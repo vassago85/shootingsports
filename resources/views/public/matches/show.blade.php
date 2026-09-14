@@ -16,6 +16,11 @@
         </section>
         <section class="block">
             <div class="wrap" style="max-width:760px">
+                @if ($bannerUrl = $event->bannerUrl())
+                    <figure class="match-poster">
+                        <img src="{{ $bannerUrl }}" alt="{{ $event->title }} match poster">
+                    </figure>
+                @endif
                 <dl class="dope-rows" style="padding:0 0 24px">
                     @foreach ($specs as [$label, $value])
                         <div class="r"><dt>{{ $label }}</dt><dd>{{ $value }}</dd></div>
