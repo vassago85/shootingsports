@@ -5,6 +5,8 @@ use App\Enums\EventStatus;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
+use App\Enums\Province;
+use App\Imports\CgpsaCalendarImporter;
 use App\Imports\MpsaCalendarImporter;
 use App\Models\Discipline;
 use App\Models\Event;
@@ -15,6 +17,7 @@ it('lists scrape and sell sources', function () {
     $this->artisan('calendar:import --list')
         ->assertSuccessful()
         ->expectsOutputToContain('saprf')
+        ->expectsOutputToContain('cgpsa')
         ->expectsOutputToContain('import')
         ->expectsOutputToContain('sapsa')
         ->expectsOutputToContain('sahunters')
@@ -131,6 +134,91 @@ it('parses MPSA season dates that wrap a month', function () {
         ->and($matches[0]->level)->toBe(EventLevel::Series)
         ->and($matches[1]->endsAt)->toBeNull()
         ->and($matches[1]->startsAt->toDateString())->toBe('2026-06-06');
+});
+
+it('imports CGPSA Events Calendar JSON without inventing fees', function () {
+    Discipline::factory()->create(['slug' => 'ipsc-practical', 'name' => 'IPSC']);
+    Discipline::factory()->create(['slug' => 'steel-challenge', 'name' => 'Steel Challenge']);
+
+    Http::fake([
+        'cgpsa.co.za/wp-json/tribe/events/v1/events*' => Http::response([
+            'events' => [
+                [
+                    'id' => 2353,
+                    'title' => 'CGPSA League 9',
+                    'url' => 'https://cgpsa.co.za/events/cgpsa-league-9-3/',
+                    'start_date' => '2026-10-03 00:00:00',
+                    'end_date' => '2026-10-04 23:59:59',
+                    'description' => '',
+                    'categories' => [['slug' => 'league', 'name' => 'League Shoot']],
+                    'venue' => [
+                        'venue' => 'Golden City Shooting Club',
+                        'city' => 'Alberton',
+                        'province' => 'Gauteng',
+                    ],
+                ],
+                [
+                    'id' => 2372,
+                    'title' => 'Steel Challenge',
+                    'url' => 'https://cgpsa.co.za/events/steel-challenge-13/',
+                    'start_date' => '2026-11-01 00:00:00',
+                    'end_date' => '2026-11-01 23:59:59',
+                    'description' => '',
+                    'categories' => [],
+                    'venue' => [
+                        'venue' => 'Golden City Shooting Club',
+                        'city' => 'Alberton',
+                    ],
+                ],
+            ],
+        ], 200),
+    ]);
+
+    $this->artisan('calendar:import cgpsa')->assertSuccessful();
+
+    $league = Event::query()->where('slug', 'cgpsa-event-2353')->first();
+
+    expect($league)->not->toBeNull()
+        ->and($league->title)->toBe('CGPSA League 9')
+        ->and($league->starts_at->toDateString())->toBe('2026-10-03')
+        ->and($league->ends_at?->toDateString())->toBe('2026-10-04')
+        ->and($league->level)->toBe(EventLevel::Series)
+        ->and($league->status)->toBe(EventStatus::Confirmed)
+        ->and($league->entry_fee_cents)->toBeNull()
+        ->and($league->entry_url)->toBe('https://cgpsa.co.za/events/cgpsa-league-9-3/')
+        ->and($league->venue?->name)->toBe('Golden City Shooting Club')
+        ->and($league->venue?->town)->toBe('Alberton')
+        ->and($league->venue?->province)->toBe(Province::Gauteng)
+        ->and($league->disciplines->pluck('slug')->all())->toBe(['ipsc-practical']);
+
+    $steel = Event::query()->where('slug', 'cgpsa-event-2372')->first();
+
+    expect($steel)->not->toBeNull()
+        ->and($steel->level)->toBe(EventLevel::Club)
+        ->and($steel->disciplines->pluck('slug')->all())->toBe(['steel-challenge']);
+
+    expect(Organisation::query()->where('slug', 'cgpsa')->first())
+        ->type->toBe(OrganisationType::ProvincialBody)
+        ->name->toBe('Central Gauteng Practical Shooting Association');
+});
+
+it('parses a CGPSA shotgun title onto sporting clays', function () {
+    $matches = app(CgpsaCalendarImporter::class)->parse([
+        'events' => [
+            [
+                'id' => 1,
+                'title' => 'Shotgun Club Shoot',
+                'url' => 'https://cgpsa.co.za/events/shotgun-club-shoot/',
+                'start_date' => '2026-09-12 00:00:00',
+                'end_date' => '2026-09-12 23:59:59',
+                'venue' => ['venue' => 'Golden City Shooting Club', 'city' => 'Alberton'],
+            ],
+        ],
+    ]);
+
+    expect($matches)->toHaveCount(1)
+        ->and($matches[0]->disciplineSlug)->toBe('sporting-clays')
+        ->and($matches[0]->level)->toBe(EventLevel::Club);
 });
 
 it('tells staff to sell the embed when a source has no feed', function () {

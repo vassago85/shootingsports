@@ -1,5 +1,6 @@
 <?php
 
+use App\Imports\CgpsaCalendarImporter;
 use App\Imports\MpsaCalendarImporter;
 use App\Imports\SaprfCalendarImporter;
 
@@ -19,6 +20,14 @@ return [
         'mode' => 'import',
         'importer' => MpsaCalendarImporter::class,
         'notes' => 'Static HTML table for the season. Dates are a bit messy (31/01) but parseable.',
+    ],
+    [
+        'key' => 'cgpsa',
+        'name' => 'Central Gauteng Practical Shooting Association',
+        'url' => 'https://cgpsa.co.za/events/',
+        'mode' => 'import',
+        'importer' => CgpsaCalendarImporter::class,
+        'notes' => 'The Events Calendar REST API. Title, dates, venue and category. No fees.',
     ],
     [
         'key' => 'ctsasa',

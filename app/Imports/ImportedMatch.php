@@ -21,5 +21,6 @@ class ImportedMatch
         public ?string $venueName,
         public ?string $disciplineSlug,
         public ?string $description = null,
+        public ?string $venueTown = null,
     ) {}
 }

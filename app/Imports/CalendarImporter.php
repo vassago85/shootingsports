@@ -79,14 +79,14 @@ class CalendarImporter
         return compact('created', 'updated', 'skipped');
     }
 
-    public function federation(string $slug, string $name, string $website): Organisation
+    public function federation(string $slug, string $name, string $website, OrganisationType $type = OrganisationType::Federation): Organisation
     {
         return Organisation::query()->updateOrCreate(
             ['slug' => $slug],
             [
                 'name' => $name,
                 'short_name' => strtoupper($slug),
-                'type' => OrganisationType::Federation,
+                'type' => $type,
                 'website_url' => $website,
                 'status' => ListingStatus::Published,
                 'verification_state' => VerificationState::Unconfirmed,
@@ -109,7 +109,7 @@ class CalendarImporter
                 'province' => $match->province,
             ],
             [
-                'town' => $match->venueName,
+                'town' => $match->venueTown ?? $match->venueName,
                 'access' => VenueAccess::GuestByArrangement,
                 'status' => ListingStatus::Published,
                 'verification_state' => VerificationState::Unconfirmed,

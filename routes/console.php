@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('calendar:import saprf')->weeklyOn(1, '06:00');
 Schedule::command('calendar:import mpsa')->weeklyOn(1, '06:20');
+Schedule::command('calendar:import cgpsa')->weeklyOn(1, '06:40');
