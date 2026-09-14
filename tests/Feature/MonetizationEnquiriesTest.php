@@ -185,7 +185,23 @@ it('renders active placements for a page slot', function () {
     $this->get(route('home'))
         ->assertOk()
         ->assertSee('Sponsored')
-        ->assertSee('Buy Brass Here');
+        ->assertSee('Buy Brass Here')
+        ->assertDontSee('This space is available');
+});
+
+it('offers vacant advertising space without prices', function () {
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('This space is available')
+        ->assertSee('Advertise here')
+        ->assertSee(route('advertise'), false)
+        ->assertDontSee('R ')
+        ->assertDontSee('rate card')
+        ->assertDontSee('price_cents');
+
+    $this->get(route('calendar'))
+        ->assertOk()
+        ->assertSee('This space is available');
 });
 
 it('marks enquiries read when opened', function () {

@@ -8,8 +8,8 @@
     $placements = \App\Support\AdPlacements::for($page, $placementSlot, (int) $limit);
 @endphp
 
-@if ($placements->isNotEmpty())
-    <aside {{ $attributes->class('ad-rail') }} aria-label="Sponsored">
+<aside {{ $attributes->class('ad-rail') }} aria-label="Advertising">
+    @if ($placements->isNotEmpty())
         <p class="ad-label">Sponsored</p>
         <div class="ad-stack">
             @foreach ($placements as $placement)
@@ -48,5 +48,13 @@
                 </article>
             @endforeach
         </div>
-    </aside>
-@endif
+    @else
+        <a class="ad-vacant" href="{{ route('advertise') }}">
+            <p class="ad-label">Advertising</p>
+            <p class="ad-vacant-kicker">This space is available</p>
+            <h3>Advertise here</h3>
+            <p>A quiet place on the register — seen by clubs, match directors and shooters looking for the next match.</p>
+            <span class="ad-vacant-cta">Enquire about this space →</span>
+        </a>
+    @endif
+</aside>
