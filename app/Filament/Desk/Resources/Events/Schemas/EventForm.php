@@ -6,6 +6,7 @@ use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\OrganisationUserRole;
 use App\Filament\Support\EventDisciplineSelect;
+use App\Filament\Support\EventFlagSelect;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -119,6 +120,11 @@ class EventForm
                             ->default(EventStatus::Draft->value)
                             ->required()
                             ->helperText('Draft stays private. Planned/confirmed can appear on the calendar once your listing is published.'),
+                    ]),
+
+                Section::make('Who this match is for')
+                    ->schema([
+                        EventFlagSelect::make(),
                     ]),
 
                 Section::make('Fees')

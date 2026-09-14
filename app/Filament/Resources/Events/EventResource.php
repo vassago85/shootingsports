@@ -9,6 +9,7 @@ use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Support\EventDisciplineSelect;
+use App\Filament\Support\EventFlagSelect;
 use App\Models\Event;
 use BackedEnum;
 use Filament\Actions\BulkAction;
@@ -163,6 +164,7 @@ class EventResource extends Resource
                                         ->minValue(0)
                                         ->columnSpan(1),
                                 ]),
+                                EventFlagSelect::make(),
                             ]),
 
                         Tab::make('Entry & Fees')

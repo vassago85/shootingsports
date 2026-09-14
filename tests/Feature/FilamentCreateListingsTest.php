@@ -2,6 +2,7 @@
 
 use App\Enums\EventLevel;
 use App\Enums\EventStatus;
+use App\Enums\FlagFamily;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
@@ -13,6 +14,7 @@ use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Organisations\Pages\CreateOrganisation as AdminCreateOrganisation;
 use App\Models\Discipline;
 use App\Models\Event;
+use App\Models\Flag;
 use App\Models\Organisation;
 use App\Models\User;
 use App\Models\Venue;
@@ -117,7 +119,8 @@ it('lays out the admin event form in tabs', function () {
         ->assertSee('Schedule')
         ->assertSee('Classification & Format')
         ->assertSee('Entry & Fees')
-        ->assertSee('Media & Results');
+        ->assertSee('Media & Results')
+        ->assertSee('Who this match is for');
 });
 
 it('creates an event from admin', function () {
@@ -224,4 +227,66 @@ it('creates a club from the match director desk', function () {
         ->and($club->status)->toBe(ListingStatus::Pending)
         ->and($club->slug)->toBe('desk-created-rifle-club')
         ->and($club->users()->where('users.id', $director->id)->wherePivot('role', OrganisationUserRole::MatchDirector->value)->exists())->toBeTrue();
+});
+
+it('saves new-shooter-friendly from admin and desk match forms', function () {
+    $flag = Flag::query()->create([
+        'slug' => 'new-shooter-friendly',
+        'name' => 'New shooter friendly',
+        'definition' => 'A first-timer can shoot without being a burden on the squad.',
+        'family' => FlagFamily::Access,
+        'sort_order' => 10,
+        'is_filterable' => true,
+    ]);
+    $discipline = Discipline::factory()->create(['slug' => 'flag-discipline']);
+
+    $staff = User::factory()->create(['is_staff' => true]);
+    $adminHost = Organisation::factory()->create(['status' => ListingStatus::Published]);
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+    Livewire::actingAs($staff)
+        ->test(CreateEvent::class)
+        ->fillForm([
+            'title' => 'Admin Novice Match',
+            'host_organisation_id' => $adminHost->id,
+            'discipline_ids' => [$discipline->id],
+            'starts_at' => now()->addWeeks(2)->startOfHour()->toDateTimeString(),
+            'all_day' => true,
+            'level' => EventLevel::Club->value,
+            'status' => EventStatus::Confirmed->value,
+            'source' => ListingSource::Staff->value,
+            'flag_ids' => [$flag->id],
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $adminEvent = Event::query()->where('title', 'Admin Novice Match')->first();
+
+    expect($adminEvent?->flags()->where('slug', 'new-shooter-friendly')->exists())->toBeTrue();
+
+    $director = User::factory()->create(['is_staff' => false]);
+    $deskHost = Organisation::factory()->create(['status' => ListingStatus::Published]);
+    $deskHost->users()->attach($director->id, [
+        'role' => OrganisationUserRole::MatchDirector,
+        'granted_at' => now(),
+    ]);
+    Filament::setCurrentPanel(Filament::getPanel('desk'));
+
+    Livewire::actingAs($director)
+        ->test(DeskCreateEvent::class)
+        ->assertSee('New shooter friendly')
+        ->fillForm([
+            'title' => 'Desk Novice Match',
+            'host_organisation_id' => $deskHost->id,
+            'discipline_ids' => [$discipline->id],
+            'starts_at' => now()->addMonth()->startOfHour()->toDateTimeString(),
+            'all_day' => true,
+            'level' => EventLevel::Club->value,
+            'status' => EventStatus::Confirmed->value,
+            'flag_ids' => [$flag->id],
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(Event::query()->where('title', 'Desk Novice Match')->first()?->flags()->where('slug', 'new-shooter-friendly')->exists())->toBeTrue();
 });
