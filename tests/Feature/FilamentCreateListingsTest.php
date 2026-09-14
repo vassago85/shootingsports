@@ -7,9 +7,11 @@ use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
 use App\Enums\OrganisationUserRole;
 use App\Enums\VerificationState;
+use App\Filament\Desk\Resources\Events\Pages\CreateEvent as DeskCreateEvent;
 use App\Filament\Desk\Resources\Organisations\Pages\CreateOrganisation as DeskCreateOrganisation;
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Organisations\Pages\CreateOrganisation as AdminCreateOrganisation;
+use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\User;
@@ -112,6 +114,7 @@ it('creates an event from admin', function () {
         'type' => OrganisationType::Club,
     ]);
     $venue = Venue::factory()->create(['status' => ListingStatus::Published]);
+    $discipline = Discipline::factory()->create(['name' => 'PRS', 'slug' => 'prs-admin-create']);
     Filament::setCurrentPanel(Filament::getPanel('admin'));
 
     Livewire::actingAs($staff)
@@ -120,9 +123,10 @@ it('creates an event from admin', function () {
             'title' => 'PPRC Club Match September',
             'host_organisation_id' => $host->id,
             'venue_id' => $venue->id,
+            'discipline_ids' => [$discipline->id],
             'starts_at' => now()->addWeeks(2)->startOfHour()->toDateTimeString(),
             'all_day' => true,
-            'level' => EventLevel::Club->value,
+            'level' => EventLevel::Series->value,
             'status' => EventStatus::Confirmed->value,
             'source' => ListingSource::Staff->value,
         ])
@@ -133,7 +137,9 @@ it('creates an event from admin', function () {
 
     expect($event)->not->toBeNull()
         ->and($event->slug)->toBe('pprc-club-match-september')
-        ->and($event->host_organisation_id)->toBe($host->id);
+        ->and($event->level)->toBe(EventLevel::Series)
+        ->and($event->host_organisation_id)->toBe($host->id)
+        ->and($event->primaryDiscipline()?->id)->toBe($discipline->id);
 });
 
 it('auto-fills event slug from title on admin create', function () {
@@ -148,6 +154,39 @@ it('auto-fills event slug from title on admin create', function () {
         ->assertFormSet([
             'slug' => 'winter-league-round-3',
         ]);
+});
+
+it('creates a match from the desk with a discipline', function () {
+    $director = User::factory()->create(['is_staff' => false]);
+    $host = Organisation::factory()->create([
+        'status' => ListingStatus::Published,
+        'type' => OrganisationType::Club,
+    ]);
+    $host->users()->attach($director->id, [
+        'role' => OrganisationUserRole::MatchDirector,
+        'granted_at' => now(),
+    ]);
+    $discipline = Discipline::factory()->create(['name' => 'Sporting Clays', 'slug' => 'sporting-clays-desk']);
+    Filament::setCurrentPanel(Filament::getPanel('desk'));
+
+    Livewire::actingAs($director)
+        ->test(DeskCreateEvent::class)
+        ->fillForm([
+            'title' => 'Valley Sporting Open',
+            'host_organisation_id' => $host->id,
+            'discipline_ids' => [$discipline->id],
+            'starts_at' => now()->addMonth()->startOfHour()->toDateTimeString(),
+            'all_day' => true,
+            'level' => EventLevel::Club->value,
+            'status' => EventStatus::Confirmed->value,
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $event = Event::query()->where('title', 'Valley Sporting Open')->first();
+
+    expect($event)->not->toBeNull()
+        ->and($event->primaryDiscipline()?->id)->toBe($discipline->id);
 });
 
 it('creates a club from the match director desk', function () {

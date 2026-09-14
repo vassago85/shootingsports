@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\EventLevel;
 use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
 use App\Enums\Province;
@@ -10,6 +11,14 @@ it('maps listing status colours from the real enum cases', function () {
     expect(ListingStatus::Published->getColor())->toBe('success')
         ->and(ListingStatus::Pending->getColor())->toBe('warning')
         ->and(ListingStatus::Archived->getColor())->toBe('danger');
+});
+
+it('maps event level colours from the real enum cases', function () {
+    expect(EventLevel::Club->getColor())->toBe('gray')
+        ->and(EventLevel::Series->getColor())->toBe('warning')
+        ->and(EventLevel::Provincial->getColor())->toBe('info')
+        ->and(EventLevel::National->getColor())->toBe('primary')
+        ->and(EventLevel::International->getColor())->toBe('success');
 });
 
 it('maps organisation type colours from the real enum cases', function () {

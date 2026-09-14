@@ -18,7 +18,9 @@
         }
     }
 
-    if (in_array($event->level, [\App\Enums\EventLevel::National, \App\Enums\EventLevel::International], true)) {
+    if ($event->level === \App\Enums\EventLevel::Series) {
+        $pills[] = ['series', $event->level->getLabel()];
+    } elseif (in_array($event->level, [\App\Enums\EventLevel::National, \App\Enums\EventLevel::International], true)) {
         $pills[] = ['nat', $event->level->getLabel()];
     }
 

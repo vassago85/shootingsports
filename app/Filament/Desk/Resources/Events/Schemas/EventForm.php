@@ -5,6 +5,7 @@ namespace App\Filament\Desk\Resources\Events\Schemas;
 use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\OrganisationUserRole;
+use App\Filament\Support\EventDisciplineSelect;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -68,12 +69,15 @@ class EventForm
                             )
                             ->searchable()
                             ->preload()
+                            ->live()
+                            ->afterStateUpdated(EventDisciplineSelect::prefillFromHost())
                             ->required(),
                         Select::make('venue_id')
                             ->label('Venue / range')
                             ->relationship('venue', 'name')
                             ->searchable()
                             ->preload(),
+                        EventDisciplineSelect::make(),
                         Textarea::make('description')
                             ->rows(4)
                             ->columnSpanFull(),

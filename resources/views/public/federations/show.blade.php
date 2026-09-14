@@ -54,9 +54,11 @@
                         <p class="label">Calendar</p>
                         <h2>Hosted matches</h2>
                     </div>
-                    @foreach ($events as $event)
-                        <x-event-card :event="$event" />
-                    @endforeach
+                    <div class="dope-grid">
+                        @foreach ($events as $event)
+                            <x-event-card :event="$event" />
+                        @endforeach
+                    </div>
                 @endif
             </div>
         </section>

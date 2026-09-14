@@ -42,11 +42,15 @@
                     <p class="label">Calendar</p>
                     <h2>Upcoming matches</h2>
                 </div>
-                @forelse ($events as $event)
-                    <x-event-card :event="$event" />
-                @empty
+                @if ($events->isEmpty())
                     <p class="empty">No upcoming matches listed.</p>
-                @endforelse
+                @else
+                    <div class="dope-grid">
+                        @foreach ($events as $event)
+                            <x-event-card :event="$event" />
+                        @endforeach
+                    </div>
+                @endif
                 <p style="margin-top:18px">
                     <a class="label" href="{{ route('ical.organisation', $organisation->slug) }}" style="text-decoration:none;border-bottom:1px solid var(--brass)">Subscribe via iCal →</a>
                 </p>

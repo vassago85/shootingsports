@@ -59,7 +59,7 @@ class SendItElr2026Seeder extends Seeder
                     'starts_at' => $match['starts_at'],
                     'ends_at' => $match['ends_at'],
                     'all_day' => true,
-                    'level' => EventLevel::National,
+                    'level' => EventLevel::Series,
                     'status' => EventStatus::Confirmed,
                     'confirmed_at' => now(),
                     'description' => $match['description'],

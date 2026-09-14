@@ -214,6 +214,7 @@ section.block { padding: 72px 0; }
 .pill.novice { background: #f0ede2; color: #4a3a0e; }
 .pill.draft, .pill.cancelled, .pill.postponed, .pill.completed { background: var(--surface-2); color: var(--slate); border: 1px solid var(--rule); }
 .pill.nat { background: #3b4a66; color: #e6ecf4; }
+.pill.series { background: #6e5a24; color: #f3e6c4; }
 
 .dhero { background: linear-gradient(140deg, var(--disc-band) 0%, var(--disc-band-2) 100%); color: #EDEFE9; position: relative; overflow: hidden; }
 .dhero .reticle { position: absolute; right: -120px; top: -90px; width: 620px; height: 620px; opacity: .13; pointer-events: none; }

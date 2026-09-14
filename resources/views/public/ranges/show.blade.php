@@ -43,11 +43,15 @@
                     <p class="label">Calendar</p>
                     <h2>Matches at this range</h2>
                 </div>
-                @forelse ($events as $event)
-                    <x-event-card :event="$event" />
-                @empty
+                @if ($events->isEmpty())
                     <p class="empty">No upcoming matches at this range.</p>
-                @endforelse
+                @else
+                    <div class="dope-grid">
+                        @foreach ($events as $event)
+                            <x-event-card :event="$event" />
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </section>
     </main>

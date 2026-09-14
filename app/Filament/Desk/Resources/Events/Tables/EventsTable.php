@@ -2,11 +2,11 @@
 
 namespace App\Filament\Desk\Resources\Events\Tables;
 
+use App\Enums\EventStatus;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use App\Enums\EventStatus;
 
 class EventsTable
 {
@@ -22,6 +22,9 @@ class EventsTable
                 TextColumn::make('hostOrganisation.name')
                     ->label('Host')
                     ->searchable(),
+                TextColumn::make('disciplines.name')
+                    ->label('Disciplines')
+                    ->badge(),
                 TextColumn::make('starts_at')
                     ->dateTime('D j M Y, H:i')
                     ->sortable(),

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\OrganisationType;
 use App\Models\Event;
@@ -22,6 +23,7 @@ it('seeds the Send It ELR series and 2026 calendar', function () {
 
     expect($events)->toHaveCount(12)
         ->and($events->every(fn (Event $event) => $event->status === EventStatus::Confirmed))->toBeTrue()
+        ->and($events->every(fn (Event $event) => $event->level === EventLevel::Series))->toBeTrue()
         ->and($events->first()->title)->toBe('1-Mile Challenge Q1')
         ->and($events->first()->starts_at->toDateString())->toBe('2026-02-07')
         ->and($events->last()->title)->toBe('2-Mile Challenge Final')

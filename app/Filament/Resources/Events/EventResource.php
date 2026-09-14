@@ -8,6 +8,7 @@ use App\Enums\ListingSource;
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
+use App\Filament\Support\EventDisciplineSelect;
 use App\Models\Event;
 use BackedEnum;
 use Filament\Actions\BulkAction;
@@ -80,6 +81,8 @@ class EventResource extends Resource
                             ->relationship('hostOrganisation', 'name')
                             ->searchable()
                             ->preload()
+                            ->live()
+                            ->afterStateUpdated(EventDisciplineSelect::prefillFromHost())
                             ->required(),
                         Select::make('venue_id')
                             ->label('Venue / range')
@@ -87,6 +90,7 @@ class EventResource extends Resource
                             ->searchable()
                             ->preload()
                             ->helperText('Leave blank if it will be hosted at the club\'s own range.'),
+                        EventDisciplineSelect::make(),
                         Textarea::make('description')
                             ->rows(4)
                             ->columnSpanFull(),
@@ -244,6 +248,10 @@ class EventResource extends Resource
                 TextColumn::make('hostOrganisation.name')
                     ->label('Host')
                     ->searchable()
+                    ->toggleable(),
+                TextColumn::make('disciplines.name')
+                    ->label('Disciplines')
+                    ->badge()
                     ->toggleable(),
                 TextColumn::make('venue.name')
                     ->label('Venue')
