@@ -7,7 +7,6 @@ use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\Venue;
-use Illuminate\Support\Facades\Storage;
 
 class JsonLd
 {
@@ -41,8 +40,8 @@ class JsonLd
             $payload['location'] = self::venue($event->venue);
         }
 
-        if ($event->banner) {
-            $payload['image'] = Storage::disk($event->banner->disk)->url($event->banner->path);
+        if ($bannerUrl = $event->bannerUrl()) {
+            $payload['image'] = $bannerUrl;
         }
 
         return $payload;

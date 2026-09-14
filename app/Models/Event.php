@@ -16,13 +16,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'slug', 'title', 'host_organisation_id', 'venue_id', 'starts_at', 'ends_at',
     'all_day', 'level', 'status', 'confirmed_at', 'original_starts_at',
     'entry_fee_cents', 'member_fee_cents', 'entry_url', 'capacity',
     'entries_taken', 'round_count', 'target_count', 'stage_count',
-    'results_url', 'banner_media_id', 'description', 'created_by',
+    'results_url', 'banner_media_id', 'banner_path', 'description', 'created_by',
     'source', 'last_verified_at',
 ])]
 class Event extends Model
@@ -70,6 +71,20 @@ class Event extends Model
     public function banner(): BelongsTo
     {
         return $this->belongsTo(Media::class, 'banner_media_id');
+    }
+
+    /**
+     * Return the public URL of the event banner, whether it was uploaded
+     * directly via the Filament form (banner_path on the "media" disk) or
+     * attached through the legacy Media model. Direct uploads win.
+     */
+    public function bannerUrl(): ?string
+    {
+        if (filled($this->banner_path)) {
+            return Storage::disk('media')->url($this->banner_path);
+        }
+
+        return $this->banner?->url();
     }
 
     public function creator(): BelongsTo

@@ -3,8 +3,7 @@
 @php
     $specs = \App\Support\EventSpecRows::for($event);
     $planned = $event->isProvisional();
-    $banner = $event->banner;
-    $bannerUrl = $banner?->url();
+    $bannerUrl = $event->bannerUrl();
     $family = $event->primaryDiscipline()?->family->value ?? $event->disciplines->first()?->family->value;
 @endphp
 

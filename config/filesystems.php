@@ -49,9 +49,13 @@ return [
 
         'media' => [
             'driver' => 'local',
-            'root' => env('MEDIA_ROOT', storage_path('app/media')),
+            // Empty string in .env would otherwise satisfy env() and make the
+            // root literally "" (Flysystem then tries to mkdir at cwd). Coalesce
+            // blanks so both `unset` and `MEDIA_ROOT=` fall through to the default.
+            'root' => env('MEDIA_ROOT') ?: storage_path('app/media'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/media',
             'visibility' => 'public',
+            'serve' => true,
             'throw' => false,
             'report' => false,
         ],
