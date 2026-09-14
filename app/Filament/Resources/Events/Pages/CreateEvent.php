@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Concerns\SyncsEventDisciplines;
-use App\Filament\Concerns\SyncsEventFlags;
 use App\Filament\Resources\Events\EventResource;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
@@ -11,7 +10,6 @@ use Illuminate\Support\Facades\Auth;
 class CreateEvent extends CreateRecord
 {
     use SyncsEventDisciplines;
-    use SyncsEventFlags;
 
     protected static string $resource = EventResource::class;
 
@@ -22,7 +20,6 @@ class CreateEvent extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data = $this->extractDisciplineIds($data);
-        $data = $this->extractFlagIds($data);
         $data['created_by'] ??= Auth::id();
 
         return $data;
@@ -31,7 +28,6 @@ class CreateEvent extends CreateRecord
     protected function afterCreate(): void
     {
         $this->persistDisciplines();
-        $this->persistFlags();
     }
 
     public function areFormActionsSticky(): bool

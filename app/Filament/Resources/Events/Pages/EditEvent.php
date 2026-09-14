@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Concerns\SyncsEventDisciplines;
-use App\Filament\Concerns\SyncsEventFlags;
 use App\Filament\Resources\Events\EventResource;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
@@ -15,7 +14,6 @@ use Filament\Support\Icons\Heroicon;
 class EditEvent extends EditRecord
 {
     use SyncsEventDisciplines;
-    use SyncsEventFlags;
 
     protected static string $resource = EventResource::class;
 
@@ -25,7 +23,7 @@ class EditEvent extends EditRecord
      */
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        return $this->hydrateFlagIds($this->hydrateDisciplineIds($data));
+        return $this->hydrateDisciplineIds($data);
     }
 
     /**
@@ -34,13 +32,12 @@ class EditEvent extends EditRecord
      */
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        return $this->extractFlagIds($this->extractDisciplineIds($data));
+        return $this->extractDisciplineIds($data);
     }
 
     protected function afterSave(): void
     {
         $this->persistDisciplines();
-        $this->persistFlags();
     }
 
     public function areFormActionsSticky(): bool

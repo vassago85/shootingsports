@@ -222,12 +222,27 @@ html.fi.dark {
 .fi-input-wrp,
 .fi-select-wrp,
 .fi-textarea-wrp,
-.fi-fo-file-upload,
-.fi-checkbox-input,
-.fi-radio {
+.fi-fo-file-upload {
     background: color-mix(in oklab, var(--ss-page) 78%, black);
     border-color: var(--ss-border);
     color: var(--ss-ink);
+}
+
+input[type='checkbox'].fi-checkbox-input {
+    background-color: color-mix(in oklab, var(--ss-page) 78%, black);
+    background-image: none;
+    box-shadow: inset 0 0 0 1px var(--ss-border);
+}
+
+input[type='checkbox'].fi-checkbox-input:checked,
+input[type='checkbox'].fi-checkbox-input:indeterminate {
+    background-color: var(--ss-brass);
+    box-shadow: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 16 16' fill='%231a1405' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L6.5 9.086l4.293-4.293a1 1 0 0 1 1.414 0z'/%3E%3C/svg%3E");
+}
+
+input[type='checkbox'].fi-checkbox-input:indeterminate {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 16 16' fill='%231a1405' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.5 6.75a1.25 1.25 0 0 0 0 2.5h7a1.25 1.25 0 0 0 0-2.5h-7z'/%3E%3C/svg%3E");
 }
 
 .fi-input,

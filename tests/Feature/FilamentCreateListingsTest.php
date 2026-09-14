@@ -255,7 +255,7 @@ it('saves new-shooter-friendly from admin and desk match forms', function () {
             'level' => EventLevel::Club->value,
             'status' => EventStatus::Confirmed->value,
             'source' => ListingSource::Staff->value,
-            'flag_ids' => [$flag->id],
+            'flags' => [$flag->id],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -283,7 +283,7 @@ it('saves new-shooter-friendly from admin and desk match forms', function () {
             'all_day' => true,
             'level' => EventLevel::Club->value,
             'status' => EventStatus::Confirmed->value,
-            'flag_ids' => [$flag->id],
+            'flags' => [$flag->id],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
