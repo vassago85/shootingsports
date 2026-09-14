@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             SendItElr2026Seeder::class,
             SaprfEventsSeeder::class,
+            CtsasaEventsSeeder::class,
         ]);
 
         if (! app()->environment('local')) {
