@@ -75,7 +75,7 @@ class CtsasaEventsSeeder extends Seeder
                     'ends_at' => $match['ends_at'],
                     'all_day' => true,
                     'level' => $match['level'],
-                    'status' => EventStatus::EntriesOpen,
+                    'status' => $match['status'],
                     'confirmed_at' => now(),
                     'entry_url' => $match['entry_url'],
                     'description' => $match['description'],
@@ -140,8 +140,10 @@ class CtsasaEventsSeeder extends Seeder
     }
 
     /**
-     * Remaining CTSASA championships from https://ctsasa.co.za/competition-entry-forms-2026/
-     * (scraped 2026-09-14). Venues for FS FITASC and Gauteng North from the MPU 2026 calendar.
+     * Upcoming domestic CTSASA championships from the official 2026 calendar
+     * (https://ctsasa.co.za/competition-calendar/, version 24/06/26) as of 2026-09-14.
+     * Past 2026 dates and overseas ISSF/NSSA/FITASC worlds are omitted.
+     * Entry URLs from https://ctsasa.co.za/competition-entry-forms-2026/ where a form is live.
      *
      * @return list<array<string, mixed>>
      */
@@ -150,25 +152,27 @@ class CtsasaEventsSeeder extends Seeder
         return [
             [
                 'slug' => 'ctsasa-sa-national-english-sporting-2026',
-                'title' => 'SA National English Sporting Championship',
+                'title' => 'SA National English Sporting & FITASC Trap1 Championships',
                 'venue' => 'gold-valley-gun-club',
                 'starts_at' => '2026-09-19 08:00:00',
                 'ends_at' => '2026-09-20 17:00:00',
                 'level' => EventLevel::National,
-                'disciplines' => ['sporting-clays'],
+                'status' => EventStatus::EntriesOpen,
+                'disciplines' => ['sporting-clays', 'trap'],
                 'entry_url' => 'https://forms.gle/wZUH6G5Efhz2aXBr9',
-                'description' => 'CTSASA national English Sporting championship at Gold Valley Gun Club, Nelspruit. Entries via CTSASA Google Form.',
+                'description' => 'CTSASA national English Sporting and FITASC Trap1 championships at Gold Valley Gun Club, Nelspruit. Entries via CTSASA Google Form.',
             ],
             [
                 'slug' => 'ctsasa-olympic-trial-wattlespring-2026',
-                'title' => 'Olympic Trial',
+                'title' => 'Olympic Trial (Trap and Skeet)',
                 'venue' => 'wattlespring-sport-shooting-club',
                 'starts_at' => '2026-09-26 08:00:00',
                 'ends_at' => '2026-09-27 17:00:00',
                 'level' => EventLevel::National,
-                'disciplines' => ['trap'],
+                'status' => EventStatus::EntriesOpen,
+                'disciplines' => ['trap', 'skeet'],
                 'entry_url' => 'https://forms.gle/h3CAdUttq9rmADrS9',
-                'description' => 'Olympic shotgun trial at Wattlespring Sport Shooting Club, Pretoria. Entries via CTSASA Google Form.',
+                'description' => 'Additional Olympic trial: trap and skeet, 2 × 100 targets of each discipline, at Wattlespring Sport Shooting Club, Pretoria. Entries via CTSASA Google Form.',
             ],
             [
                 'slug' => 'ctsasa-fs-fitasc-sporting-2026',
@@ -177,6 +181,7 @@ class CtsasaEventsSeeder extends Seeder
                 'starts_at' => '2026-10-03 08:00:00',
                 'ends_at' => '2026-10-04 17:00:00',
                 'level' => EventLevel::Provincial,
+                'status' => EventStatus::EntriesOpen,
                 'disciplines' => ['sporting-clays'],
                 'entry_url' => 'https://forms.gle/ETHz87Bfm6RCdDCv8',
                 'description' => 'CTSASA Free State FITASC Sporting championship at Maccauw Clay Target Club, Bloemfontein. Entries via CTSASA Google Form.',
@@ -188,6 +193,7 @@ class CtsasaEventsSeeder extends Seeder
                 'starts_at' => '2026-10-10 08:00:00',
                 'ends_at' => '2026-10-11 17:00:00',
                 'level' => EventLevel::Provincial,
+                'status' => EventStatus::EntriesOpen,
                 'disciplines' => ['sporting-clays', 'trap'],
                 'entry_url' => 'https://forms.gle/BXAtBffat75TYw657',
                 'description' => 'CTSASA Gauteng North English Sporting and FITASC Trap1 championships at Centurion Gun Club, Pretoria. Entries via CTSASA Google Form.',
@@ -199,9 +205,22 @@ class CtsasaEventsSeeder extends Seeder
                 'starts_at' => '2026-10-31 08:00:00',
                 'ends_at' => '2026-11-01 17:00:00',
                 'level' => EventLevel::Provincial,
+                'status' => EventStatus::EntriesOpen,
                 'disciplines' => ['trap', 'skeet'],
                 'entry_url' => 'https://docs.google.com/forms/d/e/1FAIpQLSeI8XW06B048ZyWlO4cfxdeFEkbB-LlBEKiQvc42HtuBhU6Mw/viewform',
                 'description' => 'CTSASA Northern Cape Standard championships, hosted by Maccauw Clay Target Club in Bloemfontein. Entries via CTSASA Google Form.',
+            ],
+            [
+                'slug' => 'ctsasa-chairmans-cup-2026',
+                'title' => "Chairman's Cup (Inter-Provincial Championship)",
+                'venue' => 'wattlespring-sport-shooting-club',
+                'starts_at' => '2026-11-21 08:00:00',
+                'ends_at' => '2026-11-22 17:00:00',
+                'level' => EventLevel::National,
+                'status' => EventStatus::Confirmed,
+                'disciplines' => ['sporting-clays', 'trap', 'skeet'],
+                'entry_url' => 'https://ctsasa.co.za/competition-calendar/',
+                'description' => "CTSASA Chairman's Cup inter-provincial championship, hosted by Central Gauteng at Wattlespring Sport Shooting Club. No entry form published yet.",
             ],
         ];
     }
