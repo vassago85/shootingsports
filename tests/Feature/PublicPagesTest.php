@@ -27,6 +27,28 @@ it('renders the home page instead of the Laravel welcome screen', function () {
         ->assertDontSee('Let’s get started');
 });
 
+it('lists the next ten home-rail matches inside 30 days', function () {
+    foreach (range(1, 11) as $day) {
+        Event::factory()->confirmed()->create([
+            'title' => sprintf('Window match %02d', $day),
+            'starts_at' => now()->addDays($day),
+        ]);
+    }
+
+    Event::factory()->confirmed()->create([
+        'title' => 'Far horizon match',
+        'starts_at' => now()->addDays(45),
+    ]);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('Next 30 days')
+        ->assertSee('Window match 01')
+        ->assertSee('Window match 10')
+        ->assertDontSee('Window match 11')
+        ->assertDontSee('Far horizon match');
+});
+
 it('lists upcoming matches on the calendar', function () {
     Event::factory()->confirmed()->create(['title' => 'Highveld Club Match']);
     Event::factory()->draft()->create(['title' => 'Hidden draft']);

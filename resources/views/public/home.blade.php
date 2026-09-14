@@ -17,7 +17,7 @@
                     <p class="lede">The national register of South African shooting sport. Clubs, ranges, suppliers and every match on the calendar — filtered by discipline, by province, and by how far you are willing to drive.</p>
                     <livewire:match-finder />
                 </div>
-                <div>
+                <div class="hero-rail">
                     <div class="rail-head">
                         <h3>{{ $railLabel }}</h3>
                         <span class="label">Nationwide</span>

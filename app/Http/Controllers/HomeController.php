@@ -27,21 +27,21 @@ class HomeController extends Controller
             ];
         });
 
-        $weekAhead = Event::query()
+        $monthAhead = Event::query()
             ->upcoming()
             ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
-            ->where('starts_at', '<=', now()->addDays(7))
+            ->where('starts_at', '<=', now()->addDays(30))
             ->orderBy('starts_at')
-            ->limit(4)
+            ->limit(10)
             ->get();
 
-        $rail = $weekAhead->isNotEmpty()
-            ? $weekAhead
+        $rail = $monthAhead->isNotEmpty()
+            ? $monthAhead
             : Event::query()
                 ->upcoming()
                 ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
                 ->orderBy('starts_at')
-                ->limit(4)
+                ->limit(10)
                 ->get();
 
         $upcomingCounts = Discipline::upcomingCounts();
@@ -78,7 +78,7 @@ class HomeController extends Controller
         return view('public.home', [
             'stats' => $stats,
             'rail' => $rail,
-            'railLabel' => $weekAhead->isNotEmpty() ? 'Next 7 days' : 'Next up',
+            'railLabel' => $monthAhead->isNotEmpty() ? 'Next 30 days' : 'Next up',
             'disciplines' => $disciplines,
             'clubs' => $clubs,
             'ranges' => $ranges,
