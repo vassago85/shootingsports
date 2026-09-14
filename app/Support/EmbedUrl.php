@@ -11,6 +11,7 @@ class EmbedUrl
         'club',
         'organisation',
         'venue',
+        'shooter',
         'discipline',
         'province',
         'accent',

@@ -21,6 +21,8 @@ class IcalFeed
             'METHOD:PUBLISH',
             'X-WR-CALNAME:'.self::escape($name),
             'X-WR-TIMEZONE:Africa/Johannesburg',
+            'X-PUBLISHED-TTL:PT1H',
+            'REFRESH-INTERVAL;VALUE=DURATION:PT1H',
         ];
 
         foreach ($events as $event) {
@@ -38,6 +40,9 @@ class IcalFeed
             $lines[] = 'BEGIN:VEVENT';
             $lines[] = 'UID:'.$uid;
             $lines[] = 'DTSTAMP:'.$stamp;
+            $modified = ($event->updated_at ?? now())->utc();
+            $lines[] = 'LAST-MODIFIED:'.$modified->format('Ymd\THis\Z');
+            $lines[] = 'SEQUENCE:'.$modified->timestamp;
 
             if ($event->all_day) {
                 $lines[] = 'DTSTART;VALUE=DATE:'.$event->starts_at->timezone('Africa/Johannesburg')->format('Ymd');

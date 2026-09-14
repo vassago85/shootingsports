@@ -119,15 +119,16 @@ it('hides embed snippets from guests and shows them when signed in', function ()
 
     $this->get(route('clubs.show', $club->slug))
         ->assertOk()
-        ->assertSee('Sign in to embed this calendar')
+        ->assertSee('Sign in to embed this calendar on your own site')
         ->assertDontSee('embed/calendar?club=snippet-club', false);
 
     $this->actingAs(User::factory()->create())
         ->get(route('clubs.show', $club->slug))
         ->assertOk()
         ->assertSee('embed/calendar?club=snippet-club', false)
-        ->assertSee('Copy WordPress URL')
-        ->assertSee('Copy iframe');
+        ->assertSee('WordPress URL')
+        ->assertSee('Iframe')
+        ->assertSee('Copy');
 
     $this->actingAs(User::factory()->create())
         ->get(route('ranges.show', $venue->slug))

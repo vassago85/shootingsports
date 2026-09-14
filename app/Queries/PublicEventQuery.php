@@ -7,6 +7,7 @@ use App\Enums\Province;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
+use App\Models\User;
 use App\Models\Venue;
 use App\Support\Geo;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,6 +30,8 @@ class PublicEventQuery
         public ?int $venueId = null,
         public array $disciplineIds = [],
         public ?int $limit = null,
+        /** @var list<int>|null */
+        public ?array $eventIds = null,
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -46,6 +49,7 @@ class PublicEventQuery
             confirmedOnly: $request->boolean('confirmed'),
             organisationId: self::publishedOrganisationId($request),
             venueId: self::publishedVenueId($request),
+            eventIds: self::shooterEventIds($request),
         );
     }
 
@@ -66,6 +70,14 @@ class PublicEventQuery
 
         if ($this->venueId) {
             $query->where('venue_id', $this->venueId);
+        }
+
+        if ($this->eventIds !== null) {
+            if ($this->eventIds === []) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->whereIn('id', $this->eventIds);
+            }
         }
 
         $disciplineIds = $this->resolveDisciplineIds();
@@ -198,6 +210,26 @@ class PublicEventQuery
         }
 
         return Organisation::query()->published()->where('slug', $slug)->value('id') ?? 0;
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    private static function shooterEventIds(Request $request): ?array
+    {
+        $slug = $request->string('shooter')->toString();
+
+        if ($slug === '') {
+            return null;
+        }
+
+        $user = User::query()->where('calendar_slug', $slug)->first();
+
+        if (! $user) {
+            return [];
+        }
+
+        return $user->savedEvents()->pluck('events.id')->all();
     }
 
     private static function publishedVenueId(Request $request): ?int

@@ -27,6 +27,10 @@
                 <p class="label" style="margin-top:28px">Federation</p>
                 <pre class="mono embed-code">{{ url('/embed/calendar') }}?organisation=your-federation-slug</pre>
 
+                <p class="label" style="margin-top:28px">Shooter</p>
+                <p style="max-width:40rem">Signed-in shooters add matches to <a href="{{ url('/my-calendar') }}">My calendar</a>, then embed that list:</p>
+                <pre class="mono embed-code">{{ url('/embed/calendar') }}?shooter=your-shooter-slug</pre>
+
                 <p class="label" style="margin-top:28px">Colours and fonts</p>
                 <pre class="mono embed-code">{{ url('/embed/calendar') }}?club=your-club-slug&amp;theme=dark&amp;accent=%23D9AE52&amp;bg=%23131718&amp;ink=%23e8eae6&amp;font=inter&amp;height=640</pre>
                 <p class="meta" style="margin:12px 0 0;font-family:var(--f-mono);font-size:13px;color:var(--slate)">

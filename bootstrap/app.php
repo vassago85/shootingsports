@@ -21,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
             | Request::HEADER_X_FORWARDED_PROTO
             | Request::HEADER_X_FORWARDED_AWS_ELB);
 
+        $middleware->redirectGuestsTo(fn () => url('/desk/login'));
+
         $middleware->web(append: [
             PreventClickjacking::class,
         ]);

@@ -51,4 +51,9 @@
             <span>No entry link yet</span>
         @endif
     </div>
+    @auth
+        <livewire:save-to-calendar :event="$event" :key="'save-'.$event->id" />
+    @else
+        <a class="dope-save" href="{{ url('/desk/login') }}">Add to my calendar</a>
+    @endauth
 </article>

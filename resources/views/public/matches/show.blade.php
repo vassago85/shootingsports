@@ -28,6 +28,11 @@
                     <div class="prose">{!! nl2br(e($event->description)) !!}</div>
                 @endif
                 <p style="margin-top:22px">
+                    @auth
+                        <livewire:save-to-calendar :event="$event" variant="button" :key="'save-match-'.$event->id" />
+                    @else
+                        <a class="btn ghost" href="{{ url('/desk/login') }}">Add to my calendar</a>
+                    @endauth
                     @if ($event->hostOrganisation)
                         @if ($event->hostOrganisation->isFederationListing())
                             <a class="btn ghost" href="{{ route('federations.show', $event->hostOrganisation->slug) }}">Host federation</a>

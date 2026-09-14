@@ -55,4 +55,17 @@ enum Province: string implements HasLabel
             self::WesternCape => 'WC',
         };
     }
+
+    public static function fromCode(string $code): ?self
+    {
+        $needle = strtoupper(trim($code));
+
+        foreach (self::cases() as $province) {
+            if ($province->code() === $needle) {
+                return $province;
+            }
+        }
+
+        return null;
+    }
 }

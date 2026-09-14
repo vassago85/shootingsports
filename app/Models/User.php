@@ -15,9 +15,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 #[Fillable([
-    'name', 'email', 'password', 'home_province', 'travel_radius_km',
+    'name', 'email', 'password', 'calendar_slug', 'home_province', 'travel_radius_km',
     'digest_frequency', 'is_staff',
 ])]
 #[Hidden(['password', 'remember_token'])]
@@ -92,6 +93,26 @@ class User extends Authenticatable implements FilamentUser
     public function savedEvents(): BelongsToMany
     {
         return $this->belongsToMany(Event::class, 'saved_events')->withTimestamps();
+    }
+
+    public function ensureCalendarSlug(): string
+    {
+        if (filled($this->calendar_slug)) {
+            return $this->calendar_slug;
+        }
+
+        $base = Str::slug($this->name) ?: 'shooter';
+        $slug = $base;
+        $i = 2;
+
+        while (static::query()->where('calendar_slug', $slug)->whereKeyNot($this->id)->exists()) {
+            $slug = $base.'-'.$i;
+            $i++;
+        }
+
+        $this->forceFill(['calendar_slug' => $slug])->save();
+
+        return $slug;
     }
 
     public function follows(): HasMany

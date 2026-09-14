@@ -11,6 +11,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IcalController;
 use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\ProviderController;
+use App\Http\Controllers\ShooterCalendarController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StaticPageController;
 use App\Http\Controllers\VenueController;
@@ -47,6 +48,12 @@ Route::get('/suppliers/{category}', [ProviderController::class, 'category'])
 Route::get('/supplier/{provider:slug}', [ProviderController::class, 'show'])->name('suppliers.show');
 
 Route::get('/matches/{event:slug}', [EventController::class, 'show'])->name('matches.show');
+
+Route::get('/my-calendar', [ShooterCalendarController::class, 'mine'])
+    ->middleware('auth')
+    ->name('my-calendar');
+Route::get('/shooters/{shooter}/calendar.ics', [IcalController::class, 'shooter'])->name('ical.shooter');
+Route::get('/shooters/{shooter}', [ShooterCalendarController::class, 'show'])->name('shooters.show');
 
 Route::get('/embed/calendar', [EmbedController::class, 'calendar'])->name('embed.calendar');
 Route::get('/embed/calendar.js', [EmbedController::class, 'script'])->name('embed.script');

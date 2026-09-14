@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Organisation;
+use App\Models\User;
 use App\Models\Venue;
 use App\Queries\PublicEventQuery;
 use App\Support\EmbedTheme;
@@ -71,7 +72,7 @@ class EmbedController extends Controller
   if (!script) return;
   var iframe = document.createElement("iframe");
   var base = script.src.replace(/\.js(?:\?.*)?$/, "");
-  var keys = ["club", "organisation", "venue", "discipline", "province", "accent", "color", "bg", "ink", "font", "theme"];
+  var keys = ["club", "organisation", "venue", "shooter", "discipline", "province", "accent", "color", "bg", "ink", "font", "theme"];
   var params = [];
   keys.forEach(function (key) {
     var value = script.getAttribute("data-" + key);
@@ -107,6 +108,12 @@ JS;
 
         if ($venueSlug !== '') {
             return Venue::query()->published()->where('slug', $venueSlug)->value('name');
+        }
+
+        $shooterSlug = $request->string('shooter')->toString();
+
+        if ($shooterSlug !== '') {
+            return User::query()->where('calendar_slug', $shooterSlug)->value('name');
         }
 
         return null;

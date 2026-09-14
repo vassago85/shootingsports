@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Enums\ListingStatus;
 use App\Models\Discipline;
+use App\Models\Event;
 use App\Models\Organisation;
+use App\Models\User;
 use App\Queries\PublicEventQuery;
 use App\Support\IcalFeed;
 use Illuminate\Http\Response;
@@ -30,14 +32,23 @@ class IcalController extends Controller
         return $this->feed($discipline->name.' matches', $events);
     }
 
+    public function shooter(string $shooter): Response
+    {
+        $user = User::query()->where('calendar_slug', $shooter)->firstOrFail();
+        $events = (new PublicEventQuery(eventIds: $user->savedEvents()->pluck('events.id')->all()))->get();
+
+        return $this->feed($user->name.' calendar', $events);
+    }
+
     /**
-     * @param  iterable<\App\Models\Event>  $events
+     * @param  iterable<Event>  $events
      */
     private function feed(string $name, iterable $events): Response
     {
         return response(IcalFeed::build($name, $events), 200, [
             'Content-Type' => 'text/calendar; charset=utf-8',
             'Content-Disposition' => 'inline; filename="'.Str::slug($name).'.ics"',
+            'Cache-Control' => 'public, max-age=300',
         ]);
     }
 }
