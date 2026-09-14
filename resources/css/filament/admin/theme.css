@@ -4,30 +4,56 @@
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
 
-/* Shared panel skin — matches public shootingsports.co.za palette. */
+/*
+ * Full panel skin — not just chrome. Filament v5 still paints tables/sections
+ * with gray-50 / white unless we override the dark tokens and those surfaces.
+ */
 .fi-body,
 .fi-simple-layout,
 .fi-main,
-.fi-sidebar {
+.fi-sidebar,
+.fi-topbar,
+.fi-ta-ctn,
+.fi-section,
+.fi-wi-widget {
     --gunmetal: #101516;
     --gunmetal-2: #1b2224;
+    --gunmetal-3: #242c2e;
     --brass: #d9ae52;
     --brass-dk: #e4c079;
     --slate: #8d9793;
+    --ink: #eef0ee;
+    --rule: rgba(217, 174, 82, 0.18);
+}
+
+html.fi.dark {
+    color-scheme: dark;
 }
 
 .fi-body {
     font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
     background: var(--gunmetal) !important;
+    color: var(--ink);
+}
+
+.fi-main,
+.fi-main-ctn,
+.fi-page {
+    background: transparent !important;
 }
 
 .fi-sidebar {
     background: #0c1112 !important;
-    border-inline-end: 1px solid rgba(217, 174, 82, 0.18) !important;
+    border-inline-end: 1px solid var(--rule) !important;
 }
 
 .fi-sidebar-header {
     border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.fi-sidebar-item-label,
+.fi-sidebar-group-label {
+    font-family: 'IBM Plex Sans', ui-sans-serif, sans-serif;
 }
 
 .fi-logo {
@@ -35,11 +61,11 @@
     font-weight: 700 !important;
     letter-spacing: 0.04em !important;
     text-transform: uppercase !important;
-    color: #eef0ee !important;
+    color: var(--ink) !important;
 }
 
 .fi-topbar {
-    background: rgba(16, 21, 22, 0.92) !important;
+    background: rgba(16, 21, 22, 0.94) !important;
     border-bottom: 1px solid rgba(217, 174, 82, 0.2) !important;
     backdrop-filter: blur(8px);
 }
@@ -49,9 +75,17 @@
     font-family: 'Saira Condensed', sans-serif !important;
     text-transform: uppercase !important;
     letter-spacing: 0.03em !important;
+    color: var(--ink) !important;
 }
 
-.fi-btn-primary {
+.fi-header-subheading,
+.fi-breadcrumbs,
+.fi-section-header-description {
+    color: var(--slate) !important;
+}
+
+.fi-btn-primary,
+.fi-btn.fi-color-primary {
     background: var(--brass) !important;
     color: #1a1405 !important;
     font-family: 'Saira Condensed', sans-serif !important;
@@ -60,7 +94,8 @@
     font-weight: 700 !important;
 }
 
-.fi-btn-primary:hover {
+.fi-btn-primary:hover,
+.fi-btn.fi-color-primary:hover {
     background: var(--brass-dk) !important;
 }
 
@@ -69,7 +104,7 @@
 }
 
 .fi-simple-card {
-    background: #1b2224 !important;
+    background: var(--gunmetal-2) !important;
     border: 1px solid rgba(217, 174, 82, 0.28) !important;
     border-top-width: 2px !important;
     border-top-color: var(--brass) !important;
@@ -77,8 +112,97 @@
     box-shadow: none !important;
 }
 
+/* Tables — the white slab in the screenshot */
+.fi-ta-ctn,
+.fi-ta-content-ctn,
+.fi-ta-empty-state,
+.fi-section,
+.fi-wi-stats-overview-stat,
+.fi-wi-widget,
+.fi-modal-window {
+    background: var(--gunmetal-2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 2px !important;
+    box-shadow: none !important;
+    color: var(--ink) !important;
+}
+
+.fi-ta-header-toolbar,
+.fi-ta-header-ctn,
+.fi-ta-footer,
+.fi-pagination,
+.fi-section-header,
+.fi-section-content-ctn {
+    background: transparent !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.fi-ta-table,
+.fi-ta-table thead,
+.fi-ta-table tbody,
+.fi-ta-table tr,
+.fi-ta-table th,
+.fi-ta-table td {
+    background: transparent !important;
+    color: var(--ink) !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.fi-ta-table thead th {
+    color: var(--slate) !important;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+.fi-ta-row:hover td,
+.fi-ta-record:hover td {
+    background: rgba(217, 174, 82, 0.06) !important;
+}
+
+.fi-ta-empty-state-heading,
+.fi-ta-empty-state-description {
+    color: var(--slate) !important;
+}
+
+/* Inputs */
+.fi-input-wrp,
+.fi-select-wrp,
+.fi-textarea-wrp,
+.fi-fo-file-upload,
+.fi-checkbox-input,
+.fi-radio {
+    background: rgba(0, 0, 0, 0.22) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--ink) !important;
+}
+
+.fi-input,
+.fi-select-input,
+.fi-textarea,
+.fi-input-wrp input,
+.fi-input-wrp textarea,
+.fi-input-wrp select {
+    color: var(--ink) !important;
+    background: transparent !important;
+}
+
+.fi-input-wrp:focus-within,
+.fi-select-wrp:focus-within,
+.fi-textarea-wrp:focus-within {
+    border-color: var(--brass) !important;
+    box-shadow: 0 0 0 1px rgba(217, 174, 82, 0.35) !important;
+}
+
+.fi-fo-field-wrp-label,
+.fi-fo-field-wrp-hint,
+.fi-fo-field-wrp-helper-text {
+    color: var(--slate) !important;
+}
+
 .desk-hero {
-    background: #1b2224;
+    background: var(--gunmetal-2);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-top: 2px solid var(--brass);
     padding: 1.75rem 1.5rem;
@@ -99,7 +223,7 @@
     font-size: clamp(1.8rem, 4vw, 2.6rem);
     text-transform: uppercase;
     letter-spacing: 0.02em;
-    color: #eef0ee;
+    color: var(--ink);
     margin: 0 0 0.5rem;
     line-height: 1.05;
 }
@@ -119,7 +243,7 @@
 
 .desk-card {
     display: block;
-    background: #1b2224;
+    background: var(--gunmetal-2);
     border: 1px solid rgba(255, 255, 255, 0.08);
     padding: 1.25rem 1.15rem;
     text-decoration: none;
@@ -146,7 +270,7 @@
     text-transform: uppercase;
     font-size: 1.35rem;
     margin: 0 0 0.4rem;
-    color: #eef0ee;
+    color: var(--ink);
 }
 
 .desk-card p {
