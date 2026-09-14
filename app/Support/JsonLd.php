@@ -59,6 +59,7 @@ class JsonLd
             'url' => $organisation->isFederationListing()
                 ? route('federations.show', $organisation->slug)
                 : route('clubs.show', $organisation->slug),
+            'logo' => $organisation->logoUrl(),
             'email' => $organisation->email,
             'telephone' => $organisation->phone,
             'sameAs' => array_values(array_filter([

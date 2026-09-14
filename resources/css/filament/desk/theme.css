@@ -1,0 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/Desk/**/*';
+@source '../../../../resources/views/filament/desk/**/*';
+
+/* Match the public shootingsports.co.za palette inside the desk panel. */
+.fi-body,
+.fi-simple-layout,
+.fi-main,
+.fi-sidebar {
+    --gunmetal: #101516;
+    --gunmetal-2: #1b2224;
+    --brass: #d9ae52;
+    --brass-dk: #e4c079;
+    --slate: #8d9793;
+}
+
+.fi-body {
+    font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    background: var(--gunmetal) !important;
+}
+
+.fi-sidebar {
+    background: #0c1112 !important;
+    border-inline-end: 1px solid rgba(217, 174, 82, 0.18) !important;
+}
+
+.fi-sidebar-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.fi-logo {
+    font-family: 'Saira Condensed', sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    color: #eef0ee !important;
+}
+
+.fi-topbar {
+    background: rgba(16, 21, 22, 0.92) !important;
+    border-bottom: 1px solid rgba(217, 174, 82, 0.2) !important;
+    backdrop-filter: blur(8px);
+}
+
+.fi-header-heading,
+.fi-section-header-heading {
+    font-family: 'Saira Condensed', sans-serif !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
+}
+
+.fi-btn-primary {
+    background: var(--brass) !important;
+    color: #1a1405 !important;
+    font-family: 'Saira Condensed', sans-serif !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+    font-weight: 700 !important;
+}
+
+.fi-btn-primary:hover {
+    background: var(--brass-dk) !important;
+}
+
+.fi-simple-main {
+    background: radial-gradient(ellipse at top, #1b2224 0%, #101516 55%) !important;
+}
+
+.fi-simple-card {
+    background: #1b2224 !important;
+    border: 1px solid rgba(217, 174, 82, 0.28) !important;
+    border-top-width: 2px !important;
+    border-top-color: var(--brass) !important;
+    border-radius: 2px !important;
+    box-shadow: none !important;
+}
+
+.desk-hero {
+    background: #1b2224;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 2px solid var(--brass);
+    padding: 1.75rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.desk-hero .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 0 0 0.5rem;
+}
+
+.desk-hero h1 {
+    font-family: 'Saira Condensed', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #eef0ee;
+    margin: 0 0 0.5rem;
+    line-height: 1.05;
+}
+
+.desk-hero p {
+    color: var(--slate);
+    max-width: 48ch;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.desk-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.desk-card {
+    display: block;
+    background: #1b2224;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.25rem 1.15rem;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.desk-card:hover {
+    border-color: var(--brass);
+    transform: translateY(-1px);
+}
+
+.desk-card .kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 0 0 0.55rem;
+}
+
+.desk-card h2 {
+    font-family: 'Saira Condensed', sans-serif;
+    text-transform: uppercase;
+    font-size: 1.35rem;
+    margin: 0 0 0.4rem;
+    color: #eef0ee;
+}
+
+.desk-card p {
+    margin: 0;
+    color: var(--slate);
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.desk-note {
+    margin-top: 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--slate);
+}

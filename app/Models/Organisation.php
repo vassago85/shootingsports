@@ -18,12 +18,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'slug', 'name', 'short_name', 'type', 'parent_id', 'province', 'town',
     'email', 'phone', 'website_url', 'facebook_url', 'description',
-    'accredited', 'visitors_welcome', 'status', 'verification_state',
-    'last_verified_at', 'verification_token', 'claimed_by', 'source',
+    'logo_path', 'accredited', 'visitors_welcome', 'status',
+    'verification_state', 'last_verified_at', 'verification_token',
+    'claimed_by', 'source',
 ])]
 class Organisation extends Model
 {
@@ -89,7 +91,11 @@ class Organisation extends Model
 
     public function scopeClubs($query)
     {
-        return $query->whereIn('type', [OrganisationType::Club, OrganisationType::Association]);
+        return $query->whereIn('type', [
+            OrganisationType::Club,
+            OrganisationType::Association,
+            OrganisationType::Series,
+        ]);
     }
 
     public function scopeFederations($query)
@@ -100,5 +106,18 @@ class Organisation extends Model
     public function isFederationListing(): bool
     {
         return in_array($this->type, [OrganisationType::Federation, OrganisationType::ProvincialBody], true);
+    }
+
+    /**
+     * Public URL of the uploaded logo, or null if none was set. Files are
+     * stored on the "media" disk (bind-mounted to the extra HDD in production).
+     */
+    public function logoUrl(): ?string
+    {
+        if (! filled($this->logo_path)) {
+            return null;
+        }
+
+        return Storage::disk('media')->url($this->logo_path);
     }
 }

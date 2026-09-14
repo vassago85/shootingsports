@@ -20,7 +20,8 @@ class OrganisationPolicy
 
     public function create(User $user): bool
     {
-        return $user->is_staff;
+        // Staff or any registered match director can create a draft listing.
+        return true;
     }
 
     public function update(User $user, Organisation $organisation): bool
@@ -30,12 +31,23 @@ class OrganisationPolicy
         }
 
         return $user->holdsOrganisationRole($organisation, [
+            OrganisationUserRole::MatchDirector,
             OrganisationUserRole::Admin,
             OrganisationUserRole::Editor,
         ]);
     }
 
     public function delete(User $user, Organisation $organisation): bool
+    {
+        return $user->is_staff;
+    }
+
+    public function restore(User $user, Organisation $organisation): bool
+    {
+        return $user->is_staff;
+    }
+
+    public function forceDelete(User $user, Organisation $organisation): bool
     {
         return $user->is_staff;
     }

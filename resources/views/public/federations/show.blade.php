@@ -7,9 +7,16 @@
         <section class="page-hero">
             <div class="wrap">
                 <p class="label">{{ $organisation->type->getLabel() }}</p>
-                <h1>{{ $organisation->name }}</h1>
-                <p>{{ $organisation->description }}</p>
-                <x-verification-badge :listing="$organisation" />
+                <div class="hero-row">
+                    @if ($organisation->logoUrl())
+                        <img class="hero-logo" src="{{ $organisation->logoUrl() }}" alt="{{ $organisation->name }} logo" width="96" height="96">
+                    @endif
+                    <div>
+                        <h1>{{ $organisation->name }}</h1>
+                        <p>{{ $organisation->description }}</p>
+                        <x-verification-badge :listing="$organisation" />
+                    </div>
+                </div>
             </div>
         </section>
         <section class="block">

@@ -52,7 +52,7 @@
                 <a href="{{ route('claim') }}">For Clubs</a>
                 <a href="{{ route('advertise') }}">Advertise</a>
             </nav>
-            <a class="btn" href="{{ route('claim') }}">List your club</a>
+            <a class="btn" href="{{ url('/desk/register') }}">List your club</a>
             <button class="hamburger" id="burger" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">Menu</button>
         </div>
         <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
@@ -62,6 +62,7 @@
             <a href="{{ route('ranges.index') }}">Ranges</a>
             <a href="{{ route('suppliers.index') }}">Suppliers</a>
             <a href="{{ route('claim') }}">For Clubs</a>
+            <a href="{{ url('/desk/login') }}">Director login</a>
             <a href="{{ route('advertise') }}">Advertise</a>
         </nav>
     </header>

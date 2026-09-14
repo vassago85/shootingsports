@@ -9,6 +9,7 @@ use App\Models\Provider;
 use App\Models\User;
 use App\Models\Venue;
 use App\Policies\EventPolicy;
+use App\Policies\OrganisationPolicy;
 use App\Support\PublicCache;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -42,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         Gate::policy(Event::class, EventPolicy::class);
+        Gate::policy(Organisation::class, OrganisationPolicy::class);
 
         $bumpPublic = static fn () => PublicCache::bump();
 

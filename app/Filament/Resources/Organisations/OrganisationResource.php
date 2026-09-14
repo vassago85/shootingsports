@@ -19,20 +19,25 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Str;
 use UnitEnum;
 
 class OrganisationResource extends Resource
@@ -51,49 +56,87 @@ class OrganisationResource extends Resource
     {
         return $schema
             ->components([
-                TextInput::make('slug')
-                    ->required(),
-                TextInput::make('name')
-                    ->required(),
-                TextInput::make('short_name'),
-                Select::make('type')
-                    ->options(OrganisationType::class)
-                    ->required(),
-                Select::make('parent_id')
-                    ->relationship('parent', 'name'),
-                Select::make('province')
-                    ->options(Province::class),
-                TextInput::make('town'),
-                TextInput::make('email')
-                    ->label('Email address')
-                    ->email(),
-                TextInput::make('phone')
-                    ->tel(),
-                TextInput::make('website_url')
-                    ->url(),
-                TextInput::make('facebook_url')
-                    ->url(),
-                Textarea::make('description')
-                    ->columnSpanFull(),
-                Toggle::make('accredited')
-                    ->required(),
-                Toggle::make('visitors_welcome')
-                    ->required(),
-                Select::make('status')
-                    ->options(ListingStatus::class)
-                    ->default('pending')
-                    ->required(),
-                Select::make('verification_state')
-                    ->options(VerificationState::class)
-                    ->default('unconfirmed')
-                    ->required(),
-                DateTimePicker::make('last_verified_at'),
-                TextInput::make('claimed_by')
-                    ->numeric(),
-                Select::make('source')
-                    ->options(ListingSource::class)
-                    ->default('staff')
-                    ->required(),
+                Section::make('Listing')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('name')
+                            ->required()
+                            ->columnSpanFull()
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (string $operation, ?string $state, Set $set): void {
+                                if ($operation === 'create' && filled($state)) {
+                                    $set('slug', Str::slug($state));
+                                }
+                            }),
+                        TextInput::make('slug')
+                            ->columnSpanFull()
+                            ->unique(ignoreRecord: true)
+                            ->rules(['alpha_dash']),
+                        TextInput::make('short_name'),
+                        Select::make('type')
+                            ->options(OrganisationType::class)
+                            ->required(),
+                        Select::make('parent_id')
+                            ->relationship('parent', 'name')
+                            ->searchable()
+                            ->preload(),
+                        Select::make('province')
+                            ->options(Province::class),
+                        TextInput::make('town'),
+                        Select::make('status')
+                            ->options(ListingStatus::class)
+                            ->default(ListingStatus::Pending->value)
+                            ->required(),
+                        Select::make('verification_state')
+                            ->options(VerificationState::class)
+                            ->default(VerificationState::Unconfirmed->value)
+                            ->required(),
+                        Toggle::make('accredited')
+                            ->inline(false)
+                            ->default(false),
+                        Toggle::make('visitors_welcome')
+                            ->inline(false)
+                            ->default(false),
+                        Textarea::make('description')
+                            ->rows(4)
+                            ->columnSpanFull(),
+                    ]),
+
+                Section::make('Contact')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('email')->email(),
+                        TextInput::make('phone')->tel(),
+                        TextInput::make('website_url')->url()->columnSpanFull(),
+                        TextInput::make('facebook_url')->url()->columnSpanFull(),
+                    ]),
+
+                Section::make('Logo')
+                    ->schema([
+                        FileUpload::make('logo_path')
+                            ->label('Logo')
+                            ->disk('media')
+                            ->directory('organisation-logos')
+                            ->visibility('public')
+                            ->image()
+                            ->imageEditor()
+                            ->imageResizeMode('cover')
+                            ->imageResizeTargetWidth(512)
+                            ->imageResizeTargetHeight(512)
+                            ->maxSize(3072)
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp']),
+                    ]),
+
+                Section::make('Staff meta')
+                    ->columns(2)
+                    ->collapsed()
+                    ->schema([
+                        Select::make('source')
+                            ->options(ListingSource::class)
+                            ->default(ListingSource::Staff->value)
+                            ->required(),
+                        DateTimePicker::make('last_verified_at')->seconds(false),
+                    ]),
             ]);
     }
 
@@ -102,66 +145,25 @@ class OrganisationResource extends Resource
         return $table
             ->recordTitleAttribute('name')
             ->columns([
-                TextColumn::make('slug')
-                    ->searchable(),
-                TextColumn::make('name')
-                    ->searchable(),
-                TextColumn::make('short_name')
-                    ->searchable(),
-                TextColumn::make('type')
-                    ->badge()
-                    ->searchable(),
-                TextColumn::make('parent.name')
-                    ->searchable(),
-                TextColumn::make('province')
-                    ->badge()
-                    ->searchable(),
-                TextColumn::make('town')
-                    ->searchable(),
-                TextColumn::make('email')
-                    ->label('Email address')
-                    ->searchable(),
-                TextColumn::make('phone')
-                    ->searchable(),
-                TextColumn::make('website_url')
-                    ->searchable(),
-                TextColumn::make('facebook_url')
-                    ->searchable(),
-                IconColumn::make('accredited')
-                    ->boolean(),
-                IconColumn::make('visitors_welcome')
-                    ->boolean(),
-                TextColumn::make('status')
-                    ->badge()
-                    ->searchable(),
-                TextColumn::make('verification_state')
-                    ->badge()
-                    ->searchable(),
-                TextColumn::make('last_verified_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('claimed_by')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('source')
-                    ->badge()
-                    ->searchable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                ImageColumn::make('logo_path')
+                    ->label('')
+                    ->disk('media')
+                    ->circular()
+                    ->height(32),
+                TextColumn::make('name')->searchable()->sortable()->wrap(),
+                TextColumn::make('type')->badge()->sortable(),
+                TextColumn::make('province')->badge()->toggleable(),
+                TextColumn::make('town')->toggleable(),
+                TextColumn::make('status')->badge()->sortable(),
+                TextColumn::make('verification_state')->badge()->toggleable(),
+                IconColumn::make('accredited')->boolean()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('source')->badge()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('verification_state')->options(VerificationState::class),
                 SelectFilter::make('status')->options(ListingStatus::class),
+                SelectFilter::make('type')->options(OrganisationType::class),
                 SelectFilter::make('province')->options(Province::class),
                 TrashedFilter::make(),
             ])
@@ -176,13 +178,6 @@ class OrganisationResource extends Resource
                     RestoreBulkAction::make(),
                 ]),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array

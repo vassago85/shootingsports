@@ -250,6 +250,10 @@ section.block { padding: 72px 0; }
 .page-hero { background: var(--gunmetal); color: #eef0ee; padding: 48px 0 40px; }
 .page-hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); text-transform: uppercase; }
 .page-hero p { color: #b9c0bd; max-width: 58ch; }
+.hero-row { display: flex; gap: 20px; align-items: flex-start; }
+.hero-logo { width: 96px; height: 96px; object-fit: cover; border: 1px solid rgba(217,174,82,.35); background: #1b2224; flex-shrink: 0; }
+.listing-row { display: flex; gap: 16px; align-items: flex-start; }
+.listing-logo { width: 48px; height: 48px; object-fit: cover; border: 1px solid var(--rule); flex-shrink: 0; background: var(--surface-2); }
 
 .cta-band { position: relative; overflow: hidden; background: var(--gunmetal); color: #eef0ee; }
 .cta-in { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 64px 24px; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; align-items: center; }

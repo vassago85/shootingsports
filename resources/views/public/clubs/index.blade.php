@@ -17,9 +17,16 @@
                 </div>
                 @forelse ($clubs as $club)
                     <a class="listing" href="{{ route('clubs.show', $club->slug) }}">
-                        <h3>{{ $club->name }}</h3>
-                        <p class="meta">{{ $club->type->getLabel() }} · {{ $club->province?->getLabel() }}@if ($club->town) · {{ $club->town }}@endif</p>
-                        <x-verification-badge :listing="$club" />
+                        <div class="listing-row">
+                            @if ($club->logoUrl())
+                                <img class="listing-logo" src="{{ $club->logoUrl() }}" alt="" width="48" height="48">
+                            @endif
+                            <div>
+                                <h3>{{ $club->name }}</h3>
+                                <p class="meta">{{ $club->type->getLabel() }} · {{ $club->province?->getLabel() }}@if ($club->town) · {{ $club->town }}@endif</p>
+                                <x-verification-badge :listing="$club" />
+                            </div>
+                        </div>
                     </a>
                 @empty
                     <p class="empty">No clubs listed in this province yet.</p>

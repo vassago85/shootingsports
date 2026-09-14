@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\ListingSource;
+use App\Enums\ListingStatus;
 use App\Models\Concerns\HasDisciplines;
 use App\Models\Concerns\HasSlug;
 use Database\Factories\EventFactory;
@@ -129,7 +130,12 @@ class Event extends Model
                 EventStatus::Draft,
                 EventStatus::Cancelled,
                 EventStatus::Completed,
-            ]);
+            ])
+            // Draft clubs/series stay off the public calendar until staff publish them.
+            ->whereHas(
+                'hostOrganisation',
+                fn (Builder $org) => $org->where('status', ListingStatus::Published),
+            );
     }
 
     public function scopePublished(Builder $query): Builder
