@@ -6,15 +6,18 @@ beforeEach(function () {
     $this->withoutVite();
 });
 
+use App\Enums\EventStatus;
 use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
 use App\Enums\ProviderCategory;
+use App\Enums\ProviderTier;
 use App\Enums\Province;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\Venue;
+use Illuminate\Support\Facades\Route;
 
 it('renders the home page instead of the Laravel welcome screen', function () {
     $this->get(route('home'))
@@ -85,6 +88,50 @@ it('shows club, range, supplier and match pages by slug', function () {
     $this->get(route('suppliers.show', $provider->slug))->assertOk()->assertSee('Ridgeline Rifleworks');
 });
 
+it('binds public listing routes to the slug column', function () {
+    $routes = Route::getRoutes();
+
+    expect($routes->getByName('matches.show')->bindingFields())->toBe(['event' => 'slug'])
+        ->and($routes->getByName('clubs.show')->bindingFields())->toBe(['organisation' => 'slug'])
+        ->and($routes->getByName('federations.show')->bindingFields())->toBe(['organisation' => 'slug'])
+        ->and($routes->getByName('ranges.show')->bindingFields())->toBe(['venue' => 'slug'])
+        ->and($routes->getByName('suppliers.show')->bindingFields())->toBe(['provider' => 'slug']);
+});
+
+it('renders a federation-hosted match with entry url and fees', function () {
+    $federation = Organisation::factory()->create([
+        'slug' => 'saprf-test',
+        'name' => 'South African Precision Rifle Federation',
+        'type' => OrganisationType::Federation,
+        'status' => ListingStatus::Published,
+        'logo_path' => 'organisation-logos/saprf.png',
+        'website_url' => 'https://saprf.co.za',
+    ]);
+    $venue = Venue::factory()->create([
+        'slug' => 'balmoral-farm-test',
+        'name' => 'Balmoral Farm',
+        'status' => ListingStatus::Published,
+    ]);
+    $event = Event::factory()->create([
+        'slug' => 'saprf-pr22-mp-provincial-test',
+        'title' => 'Rimfire PR22 MP Provincial',
+        'host_organisation_id' => $federation->id,
+        'venue_id' => $venue->id,
+        'status' => EventStatus::EntriesOpen,
+        'entry_url' => 'https://saprf.co.za/events/111',
+        'entry_fee_cents' => 90000,
+        'member_fee_cents' => 70000,
+    ]);
+
+    $this->get(route('matches.show', $event->slug))
+        ->assertOk()
+        ->assertSee('Rimfire PR22 MP Provincial')
+        ->assertSee('South African Precision Rifle Federation')
+        ->assertSee('Host federation')
+        ->assertSee('Entry details')
+        ->assertDontSee('Host club');
+});
+
 it('returns 404 for draft events and unpublished listings', function () {
     $draft = Event::factory()->draft()->create(['slug' => 'secret-match']);
     $archived = Organisation::factory()->create([
@@ -133,7 +180,7 @@ it('lists ranges and shows enquire CTAs without public emails', function () {
         'slug' => 'smoke-range',
         'name' => 'Smoke Test Range',
         'status' => ListingStatus::Published,
-        'tier' => \App\Enums\ProviderTier::Featured,
+        'tier' => ProviderTier::Featured,
     ]);
 
     $this->get(route('ranges.index'))

@@ -28,8 +28,12 @@
                     <div class="prose">{!! nl2br(e($event->description)) !!}</div>
                 @endif
                 <p style="margin-top:22px">
-                    @if ($event->hostOrganisation && ! $event->hostOrganisation->isFederationListing())
-                        <a class="btn ghost" href="{{ route('clubs.show', $event->hostOrganisation->slug) }}">Host club</a>
+                    @if ($event->hostOrganisation)
+                        @if ($event->hostOrganisation->isFederationListing())
+                            <a class="btn ghost" href="{{ route('federations.show', $event->hostOrganisation->slug) }}">Host federation</a>
+                        @else
+                            <a class="btn ghost" href="{{ route('clubs.show', $event->hostOrganisation->slug) }}">Host club</a>
+                        @endif
                     @endif
                     @if ($event->venue)
                         <a class="btn ghost" href="{{ route('ranges.show', $event->venue->slug) }}">Range</a>

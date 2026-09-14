@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Discipline;
+use App\Models\Enquiry;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Provider;
@@ -14,6 +15,7 @@ use App\Support\MailSettings;
 use App\Support\PublicCache;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -37,13 +39,33 @@ class AppServiceProvider extends ServiceProvider
 
         MailSettings::apply();
 
+        // Binders live here, not in routes/web.php: `route:cache` (used in
+        // the Docker entrypoint) never loads web.php, so slug lookups would
+        // fall back to implicit id binding and Postgres 500s on the slug.
+        Route::bind('discipline', fn (string $value): Discipline => Discipline::query()
+            ->where('slug', $value)
+            ->where('is_published', true)
+            ->firstOrFail());
+        Route::bind('event', fn (string $value): Event => Event::query()
+            ->where('slug', $value)
+            ->firstOrFail());
+        Route::bind('organisation', fn (string $value): Organisation => Organisation::query()
+            ->where('slug', $value)
+            ->firstOrFail());
+        Route::bind('venue', fn (string $value): Venue => Venue::query()
+            ->where('slug', $value)
+            ->firstOrFail());
+        Route::bind('provider', fn (string $value): Provider => Provider::query()
+            ->where('slug', $value)
+            ->firstOrFail());
+
         Relation::enforceMorphMap([
             'organisation' => Organisation::class,
             'venue' => Venue::class,
             'event' => Event::class,
             'provider' => Provider::class,
             'user' => User::class,
-            'enquiry' => \App\Models\Enquiry::class,
+            'enquiry' => Enquiry::class,
         ]);
 
         Gate::policy(Event::class, EventPolicy::class);
