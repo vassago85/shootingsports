@@ -6,18 +6,22 @@ use Illuminate\Support\Facades\Cache;
 
 class PublicCache
 {
-    public static function version(): int
+    /**
+     * @var list<string>
+     */
+    private const KEYS = [
+        'stats',
+    ];
+
+    public static function key(string $name): string
     {
-        return (int) Cache::get('public.cache_version', 1);
+        return 'public.'.$name;
     }
 
     public static function bump(): void
     {
-        Cache::forever('public.cache_version', self::version() + 1);
-    }
-
-    public static function key(string $name): string
-    {
-        return 'public.v'.self::version().'.'.$name;
+        foreach (self::KEYS as $name) {
+            Cache::forget(self::key($name));
+        }
     }
 }

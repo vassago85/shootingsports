@@ -7,8 +7,6 @@ use App\Models\Discipline;
 use App\Models\Organisation;
 use App\Models\Venue;
 use App\Queries\PublicEventQuery;
-use App\Support\PublicCache;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class DisciplineController extends Controller
@@ -41,13 +39,7 @@ class DisciplineController extends Controller
 
         abort_if($province !== null && $provinceEnum === null, 404);
 
-        $payload = Cache::remember(
-            PublicCache::key('discipline.'.$discipline->slug.'.'.($provinceEnum?->value ?? 'all')),
-            600,
-            fn (): array => $this->pageData($discipline, $provinceEnum),
-        );
-
-        return view('public.disciplines.show', $payload);
+        return view('public.disciplines.show', $this->pageData($discipline, $provinceEnum));
     }
 
     /**

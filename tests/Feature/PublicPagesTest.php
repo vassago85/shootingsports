@@ -17,6 +17,8 @@ use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\Venue;
+use App\Support\PublicCache;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
 it('renders the home page instead of the Laravel welcome screen', function () {
@@ -77,6 +79,23 @@ it('shows a published discipline page and noindexes thin province slices', funct
         ->assertOk()
         ->assertSee('in Gauteng')
         ->assertSee('<meta name="robots" content="noindex,follow">', false);
+
+    $this->get(route('disciplines.show', $discipline->slug))
+        ->assertOk()
+        ->assertSee('Precision Rifle');
+
+    expect(Cache::get(PublicCache::key('discipline.precision-rifle.all')))->toBeNull();
+});
+
+it('invalidates public stats without leaking versioned cache keys', function () {
+    Cache::put(PublicCache::key('stats'), ['clubs' => 9], 600);
+    Cache::put('public.v1.discipline.precision-rifle.all', ['stale' => true], 600);
+
+    PublicCache::bump();
+
+    expect(Cache::get(PublicCache::key('stats')))->toBeNull()
+        ->and(PublicCache::key('stats'))->toBe('public.stats')
+        ->and(PublicCache::key('stats'))->not->toContain('.v');
 });
 
 it('shows club, range, supplier and match pages by slug', function () {
