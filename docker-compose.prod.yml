@@ -1,6 +1,6 @@
 # Production compose for shootingsports.co.za
 # Install path on server: /opt/shootingsports
-# Reverse proxied (Nginx Proxy Manager) to 127.0.0.1:8095
+# Reverse proxied (Nginx Proxy Manager) to 127.0.0.1:8099
 #
 # Pictures live on the 4TB volume. Create the directory once:
 #   sudo mkdir -p /mnt/storage/shootingsports/media
@@ -25,7 +25,7 @@ services:
     env_file:
       - .env
     ports:
-      - "8095:80"
+      - "8099:80"
     volumes:
       - shootingsports-storage:/var/www/html/storage
       - ${MEDIA_HOST_PATH:-/mnt/storage/shootingsports/media}:/var/www/html/storage/app/media
