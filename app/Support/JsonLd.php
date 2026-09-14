@@ -60,8 +60,6 @@ class JsonLd
                 ? route('federations.show', $organisation->slug)
                 : route('clubs.show', $organisation->slug),
             'logo' => $organisation->logoUrl(),
-            'email' => $organisation->email,
-            'telephone' => $organisation->phone,
             'sameAs' => array_values(array_filter([
                 $organisation->website_url,
                 $organisation->facebook_url,
@@ -110,8 +108,6 @@ class JsonLd
             '@type' => 'LocalBusiness',
             'name' => $provider->name,
             'url' => $provider->website_url ?: url()->current(),
-            'email' => $provider->email,
-            'telephone' => $provider->phone,
             'description' => $provider->description,
             'address' => array_filter([
                 '@type' => 'PostalAddress',

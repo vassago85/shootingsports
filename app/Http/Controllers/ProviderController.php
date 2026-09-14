@@ -15,7 +15,7 @@ class ProviderController extends Controller
     {
         $providers = Provider::query()
             ->published()
-            ->orderBy('name')
+            ->orderByTier()
             ->get()
             ->groupBy(fn (Provider $provider) => $provider->category->value);
 
@@ -37,7 +37,7 @@ class ProviderController extends Controller
             ->published()
             ->where('category', $categoryEnum)
             ->when($provinceEnum, fn ($q) => $q->where('province', $provinceEnum))
-            ->orderBy('name')
+            ->orderByTier()
             ->get();
 
         return view('public.suppliers.category', [

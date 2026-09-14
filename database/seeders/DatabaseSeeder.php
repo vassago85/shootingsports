@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DisciplineSeeder::class,
             FlagSeeder::class,
+            AdSlotSeeder::class,
             // Staff account for the Filament admin (paul@charsley.co.za).
             // Idempotent, runs in every environment so production also gets a
             // first-login account after `php artisan migrate --seed`.

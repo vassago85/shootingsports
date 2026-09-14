@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Venues;
 use App\Enums\GautengMetro;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
+use App\Enums\ProviderTier;
 use App\Enums\Province;
 use App\Enums\VenueAccess;
 use App\Enums\VerificationState;
@@ -81,6 +82,11 @@ class VenueResource extends Resource
                     ->columnSpanFull(),
                 Textarea::make('notes')
                     ->columnSpanFull(),
+                Select::make('tier')
+                    ->options(ProviderTier::class)
+                    ->default('free')
+                    ->required()
+                    ->helperText('Paid listing for ranges only — clubs stay free.'),
                 Select::make('status')
                     ->options(ListingStatus::class)
                     ->default('pending')
@@ -133,6 +139,9 @@ class VenueResource extends Resource
                     ->searchable(),
                 TextColumn::make('day_fee_cents')
                     ->numeric()
+                    ->sortable(),
+                TextColumn::make('tier')
+                    ->badge()
                     ->sortable(),
                 TextColumn::make('status')
                     ->badge()

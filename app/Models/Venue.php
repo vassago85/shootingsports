@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\GautengMetro;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
+use App\Enums\ProviderTier;
 use App\Enums\Province;
 use App\Enums\VenueAccess;
 use App\Enums\VerificationState;
@@ -22,7 +23,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'slug', 'name', 'province', 'town', 'metro', 'lat', 'lng', 'address',
     'max_distance_m', 'bay_count', 'access', 'day_fee_cents', 'facilities',
-    'notes', 'status', 'verification_state', 'last_verified_at',
+    'notes', 'tier', 'status', 'verification_state', 'last_verified_at',
     'verification_token', 'claimed_by', 'source',
 ])]
 class Venue extends Model
@@ -42,6 +43,7 @@ class Venue extends Model
             'access' => VenueAccess::class,
             'day_fee_cents' => 'integer',
             'facilities' => 'array',
+            'tier' => ProviderTier::class,
             'status' => ListingStatus::class,
             'verification_state' => VerificationState::class,
             'last_verified_at' => 'immutable_datetime',
@@ -62,5 +64,12 @@ class Venue extends Model
     public function scopePublished($query)
     {
         return $query->where('status', ListingStatus::Published);
+    }
+
+    public function scopeOrderByTier($query)
+    {
+        return $query
+            ->orderByRaw("case tier when 'featured' then 0 when 'verified' then 1 else 2 end")
+            ->orderBy('name');
     }
 }

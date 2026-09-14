@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Venue;
 use App\Policies\EventPolicy;
 use App\Policies\OrganisationPolicy;
+use App\Support\MailSettings;
 use App\Support\PublicCache;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -34,12 +35,15 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        MailSettings::apply();
+
         Relation::enforceMorphMap([
             'organisation' => Organisation::class,
             'venue' => Venue::class,
             'event' => Event::class,
             'provider' => Provider::class,
             'user' => User::class,
+            'enquiry' => \App\Models\Enquiry::class,
         ]);
 
         Gate::policy(Event::class, EventPolicy::class);

@@ -12,16 +12,19 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class PlacementResource extends Resource
 {
@@ -29,77 +32,88 @@ class PlacementResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMegaphone;
 
-    protected static \UnitEnum|string|null $navigationGroup = 'Advertising';
+    protected static string|UnitEnum|null $navigationGroup = 'Advertising';
+
+    protected static ?int $navigationSort = 20;
+
+    protected static ?string $navigationLabel = 'Placements';
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Select::make('provider_id')
-                    ->relationship('provider', 'name')
-                    ->required(),
-                Select::make('slot')
-                    ->options(PlacementSlot::class)
-                    ->required(),
-                Textarea::make('targeting')
-                    ->columnSpanFull(),
-                DatePicker::make('starts_on')
-                    ->required(),
-                DatePicker::make('ends_on')
-                    ->required(),
-                TextInput::make('rate_cents')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('impressions')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
-                TextInput::make('clicks')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
-                Toggle::make('is_active')
-                    ->required(),
+                Section::make('Booking')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('provider_id')
+                            ->relationship('provider', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                        Select::make('ad_slot_id')
+                            ->label('Ad slot')
+                            ->relationship(
+                                name: 'adSlot',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn ($query) => $query->where('is_active', true)->orderBy('page'),
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->helperText('Catalog entry sets page + list price. Slot below must match.'),
+                        Select::make('slot')
+                            ->options(PlacementSlot::class)
+                            ->required(),
+                        DatePicker::make('starts_on')->required(),
+                        DatePicker::make('ends_on')->required(),
+                        TextInput::make('rate_cents')
+                            ->label('Invoiced rate (cents)')
+                            ->numeric()
+                            ->required()
+                            ->default(0),
+                        Toggle::make('is_active')->default(true)->required(),
+                    ]),
+                Section::make('Creative')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('headline')->maxLength(120)->columnSpanFull(),
+                        Textarea::make('body')->rows(3)->columnSpanFull(),
+                        FileUpload::make('image_path')
+                            ->label('Image')
+                            ->disk('media')
+                            ->directory('placements')
+                            ->image()
+                            ->maxSize(2048),
+                        TextInput::make('click_url')
+                            ->label('Click URL')
+                            ->url()
+                            ->maxLength(500),
+                    ]),
+                Section::make('Counters')
+                    ->columns(2)
+                    ->collapsed()
+                    ->schema([
+                        TextInput::make('impressions')->numeric()->default(0)->required(),
+                        TextInput::make('clicks')->numeric()->default(0)->required(),
+                    ]),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('starts_on', 'desc')
             ->columns([
-                TextColumn::make('provider.name')
-                    ->searchable(),
-                TextColumn::make('slot')
-                    ->badge()
-                    ->searchable(),
-                TextColumn::make('starts_on')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('ends_on')
-                    ->date()
-                    ->sortable(),
+                TextColumn::make('provider.name')->searchable()->sortable(),
+                TextColumn::make('adSlot.name')->label('Slot catalog')->toggleable(),
+                TextColumn::make('slot')->badge(),
+                TextColumn::make('headline')->limit(30)->toggleable(),
+                TextColumn::make('starts_on')->date()->sortable(),
+                TextColumn::make('ends_on')->date()->sortable(),
                 TextColumn::make('rate_cents')
-                    ->numeric()
+                    ->label('Rate')
+                    ->formatStateUsing(fn (?int $state): string => 'R '.number_format(($state ?? 0) / 100, 0, '.', ' '))
                     ->sortable(),
-                TextColumn::make('impressions')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('clicks')
-                    ->numeric()
-                    ->sortable(),
-                IconColumn::make('is_active')
-                    ->boolean(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                //
+                IconColumn::make('is_active')->boolean(),
             ])
             ->recordActions([
                 EditAction::make(),
@@ -109,13 +123,6 @@ class PlacementResource extends Resource
                     DeleteBulkAction::make(),
                 ]),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array

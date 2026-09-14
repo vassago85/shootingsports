@@ -9,6 +9,7 @@
         </section>
         <section class="block">
             <div class="wrap">
+                <x-ad-slot page="suppliers" placement-slot="in_feed_native" :limit="2" class="ad-rail--tight" />
                 <div class="disc-grid">
                     @foreach ($categories as $category)
                         <a class="disc" href="{{ route('suppliers.category', $category->urlSlug()) }}">

@@ -3,6 +3,7 @@
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DisciplineController;
 use App\Http\Controllers\EmbedController;
+use App\Http\Controllers\EnquiryController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IcalController;
@@ -76,7 +77,15 @@ Route::get('/embed/calendar', [EmbedController::class, 'calendar'])->name('embed
 Route::get('/embed/calendar.js', [EmbedController::class, 'script'])->name('embed.script');
 Route::get('/embed', [StaticPageController::class, 'embedDocs'])->name('embed.docs');
 
-Route::get('/advertise', [StaticPageController::class, 'advertise'])->name('advertise');
+Route::get('/advertise', [EnquiryController::class, 'advertise'])->name('advertise');
+Route::get('/contact', [EnquiryController::class, 'create'])->name('contact');
+Route::get('/enquire/{type}/{id}', [EnquiryController::class, 'listing'])
+    ->where(['type' => 'organisation|provider|venue', 'id' => '[0-9]+'])
+    ->name('enquiries.listing');
+Route::post('/enquiries', [EnquiryController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('enquiries.store');
+Route::get('/enquiries/thanks', [EnquiryController::class, 'thanks'])->name('enquiries.thanks');
 Route::get('/claim', [StaticPageController::class, 'claim'])->name('claim');
 Route::get('/privacy', [StaticPageController::class, 'privacy'])->name('privacy');
 

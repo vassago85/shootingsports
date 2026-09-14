@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\EditProfile;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -28,7 +29,7 @@ class DeskPanelProvider extends PanelProvider
             ->login()
             ->registration()
             ->passwordReset()
-            ->profile()
+            ->profile(EditProfile::class)
             ->brandName('Shooting Sports Desk')
             ->favicon(asset('favicon.svg'))
             ->viteTheme('resources/css/filament/desk/theme.css')

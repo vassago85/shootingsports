@@ -61,4 +61,11 @@ class Provider extends Model
     {
         return $query->where('status', ListingStatus::Published);
     }
+
+    public function scopeOrderByTier($query)
+    {
+        return $query
+            ->orderByRaw("case tier when 'featured' then 0 when 'verified' then 1 else 2 end")
+            ->orderBy('name');
+    }
 }

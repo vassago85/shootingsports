@@ -22,7 +22,7 @@ class VenueController extends Controller
             ->published()
             ->with('disciplines')
             ->when($province, fn ($q) => $q->where('province', $province))
-            ->orderBy('name')
+            ->orderByTier()
             ->get();
 
         return view('public.ranges.index', [

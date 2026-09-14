@@ -9,6 +9,7 @@
         </section>
         <section class="block">
             <div class="wrap">
+                <x-ad-slot page="ranges" placement-slot="in_feed_native" :limit="2" class="ad-rail--tight" />
                 <div class="filters">
                     <a href="{{ route('ranges.index') }}" class="{{ $province === null ? 'on' : '' }}">All</a>
                     @foreach ($provinces as $item)
@@ -17,8 +18,13 @@
                 </div>
                 @forelse ($venues as $venue)
                     <a class="listing" href="{{ route('ranges.show', $venue->slug) }}">
-                        <h3>{{ $venue->name }}</h3>
-                        <p class="meta">{{ $venue->town }} · {{ $venue->province?->getLabel() }}@if ($venue->max_distance_m) · {{ number_format($venue->max_distance_m) }} m@endif</p>
+                        <h3>{{ $venue->name }} <x-listing-tier-badge :listing="$venue" /></h3>
+                        <p class="meta">
+                            {{ $venue->town }} · {{ $venue->province?->getLabel() }}
+                            @if ($venue->max_distance_m)
+                                · {{ number_format($venue->max_distance_m) }} m
+                            @endif
+                        </p>
                         <x-verification-badge :listing="$venue" />
                     </a>
                 @empty

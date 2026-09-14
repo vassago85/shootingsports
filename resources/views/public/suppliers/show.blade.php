@@ -7,7 +7,7 @@
         <section class="page-hero">
             <div class="wrap">
                 <p class="label">{{ $provider->category->getLabel() }} · {{ $provider->province?->getLabel() }}</p>
-                <h1>{{ $provider->name }}</h1>
+                <h1>{{ $provider->name }} <x-listing-tier-badge :listing="$provider" /></h1>
                 <p>{{ $provider->description }}</p>
                 <x-verification-badge :listing="$provider" />
             </div>
@@ -17,16 +17,16 @@
                 <dl class="dope-rows" style="max-width:420px;padding:0">
                     <div class="r"><dt>Town</dt><dd>{{ $provider->town }}</dd></div>
                     <div class="r"><dt>Province</dt><dd>{{ $provider->province?->getLabel() }}</dd></div>
-                    @if ($provider->phone)
-                        <div class="r"><dt>Phone</dt><dd>{{ $provider->phone }}</dd></div>
-                    @endif
-                    @if ($provider->email)
-                        <div class="r"><dt>Email</dt><dd>{{ $provider->email }}</dd></div>
+                    @if ($provider->tier && $provider->tier->value !== 'free')
+                        <div class="r"><dt>Listing</dt><dd>{{ $provider->tier->getLabel() }}</dd></div>
                     @endif
                 </dl>
-                @if ($provider->website_url)
-                    <p style="margin-top:18px"><a class="label" href="{{ $provider->website_url }}" rel="noopener noreferrer" style="border-bottom:1px solid var(--brass);text-decoration:none">Website →</a></p>
-                @endif
+                <p style="margin-top:18px;display:flex;flex-wrap:wrap;gap:12px">
+                    <a class="btn" href="{{ route('enquiries.listing', ['type' => 'provider', 'id' => $provider->id]) }}">Enquire via platform</a>
+                    @if ($provider->website_url)
+                        <a class="btn ghost" href="{{ $provider->website_url }}" rel="noopener noreferrer">Website</a>
+                    @endif
+                </p>
             </div>
         </section>
     </main>

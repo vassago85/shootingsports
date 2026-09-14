@@ -128,6 +128,36 @@ it('serves split sitemaps and ical feeds', function () {
         ->assertSee('BEGIN:VCALENDAR');
 });
 
+it('lists ranges and shows enquire CTAs without public emails', function () {
+    $venue = Venue::factory()->create([
+        'slug' => 'smoke-range',
+        'name' => 'Smoke Test Range',
+        'status' => ListingStatus::Published,
+        'tier' => \App\Enums\ProviderTier::Featured,
+    ]);
+
+    $this->get(route('ranges.index'))
+        ->assertOk()
+        ->assertSee('Smoke Test Range')
+        ->assertSee('Featured');
+
+    $this->get(route('ranges.show', $venue->slug))
+        ->assertOk()
+        ->assertSee('Enquire via platform')
+        ->assertSee('Featured');
+});
+
+it('serves contact and advertise enquiry forms', function () {
+    $this->get(route('contact'))
+        ->assertOk()
+        ->assertSee('Contact Shooting Sports')
+        ->assertSee('company_website');
+
+    $this->get(route('advertise'))
+        ->assertOk()
+        ->assertSee('Advertise on the register');
+});
+
 it('hyphenates province slugs in public urls', function () {
     expect(Province::WesternCape->urlSlug())->toBe('western-cape')
         ->and(Province::fromUrlSlug('western-cape'))->toBe(Province::WesternCape)

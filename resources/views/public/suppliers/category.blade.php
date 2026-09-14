@@ -20,7 +20,7 @@
                 </div>
                 @forelse ($providers as $provider)
                     <a class="listing" href="{{ route('suppliers.show', $provider->slug) }}">
-                        <h3>{{ $provider->name }}</h3>
+                        <h3>{{ $provider->name }} <x-listing-tier-badge :listing="$provider" /></h3>
                         <p class="meta">{{ $provider->town }} · {{ $provider->province?->getLabel() }}</p>
                         <x-verification-badge :listing="$provider" />
                     </a>

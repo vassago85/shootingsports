@@ -7,7 +7,7 @@
         <section class="page-hero">
             <div class="wrap">
                 <p class="label">Range · {{ $venue->province?->getLabel() }}</p>
-                <h1>{{ $venue->name }}</h1>
+                <h1>{{ $venue->name }} <x-listing-tier-badge :listing="$venue" /></h1>
                 <p>{{ $venue->address ?: $venue->town }}</p>
                 <x-verification-badge :listing="$venue" />
             </div>
@@ -31,6 +31,9 @@
                         <div class="r"><dt>Metro</dt><dd>{{ $venue->metro->getLabel() }}</dd></div>
                     @endif
                 </dl>
+                <p style="margin:0 0 28px">
+                    <a class="btn" href="{{ route('enquiries.listing', ['type' => 'venue', 'id' => $venue->id]) }}">Enquire via platform</a>
+                </p>
                 <div class="club-tags" style="margin-bottom:28px">
                     @foreach ($venue->disciplines as $discipline)
                         <a class="tag" href="{{ route('disciplines.show', $discipline->slug) }}">{{ $discipline->name }}</a>

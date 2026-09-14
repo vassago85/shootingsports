@@ -29,6 +29,9 @@
                 @if ($organisation->website_url)
                     <p><a class="label" href="{{ $organisation->website_url }}" rel="noopener noreferrer" style="border-bottom:1px solid var(--brass);text-decoration:none">{{ parse_url($organisation->website_url, PHP_URL_HOST) }} →</a></p>
                 @endif
+                <p style="margin:14px 0 0">
+                    <a class="btn" href="{{ route('enquiries.listing', ['type' => 'organisation', 'id' => $organisation->id]) }}">Enquire via platform</a>
+                </p>
                 <div class="club-tags" style="margin:16px 0 28px">
                     @foreach ($organisation->disciplines as $discipline)
                         <a class="tag" href="{{ route('disciplines.show', $discipline->slug) }}">{{ $discipline->name }}</a>

@@ -36,6 +36,7 @@ class VenueFactory extends Factory
             'status' => ListingStatus::Published,
             'verification_state' => VerificationState::Unconfirmed,
             'source' => ListingSource::Staff,
+            'tier' => \App\Enums\ProviderTier::Free,
         ];
     }
 }

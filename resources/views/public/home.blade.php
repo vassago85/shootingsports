@@ -51,6 +51,10 @@
             </div>
         </div>
 
+        <div class="wrap" style="padding-top:28px">
+            <x-ad-slot page="home" placement-slot="leaderboard" :limit="2" />
+        </div>
+
         <section class="block" id="calendar">
             <div class="wrap">
                 <div class="sec-head">

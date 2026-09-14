@@ -12,6 +12,7 @@
         </section>
         <section class="block">
             <div class="wrap">
+                <x-ad-slot page="calendar" placement-slot="leaderboard" :limit="2" class="ad-rail--tight" />
                 <livewire:calendar-filter
                     :family="$family"
                     :novice="$novice"

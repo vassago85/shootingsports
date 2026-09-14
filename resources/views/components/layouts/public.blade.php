@@ -104,6 +104,7 @@
                 <div>
                     <h4>Participate</h4>
                     <ul>
+                        <li><a href="{{ route('contact') }}">Contact</a></li>
                         <li><a href="{{ url('/desk/login') }}">Director login</a></li>
                         <li><a href="{{ url('/desk/register') }}">Create a desk account</a></li>
                         <li><a href="{{ route('claim') }}">For clubs</a></li>
