@@ -29,7 +29,7 @@ class HomeController extends Controller
 
         $weekAhead = Event::query()
             ->upcoming()
-            ->with(['hostOrganisation', 'venue', 'disciplines'])
+            ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
             ->where('starts_at', '<=', now()->addDays(7))
             ->orderBy('starts_at')
             ->limit(4)
@@ -39,7 +39,7 @@ class HomeController extends Controller
             ? $weekAhead
             : Event::query()
                 ->upcoming()
-                ->with(['hostOrganisation', 'venue', 'disciplines'])
+                ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
                 ->orderBy('starts_at')
                 ->limit(4)
                 ->get();

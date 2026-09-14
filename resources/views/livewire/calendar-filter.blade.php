@@ -9,6 +9,17 @@
         <button type="button" wire:click="toggleNovice" aria-pressed="{{ $novice ? 'true' : 'false' }}">New shooter friendly</button>
         <button type="button" wire:click="toggleConfirmed" aria-pressed="{{ $confirmed ? 'true' : 'false' }}">Confirmed dates only</button>
     </div>
+    <div class="filters" role="group" aria-label="Filter matches by province" style="margin-top:-14px">
+        <button type="button" wire:click="clearProvinces" aria-pressed="{{ $selectedProvinces === [] ? 'true' : 'false' }}">All provinces</button>
+        @foreach ($provinces as $item)
+            <button
+                type="button"
+                wire:click="toggleProvince('{{ $item->urlSlug() }}')"
+                aria-pressed="{{ in_array($item->urlSlug(), $selectedProvinces, true) ? 'true' : 'false' }}"
+                title="{{ $item->getLabel() }}"
+            >{{ $item->getLabel() }}</button>
+        @endforeach
+    </div>
 
     @if ($events->isEmpty())
         <p class="empty">No matches in this window. Planned dates still appear on the calendar — they render as provisional.</p>

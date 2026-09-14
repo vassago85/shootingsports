@@ -14,7 +14,7 @@ class EventController extends Controller
     {
         abort_if($event->status === EventStatus::Draft, 404);
 
-        $event->load(['hostOrganisation', 'venue', 'disciplines', 'flags', 'banner']);
+        $event->load(['hostOrganisation.parent', 'venue', 'disciplines', 'flags', 'banner']);
 
         return view('public.matches.show', [
             'event' => $event,

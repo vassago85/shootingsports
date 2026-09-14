@@ -38,11 +38,15 @@ class DeskPanelProvider extends PanelProvider
                 'primary' => Color::hex('#D9AE52'),
                 'gray' => Color::Zinc,
                 'danger' => Color::Rose,
+                'info' => Color::Sky,
                 'success' => Color::Emerald,
                 'warning' => Color::Amber,
+                'teal' => Color::Teal,
+                'cyan' => Color::Cyan,
             ])
             ->font('IBM Plex Sans')
-            ->darkMode(true)
+            ->darkMode(true, isForced: true)
+            ->themeSwitcher(false)
             ->sidebarCollapsibleOnDesktop()
             ->navigationGroups([
                 'Your listings',

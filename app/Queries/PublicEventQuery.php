@@ -49,7 +49,7 @@ class PublicEventQuery
     {
         $query = Event::query()
             ->upcoming()
-            ->with(['hostOrganisation', 'venue', 'disciplines', 'flags', 'banner'])
+            ->with(['hostOrganisation.parent', 'venue', 'disciplines', 'flags', 'banner'])
             ->orderBy('starts_at');
 
         if ($this->confirmedOnly) {
@@ -78,14 +78,14 @@ class PublicEventQuery
             }
         }
 
-        $province = $this->provinceSlug ? Province::fromUrlSlug($this->provinceSlug) : null;
+        $provinces = $this->resolvedProvinces();
 
-        if ($province) {
-            $query->where(function (Builder $q) use ($province): void {
-                $q->whereHas('venue', fn (Builder $venue) => $venue->where('province', $province))
-                    ->orWhere(function (Builder $withoutVenue) use ($province): void {
+        if ($provinces !== []) {
+            $query->where(function (Builder $q) use ($provinces): void {
+                $q->whereHas('venue', fn (Builder $venue) => $venue->whereIn('province', $provinces))
+                    ->orWhere(function (Builder $withoutVenue) use ($provinces): void {
                         $withoutVenue->whereNull('venue_id')
-                            ->whereHas('hostOrganisation', fn (Builder $org) => $org->where('province', $province));
+                            ->whereHas('hostOrganisation', fn (Builder $org) => $org->whereIn('province', $provinces));
                     });
             });
         }
@@ -147,13 +147,13 @@ class PublicEventQuery
             return $events;
         }
 
-        $province = $this->provinceSlug ? Province::fromUrlSlug($this->provinceSlug) : null;
+        $provinces = $this->resolvedProvinces();
 
-        if (! $province) {
+        if (count($provinces) !== 1) {
             return $events;
         }
 
-        [$lat, $lng] = Geo::provinceCentroid($province);
+        [$lat, $lng] = Geo::provinceCentroid($provinces[0]);
 
         return $events->filter(function (Event $event) use ($lat, $lng): bool {
             $venue = $event->venue;
@@ -164,6 +164,24 @@ class PublicEventQuery
 
             return Geo::haversineKm($lat, $lng, (float) $venue->lat, (float) $venue->lng) <= $this->radiusKm;
         })->values();
+    }
+
+    /**
+     * @return list<Province>
+     */
+    public function resolvedProvinces(): array
+    {
+        if (! filled($this->provinceSlug)) {
+            return [];
+        }
+
+        return collect(preg_split('/\s*,\s*/', $this->provinceSlug) ?: [])
+            ->filter()
+            ->map(fn (string $slug): ?Province => Province::fromUrlSlug($slug) ?? Province::tryFrom($slug))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private static function date(mixed $value): ?Carbon

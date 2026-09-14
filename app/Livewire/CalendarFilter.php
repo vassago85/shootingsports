@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Enums\DisciplineFamily;
+use App\Enums\Province;
 use App\Queries\PublicEventQuery;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Url;
@@ -53,6 +54,39 @@ class CalendarFilter extends Component
         $this->confirmed = ! $this->confirmed;
     }
 
+    public function toggleProvince(string $slug): void
+    {
+        $selected = $this->selectedProvinceSlugs();
+
+        if (in_array($slug, $selected, true)) {
+            $selected = array_values(array_diff($selected, [$slug]));
+        } else {
+            $selected[] = $slug;
+        }
+
+        $this->province = $selected === [] ? null : implode(',', $selected);
+    }
+
+    public function clearProvinces(): void
+    {
+        $this->province = null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function selectedProvinceSlugs(): array
+    {
+        if (! filled($this->province)) {
+            return [];
+        }
+
+        return collect(preg_split('/\s*,\s*/', $this->province) ?: [])
+            ->filter()
+            ->values()
+            ->all();
+    }
+
     public function render()
     {
         $query = new PublicEventQuery(
@@ -70,6 +104,8 @@ class CalendarFilter extends Component
         return view('livewire.calendar-filter', [
             'events' => $query->get(),
             'families' => DisciplineFamily::cases(),
+            'provinces' => Province::cases(),
+            'selectedProvinces' => $this->selectedProvinceSlugs(),
         ]);
     }
 

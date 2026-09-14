@@ -15,7 +15,7 @@ class JsonLd
      */
     public static function event(Event $event): array
     {
-        $event->loadMissing(['hostOrganisation', 'venue', 'banner']);
+        $event->loadMissing(['hostOrganisation.parent', 'venue', 'banner']);
 
         $payload = [
             '@context' => 'https://schema.org',
@@ -40,8 +40,8 @@ class JsonLd
             $payload['location'] = self::venue($event->venue);
         }
 
-        if ($bannerUrl = $event->bannerUrl()) {
-            $payload['image'] = $bannerUrl;
+        if ($coverUrl = $event->coverImageUrl()) {
+            $payload['image'] = $coverUrl;
         }
 
         return $payload;

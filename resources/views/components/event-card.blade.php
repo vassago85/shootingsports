@@ -4,13 +4,15 @@
     $specs = \App\Support\EventSpecRows::for($event);
     $planned = $event->isProvisional();
     $bannerUrl = $event->bannerUrl();
+    $coverUrl = $event->coverImageUrl();
+    $usingHostLogo = $coverUrl && ! $bannerUrl;
     $family = $event->primaryDiscipline()?->family->value ?? $event->disciplines->first()?->family->value;
 @endphp
 
 <article class="dope {{ $planned ? 'is-planned' : '' }}" data-fam="{{ $family }}">
-    <div class="dope-banner {{ $bannerUrl ? '' : 'fallback' }}">
-        @if ($bannerUrl)
-            <img src="{{ $bannerUrl }}" alt="{{ $event->title }} match banner">
+    <div class="dope-banner {{ $coverUrl ? ($usingHostLogo ? 'logo-fallback' : '') : 'fallback' }}">
+        @if ($coverUrl)
+            <img src="{{ $coverUrl }}" alt="{{ $usingHostLogo ? $event->hostOrganisation?->name.' logo' : $event->title.' match banner' }}">
         @else
             <svg viewBox="0 0 40 40" aria-hidden="true">
                 <circle cx="20" cy="20" r="17" fill="none" stroke="#D9AE52" stroke-width="1.2"/>
@@ -21,7 +23,7 @@
         <div class="pill-row">
             <x-event-status-pill :event="$event" />
         </div>
-        <span class="banner-caption">{{ $bannerUrl ? $event->title : 'No club banner yet' }}</span>
+        <span class="banner-caption">{{ $coverUrl ? $event->title : 'No match banner yet' }}</span>
     </div>
     <div class="dope-top">
         <div>

@@ -210,3 +210,66 @@ it('hyphenates province slugs in public urls', function () {
         ->and(Province::fromUrlSlug('western-cape'))->toBe(Province::WesternCape)
         ->and(Province::fromUrlSlug('no-such-place'))->toBeNull();
 });
+
+it('falls a match card cover back to the host organisation logo', function () {
+    $federation = Organisation::factory()->create([
+        'name' => 'South African Precision Rifle Federation',
+        'type' => OrganisationType::Federation,
+        'status' => ListingStatus::Published,
+        'logo_path' => 'organisation-logos/saprf.png',
+    ]);
+    $event = Event::factory()->confirmed()->create([
+        'title' => 'Centrefire 1 Day',
+        'host_organisation_id' => $federation->id,
+        'banner_path' => null,
+        'banner_media_id' => null,
+    ]);
+    $event->load('hostOrganisation');
+
+    expect($event->bannerUrl())->toBeNull()
+        ->and($event->coverImageUrl())->toEndWith('/media/organisation-logos/saprf.png');
+
+    $this->get(route('calendar'))
+        ->assertOk()
+        ->assertSee('/media/organisation-logos/saprf.png', false)
+        ->assertSee('Centrefire 1 Day')
+        ->assertDontSee('No club banner yet')
+        ->assertDontSee('No match banner yet');
+});
+
+it('prefers the match banner over the host logo', function () {
+    $series = Organisation::factory()->create([
+        'type' => OrganisationType::Series,
+        'status' => ListingStatus::Published,
+        'logo_path' => 'organisation-logos/series.png',
+    ]);
+    $event = Event::factory()->confirmed()->create([
+        'host_organisation_id' => $series->id,
+        'banner_path' => 'event-banners/own.jpg',
+    ]);
+    $event->load('hostOrganisation');
+
+    expect($event->coverImageUrl())->toEndWith('/media/event-banners/own.jpg');
+});
+
+it('falls a club match cover back to the parent federation logo', function () {
+    $federation = Organisation::factory()->create([
+        'type' => OrganisationType::Federation,
+        'status' => ListingStatus::Published,
+        'logo_path' => 'organisation-logos/parent-fed.png',
+    ]);
+    $club = Organisation::factory()->create([
+        'type' => OrganisationType::Club,
+        'status' => ListingStatus::Published,
+        'parent_id' => $federation->id,
+        'logo_path' => null,
+    ]);
+    $event = Event::factory()->confirmed()->create([
+        'host_organisation_id' => $club->id,
+        'banner_path' => null,
+        'banner_media_id' => null,
+    ]);
+    $event->load('hostOrganisation.parent');
+
+    expect($event->coverImageUrl())->toEndWith('/media/organisation-logos/parent-fed.png');
+});

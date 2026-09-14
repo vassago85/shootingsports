@@ -120,4 +120,38 @@ class Organisation extends Model
 
         return Storage::disk('media')->url($this->logo_path);
     }
+
+    public function locationLabel(): string
+    {
+        return collect([
+            $this->town,
+            $this->province?->getLabel(),
+        ])->filter()->implode(', ') ?: '—';
+    }
+
+    public function initialsAvatarDataUri(): string
+    {
+        $initials = htmlspecialchars($this->avatarInitials(), ENT_XML1);
+
+        $svg = <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="{$initials}">
+  <rect width="64" height="64" rx="32" fill="#12181A"/>
+  <circle cx="32" cy="32" r="30.5" fill="none" stroke="#D9AE52" stroke-width="1.5" opacity="0.55"/>
+  <text x="32" y="39" text-anchor="middle" font-family="IBM Plex Sans, ui-sans-serif, sans-serif" font-size="20" font-weight="600" fill="#D9AE52">{$initials}</text>
+</svg>
+SVG;
+
+        return 'data:image/svg+xml;charset=UTF-8,'.rawurlencode($svg);
+    }
+
+    public function avatarInitials(): string
+    {
+        $letters = collect(preg_split('/\s+/', trim((string) $this->name)) ?: [])
+            ->filter()
+            ->map(fn (string $word): string => mb_strtoupper(mb_substr($word, 0, 1)))
+            ->take(2)
+            ->implode('');
+
+        return $letters !== '' ? $letters : 'SS';
+    }
 }

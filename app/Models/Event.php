@@ -88,6 +88,17 @@ class Event extends Model
         return $this->banner?->url();
     }
 
+    /**
+     * Image for public cards: the match banner, or the host club / series /
+     * federation logo when the event has not uploaded one yet.
+     */
+    public function coverImageUrl(): ?string
+    {
+        return $this->bannerUrl()
+            ?? $this->hostOrganisation?->logoUrl()
+            ?? $this->hostOrganisation?->parent?->logoUrl();
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

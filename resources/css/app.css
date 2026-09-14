@@ -370,6 +370,7 @@ footer.site a:hover { color: #fff; }
 
 .m-pills { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
 .dope-banner img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.dope-banner.logo-fallback img { object-fit: contain; padding: 14px 18%; background: #1d2426; }
 .dope-banner svg { position: absolute; right: 12px; bottom: 8px; width: 56px; height: 56px; opacity: .35; }
 
 .hamburger { display: none; color: #e6e9e7; padding: 8px; font-family: var(--f-display); letter-spacing: .08em; text-transform: uppercase; }

@@ -4,127 +4,165 @@
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-display: 'Saira Condensed', sans-serif;
+    --font-body: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
 /*
- * Full panel skin — not just chrome. Filament v5 still paints tables/sections
- * with gray-50 / white unless we override the dark tokens and those surfaces.
+ * Surfaces live on custom properties so each mode owns its own paint.
+ * Hardcoding gunmetal on .fi-* while .dark is absent is what made
+ * Filament's light-mode utilities (zinc-950 text, white badges) vanish.
  */
-.fi-body,
-.fi-simple-layout,
-.fi-main,
-.fi-sidebar,
-.fi-topbar,
-.fi-ta-ctn,
-.fi-section,
-.fi-wi-widget {
-    --gunmetal: #101516;
-    --gunmetal-2: #1b2224;
-    --gunmetal-3: #242c2e;
-    --brass: #d9ae52;
-    --brass-dk: #e4c079;
-    --slate: #8d9793;
-    --ink: #eef0ee;
-    --rule: rgba(217, 174, 82, 0.18);
+html.fi {
+    --ss-page: #f4f5f4;
+    --ss-sidebar: #eceee9;
+    --ss-surface: #ffffff;
+    --ss-ink: #16191a;
+    --ss-muted: #4d5553;
+    --ss-border: rgba(22, 25, 26, 0.1);
+    --ss-rule: rgba(179, 137, 43, 0.28);
+    --ss-scrollbar: rgba(22, 25, 26, 0.22);
+    --ss-brass: #d9ae52;
+    --ss-brass-dk: #c49a3e;
+    --ss-brass-ink: #1a1405;
 }
 
 html.fi.dark {
     color-scheme: dark;
+    --ss-page: #0c1112;
+    --ss-sidebar: #0c1112;
+    --ss-surface: #12181a;
+    --ss-ink: #eef0ee;
+    --ss-muted: #9aa39f;
+    --ss-border: rgba(217, 174, 82, 0.12);
+    --ss-rule: rgba(217, 174, 82, 0.18);
+    --ss-scrollbar: #2a3336;
+    --ss-brass: #d9ae52;
+    --ss-brass-dk: #e4c079;
+    --ss-brass-ink: #1a1405;
 }
 
 .fi-body {
-    font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
-    background: var(--gunmetal) !important;
-    color: var(--ink);
+    font-family: var(--font-body);
+    background: var(--ss-page);
+    color: var(--ss-ink);
 }
 
 .fi-main,
 .fi-main-ctn,
 .fi-page {
-    background: transparent !important;
+    background: transparent;
 }
 
 .fi-sidebar {
-    background: #0c1112 !important;
-    border-inline-end: 1px solid var(--rule) !important;
+    background: var(--ss-sidebar);
+    border-inline-end: 1px solid var(--ss-rule);
 }
 
 .fi-sidebar-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-bottom: 1px solid var(--ss-border);
+}
+
+.fi-sidebar-nav {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ss-scrollbar) transparent;
+}
+
+.fi-sidebar-nav::-webkit-scrollbar {
+    width: 8px;
+}
+
+.fi-sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.fi-sidebar-nav::-webkit-scrollbar-thumb {
+    background: var(--ss-scrollbar);
+    border-radius: 999px;
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+    background: color-mix(in oklab, var(--primary-500) 12%, transparent);
+    box-shadow: inset 2px 0 0 var(--primary-500);
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label {
+    color: var(--primary-400, var(--ss-brass));
 }
 
 .fi-sidebar-item-label,
 .fi-sidebar-group-label {
-    font-family: 'IBM Plex Sans', ui-sans-serif, sans-serif;
+    font-family: var(--font-body);
 }
 
 .fi-logo {
-    font-family: 'Saira Condensed', sans-serif !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.04em !important;
-    text-transform: uppercase !important;
-    color: var(--ink) !important;
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ss-ink);
 }
 
 .fi-topbar {
-    background: rgba(16, 21, 22, 0.94) !important;
-    border-bottom: 1px solid rgba(217, 174, 82, 0.2) !important;
+    background: color-mix(in oklab, var(--ss-page) 94%, transparent);
+    border-bottom: 1px solid var(--ss-rule);
     backdrop-filter: blur(8px);
 }
 
 .fi-header-heading,
 .fi-section-header-heading {
-    font-family: 'Saira Condensed', sans-serif !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.03em !important;
-    color: var(--ink) !important;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--ss-ink);
 }
 
 .fi-header-subheading,
 .fi-breadcrumbs,
 .fi-section-header-description {
-    color: var(--slate) !important;
+    color: var(--ss-muted);
 }
 
 .fi-btn-primary,
 .fi-btn.fi-color-primary {
-    background: var(--brass) !important;
-    color: #1a1405 !important;
-    font-family: 'Saira Condensed', sans-serif !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.08em !important;
-    font-weight: 700 !important;
+    background: var(--ss-brass);
+    color: var(--ss-brass-ink);
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
 }
 
 .fi-btn-primary:hover,
 .fi-btn.fi-color-primary:hover {
-    background: var(--brass-dk) !important;
+    background: var(--ss-brass-dk);
 }
 
 .fi-simple-main {
-    background: radial-gradient(ellipse at top, #1b2224 0%, #101516 55%) !important;
+    background: radial-gradient(ellipse at top, var(--ss-surface) 0%, var(--ss-page) 55%);
 }
 
 .fi-simple-card {
-    background: var(--gunmetal-2) !important;
-    border: 1px solid rgba(217, 174, 82, 0.28) !important;
-    border-top-width: 2px !important;
-    border-top-color: var(--brass) !important;
-    border-radius: 2px !important;
-    box-shadow: none !important;
+    background: var(--ss-surface);
+    border: 1px solid var(--ss-rule);
+    border-top-width: 2px;
+    border-top-color: var(--ss-brass);
+    border-radius: 2px;
+    box-shadow: none;
 }
 
-/* Tables — the white slab in the screenshot */
 .fi-ta-ctn,
-.fi-ta-content-ctn,
-.fi-ta-empty-state,
 .fi-section,
 .fi-wi-stats-overview-stat,
 .fi-wi-widget,
 .fi-modal-window {
-    background: var(--gunmetal-2) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 2px !important;
-    box-shadow: none !important;
-    color: var(--ink) !important;
+    background: var(--ss-surface);
+    border: 1px solid var(--ss-border);
+    border-radius: 2px;
+    box-shadow: none;
 }
 
 .fi-ta-header-toolbar,
@@ -133,8 +171,22 @@ html.fi.dark {
 .fi-pagination,
 .fi-section-header,
 .fi-section-content-ctn {
-    background: transparent !important;
-    border-color: rgba(255, 255, 255, 0.06) !important;
+    background: transparent;
+    border-color: var(--ss-border);
+}
+
+.fi-ta-ctn .fi-ta-header-toolbar {
+    padding-block: 0.5rem;
+}
+
+.fi-ta-ctn .fi-ta-header-toolbar > :nth-child(2) {
+    margin-inline-start: 0;
+    flex: 1 1 auto;
+}
+
+.fi-ta-search-field {
+    flex: 1 1 16rem;
+    max-width: 32rem;
 }
 
 .fi-ta-table,
@@ -143,39 +195,39 @@ html.fi.dark {
 .fi-ta-table tr,
 .fi-ta-table th,
 .fi-ta-table td {
-    background: transparent !important;
-    color: var(--ink) !important;
-    border-color: rgba(255, 255, 255, 0.06) !important;
+    background: transparent;
+    border-color: var(--ss-border);
 }
 
-.fi-ta-table thead th {
-    color: var(--slate) !important;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace !important;
-    font-size: 0.72rem !important;
-    letter-spacing: 0.08em !important;
-    text-transform: uppercase !important;
+.fi-ta-header-cell,
+.fi-ta-header-cell-sort-btn {
+    font-family: var(--font-body);
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--ss-muted);
 }
 
 .fi-ta-row:hover td,
 .fi-ta-record:hover td {
-    background: rgba(217, 174, 82, 0.06) !important;
+    background: color-mix(in oklab, var(--primary-500) 6%, transparent);
 }
 
 .fi-ta-empty-state-heading,
 .fi-ta-empty-state-description {
-    color: var(--slate) !important;
+    color: var(--ss-muted);
 }
 
-/* Inputs */
 .fi-input-wrp,
 .fi-select-wrp,
 .fi-textarea-wrp,
 .fi-fo-file-upload,
 .fi-checkbox-input,
 .fi-radio {
-    background: rgba(0, 0, 0, 0.22) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    color: var(--ink) !important;
+    background: color-mix(in oklab, var(--ss-page) 78%, black);
+    border-color: var(--ss-border);
+    color: var(--ss-ink);
 }
 
 .fi-input,
@@ -184,27 +236,27 @@ html.fi.dark {
 .fi-input-wrp input,
 .fi-input-wrp textarea,
 .fi-input-wrp select {
-    color: var(--ink) !important;
-    background: transparent !important;
+    color: var(--ss-ink);
+    background: transparent;
 }
 
 .fi-input-wrp:focus-within,
 .fi-select-wrp:focus-within,
 .fi-textarea-wrp:focus-within {
-    border-color: var(--brass) !important;
-    box-shadow: 0 0 0 1px rgba(217, 174, 82, 0.35) !important;
+    border-color: var(--ss-brass);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--ss-brass) 35%, transparent);
 }
 
 .fi-fo-field-wrp-label,
 .fi-fo-field-wrp-hint,
 .fi-fo-field-wrp-helper-text {
-    color: var(--slate) !important;
+    color: var(--ss-muted);
 }
 
 .desk-hero {
-    background: var(--gunmetal-2);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-top: 2px solid var(--brass);
+    background: var(--ss-surface);
+    border: 1px solid var(--ss-border);
+    border-top: 2px solid var(--ss-brass);
     padding: 1.75rem 1.5rem;
     margin-bottom: 1.5rem;
 }
@@ -214,22 +266,22 @@ html.fi.dark {
     font-size: 0.7rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--brass);
+    color: var(--ss-brass);
     margin: 0 0 0.5rem;
 }
 
 .desk-hero h1 {
-    font-family: 'Saira Condensed', sans-serif;
+    font-family: var(--font-display);
     font-size: clamp(1.8rem, 4vw, 2.6rem);
     text-transform: uppercase;
     letter-spacing: 0.02em;
-    color: var(--ink);
+    color: var(--ss-ink);
     margin: 0 0 0.5rem;
     line-height: 1.05;
 }
 
 .desk-hero p {
-    color: var(--slate);
+    color: var(--ss-muted);
     max-width: 52ch;
     margin: 0;
     font-size: 0.95rem;
@@ -243,8 +295,8 @@ html.fi.dark {
 
 .desk-card {
     display: block;
-    background: var(--gunmetal-2);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--ss-surface);
+    border: 1px solid var(--ss-border);
     padding: 1.25rem 1.15rem;
     text-decoration: none;
     color: inherit;
@@ -252,7 +304,7 @@ html.fi.dark {
 }
 
 .desk-card:hover {
-    border-color: var(--brass);
+    border-color: var(--ss-brass);
     transform: translateY(-1px);
 }
 
@@ -261,21 +313,21 @@ html.fi.dark {
     font-size: 0.65rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--brass);
+    color: var(--ss-brass);
     margin: 0 0 0.55rem;
 }
 
 .desk-card h2 {
-    font-family: 'Saira Condensed', sans-serif;
+    font-family: var(--font-display);
     text-transform: uppercase;
     font-size: 1.35rem;
     margin: 0 0 0.4rem;
-    color: var(--ink);
+    color: var(--ss-ink);
 }
 
 .desk-card p {
     margin: 0;
-    color: var(--slate);
+    color: var(--ss-muted);
     font-size: 0.9rem;
     line-height: 1.45;
 }
@@ -285,5 +337,5 @@ html.fi.dark {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.75rem;
     letter-spacing: 0.04em;
-    color: var(--slate);
+    color: var(--ss-muted);
 }

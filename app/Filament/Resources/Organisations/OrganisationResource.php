@@ -154,15 +154,48 @@ class OrganisationResource extends Resource
                     ->label('')
                     ->disk('media')
                     ->circular()
-                    ->height(32),
+                    ->imageSize(40)
+                    ->defaultImageUrl(fn (?Organisation $record): string => $record?->initialsAvatarDataUri()
+                        ?? (new Organisation(['name' => 'Shooting Sports']))->initialsAvatarDataUri()),
                 TextColumn::make('name')->searchable()->sortable()->wrap(),
-                TextColumn::make('type')->badge()->sortable(),
-                TextColumn::make('province')->badge()->toggleable(),
-                TextColumn::make('town')->toggleable(),
-                TextColumn::make('status')->badge()->sortable(),
-                TextColumn::make('verification_state')->badge()->toggleable(),
+                TextColumn::make('type')
+                    ->badge()
+                    ->sortable()
+                    ->color(fn (OrganisationType|string|null $state): string => match ($state instanceof OrganisationType ? $state : OrganisationType::tryFrom((string) $state)) {
+                        OrganisationType::Club => 'info',
+                        OrganisationType::Series => 'warning',
+                        OrganisationType::Federation => 'primary',
+                        OrganisationType::Association => 'teal',
+                        OrganisationType::ProvincialBody => 'cyan',
+                        default => 'gray',
+                    }),
+                TextColumn::make('town')
+                    ->label('Location')
+                    ->getStateUsing(fn (Organisation $record): string => $record->locationLabel())
+                    ->searchable(['town', 'province'])
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('status')
+                    ->badge()
+                    ->sortable()
+                    ->color(fn (ListingStatus|string|null $state): string => match ($state instanceof ListingStatus ? $state : ListingStatus::tryFrom((string) $state)) {
+                        ListingStatus::Published => 'success',
+                        ListingStatus::Pending => 'warning',
+                        ListingStatus::Archived => 'danger',
+                        default => 'gray',
+                    }),
+                TextColumn::make('verification_state')
+                    ->badge()
+                    ->toggleable()
+                    ->color(fn (VerificationState|string|null $state): string => match ($state instanceof VerificationState ? $state : VerificationState::tryFrom((string) $state)) {
+                        VerificationState::Verified => 'success',
+                        VerificationState::Ageing => 'warning',
+                        VerificationState::Unconfirmed => 'gray',
+                        VerificationState::Archived => 'danger',
+                        default => 'gray',
+                    }),
                 IconColumn::make('accredited')->boolean()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('source')->badge()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('source')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
