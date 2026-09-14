@@ -64,6 +64,7 @@ class DisciplineSeeder extends Seeder
             ['combat-rifle', 'Combat Rifle', 'Practical rifle on timed stages.', '25–300 m'],
             ['hunting-rifle', 'Hunting Rifle', 'Field-position hunting rifle matches.', '100–400 m'],
             ['nrl-hunter', 'NRL Hunter', 'Hunting-position precision rifle on unknown-distance steel.', '200–800 m'],
+            ['gong-shooting', 'Gong Shooting', 'Team or individual steel-gong rifle matches, often hunting-calibre.', '100–450 m'],
             ['metallic-silhouette', 'Metallic Silhouette', 'Knock-down animal silhouettes at known distance.', '200–500 m'],
         ] as [$slug, $name, $blurb, $distance]) {
             $this->upsert([

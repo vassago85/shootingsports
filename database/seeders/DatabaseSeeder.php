@@ -22,6 +22,15 @@ class DatabaseSeeder extends Seeder
             SaprfEventsSeeder::class,
             CtsasaEventsSeeder::class,
             NrlHunterEventsSeeder::class,
+            SpringbokvlakteGongskietSeeder::class,
+            SahrsaEventsSeeder::class,
+            MuletechRidgeRangeSeeder::class,
+            FreeCivilianShootersSeeder::class,
+            AgriBoKammanassieSeeder::class,
+            SahuntersDuikerSeeder::class,
+            NgGemeenteDelmasSeeder::class,
+            SahuntersVaaldriehoekSeeder::class,
+            DwarskloofNightShootSeeder::class,
         ]);
 
         if (! app()->environment('local')) {
