@@ -63,6 +63,13 @@ return [
         'notes' => 'Joomla poster cards: title and town are text, dates are screenshots. Some ENTER buttons go to PractiScore. Sell them the embed; staff can type the season once.',
     ],
     [
+        'key' => 'kaapjag',
+        'name' => 'Kaapjag (Cape Hunt)',
+        'url' => 'https://www.kaapjag.co.za/calendar',
+        'mode' => 'sell',
+        'notes' => 'Webflow page with an Elfsight calendar widget. No HTML table. Sell them the embed; staff can type championships by hand.',
+    ],
+    [
         'key' => 'send-it-elr',
         'name' => 'Send It ELR',
         'url' => 'https://shootingsports.co.za/clubs/send-it-elr',

@@ -19,6 +19,7 @@ it('lists scrape and sell sources', function () {
         ->expectsOutputToContain('sapsa')
         ->expectsOutputToContain('sahunters')
         ->expectsOutputToContain('nrlhunter')
+        ->expectsOutputToContain('kaapjag')
         ->expectsOutputToContain('sell');
 });
 
