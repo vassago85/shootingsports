@@ -13,12 +13,17 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DisciplineSeeder::class,
             FlagSeeder::class,
+            // Staff account for the Filament admin (paul@charsley.co.za).
+            // Idempotent, runs in every environment so production also gets a
+            // first-login account after `php artisan migrate --seed`.
+            AdminUserSeeder::class,
         ]);
 
         if (! app()->environment('local')) {
             return;
         }
 
+        // Extra convenience account for local dev only.
         User::query()->updateOrCreate(
             ['email' => 'admin@shootingsports.test'],
             [
