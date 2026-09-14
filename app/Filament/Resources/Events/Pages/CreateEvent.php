@@ -29,4 +29,9 @@ class CreateEvent extends CreateRecord
     {
         $this->persistDisciplines();
     }
+
+    public function areFormActionsSticky(): bool
+    {
+        return true;
+    }
 }

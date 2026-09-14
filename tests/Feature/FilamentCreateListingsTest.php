@@ -107,6 +107,19 @@ it('creates a series from admin', function () {
     expect(Organisation::query()->where('type', OrganisationType::Series)->where('slug', 'royal-flush-series')->exists())->toBeTrue();
 });
 
+it('lays out the admin event form in tabs', function () {
+    $staff = User::factory()->create(['is_staff' => true]);
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+    Livewire::actingAs($staff)
+        ->test(CreateEvent::class)
+        ->assertSee('Details')
+        ->assertSee('Schedule')
+        ->assertSee('Classification & Format')
+        ->assertSee('Entry & Fees')
+        ->assertSee('Media & Results');
+});
+
 it('creates an event from admin', function () {
     $staff = User::factory()->create(['is_staff' => true]);
     $host = Organisation::factory()->create([

@@ -4,10 +4,12 @@ namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Concerns\SyncsEventDisciplines;
 use App\Filament\Resources\Events\EventResource;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Icons\Heroicon;
 
 class EditEvent extends EditRecord
 {
@@ -38,12 +40,22 @@ class EditEvent extends EditRecord
         $this->persistDisciplines();
     }
 
+    public function areFormActionsSticky(): bool
+    {
+        return true;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
-            ForceDeleteAction::make(),
-            RestoreAction::make(),
+            ActionGroup::make([
+                DeleteAction::make(),
+                ForceDeleteAction::make(),
+                RestoreAction::make(),
+            ])
+                ->icon(Heroicon::EllipsisVertical)
+                ->iconButton()
+                ->tooltip('Actions'),
         ];
     }
 }

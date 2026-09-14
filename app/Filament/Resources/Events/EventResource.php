@@ -26,7 +26,9 @@ use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -55,184 +57,198 @@ class EventResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema
+            ->columns(1)
             ->components([
-                Section::make('Basics')
-                    ->description('Match title, permalink and the club hosting it.')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('title')
-                            ->required()
-                            ->columnSpanFull()
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(function (?string $state, Set $set, mixed $livewire): void {
-                                // Only auto-populate the slug on create — never overwrite it
-                                // on edit, or bookmarks and cached URLs would break.
-                                if ($livewire instanceof CreateRecord && filled($state)) {
-                                    $set('slug', Str::slug($state));
-                                }
-                            }),
-                        TextInput::make('slug')
-                            ->columnSpanFull()
-                            ->helperText('Auto-generated from the title. Edit only if you need a custom URL.')
-                            ->unique(ignoreRecord: true)
-                            ->rules(['alpha_dash']),
-                        Select::make('host_organisation_id')
-                            ->label('Host club / organisation')
-                            ->relationship('hostOrganisation', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->live()
-                            ->afterStateUpdated(EventDisciplineSelect::prefillFromHost())
-                            ->required(),
-                        Select::make('venue_id')
-                            ->label('Venue / range')
-                            ->relationship('venue', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->helperText('Leave blank if it will be hosted at the club\'s own range.'),
-                        EventDisciplineSelect::make(),
-                        Textarea::make('description')
-                            ->rows(4)
-                            ->columnSpanFull(),
-                    ]),
+                Tabs::make('Event')
+                    ->persistTab()
+                    ->columnSpanFull()
+                    ->tabs([
+                        Tab::make('Details')
+                            ->schema([
+                                Grid::make(2)->schema([
+                                    TextInput::make('title')
+                                        ->required()
+                                        ->live(onBlur: true)
+                                        ->afterStateUpdated(function (?string $state, Set $set, mixed $livewire): void {
+                                            if ($livewire instanceof CreateRecord && filled($state)) {
+                                                $set('slug', Str::slug($state));
+                                            }
+                                        }),
+                                    TextInput::make('slug')
+                                        ->helperText('Auto-generated from the title.')
+                                        ->unique(ignoreRecord: true)
+                                        ->rules(['alpha_dash']),
+                                ]),
+                                Grid::make(3)->schema([
+                                    Select::make('host_organisation_id')
+                                        ->label('Host club / organisation')
+                                        ->relationship('hostOrganisation', 'name')
+                                        ->searchable()
+                                        ->preload()
+                                        ->native(false)
+                                        ->live()
+                                        ->afterStateUpdated(EventDisciplineSelect::prefillFromHost())
+                                        ->required()
+                                        ->columnSpan(2),
+                                    Select::make('venue_id')
+                                        ->label('Venue / range')
+                                        ->relationship('venue', 'name')
+                                        ->searchable()
+                                        ->preload()
+                                        ->native(false)
+                                        ->hintIcon(Heroicon::OutlinedInformationCircle, 'Leave blank if it is hosted at the club range.'),
+                                ]),
+                                EventDisciplineSelect::make()
+                                    ->helperText('First selected is the primary on cards.'),
+                                Textarea::make('description')
+                                    ->rows(8)
+                                    ->columnSpanFull(),
+                            ]),
 
-                Section::make('When')
-                    ->columns(2)
-                    ->schema([
-                        DateTimePicker::make('starts_at')
-                            ->label('Starts')
-                            ->seconds(false)
-                            ->required(),
-                        DateTimePicker::make('ends_at')
-                            ->label('Ends')
-                            ->seconds(false),
-                        Toggle::make('all_day')
-                            ->label('All-day match')
-                            ->inline(false),
-                        DateTimePicker::make('confirmed_at')
-                            ->label('Dates confirmed at')
-                            ->seconds(false)
-                            ->helperText('Auto-set when you use the "Confirm dates" bulk action.'),
-                        DateTimePicker::make('original_starts_at')
-                            ->label('Original start date')
-                            ->seconds(false)
-                            ->helperText('Only set if the match was postponed from a previous date.'),
-                    ]),
+                        Tab::make('Schedule')
+                            ->schema([
+                                Grid::make(2)->schema([
+                                    self::dateTimePicker('starts_at')
+                                        ->label('Starts')
+                                        ->required(),
+                                    self::dateTimePicker('ends_at')
+                                        ->label('Ends'),
+                                ]),
+                                Toggle::make('all_day')
+                                    ->label('All-day match')
+                                    ->inline(false),
+                                Grid::make(2)->schema([
+                                    self::dateTimePicker('confirmed_at')
+                                        ->label('Dates confirmed at')
+                                        ->helperText('Set by the Confirm dates bulk action.'),
+                                    self::dateTimePicker('original_starts_at')
+                                        ->label('Original start date')
+                                        ->helperText('Only if the match was postponed.'),
+                                ]),
+                            ]),
 
-                Section::make('Classification')
-                    ->columns(3)
-                    ->schema([
-                        Select::make('level')
-                            ->options(EventLevel::class)
-                            ->default('club')
-                            ->required(),
-                        Select::make('status')
-                            ->options(EventStatus::class)
-                            ->default('draft')
-                            ->required(),
-                        Select::make('source')
-                            ->options(ListingSource::class)
-                            ->default('staff')
-                            ->required(),
-                    ]),
+                        Tab::make('Classification & Format')
+                            ->schema([
+                                Grid::make(3)->schema([
+                                    Select::make('level')
+                                        ->options(EventLevel::class)
+                                        ->native(false)
+                                        ->default(EventLevel::Club)
+                                        ->required(),
+                                    Select::make('status')
+                                        ->options(EventStatus::class)
+                                        ->native(false)
+                                        ->default(EventStatus::Draft)
+                                        ->required(),
+                                    Select::make('source')
+                                        ->options(ListingSource::class)
+                                        ->native(false)
+                                        ->default(ListingSource::Staff)
+                                        ->required(),
+                                ]),
+                                Grid::make(4)->schema([
+                                    TextInput::make('round_count')
+                                        ->label('Rounds')
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->columnSpan(1),
+                                    TextInput::make('target_count')
+                                        ->label('Targets')
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->columnSpan(1),
+                                    TextInput::make('stage_count')
+                                        ->label('Stages')
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->columnSpan(1),
+                                ]),
+                            ]),
 
-                Section::make('Fees')
-                    ->description('Entered in Rand. Stored internally as cents.')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('entry_fee_cents')
-                            ->label('Public entry fee')
-                            ->prefix('R')
-                            ->numeric()
-                            ->minValue(0)
-                            ->step('0.01')
-                            ->formatStateUsing(fn (?int $state): ?string => $state !== null
-                                ? number_format($state / 100, 2, '.', '')
-                                : null)
-                            ->dehydrateStateUsing(fn (mixed $state): ?int => $state !== null && $state !== ''
-                                ? (int) round(((float) $state) * 100)
-                                : null),
-                        TextInput::make('member_fee_cents')
-                            ->label('Member entry fee')
-                            ->prefix('R')
-                            ->numeric()
-                            ->minValue(0)
-                            ->step('0.01')
-                            ->helperText('Optional discounted fee for club members.')
-                            ->formatStateUsing(fn (?int $state): ?string => $state !== null
-                                ? number_format($state / 100, 2, '.', '')
-                                : null)
-                            ->dehydrateStateUsing(fn (mixed $state): ?int => $state !== null && $state !== ''
-                                ? (int) round(((float) $state) * 100)
-                                : null),
-                    ]),
+                        Tab::make('Entry & Fees')
+                            ->schema([
+                                Grid::make(2)->schema([
+                                    TextInput::make('entry_fee_cents')
+                                        ->label('Public entry fee')
+                                        ->prefix('R')
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->step('0.01')
+                                        ->formatStateUsing(fn (?int $state): ?string => $state !== null
+                                            ? number_format($state / 100, 2, '.', '')
+                                            : null)
+                                        ->dehydrateStateUsing(fn (mixed $state): ?int => $state !== null && $state !== ''
+                                            ? (int) round(((float) $state) * 100)
+                                            : null),
+                                    TextInput::make('member_fee_cents')
+                                        ->label('Member entry fee')
+                                        ->prefix('R')
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->step('0.01')
+                                        ->helperText('Optional club-member rate.')
+                                        ->formatStateUsing(fn (?int $state): ?string => $state !== null
+                                            ? number_format($state / 100, 2, '.', '')
+                                            : null)
+                                        ->dehydrateStateUsing(fn (mixed $state): ?int => $state !== null && $state !== ''
+                                            ? (int) round(((float) $state) * 100)
+                                            : null),
+                                ]),
+                                TextInput::make('entry_url')
+                                    ->label('External entry / registration URL')
+                                    ->url()
+                                    ->hintIcon(
+                                        Heroicon::OutlinedInformationCircle,
+                                        'Link to MatchApp, TicketForms, or another entry site. Keep it current, or leave blank.',
+                                    ),
+                                Grid::make(2)->schema([
+                                    TextInput::make('capacity')
+                                        ->label('Maximum entries')
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->helperText('Leave blank for unlimited.'),
+                                    TextInput::make('entries_taken')
+                                        ->label('Entries taken')
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->helperText('Manual count for the public page.'),
+                                ]),
+                            ]),
 
-                Section::make('Registration')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('entry_url')
-                            ->label('External entry / registration URL')
-                            ->url()
-                            ->columnSpanFull()
-                            ->helperText('Optional — link to the external form/site where entries are actually taken (MatchApp, TicketForms, etc). You\'ll need to keep this current manually; leave blank if you don\'t have one.'),
-                        TextInput::make('capacity')
-                            ->label('Maximum entries')
-                            ->numeric()
-                            ->minValue(0)
-                            ->helperText('Optional cap. Leave blank for unlimited.'),
-                        TextInput::make('entries_taken')
-                            ->label('Entries taken (count)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->helperText('Optional — only fill in if you\'re manually tracking entries and want the public page to show "X entries taken so far".'),
-                    ]),
-
-                Section::make('Match format')
-                    ->columns(3)
-                    ->schema([
-                        TextInput::make('round_count')
-                            ->label('Rounds')
-                            ->numeric()
-                            ->minValue(0),
-                        TextInput::make('target_count')
-                            ->label('Targets')
-                            ->numeric()
-                            ->minValue(0),
-                        TextInput::make('stage_count')
-                            ->label('Stages')
-                            ->numeric()
-                            ->minValue(0),
-                    ]),
-
-                Section::make('Results')
-                    ->schema([
-                        TextInput::make('results_url')
-                            ->label('Results URL')
-                            ->url()
-                            ->helperText('Link to results after the match (Practiscore, WinMSS, PDF, etc).'),
-                        DateTimePicker::make('last_verified_at')
-                            ->label('Details last verified')
-                            ->seconds(false),
-                    ]),
-
-                Section::make('Banner image')
-                    ->description('Uploaded to the media storage volume on the server. JPEG or PNG, up to 5 MB.')
-                    ->schema([
-                        FileUpload::make('banner_path')
-                            ->label('Banner')
-                            ->disk('media')
-                            ->directory('event-banners')
-                            ->visibility('public')
-                            ->image()
-                            ->imageEditor()
-                            ->imageResizeMode('cover')
-                            ->imageResizeTargetWidth(1600)
-                            ->imageResizeTargetHeight(900)
-                            ->maxSize(5120)
-                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                            ->helperText('Landscape works best. Wider than 1200 pixels ideal.'),
+                        Tab::make('Media & Results')
+                            ->schema([
+                                FileUpload::make('banner_path')
+                                    ->label('Banner')
+                                    ->disk('media')
+                                    ->directory('event-banners')
+                                    ->visibility('public')
+                                    ->image()
+                                    ->imageEditor()
+                                    ->imageResizeMode('cover')
+                                    ->imageResizeTargetWidth(1600)
+                                    ->imageResizeTargetHeight(900)
+                                    ->maxSize(5120)
+                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                                    ->hintIcon(Heroicon::OutlinedInformationCircle, 'JPEG or PNG, up to 5 MB. Landscape, wider than 1200px.'),
+                                Grid::make(2)->schema([
+                                    TextInput::make('results_url')
+                                        ->label('Results URL')
+                                        ->url()
+                                        ->helperText('Practiscore, WinMSS, or a PDF.'),
+                                    self::dateTimePicker('last_verified_at')
+                                        ->label('Details last verified'),
+                                ]),
+                            ]),
                     ]),
             ]);
+    }
+
+    private static function dateTimePicker(string $name): DateTimePicker
+    {
+        return DateTimePicker::make($name)
+            ->native(false)
+            ->seconds(false)
+            ->displayFormat('D j M Y, H:i');
     }
 
     public static function table(Table $table): Table
