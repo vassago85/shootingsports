@@ -52,7 +52,10 @@
                 <a href="{{ route('claim') }}">For Clubs</a>
                 <a href="{{ route('advertise') }}">Advertise</a>
             </nav>
-            <a class="btn" href="{{ url('/desk/register') }}">List your club</a>
+            <div class="nav-cta">
+                <a class="btn ghost on-dark" href="{{ url('/desk/login') }}">Director login</a>
+                <a class="btn" href="{{ url('/desk/register') }}">List your club</a>
+            </div>
             <button class="hamburger" id="burger" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">Menu</button>
         </div>
         <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
@@ -63,6 +66,7 @@
             <a href="{{ route('suppliers.index') }}">Suppliers</a>
             <a href="{{ route('claim') }}">For Clubs</a>
             <a href="{{ url('/desk/login') }}">Director login</a>
+            <a href="{{ url('/desk/register') }}">List your club</a>
             <a href="{{ route('advertise') }}">Advertise</a>
         </nav>
     </header>
@@ -100,8 +104,9 @@
                 <div>
                     <h4>Participate</h4>
                     <ul>
-                        <li><a href="{{ route('claim') }}">Claim a listing</a></li>
-                        <li><a href="{{ route('claim') }}">Submit a match</a></li>
+                        <li><a href="{{ url('/desk/login') }}">Director login</a></li>
+                        <li><a href="{{ url('/desk/register') }}">Create a desk account</a></li>
+                        <li><a href="{{ route('claim') }}">For clubs</a></li>
                         <li><a href="{{ route('embed.docs') }}">Embed the calendar</a></li>
                     </ul>
                 </div>

@@ -108,6 +108,8 @@ header.nav {
     border-bottom: 1px solid rgba(255,255,255,.08);
 }
 .nav-in { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: var(--nav-h); display: flex; align-items: center; gap: 26px; }
+.nav-cta { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.nav-cta .btn { white-space: nowrap; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-right: auto; }
 .brand-text { display: flex; flex-direction: column; line-height: 1; }
 .brand-text .wordmark { font-family: var(--f-display); font-weight: 700; font-size: 19px; letter-spacing: .02em; color: #f2f3f0; text-transform: uppercase; }
@@ -127,7 +129,7 @@ header.nav {
     font-family: var(--f-display); text-transform: uppercase; letter-spacing: .05em;
     border-bottom: 1px solid rgba(255,255,255,.06);
 }
-@media (max-width: 900px) { .nav-links { display: none; } .hamburger { display: block; } }
+@media (max-width: 900px) { .nav-links, .nav-cta { display: none; } .hamburger { display: block; } }
 
 .hero { position: relative; overflow: hidden; background: var(--gunmetal); color: #eef0ee; }
 .hero-reticle { position: absolute; right: -140px; top: 50%; transform: translateY(-50%); width: 720px; height: 720px; opacity: .16; pointer-events: none; }

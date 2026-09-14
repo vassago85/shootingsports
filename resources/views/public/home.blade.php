@@ -170,9 +170,9 @@
                 <div>
                     <p class="label">Independent · neutral · free to list</p>
                     <h2>The register only works if the clubs are on it.</h2>
-                    <p>If your club is missing, claim it. If a match is missing, send it in. The calendar is only as good as the last confirmed date.</p>
+                    <p>If your club is missing, claim it from the desk. If a match is missing, a director can add it.</p>
                 </div>
-                <a class="btn" href="{{ route('claim') }}">Claim a listing</a>
+                <a class="btn" href="{{ url('/desk/login') }}">Director login</a>
             </div>
         </section>
     </main>
