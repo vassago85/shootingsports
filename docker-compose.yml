@@ -1,0 +1,34 @@
+# Local data services only. The app is served by Laragon.
+# Start with: docker compose up -d
+
+services:
+  pgsql:
+    image: postgres:16-alpine
+    container_name: shootingsports-pgsql
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: shootingsports
+      POSTGRES_USER: shootingsports
+      POSTGRES_PASSWORD: shootingsports
+    ports:
+      - "55434:5432"
+    volumes:
+      - shootingsports-pgsql:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shootingsports -d shootingsports"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: shootingsports-redis
+    restart: unless-stopped
+    ports:
+      - "56381:6379"
+    volumes:
+      - shootingsports-redis:/data
+
+volumes:
+  shootingsports-pgsql:
+  shootingsports-redis:

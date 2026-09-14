@@ -1,0 +1,109 @@
+# Production compose for shootingsports.co.za
+# Install path on server: /opt/shootingsports
+# Reverse proxied (Nginx Proxy Manager) to 127.0.0.1:8094
+#
+# Pictures live on the 4TB volume. Create the directory once:
+#   sudo mkdir -p /mnt/storage/shootingsports/media
+#   sudo chown -R 33:33 /mnt/storage/shootingsports
+# Then set MEDIA_HOST_PATH in .env if the mount point differs.
+
+name: shootingsports
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: shootingsports-app:latest
+    container_name: shootingsports-app
+    restart: unless-stopped
+    depends_on:
+      pgsql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "8094:80"
+    volumes:
+      - shootingsports-storage:/var/www/html/storage
+      - ${MEDIA_HOST_PATH:-/mnt/storage/shootingsports/media}:/var/www/html/storage/app/media
+    command: ["app"]
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "-o", "/dev/null", "http://127.0.0.1/up"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  queue:
+    image: shootingsports-app:latest
+    container_name: shootingsports-queue
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started
+      pgsql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      APP_RUN_MIGRATIONS_ON_BOOT: "false"
+    volumes:
+      - shootingsports-storage:/var/www/html/storage
+      - ${MEDIA_HOST_PATH:-/mnt/storage/shootingsports/media}:/var/www/html/storage/app/media
+    command: ["queue"]
+
+  scheduler:
+    image: shootingsports-app:latest
+    container_name: shootingsports-scheduler
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started
+      pgsql:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      APP_RUN_MIGRATIONS_ON_BOOT: "false"
+    volumes:
+      - shootingsports-storage:/var/www/html/storage
+      - ${MEDIA_HOST_PATH:-/mnt/storage/shootingsports/media}:/var/www/html/storage/app/media
+    command: ["scheduler"]
+
+  pgsql:
+    image: postgres:16-alpine
+    container_name: shootingsports-pgsql
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${DB_DATABASE:-shootingsports}"
+      POSTGRES_USER: "${DB_USERNAME:-shootingsports}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - shootingsports-pgsql:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-shootingsports} -d ${DB_DATABASE:-shootingsports}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: shootingsports-redis
+    restart: unless-stopped
+    volumes:
+      - shootingsports-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  shootingsports-storage:
+  shootingsports-pgsql:
+  shootingsports-redis:
