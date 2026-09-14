@@ -58,7 +58,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         zip \
         gd \
         exif \
-        opcache \
+    && (docker-php-ext-enable opcache || true) \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apt-get clean \
