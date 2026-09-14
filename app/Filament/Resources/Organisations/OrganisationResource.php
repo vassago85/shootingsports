@@ -11,6 +11,7 @@ use App\Filament\Actions\MarkVerifiedBulkAction;
 use App\Filament\Resources\Organisations\Pages\CreateOrganisation;
 use App\Filament\Resources\Organisations\Pages\EditOrganisation;
 use App\Filament\Resources\Organisations\Pages\ListOrganisations;
+use App\Filament\Resources\Organisations\RelationManagers\MembershipsRelationManager;
 use App\Models\Organisation;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -178,6 +179,13 @@ class OrganisationResource extends Resource
                     RestoreBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            MembershipsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

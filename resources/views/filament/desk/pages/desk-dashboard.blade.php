@@ -5,6 +5,7 @@
         <p>
             List your club or series, claim an existing one, then add matches.
             New listings stay private until staff publish them.
+            You can be a match director on several clubs and federations at once.
         </p>
     </div>
 

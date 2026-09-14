@@ -62,7 +62,7 @@ class ClaimListing extends Page implements HasForms
                     )
                     ->searchable()
                     ->required()
-                    ->helperText('Only published listings appear here. New ones you create yourself do not need a claim.'),
+                    ->helperText('Only published listings appear here. You can claim (or be added to) several clubs and federations — e.g. PPRC and SAPRF.'),
                 Textarea::make('evidence')
                     ->label('Why should we grant you access?')
                     ->rows(4)
