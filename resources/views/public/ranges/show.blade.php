@@ -52,6 +52,7 @@
                         @endforeach
                     </div>
                 @endif
+                <x-embed-snippet :venue="$venue->slug" />
             </div>
         </section>
     </main>

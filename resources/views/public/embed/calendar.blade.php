@@ -1,18 +1,25 @@
 <!DOCTYPE html>
-<html lang="en-ZA">
+<html lang="en-ZA" @if ($theme->theme) data-theme="{{ $theme->theme }}" @endif>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
-    <title>Match calendar · Shooting Sports</title>
+    <link rel="alternate" type="application/json+oembed" href="{{ $oembedUrl }}" title="Shooting Sports oEmbed">
+    <title>{{ $listingName ? $listingName.' calendar' : 'Match calendar' }} · Shooting Sports</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" sizes="16x16 32x32 48x48">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap">
+    @if ($theme->googleFontsHref())
+        <link rel="stylesheet" href="{{ $theme->googleFontsHref() }}">
+    @endif
     @vite(['resources/css/app.css'])
+    <style>
+        :root { {{ $theme->cssVariables() }} }
+        html, body { background: var(--base); }
+        .embed-shell { padding: 16px; }
+    </style>
 </head>
 <body>
-    <main id="main" style="padding:16px">
-        <p class="label">Shooting Sports calendar</p>
+    <main id="main" class="embed-shell">
+        <p class="label">{{ $listingName ? $listingName : 'Shooting Sports' }} calendar</p>
         @forelse ($events as $event)
             <a class="match-row" href="{{ route('matches.show', $event->slug) }}" target="_blank" rel="noopener">
                 <div class="m-date">

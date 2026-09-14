@@ -54,6 +54,7 @@
                 <p style="margin-top:18px">
                     <a class="label" href="{{ route('ical.organisation', $organisation->slug) }}" style="text-decoration:none;border-bottom:1px solid var(--brass)">Subscribe via iCal →</a>
                 </p>
+                <x-embed-snippet :club="$organisation->slug" />
             </div>
         </section>
     </main>

@@ -6,6 +6,8 @@ use App\Enums\DisciplineFamily;
 use App\Enums\Province;
 use App\Models\Discipline;
 use App\Models\Event;
+use App\Models\Organisation;
+use App\Models\Venue;
 use App\Support\Geo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -42,6 +44,8 @@ class PublicEventQuery
             to: self::date($request->input('to')),
             novice: $request->boolean('novice'),
             confirmedOnly: $request->boolean('confirmed'),
+            organisationId: self::publishedOrganisationId($request),
+            venueId: self::publishedVenueId($request),
         );
     }
 
@@ -182,6 +186,29 @@ class PublicEventQuery
             ->unique()
             ->values()
             ->all();
+    }
+
+    private static function publishedOrganisationId(Request $request): ?int
+    {
+        $slug = $request->string('organisation')->toString()
+            ?: $request->string('club')->toString();
+
+        if ($slug === '') {
+            return null;
+        }
+
+        return Organisation::query()->published()->where('slug', $slug)->value('id') ?? 0;
+    }
+
+    private static function publishedVenueId(Request $request): ?int
+    {
+        $slug = $request->string('venue')->toString();
+
+        if ($slug === '') {
+            return null;
+        }
+
+        return Venue::query()->published()->where('slug', $slug)->value('id') ?? 0;
     }
 
     private static function date(mixed $value): ?Carbon

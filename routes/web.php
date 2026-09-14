@@ -51,6 +51,7 @@ Route::get('/matches/{event:slug}', [EventController::class, 'show'])->name('mat
 Route::get('/embed/calendar', [EmbedController::class, 'calendar'])->name('embed.calendar');
 Route::get('/embed/calendar.js', [EmbedController::class, 'script'])->name('embed.script');
 Route::get('/embed', [StaticPageController::class, 'embedDocs'])->name('embed.docs');
+Route::get('/oembed', [EmbedController::class, 'oembed'])->name('oembed');
 
 Route::get('/advertise', [EnquiryController::class, 'advertise'])->name('advertise');
 Route::get('/contact', [EnquiryController::class, 'create'])->name('contact');

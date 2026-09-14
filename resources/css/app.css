@@ -369,6 +369,8 @@ footer.site a:hover { color: #fff; }
 .club-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .tag { font-family: var(--f-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; border: 1px solid var(--rule); padding: 3px 7px; color: var(--slate); text-decoration: none; }
 .tag.key { border-color: var(--brass); color: var(--brass-dk); }
+.embed-box { margin-top: 28px; }
+.embed-code { background: var(--surface); border: 1px solid var(--rule); padding: 16px 18px; overflow: auto; font-size: 13px; }
 
 .m-pills { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
 .dope-banner img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

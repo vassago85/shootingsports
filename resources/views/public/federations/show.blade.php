@@ -60,6 +60,7 @@
                         @endforeach
                     </div>
                 @endif
+                <x-embed-snippet :organisation="$organisation->slug" />
             </div>
         </section>
     </main>
