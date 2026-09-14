@@ -12,7 +12,9 @@ use App\Policies\EventPolicy;
 use App\Support\PublicCache;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,14 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Behind Nginx Proxy Manager the app container only ever sees plain http
+        // on port 80. If the public APP_URL is https, force every generated URL
+        // (asset(), route(), Vite manifest URLs, Livewire endpoints) to use
+        // https so browsers don't block them as mixed content.
+        if (Str::startsWith((string) config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
+
         Relation::enforceMorphMap([
             'organisation' => Organisation::class,
             'venue' => Venue::class,
