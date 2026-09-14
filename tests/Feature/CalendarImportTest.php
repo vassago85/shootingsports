@@ -77,6 +77,42 @@ it('imports SAPRF table rows without touching staff matches', function () {
         ->status->toBe(ListingStatus::Published);
 });
 
+it('updates an existing SAPRF listing by entry URL instead of creating a second row', function () {
+    Discipline::factory()->create(['slug' => 'pr22-rimfire', 'name' => 'PR22']);
+
+    $existing = Event::factory()->confirmed()->create([
+        'slug' => 'saprf-pr22-mp-provincial-2026',
+        'title' => 'Rimfire PR22 MP Provincial',
+        'entry_url' => 'https://saprf.co.za/events/111',
+        'source' => ListingSource::Import,
+    ]);
+
+    Http::fake([
+        'saprf.co.za/events*' => Http::response(<<<'HTML'
+            <table>
+                <tbody>
+                    <tr>
+                        <td>17 Oct 2026</td>
+                        <td><a href="https://saprf.co.za/events/111">Rimfire PR22 MP Provincial</a></td>
+                        <td>PR22</td>
+                        <td>provincial</td>
+                        <td>MP</td>
+                        <td>Balmoral Farm</td>
+                        <td>—</td>
+                        <td>Open</td>
+                    </tr>
+                </tbody>
+            </table>
+            HTML, 200),
+    ]);
+
+    $this->artisan('calendar:import saprf')->assertSuccessful();
+
+    expect(Event::query()->where('entry_url', 'https://saprf.co.za/events/111')->count())->toBe(1)
+        ->and($existing->fresh()->slug)->toBe('saprf-pr22-mp-provincial-2026')
+        ->and($existing->fresh()->status)->toBe(EventStatus::EntriesOpen);
+});
+
 it('parses MPSA season dates that wrap a month', function () {
     Discipline::factory()->create(['slug' => 'ipsc-practical', 'name' => 'IPSC']);
 

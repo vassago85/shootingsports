@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             SendItElr2026Seeder::class,
             SaprfEventsSeeder::class,
             CtsasaEventsSeeder::class,
+            NrlHunterEventsSeeder::class,
         ]);
 
         if (! app()->environment('local')) {
