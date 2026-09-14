@@ -430,7 +430,13 @@ footer.site a:hover { color: #fff; }
 .tag { font-family: var(--f-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; border: 1px solid var(--rule); padding: 3px 7px; color: var(--slate); text-decoration: none; }
 .tag.key { border-color: var(--brass); color: var(--brass-dk); }
 .embed-box { margin-top: 28px; }
+.embed-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; margin-top: 10px; }
+.embed-row:first-of-type { margin-top: 0; }
+.embed-row .embed-code { margin: 0; }
 .embed-code { background: var(--surface); border: 1px solid var(--rule); padding: 16px 18px; overflow: auto; font-size: 13px; }
+@media (max-width: 700px) {
+    .embed-row { grid-template-columns: 1fr; }
+}
 
 .m-pills { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
 .dope-banner img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

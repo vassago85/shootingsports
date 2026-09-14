@@ -4,6 +4,7 @@ use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
 use App\Models\Event;
 use App\Models\Organisation;
+use App\Models\User;
 use App\Models\Venue;
 use App\Support\EmbedTheme;
 use App\Support\EmbedUrl;
@@ -97,7 +98,7 @@ it('serves embed script attributes for club styling', function () {
         ->assertSee('font');
 });
 
-it('shows an embed snippet on club and range pages', function () {
+it('hides embed snippets from guests and shows them when signed in', function () {
     $club = Organisation::factory()->create([
         'slug' => 'snippet-club',
         'name' => 'Snippet Club',
@@ -109,15 +110,6 @@ it('shows an embed snippet on club and range pages', function () {
         'name' => 'Snippet Range',
         'status' => ListingStatus::Published,
     ]);
-
-    $this->get(route('clubs.show', $club->slug))
-        ->assertOk()
-        ->assertSee('embed/calendar?club=snippet-club', false);
-
-    $this->get(route('ranges.show', $venue->slug))
-        ->assertOk()
-        ->assertSee('embed/calendar?venue=snippet-range', false);
-
     $federation = Organisation::factory()->create([
         'slug' => 'snippet-fed',
         'name' => 'Snippet Federation',
@@ -125,7 +117,25 @@ it('shows an embed snippet on club and range pages', function () {
         'type' => OrganisationType::Federation,
     ]);
 
-    $this->get(route('federations.show', $federation->slug))
+    $this->get(route('clubs.show', $club->slug))
+        ->assertOk()
+        ->assertSee('Sign in to embed this calendar')
+        ->assertDontSee('embed/calendar?club=snippet-club', false);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('clubs.show', $club->slug))
+        ->assertOk()
+        ->assertSee('embed/calendar?club=snippet-club', false)
+        ->assertSee('Copy WordPress URL')
+        ->assertSee('Copy iframe');
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('ranges.show', $venue->slug))
+        ->assertOk()
+        ->assertSee('embed/calendar?venue=snippet-range', false);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('federations.show', $federation->slug))
         ->assertOk()
         ->assertSee('embed/calendar?organisation=snippet-fed', false);
 });
