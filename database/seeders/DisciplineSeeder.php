@@ -45,6 +45,16 @@ class DisciplineSeeder extends Seeder
             'sort_order' => $sort += 10,
         ]);
 
+        $this->upsert([
+            'slug' => 'elr',
+            'name' => 'ELR',
+            'family' => DisciplineFamily::Rifle,
+            'short_blurb' => 'Extreme long range — known-distance steel past a mile, often to two miles.',
+            'typical_distances' => '1 000–3 200 m',
+            'is_published' => true,
+            'sort_order' => $sort += 10,
+        ]);
+
         foreach ([
             ['f-class', 'F-Class', 'Supported-rifle target shooting at known distance.', '300–1 000 yd'],
             ['target-rifle', 'Target Rifle', 'Sling-supported target rifle on paper.', '300–1 000 yd'],

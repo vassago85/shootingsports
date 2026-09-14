@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             // Idempotent, runs in every environment so production also gets a
             // first-login account after `php artisan migrate --seed`.
             AdminUserSeeder::class,
+            SendItElr2026Seeder::class,
         ]);
 
         if (! app()->environment('local')) {
