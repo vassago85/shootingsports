@@ -11,8 +11,9 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Set;
+use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -31,8 +32,8 @@ class EventForm
                             ->required()
                             ->columnSpanFull()
                             ->live(onBlur: true)
-                            ->afterStateUpdated(function (string $operation, ?string $state, Set $set): void {
-                                if ($operation === 'create' && filled($state)) {
+                            ->afterStateUpdated(function (?string $state, Set $set, mixed $livewire): void {
+                                if ($livewire instanceof CreateRecord && filled($state)) {
                                     $set('slug', Str::slug($state));
                                 }
                             }),

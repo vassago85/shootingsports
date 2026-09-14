@@ -25,9 +25,10 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Set;
+use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
@@ -49,6 +50,8 @@ class OrganisationResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Directory';
 
+    protected static ?string $navigationLabel = 'Clubs & series';
+
     protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'name';
@@ -64,13 +67,14 @@ class OrganisationResource extends Resource
                             ->required()
                             ->columnSpanFull()
                             ->live(onBlur: true)
-                            ->afterStateUpdated(function (string $operation, ?string $state, Set $set): void {
-                                if ($operation === 'create' && filled($state)) {
+                            ->afterStateUpdated(function (?string $state, Set $set, mixed $livewire): void {
+                                if ($livewire instanceof CreateRecord && filled($state)) {
                                     $set('slug', Str::slug($state));
                                 }
                             }),
                         TextInput::make('slug')
                             ->columnSpanFull()
+                            ->helperText('Auto-generated from the name. Edit only if you need a custom URL.')
                             ->unique(ignoreRecord: true)
                             ->rules(['alpha_dash']),
                         TextInput::make('short_name'),

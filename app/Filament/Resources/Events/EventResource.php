@@ -22,10 +22,11 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Set;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -62,10 +63,10 @@ class EventResource extends Resource
                             ->required()
                             ->columnSpanFull()
                             ->live(onBlur: true)
-                            ->afterStateUpdated(function (string $operation, ?string $state, Set $set): void {
+                            ->afterStateUpdated(function (?string $state, Set $set, mixed $livewire): void {
                                 // Only auto-populate the slug on create — never overwrite it
                                 // on edit, or bookmarks and cached URLs would break.
-                                if ($operation === 'create' && filled($state)) {
+                                if ($livewire instanceof CreateRecord && filled($state)) {
                                     $set('slug', Str::slug($state));
                                 }
                             }),
