@@ -191,7 +191,11 @@ it('renders active placements for a page slot', function () {
 });
 
 it('offers vacant advertising space without prices', function () {
-    $this->get(route('home'))
+    // The home page opts out of the vacant pitch (hide-when-vacant) to
+    // stop an "Advertise here" block appearing above the first match
+    // on a young directory. /calendar and /suppliers keep the vacant
+    // pitch since advertising is the whole point of the surface.
+    $this->get(route('calendar'))
         ->assertOk()
         ->assertSee('This space is available')
         ->assertSee('Advertise here')
@@ -200,9 +204,14 @@ it('offers vacant advertising space without prices', function () {
         ->assertDontSee('rate card')
         ->assertDontSee('price_cents');
 
-    $this->get(route('calendar'))
+    $this->get(route('suppliers.index'))
         ->assertOk()
         ->assertSee('This space is available');
+
+    // Home explicitly should NOT show the vacant pitch.
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertDontSee('This space is available');
 });
 
 it('marks enquiries read when opened', function () {

@@ -187,8 +187,10 @@ section.block { padding: 72px 0; }
 .dope-top { display: flex; justify-content: space-between; gap: 12px; padding: 15px 17px 12px; border-bottom: 1px solid var(--rule); }
 .dope-top h3 { font-size: 18px; line-height: 1.13; text-transform: uppercase; }
 .dope-top .club { font-family: var(--f-mono); font-size: 11px; color: var(--slate); margin-top: 4px; display: block; }
-.dope-date { font-family: var(--f-mono); text-align: right; font-size: 10.5px; letter-spacing: .1em; color: var(--brass-dk); }
+.dope-date { font-family: var(--f-mono); text-align: right; font-size: 10.5px; letter-spacing: .1em; color: var(--brass-dk); line-height: 1.15; }
+.dope-date .dow { display: block; font-size: 10px; color: var(--slate); letter-spacing: .18em; text-transform: uppercase; }
 .dope-date b { display: block; font-size: 23px; font-weight: 600; color: var(--ink); }
+.dope-date .mo { display: block; text-transform: uppercase; }
 .dope.is-planned .dope-date b { color: var(--slate); }
 .dope-rows { padding: 12px 17px; font-family: var(--f-mono); font-size: 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
 .dope-rows .r { display: flex; justify-content: space-between; gap: 14px; }
@@ -264,7 +266,13 @@ section.block { padding: 72px 0; }
 .listing { background: var(--surface); border: 1px solid var(--rule); padding: 18px 20px; margin-bottom: 12px; text-decoration: none; display: block; }
 .listing h3 { font-size: 20px; text-transform: uppercase; }
 .listing .meta { font-family: var(--f-mono); font-size: 12px; color: var(--slate); margin-top: 6px; }
-.badge-verified { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--brass-dk); }
+/* Confirmation status. Gold is the earned state; unconfirmed listings
+   default to a muted colour so a fresh directory does not scream
+   "everything is unverified" in the site's emphasis colour. */
+.badge-verified { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--slate); }
+.badge-verified--verified { color: var(--brass-dk); }
+.badge-verified--ageing { color: #b3892b; }
+.badge-verified--unconfirmed { color: var(--slate); opacity: .7; text-transform: none; letter-spacing: .04em; font-size: 10px; }
 
 .enquiry-form .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .enquiry-form .field span { font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--slate); }
@@ -498,6 +506,14 @@ footer.site a:hover { color: #fff; }
 .m-pills { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
 .dope-banner img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .dope-banner.logo-fallback img { object-fit: contain; padding: 14px 18%; background: #1d2426; }
+/* Posters are almost always square or portrait. Cover-fit crops the
+   middle strip and eats the title / date / prize copy that lives at
+   the top and bottom of the poster. Instead we blur the poster into
+   the 3:1 backdrop and contain-fit the real thing on top of it. */
+.dope-banner.has-poster { background: #0e1214; }
+.dope-banner.has-poster .dope-banner-bg { object-fit: cover; filter: blur(22px) saturate(1.15) brightness(.42); transform: scale(1.08); z-index: 1; }
+.dope-banner.has-poster .dope-banner-fg { object-fit: contain; z-index: 2; }
+.dope-banner .pill-row, .dope-banner .banner-caption { z-index: 3; }
 .dope-banner svg { position: absolute; right: 12px; bottom: 8px; width: 56px; height: 56px; opacity: .35; }
 
 .hamburger { display: none; color: #e6e9e7; padding: 8px; font-family: var(--f-display); letter-spacing: .08em; text-transform: uppercase; }

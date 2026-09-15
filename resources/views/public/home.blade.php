@@ -12,9 +12,9 @@
             </svg>
             <div class="hero-in">
                 <div>
-                    <p class="label">Every discipline · every province · one calendar</p>
-                    <h1>Find your next <em>shoot</em>.</h1>
-                    <p class="lede">The national register of South African shooting sport. Clubs, ranges, suppliers and every match on the calendar — filtered by discipline, by province, and by how far you are willing to drive.</p>
+                    <p class="label">The national register of South African shooting sport</p>
+                    <h1>Find your <em>sport</em>. Find your <em>club</em>. Find your <em>match</em>.</h1>
+                    <p class="lede">Every discipline, every province, one calendar. Free to list, free to browse, no account needed to look around.</p>
                     <livewire:match-finder />
                 </div>
                 <div class="hero-rail">
@@ -25,8 +25,9 @@
                     @forelse ($rail as $event)
                         <a class="rail-item" href="{{ route('matches.show', $event->slug) }}">
                             <div class="rail-date">
-                                <b>{{ $event->starts_at->timezone('Africa/Johannesburg')->format('j') }}</b>
-                                {{ $event->starts_at->timezone('Africa/Johannesburg')->format('M') }}
+                                <span class="dow">{{ \App\Support\EventDate::weekday($event->starts_at) }}</span>
+                                <b>{{ \App\Support\EventDate::dayOfMonth($event->starts_at) }}</b>
+                                <span class="mo">{{ \App\Support\EventDate::monthWithYear($event->starts_at) }}</span>
                             </div>
                             <div class="rail-body">
                                 <div class="t">{{ $event->title }}</div>
@@ -47,12 +48,8 @@
                 <div><span>Matches listed</span><b>{{ $stats['matches'] }}</b></div>
                 <div><span>Disciplines</span><b>{{ $stats['disciplines'] }}</b></div>
                 <div><span>Provinces</span><b>{{ $stats['provinces'] }}</b></div>
-                <div><span>Suppliers</span><b>{{ $stats['suppliers'] }}</b></div>
+                <div><span>Industry</span><b>{{ $stats['suppliers'] }}</b></div>
             </div>
-        </div>
-
-        <div class="wrap" style="padding-top:28px">
-            <x-ad-slot page="home" placement-slot="leaderboard" :limit="2" />
         </div>
 
         <section class="block" id="calendar">
@@ -66,10 +63,18 @@
             </div>
         </section>
 
+        {{-- Ad rail lives between the first content section and the
+             discipline grid, and only renders when there is a live
+             placement. A vacant "Advertise here" block above the first
+             match reads as thin on a young directory. --}}
+        <div class="wrap" style="padding-top:8px; padding-bottom:8px">
+            <x-ad-slot page="home" placement-slot="leaderboard" :limit="2" hide-when-vacant />
+        </div>
+
         <section class="block" id="disciplines" style="padding-top:0">
             <div class="wrap">
                 <div class="sec-head">
-                    <p class="label">02 — Disciplines</p>
+                    <p class="label">02 — Discover</p>
                     <h2>Know the game before you arrive</h2>
                     <p>Each discipline is a real page — what it is, who governs it, and where the next match is.</p>
                 </div>
@@ -120,8 +125,8 @@
                         <a class="dir-more" href="{{ route('ranges.index') }}">All ranges →</a>
                     </div>
                     <div class="dir-col">
-                        <h3>Suppliers</h3>
-                        <span class="label">Gunsmiths, dealers, instructors</span>
+                        <h3>Industry</h3>
+                        <span class="label">Gunsmiths, dealers, ammunition, optics</span>
                         <ul>
                             @foreach ($suppliers as $supplier)
                                 <li>
@@ -130,7 +135,7 @@
                                 </li>
                             @endforeach
                         </ul>
-                        <a class="dir-more" href="{{ route('suppliers.index') }}">All suppliers →</a>
+                        <a class="dir-more" href="{{ route('suppliers.index') }}">See the industry →</a>
                     </div>
                 </div>
             </div>

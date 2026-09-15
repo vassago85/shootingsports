@@ -47,7 +47,7 @@
             </a>
             <nav class="nav-links" aria-label="Primary">
                 <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') ? 'on' : '' }}">Calendar</a>
-                <a href="{{ route('disciplines.index') }}" class="{{ request()->routeIs('disciplines.*') ? 'on' : '' }}">Disciplines</a>
+                <a href="{{ route('disciplines.index') }}" class="{{ request()->routeIs('disciplines.*') ? 'on' : '' }}">Discover</a>
                 <a href="{{ route('clubs.index') }}" class="{{ request()->routeIs('clubs.*') || request()->routeIs('ranges.*') || request()->routeIs('suppliers.*') ? 'on' : '' }}">Directory</a>
                 <a href="{{ route('claim') }}">For Clubs</a>
                 <a href="{{ route('advertise') }}">Advertise</a>
@@ -65,10 +65,10 @@
         </div>
         <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
             <a href="{{ route('calendar') }}">Calendar</a>
-            <a href="{{ route('disciplines.index') }}">Disciplines</a>
+            <a href="{{ route('disciplines.index') }}">Discover</a>
             <a href="{{ route('clubs.index') }}">Clubs</a>
             <a href="{{ route('ranges.index') }}">Ranges</a>
-            <a href="{{ route('suppliers.index') }}">Suppliers</a>
+            <a href="{{ route('suppliers.index') }}">Industry</a>
             <a href="{{ route('claim') }}">For Clubs</a>
             @auth
                 <a href="{{ route('my-calendar') }}">My calendar</a>
@@ -105,10 +105,10 @@
                     <h4>Browse</h4>
                     <ul>
                         <li><a href="{{ route('calendar') }}">Match calendar</a></li>
-                        <li><a href="{{ route('disciplines.index') }}">Disciplines</a></li>
+                        <li><a href="{{ route('disciplines.index') }}">Discover</a></li>
                         <li><a href="{{ route('clubs.index') }}">Clubs</a></li>
                         <li><a href="{{ route('ranges.index') }}">Ranges</a></li>
-                        <li><a href="{{ route('suppliers.index') }}">Suppliers</a></li>
+                        <li><a href="{{ route('suppliers.index') }}">Industry</a></li>
                     </ul>
                 </div>
                 <div>

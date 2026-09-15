@@ -30,7 +30,7 @@ class JsonLd
                     '@id' => $siteUrl.'#website',
                     'url' => $siteUrl,
                     'name' => 'Shooting Sports',
-                    'alternateName' => 'The SA Register of Shooting Sport',
+                    'alternateName' => 'Find your sport, your club, your match',
                     'inLanguage' => 'en-ZA',
                     'potentialAction' => [
                         '@type' => 'SearchAction',

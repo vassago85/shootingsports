@@ -1,10 +1,10 @@
-<x-layouts.public title="Suppliers" description="Gunsmiths, dealers, instructors and other providers listed on the South African shooting sports register.">
+<x-layouts.public title="Industry" description="Gunsmiths, dealers, ammunition, optics and other shooting-related businesses listed on the South African register.">
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
                 <p class="label">Directory</p>
-                <h1>Suppliers</h1>
-                <p>Listings are free. We do not sell firearms or take a cut of a transfer.</p>
+                <h1>Industry</h1>
+                <p>Every shooting-related business, listed free. We do not sell firearms or take a cut of a transfer.</p>
             </div>
         </section>
         <section class="block">

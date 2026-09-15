@@ -17,11 +17,11 @@ class LlmsTxtController extends Controller
     public function __invoke(): Response
     {
         $lines = [
-            '# Shooting Sports — The SA Register of Shooting Sport',
+            '# Shooting Sports — Find your sport. Find your club. Find your match.',
             '',
             'The independent, neutral national register of South African shooting sport.',
-            'Clubs, ranges, suppliers and every match on the calendar — filtered by discipline,',
-            'by province, and by how far you are willing to drive.',
+            'Every discipline, every province, every match on one South African calendar.',
+            'Free to list, free to browse, no account required to look around.',
             '',
             '## Public pages',
             '',

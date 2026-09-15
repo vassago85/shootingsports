@@ -2,12 +2,21 @@
     'page',
     'placementSlot',
     'limit' => 3,
+    // When true, the slot renders nothing at all if there's no live ad.
+    // Use this on high-traffic surfaces (home hero neighbourhood) where
+    // an empty "Advertise here" panel makes a young directory read
+    // as thin. Keep it false on /advertise and /calendar where the
+    // vacant slot is doing genuine sales work.
+    'hideWhenVacant' => false,
 ])
 
 @php
     $placements = \App\Support\AdPlacements::for($page, $placementSlot, (int) $limit);
 @endphp
 
+@if ($placements->isEmpty() && $hideWhenVacant)
+    {{-- Silent: no chrome, no vacant pitch. --}}
+@else
 <aside {{ $attributes->class('ad-rail') }} aria-label="Advertising">
     @if ($placements->isNotEmpty())
         <p class="ad-label">Sponsored</p>
@@ -58,3 +67,4 @@
         </a>
     @endif
 </aside>
+@endif

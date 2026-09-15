@@ -2,9 +2,9 @@
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
-                <p class="label">Directory</p>
+                <p class="label">Find your club</p>
                 <h1>Clubs</h1>
-                <p>A club is not bound to a venue. Home province is for orientation. The range lives on the match.</p>
+                <p>Every registered shooting club in South Africa, filtered by home province. Ranges live on the match — a club can host at any of them.</p>
             </div>
         </section>
         <section class="block">

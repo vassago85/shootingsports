@@ -19,10 +19,10 @@
     use App\Support\JsonLd;
 
     $siteName = 'Shooting Sports';
-    $tagline = 'The SA Register';
+    $tagline = 'Find your sport, your club, your match';
     $fullTitle = $title ? $title.' · '.$siteName : $siteName.' — '.$tagline;
     $description = $description
-        ?: 'Clubs, ranges, suppliers and every match on the calendar — filtered by discipline, by province, and by how far you are willing to drive.';
+        ?: 'Find your sport. Find your club. Find your match. Every discipline, every province, every South African shooting match on one calendar.';
     $canonical = $canonical ?: url()->current();
     $image = $image ?: asset('images/og-default.png');
     $verification = config('services.google.site_verification');

@@ -23,8 +23,9 @@
         @forelse ($events as $event)
             <a class="match-row" href="{{ route('matches.show', $event->slug) }}" target="_blank" rel="noopener">
                 <div class="m-date">
-                    <b>{{ $event->starts_at->timezone('Africa/Johannesburg')->format('j') }}</b>
-                    {{ $event->starts_at->timezone('Africa/Johannesburg')->format('M') }}
+                    <span class="dow">{{ \App\Support\EventDate::weekday($event->starts_at) }}</span>
+                    <b>{{ \App\Support\EventDate::dayOfMonth($event->starts_at) }}</b>
+                    <span class="mo">{{ \App\Support\EventDate::monthWithYear($event->starts_at) }}</span>
                 </div>
                 <div class="m-body">
                     <div class="t">{{ $event->title }}</div>

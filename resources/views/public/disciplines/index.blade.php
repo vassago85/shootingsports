@@ -1,13 +1,13 @@
 <x-layouts.public
-    title="Disciplines"
+    title="Discover"
     description="Every shooting discipline on the South African register — what it is, who shoots it, and where the next match is."
 >
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
-                <p class="label">The grid</p>
-                <h1>Disciplines</h1>
-                <p>Each page is a real destination. Discipline × province pages exist for search. Thin combinations are noindexed, not deleted.</p>
+                <p class="label">Find your sport</p>
+                <h1>Discover</h1>
+                <p>Precision rifle, IPSC, clays, benchrest, gong, PR22 — every discipline shot in South Africa, what it is, who governs it, and where the next match is.</p>
             </div>
         </section>
         <section class="block">
