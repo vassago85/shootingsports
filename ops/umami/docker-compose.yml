@@ -13,7 +13,10 @@
 #   docker compose up -d
 #
 # Then point Nginx Proxy Manager for analytics.charsleydigital.co.za at
-# 127.0.0.1:${UMAMI_PORT:-3010}.
+# umami:3000 (container name + internal port on the shared network).
+# 127.0.0.1:${UMAMI_PORT:-3010} on the host is kept for on-server curl
+# debugging only — NPM does NOT use that path, because from inside the
+# NPM container 127.0.0.1 refers to the NPM container itself.
 
 services:
   umami-db:
@@ -47,12 +50,23 @@ services:
       TRACKER_SCRIPT_NAME: script
       # Optional: hostname whitelist for the shared tracker script.
       # ALLOWED_FRAME_URLS: https://shootingsports.co.za,https://tuneupprecision.co.za
-    # Loopback-only bind. Nginx Proxy Manager (also on this host) is the
-    # only client — no external traffic should touch Umami directly.
-    # If you ever need to reach it from another VM, add a firewall rule
-    # rather than opening the port here.
+    networks:
+      # `default` = the stack's private network, needed to reach umami-db.
+      # `proxy`   = the shared NPM network so NPM can hit us by container name.
+      - default
+      - proxy
+    # Loopback-only bind. Kept for on-server curl debugging only; NPM
+    # reaches us via the `proxy` network above, not this host port.
     ports:
       - "127.0.0.1:${UMAMI_PORT:-3010}:3000"
+
+networks:
+  # External network created by the Nginx Proxy Manager compose stack.
+  # We do NOT create it — we just join it. If NPM is ever moved to a
+  # different network name, update this and the NPM proxy host together.
+  proxy:
+    external: true
+    name: nginx-proxy-manager_default
 
 volumes:
   umami-db:
