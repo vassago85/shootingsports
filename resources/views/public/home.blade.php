@@ -94,13 +94,13 @@
             <div class="wrap">
                 <div class="sec-head">
                     <p class="label">03 — Directory</p>
-                    <h2>Clubs, ranges, suppliers</h2>
-                    <p>A club is not bound to a venue. Ranges live on the match. Listings stay free.</p>
+                    <h2>Clubs &amp; series, ranges, industry</h2>
+                    <p>A club is not bound to a venue. Ranges live on the match. Series are branded, recurring matches with no membership. Listings stay free.</p>
                 </div>
                 <div class="dir-grid">
                     <div class="dir-col">
-                        <h3>Clubs</h3>
-                        <span class="label">By home province</span>
+                        <h3>Clubs &amp; series</h3>
+                        <span class="label">Membership clubs, associations, and branded match series</span>
                         <ul>
                             @foreach ($clubs as $club)
                                 <li>
@@ -109,7 +109,7 @@
                                 </li>
                             @endforeach
                         </ul>
-                        <a class="dir-more" href="{{ route('clubs.index') }}">All clubs →</a>
+                        <a class="dir-more" href="{{ route('clubs.index') }}">All clubs &amp; series →</a>
                     </div>
                     <div class="dir-col">
                         <h3>Ranges</h3>

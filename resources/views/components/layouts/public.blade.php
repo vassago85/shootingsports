@@ -68,7 +68,7 @@
         <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
             <a href="{{ route('calendar') }}">Calendar</a>
             <a href="{{ route('disciplines.index') }}">Discover</a>
-            <a href="{{ route('clubs.index') }}">Clubs</a>
+            <a href="{{ route('clubs.index') }}">Clubs &amp; series</a>
             <a href="{{ route('ranges.index') }}">Ranges</a>
             <a href="{{ route('suppliers.index') }}">Industry</a>
             <a href="{{ route('claim') }}">For Clubs</a>
@@ -136,7 +136,7 @@
                     <ul>
                         <li><a href="{{ route('calendar') }}">Match calendar</a></li>
                         <li><a href="{{ route('disciplines.index') }}">Discover</a></li>
-                        <li><a href="{{ route('clubs.index') }}">Clubs</a></li>
+                        <li><a href="{{ route('clubs.index') }}">Clubs &amp; series</a></li>
                         <li><a href="{{ route('ranges.index') }}">Ranges</a></li>
                         <li><a href="{{ route('suppliers.index') }}">Industry</a></li>
                     </ul>

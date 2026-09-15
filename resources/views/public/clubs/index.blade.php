@@ -1,10 +1,10 @@
-<x-layouts.public title="Clubs" description="Clubs and associations on the South African shooting sports register, listed by home province.">
+<x-layouts.public title="Clubs & series" description="Membership clubs, associations, and branded match series on the South African shooting sports register, listed by home province.">
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
-                <p class="label">Find your club</p>
-                <h1>Clubs</h1>
-                <p>Every registered shooting club in South Africa, filtered by home province. Ranges live on the match — a club can host at any of them.</p>
+                <p class="label">Find your club or series</p>
+                <h1>Clubs &amp; series</h1>
+                <p>Membership clubs, associations, and branded match series — the people who put on matches. Filter by home province. Ranges live on the match; a host can shoot at any of them.</p>
             </div>
         </section>
         <section class="block">
@@ -29,7 +29,7 @@
                         </div>
                     </a>
                 @empty
-                    <p class="empty">No clubs listed in this province yet.</p>
+                    <p class="empty">No clubs or series listed in this province yet.</p>
                 @endforelse
             </div>
         </section>
