@@ -32,6 +32,7 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'digest_frequency' => 'none',
             'is_staff' => false,
+            'is_match_director' => false,
         ];
     }
 
@@ -49,6 +50,13 @@ class UserFactory extends Factory
     {
         return $this->state(fn (): array => [
             'is_staff' => true,
+        ]);
+    }
+
+    public function matchDirector(): static
+    {
+        return $this->state(fn (): array => [
+            'is_match_director' => true,
         ]);
     }
 }

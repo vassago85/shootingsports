@@ -16,6 +16,10 @@ use App\Http\Controllers\ShooterCalendarController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StaticPageController;
 use App\Http\Controllers\VenueController;
+use App\Livewire\Auth\DirectorRegister;
+use App\Livewire\Auth\Login;
+use App\Livewire\Auth\ShooterRegister;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 $provincePattern = implode('|', array_map(fn (Province $province) => $province->urlSlug(), Province::cases()));
@@ -91,3 +95,26 @@ Route::get('/sitemaps/disciplines.xml', [SitemapController::class, 'disciplines'
 Route::get('/sitemaps/providers.xml', [SitemapController::class, 'providers'])->name('sitemap.providers');
 
 Route::get('/llms.txt', LlmsTxtController::class)->name('llms');
+
+// Public auth. Filament still owns /admin/login and /desk/login as
+// internal panel infrastructure; these routes are the front-door
+// nav uses. The name 'login' matches Laravel's default so the
+// auth middleware's redirectTo() finds it without config changes.
+Route::middleware('guest')->group(function (): void {
+    Route::get('/login', Login::class)->name('login');
+    Route::get('/register', ShooterRegister::class)->name('register');
+    Route::get('/directors/register', DirectorRegister::class)->name('directors.register');
+});
+
+// Legacy bookmark: /desk/register was Filament's built-in registration
+// page before the signup split. Point it at the new director flow so
+// old links still land somewhere sensible.
+Route::redirect('/desk/register', '/directors/register', 301);
+
+Route::post('/logout', function () {
+    Auth::logout();
+    session()->invalidate();
+    session()->regenerateToken();
+
+    return redirect('/');
+})->middleware('auth')->name('logout');

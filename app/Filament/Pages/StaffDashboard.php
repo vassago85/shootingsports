@@ -9,9 +9,11 @@ use App\Filament\Resources\Enquiries\EnquiryResource;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Organisations\OrganisationResource;
 use App\Filament\Resources\Placements\PlacementResource;
+use App\Filament\Resources\Users\UserResource;
 use App\Models\Enquiry;
 use App\Models\Event;
 use App\Models\Organisation;
+use App\Models\User;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Icons\Heroicon;
@@ -55,6 +57,7 @@ class StaffDashboard extends Page
             'newEnquiries' => $newEnquiries,
             'upcoming' => $upcoming,
             'waitlistThisMonth' => $this->waitlistThisMonth(),
+            'newMatchDirectors' => $this->newMatchDirectorsThisMonth(),
             'orgsUrl' => OrganisationResource::getUrl('index'),
             'createOrgUrl' => OrganisationResource::getUrl('create'),
             'eventsUrl' => EventResource::getUrl('index'),
@@ -63,7 +66,23 @@ class StaffDashboard extends Page
             'placementsUrl' => PlacementResource::getUrl('index'),
             'emailUrl' => ManageMailSettings::getUrl(),
             'verificationUrl' => VerificationDashboard::getUrl(),
+            'usersUrl' => UserResource::getUrl('index'),
         ];
+    }
+
+    /**
+     * Match director signups this calendar month — the review lane
+     * introduced by the open-signup MD flow. Kept as a raw count with
+     * a "review" deep link rather than a table on the dashboard; if
+     * volume grows, promote it to a dedicated widget.
+     */
+    private function newMatchDirectorsThisMonth(): int
+    {
+        return User::query()
+            ->where('is_match_director', true)
+            ->where('is_staff', false)
+            ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->count();
     }
 
     /**

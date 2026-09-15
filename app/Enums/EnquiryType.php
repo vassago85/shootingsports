@@ -13,4 +13,5 @@ enum EnquiryType: string implements HasLabel
     case Advertise = 'advertise';
     case Listing = 'listing';
     case ProWaitlist = 'pro_waitlist';
+    case MdSignup = 'md_signup';
 }

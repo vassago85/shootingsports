@@ -24,7 +24,7 @@ class SaveToCalendar extends Component
         $user = auth()->user();
 
         if (! $user) {
-            $this->redirect(url('/desk/login'));
+            $this->redirect(route('login'));
 
             return;
         }

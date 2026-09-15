@@ -62,7 +62,7 @@
                         @else
                             <a
                                 class="btn"
-                                href="{{ url('/desk/login') }}"
+                                href="{{ route('login') }}"
                             >Sign in to join the waitlist</a>
                         @endauth
                         <button type="button" class="btn ghost" wire:click="close">Not now</button>

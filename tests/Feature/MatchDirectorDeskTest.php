@@ -30,6 +30,10 @@ it('excludes upcoming events whose host listing is not published', function () {
 });
 
 it('allows any authenticated user to create an organisation listing', function () {
+    // The OrganisationPolicy stays permissive on create — the entry
+    // barrier is "you have an account", not "you have the MD flag".
+    // Staff still need to review new orgs before they go live, so a
+    // pending listing costs nothing to accept.
     $user = User::factory()->create();
 
     expect((new OrganisationPolicy)->create($user))->toBeTrue();
@@ -56,10 +60,13 @@ it('denies a stranger from updating someone else\'s listing', function () {
     expect((new OrganisationPolicy)->update($stranger, $organisation))->toBeFalse();
 });
 
-it('lets a registered user open the desk panel', function () {
-    $user = User::factory()->create(['is_staff' => false]);
+it('lets a match director open the desk panel', function () {
+    // Post signup-split: /desk is gated on is_match_director || is_staff.
+    // A plain shooter (no MD flag) can log in but cannot see /desk — the
+    // AuthFlowsTest covers that guard. This test asserts the affirmative.
+    $md = User::factory()->matchDirector()->create();
 
-    $this->actingAs($user)
+    $this->actingAs($md)
         ->get('/desk')
         ->assertOk();
 });

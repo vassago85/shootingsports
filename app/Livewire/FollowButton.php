@@ -44,7 +44,7 @@ class FollowButton extends Component
         $user = auth()->user();
 
         if (! $user instanceof User) {
-            $this->redirect(url('/desk/login'));
+            $this->redirect(route('login'));
 
             return;
         }

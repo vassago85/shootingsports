@@ -181,7 +181,7 @@
                     <h2>The register only works if the clubs are on it.</h2>
                     <p>If your club is missing, claim it from the desk. If a match is missing, a director can add it.</p>
                 </div>
-                <a class="btn" href="{{ url('/desk/login') }}">Director login</a>
+                <a class="btn" href="{{ route('login') }}">Director login</a>
             </div>
         </section>
     </main>

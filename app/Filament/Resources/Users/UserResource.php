@@ -21,6 +21,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class UserResource extends Resource
@@ -55,7 +56,12 @@ class UserResource extends Resource
                     ->options(DigestFrequency::class)
                     ->default('none')
                     ->required(),
+                Toggle::make('is_match_director')
+                    ->label('Match director')
+                    ->helperText('Grants /desk access. Set automatically when a user signs up via /directors/register.')
+                    ->required(),
                 Toggle::make('is_staff')
+                    ->helperText('Full admin. Trumps every other flag.')
                     ->required(),
             ]);
     }
@@ -90,11 +96,23 @@ class UserResource extends Resource
                 TextColumn::make('digest_frequency')
                     ->badge()
                     ->searchable(),
+                IconColumn::make('is_match_director')
+                    ->label('MD')
+                    ->boolean(),
                 IconColumn::make('is_staff')
                     ->boolean(),
             ])
             ->filters([
-                //
+                TernaryFilter::make('is_match_director')
+                    ->label('Match directors')
+                    ->placeholder('All users')
+                    ->trueLabel('MDs only')
+                    ->falseLabel('Non-MDs only'),
+                TernaryFilter::make('is_staff')
+                    ->label('Staff')
+                    ->placeholder('All users')
+                    ->trueLabel('Staff only')
+                    ->falseLabel('Non-staff only'),
             ])
             ->recordActions([
                 EditAction::make(),

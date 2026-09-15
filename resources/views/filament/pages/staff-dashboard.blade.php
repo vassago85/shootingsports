@@ -27,6 +27,28 @@
         @endif
     </div>
 
+    {{-- New match director signups this month. Signup is open so we
+         surface the review queue here rather than blocking access —
+         staff can pair each new MD with an existing organisation
+         (or catch a bad actor early) from the linked UserResource. --}}
+    <div class="desk-widget">
+        <p class="kicker">New match directors · {{ now()->format('F Y') }}</p>
+        @if ($newMatchDirectors === 0)
+            <p style="color:var(--slate)">No new match director signups yet this month.</p>
+        @else
+            <p>
+                <b>{{ $newMatchDirectors }}</b> new match director{{ $newMatchDirectors === 1 ? '' : 's' }} signed up.
+                Check the accompanying MD signup enquiries in the inbox for any club/host they named,
+                then pair them with an existing organisation.
+            </p>
+            <p style="margin-top:8px">
+                <a href="{{ $usersUrl }}" style="color:var(--brass)">Review users →</a>
+                &nbsp;·&nbsp;
+                <a href="{{ $enquiriesUrl }}" style="color:var(--brass)">MD signup enquiries →</a>
+            </p>
+        @endif
+    </div>
+
     <div class="desk-grid">
         <a class="desk-card" href="{{ $createOrgUrl }}">
             <p class="kicker">01 — Directory</p>

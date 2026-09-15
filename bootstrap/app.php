@@ -21,7 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
             | Request::HEADER_X_FORWARDED_PROTO
             | Request::HEADER_X_FORWARDED_AWS_ELB);
 
-        $middleware->redirectGuestsTo(fn () => url('/desk/login'));
+        // Unified public login. Filament panels still redirect to their own
+        // /admin/login and /desk/login internally; this is the fallback
+        // for auth-middlewared app routes (like /my-calendar).
+        $middleware->redirectGuestsTo(fn () => route('login'));
 
         $middleware->web(append: [
             PreventClickjacking::class,

@@ -68,9 +68,9 @@ it('does not show a missing shooter calendar as the nationwide feed', function (
         ->assertNotFound();
 });
 
-it('sends guests to desk login from my calendar', function () {
+it('sends guests to the public login when they hit my-calendar', function () {
     $this->get(route('my-calendar'))
-        ->assertRedirect('/desk/login');
+        ->assertRedirect(route('login'));
 });
 
 it('lets a shooter take a match off their calendar', function () {

@@ -6,8 +6,8 @@
                 <h1>Match director desk</h1>
                 <p>Create or claim a club or series, upload a logo, and manage your own matches. New listings stay private until staff publish them.</p>
                 <p style="margin-top:22px;display:flex;flex-wrap:wrap;gap:12px">
-                    <a class="btn" href="{{ url('/desk/login') }}">Director login</a>
-                    <a class="btn ghost on-dark" href="{{ url('/desk/register') }}">Create an account</a>
+                    <a class="btn" href="{{ route('login') }}">Director login</a>
+                    <a class="btn ghost on-dark" href="{{ route('directors.register') }}">Register as a match director</a>
                 </p>
             </div>
         </section>

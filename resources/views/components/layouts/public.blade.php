@@ -55,10 +55,12 @@
             <div class="nav-cta">
                 @auth
                     <a class="btn ghost on-dark" href="{{ route('my-calendar') }}">My calendar</a>
-                    <a class="btn" href="{{ url('/desk') }}">Desk</a>
+                    @if (auth()->user()?->is_staff || auth()->user()?->is_match_director)
+                        <a class="btn" href="{{ url('/desk') }}">Desk</a>
+                    @endif
                 @else
-                    <a class="btn ghost on-dark" href="{{ url('/desk/login') }}">Director login</a>
-                    <a class="btn" href="{{ url('/desk/register') }}">List your club</a>
+                    <a class="btn ghost on-dark" href="{{ route('login') }}">Log in</a>
+                    <a class="btn" href="{{ route('directors.register') }}">List your club</a>
                 @endauth
             </div>
             <button class="hamburger" id="burger" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">Menu</button>
@@ -72,10 +74,13 @@
             <a href="{{ route('claim') }}">For Clubs</a>
             @auth
                 <a href="{{ route('my-calendar') }}">My calendar</a>
-                <a href="{{ url('/desk') }}">Desk</a>
+                @if (auth()->user()?->is_staff || auth()->user()?->is_match_director)
+                    <a href="{{ url('/desk') }}">Desk</a>
+                @endif
             @else
-                <a href="{{ url('/desk/login') }}">Director login</a>
-                <a href="{{ url('/desk/register') }}">List your club</a>
+                <a href="{{ route('login') }}">Log in</a>
+                <a href="{{ route('register') }}">Create a shooter account</a>
+                <a href="{{ route('directors.register') }}">List your club</a>
             @endauth
             <a href="{{ route('advertise') }}">Advertise</a>
         </nav>
@@ -143,8 +148,9 @@
                         @auth
                             <li><a href="{{ route('my-calendar') }}">My calendar</a></li>
                         @else
-                            <li><a href="{{ url('/desk/login') }}">Director login</a></li>
-                            <li><a href="{{ url('/desk/register') }}">Create a desk account</a></li>
+                            <li><a href="{{ route('login') }}">Log in</a></li>
+                            <li><a href="{{ route('register') }}">Create a shooter account</a></li>
+                            <li><a href="{{ route('directors.register') }}">Register as a match director</a></li>
                         @endauth
                         <li><a href="{{ route('claim') }}">For clubs</a></li>
                         <li><a href="{{ route('embed.docs') }}">Embed the calendar</a></li>

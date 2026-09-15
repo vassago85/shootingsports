@@ -21,7 +21,7 @@ use Illuminate\Support\Str;
 
 #[Fillable([
     'name', 'email', 'password', 'calendar_slug', 'home_province', 'travel_radius_km',
-    'digest_frequency', 'is_staff', 'plan', 'plan_expires_at',
+    'digest_frequency', 'is_staff', 'is_match_director', 'plan', 'plan_expires_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
@@ -38,6 +38,7 @@ class User extends Authenticatable implements FilamentUser
             'travel_radius_km' => 'integer',
             'digest_frequency' => DigestFrequency::class,
             'is_staff' => 'boolean',
+            'is_match_director' => 'boolean',
             'plan' => Plan::class,
             'plan_expires_at' => 'datetime',
         ];
@@ -47,8 +48,25 @@ class User extends Authenticatable implements FilamentUser
     {
         return match ($panel->getId()) {
             'admin' => $this->is_staff,
-            'desk' => true, // any registered user (match directors + staff)
+            // Staff can access desk unconditionally (staff > MD > shooter).
+            // Everyone else must have opted into the MD signup path.
+            'desk' => $this->is_staff || $this->is_match_director,
             default => false,
+        };
+    }
+
+    /**
+     * Post-login landing URL. Staff drop into /admin, match directors
+     * into /desk, plain shooters into their own calendar. Callers should
+     * still respect any `intended` URL captured by the auth middleware —
+     * this is only the default when no intended URL was set.
+     */
+    public function defaultRedirectPath(): string
+    {
+        return match (true) {
+            $this->is_staff => '/admin',
+            $this->is_match_director => '/desk',
+            default => '/my-calendar',
         };
     }
 

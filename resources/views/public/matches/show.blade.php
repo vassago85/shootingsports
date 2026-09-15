@@ -45,7 +45,7 @@
                     @auth
                         <livewire:save-to-calendar :event="$event" variant="button" :key="'save-match-'.$event->id" />
                     @else
-                        <a class="btn ghost" href="{{ url('/desk/login') }}">Add to my calendar</a>
+                        <a class="btn ghost" href="{{ route('login') }}">Add to my calendar</a>
                     @endauth
                     @if ($event->hostOrganisation)
                         @if ($event->hostOrganisation->isFederationListing())

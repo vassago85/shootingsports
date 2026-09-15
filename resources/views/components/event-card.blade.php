@@ -65,6 +65,6 @@
     @auth
         <livewire:save-to-calendar :event="$event" :key="'save-'.$event->id" />
     @else
-        <a class="dope-save" href="{{ url('/desk/login') }}">Add to my calendar</a>
+        <a class="dope-save" href="{{ route('login') }}">Add to my calendar</a>
     @endauth
 </article>

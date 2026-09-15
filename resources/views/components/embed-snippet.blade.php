@@ -36,6 +36,6 @@
         </div>
     @else
         <p class="embed-help">Sign in to embed this calendar on your own site.</p>
-        <a class="btn" href="{{ url('/desk/login') }}">Director login</a>
+        <a class="btn" href="{{ route('login') }}">Director login</a>
     @endauth
 </div>
