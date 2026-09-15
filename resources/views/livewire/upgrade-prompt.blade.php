@@ -39,38 +39,57 @@
                         <button type="button" class="btn" wire:click="close">Close</button>
                     </div>
                 @else
-                    <p class="label">Pro · {{ $pricing['monthly'] ?? '' }} · {{ $pricing['annual'] ?? '' }}</p>
+                    <p class="label">Pro · {{ $pricing['monthly']['display'] ?? '' }} · {{ $pricing['annual']['display'] ?? '' }}</p>
                     <h2 id="upgrade-prompt-title">{{ $copy['headline'] }}</h2>
                     <p>{{ $copy['detail'] }}</p>
 
-                    <label class="field" style="margin-top:14px">
-                        <span>What would this need to do to be worth R30 a month to you? (optional)</span>
-                        <textarea
-                            wire:model.defer="answer"
-                            rows="3"
-                            placeholder="e.g. remember matches from 2 years ago; follow more than 3 clubs; export a printable season for RO briefings"
-                        ></textarea>
-                    </label>
+                    @if (! $paystackReady)
+                        {{-- Waitlist mode. Pro is not yet purchasable, we
+                             are gathering demand signal via the enquiries
+                             inbox. --}}
+                        <label class="field" style="margin-top:14px">
+                            <span>What would this need to do to be worth R30 a month to you? (optional)</span>
+                            <textarea
+                                wire:model.defer="answer"
+                                rows="3"
+                                placeholder="e.g. remember matches from 2 years ago; follow more than 3 clubs; export a printable season for RO briefings"
+                            ></textarea>
+                        </label>
 
-                    <div class="upgrade-prompt-actions">
-                        @auth
-                            <button
-                                type="button"
-                                class="btn"
-                                wire:click="notify"
-                            >Notify me when Pro launches</button>
-                        @else
-                            <a
-                                class="btn"
-                                href="{{ route('login') }}"
-                            >Sign in to join the waitlist</a>
-                        @endauth
-                        <button type="button" class="btn ghost" wire:click="close">Not now</button>
-                    </div>
+                        <div class="upgrade-prompt-actions">
+                            @auth
+                                <button
+                                    type="button"
+                                    class="btn"
+                                    wire:click="notify"
+                                >Notify me when Pro launches</button>
+                            @else
+                                <a
+                                    class="btn"
+                                    href="{{ route('login') }}"
+                                >Sign in to join the waitlist</a>
+                            @endauth
+                            <button type="button" class="btn ghost" wire:click="close">Not now</button>
+                        </div>
 
-                    <p class="upgrade-prompt-fineprint">
-                        No payment page. Nothing charges. We only email when Pro is ready.
-                    </p>
+                        <p class="upgrade-prompt-fineprint">
+                            No payment page. Nothing charges. We only email when Pro is ready.
+                        </p>
+                    @else
+                        {{-- Paystack is wired up — real upgrade CTA. --}}
+                        <div class="upgrade-prompt-actions" style="margin-top:18px">
+                            @auth
+                                <a class="btn" href="{{ route('upgrade') }}">Go Pro now &rarr;</a>
+                            @else
+                                <a class="btn" href="{{ route('login') }}">Sign in to upgrade</a>
+                            @endauth
+                            <button type="button" class="btn ghost" wire:click="close">Not now</button>
+                        </div>
+
+                        <p class="upgrade-prompt-fineprint">
+                            You will pick monthly or annual on the next screen. Cancel any time.
+                        </p>
+                    @endif
                 @endif
             </div>
         </div>

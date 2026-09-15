@@ -22,6 +22,8 @@ use Illuminate\Support\Str;
 #[Fillable([
     'name', 'email', 'password', 'calendar_slug', 'home_province', 'travel_radius_km',
     'digest_frequency', 'is_staff', 'is_match_director', 'plan', 'plan_expires_at',
+    'paystack_customer_code', 'paystack_subscription_code', 'paystack_authorization_code',
+    'plan_billing_cycle', 'plan_cancelled_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
@@ -41,7 +43,45 @@ class User extends Authenticatable implements FilamentUser
             'is_match_director' => 'boolean',
             'plan' => Plan::class,
             'plan_expires_at' => 'datetime',
+            'plan_cancelled_at' => 'datetime',
         ];
+    }
+
+    /**
+     * True when the user has an auto-renewing Paystack subscription that
+     * is still charging. Cancelled-but-not-yet-expired subscriptions
+     * return false here (use isCancelling() for that) — this is the
+     * flag the "You are subscribed" section of the account page reads.
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->paystack_subscription_code !== null
+            && $this->plan_cancelled_at === null
+            && $this->isPro();
+    }
+
+    /**
+     * True when the user has hit "cancel" but their entitlement window
+     * has not run out yet. UI should say "cancelled — Pro until X".
+     */
+    public function isCancelling(): bool
+    {
+        return $this->plan_cancelled_at !== null && $this->isPro();
+    }
+
+    /**
+     * Human-readable subscription status for account pages and the
+     * Filament admin. Never used for authorisation — that goes through
+     * HasPlan::isPro() and the gates.
+     */
+    public function subscriptionStatusLabel(): string
+    {
+        return match (true) {
+            $this->hasActiveSubscription() => 'Active — renews automatically',
+            $this->isCancelling() => 'Cancelled — Pro until '.$this->plan_expires_at?->format('j M Y'),
+            $this->isPro() => 'Active (comp / manual)',
+            default => 'Free',
+        };
     }
 
     public function canAccessPanel(Panel $panel): bool

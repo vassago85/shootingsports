@@ -8,14 +8,18 @@ use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\User;
+use App\Services\Paystack\SubscriptionApplier;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -63,6 +67,29 @@ class UserResource extends Resource
                 Toggle::make('is_staff')
                     ->helperText('Full admin. Trumps every other flag.')
                     ->required(),
+
+                // Subscription section — read-only mirror of what
+                // Paystack has stored. To change plan state use the
+                // "Grant Pro comp" record action, or fix it in the
+                // Paystack dashboard and let the webhook update us.
+                Placeholder::make('subscription_status')
+                    ->label('Subscription status')
+                    ->content(fn (?User $record): string => $record?->subscriptionStatusLabel() ?? '—'),
+                Placeholder::make('plan_billing_cycle')
+                    ->label('Billing cycle')
+                    ->content(fn (?User $record): string => $record?->plan_billing_cycle ?? '—'),
+                Placeholder::make('plan_expires_at')
+                    ->label('Plan expires / next billing')
+                    ->content(fn (?User $record): string => $record?->plan_expires_at?->format('j M Y H:i') ?? '—'),
+                Placeholder::make('plan_cancelled_at')
+                    ->label('Cancelled at')
+                    ->content(fn (?User $record): string => $record?->plan_cancelled_at?->format('j M Y H:i') ?? '—'),
+                Placeholder::make('paystack_customer_code')
+                    ->label('Paystack customer')
+                    ->content(fn (?User $record): string => $record?->paystack_customer_code ?? '—'),
+                Placeholder::make('paystack_subscription_code')
+                    ->label('Paystack subscription')
+                    ->content(fn (?User $record): string => $record?->paystack_subscription_code ?? '—'),
             ]);
     }
 
@@ -101,6 +128,14 @@ class UserResource extends Resource
                     ->boolean(),
                 IconColumn::make('is_staff')
                     ->boolean(),
+                TextColumn::make('plan')
+                    ->badge()
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('plan_expires_at')
+                    ->label('Pro until')
+                    ->dateTime('j M Y')
+                    ->toggleable(),
             ])
             ->filters([
                 TernaryFilter::make('is_match_director')
@@ -113,9 +148,47 @@ class UserResource extends Resource
                     ->placeholder('All users')
                     ->trueLabel('Staff only')
                     ->falseLabel('Non-staff only'),
+                TernaryFilter::make('paystack_subscription_code')
+                    ->label('Paid subscribers')
+                    ->placeholder('All users')
+                    ->trueLabel('Has active Paystack sub')
+                    ->falseLabel('No active Paystack sub')
+                    ->queries(
+                        true: fn ($query) => $query->whereNotNull('paystack_subscription_code'),
+                        false: fn ($query) => $query->whereNull('paystack_subscription_code'),
+                        blank: fn ($query) => $query,
+                    ),
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('grantProComp')
+                    ->label('Grant Pro comp')
+                    ->icon(Heroicon::OutlinedGift)
+                    ->color('warning')
+                    ->form([
+                        TextInput::make('months')
+                            ->label('Months of Pro to grant')
+                            ->required()
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(24)
+                            ->default(3)
+                            ->helperText('Adds to the existing expiry if the user is already Pro.'),
+                    ])
+                    ->action(function (User $record, array $data): void {
+                        // No Paystack call — this is a manual grant, so
+                        // it never touches customer/subscription/auth
+                        // codes and never auto-renews.
+                        app(SubscriptionApplier::class)
+                            ->applyManualGrant($record, (int) $data['months']);
+
+                        Notification::make()
+                            ->title('Pro comp granted')
+                            ->body("{$record->name} is Pro until {$record->fresh()->plan_expires_at?->format('j M Y')}.")
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

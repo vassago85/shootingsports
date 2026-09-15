@@ -57,4 +57,22 @@ return [
         'website_id' => env('UMAMI_WEBSITE_ID'),
     ],
 
+    // Paystack subscriptions. Test keys start pk_test_ / sk_test_ and are
+    // safe to commit around (they only touch the sandbox). Live keys start
+    // pk_live_ / sk_live_ and are set on the server only, never here.
+    //
+    // Plan codes are created once via `php artisan paystack:setup-plans`
+    // (idempotent) and pasted back into the server .env. Leaving them
+    // blank makes the UpgradePrompt fall back to the waitlist-only mode.
+    'paystack' => [
+        'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+        'secret_key' => env('PAYSTACK_SECRET_KEY'),
+        'base_url' => env('PAYSTACK_BASE_URL', 'https://api.paystack.co'),
+        'currency' => env('PAYSTACK_CURRENCY', 'ZAR'),
+        'plan_codes' => [
+            'annual' => env('PAYSTACK_PLAN_ANNUAL'),
+            'monthly' => env('PAYSTACK_PLAN_MONTHLY'),
+        ],
+    ],
+
 ];

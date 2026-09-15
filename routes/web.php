@@ -11,6 +11,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IcalController;
 use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\OrganisationController;
+use App\Http\Controllers\PaystackController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\ShooterCalendarController;
 use App\Http\Controllers\SitemapController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\VenueController;
 use App\Livewire\Auth\DirectorRegister;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\ShooterRegister;
+use App\Livewire\Upgrade;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -118,3 +120,15 @@ Route::post('/logout', function () {
 
     return redirect('/');
 })->middleware('auth')->name('logout');
+
+// Paystack subscriptions. Callback is behind the app's normal session
+// (so the flash message renders on redirect) but does not require
+// auth — Paystack may return the customer on a fresh browser after
+// completing checkout on their phone. Webhook is CSRF-exempted in
+// bootstrap/app.php since Paystack cannot present a CSRF token.
+Route::get('/upgrade', Upgrade::class)->middleware('auth')->name('upgrade');
+Route::post('/upgrade/cancel', [PaystackController::class, 'cancel'])
+    ->middleware('auth')
+    ->name('upgrade.cancel');
+Route::get('/paystack/callback', [PaystackController::class, 'callback'])->name('paystack.callback');
+Route::post('/paystack/webhook', [PaystackController::class, 'webhook'])->name('paystack.webhook');

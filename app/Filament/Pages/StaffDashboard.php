@@ -58,6 +58,8 @@ class StaffDashboard extends Page
             'upcoming' => $upcoming,
             'waitlistThisMonth' => $this->waitlistThisMonth(),
             'newMatchDirectors' => $this->newMatchDirectorsThisMonth(),
+            'proSubscribers' => $this->activeProSubscribers(),
+            'estimatedMrrCents' => $this->estimatedMrrCents(),
             'orgsUrl' => OrganisationResource::getUrl('index'),
             'createOrgUrl' => OrganisationResource::getUrl('create'),
             'eventsUrl' => EventResource::getUrl('index'),
@@ -68,6 +70,48 @@ class StaffDashboard extends Page
             'verificationUrl' => VerificationDashboard::getUrl(),
             'usersUrl' => UserResource::getUrl('index'),
         ];
+    }
+
+    /**
+     * Count of users with a Paystack subscription code AND a non-past
+     * plan_expires_at AND no cancelled_at. Comps (Pro without a
+     * subscription code) are deliberately excluded from the subscriber
+     * count and MRR — they aren't recurring revenue.
+     *
+     * @return array{annual:int, monthly:int, total:int}
+     */
+    private function activeProSubscribers(): array
+    {
+        $base = User::query()
+            ->whereNotNull('paystack_subscription_code')
+            ->whereNull('plan_cancelled_at')
+            ->where('plan_expires_at', '>', now());
+
+        $annual = (clone $base)->where('plan_billing_cycle', 'annual')->count();
+        $monthly = (clone $base)->where('plan_billing_cycle', 'monthly')->count();
+
+        return [
+            'annual' => $annual,
+            'monthly' => $monthly,
+            'total' => $annual + $monthly,
+        ];
+    }
+
+    /**
+     * Rough monthly recurring revenue in cents. Annuals are amortised
+     * over 12 months at the currently configured annual price; monthlies
+     * are counted at their own price. Grandfathered subscribers on a
+     * previous price will make this off by a few rand — good enough
+     * as a "how are we doing" number, not for accounting.
+     */
+    private function estimatedMrrCents(): int
+    {
+        $counts = $this->activeProSubscribers();
+
+        $annualCents = (int) config('plans.pricing.annual.amount_cents');
+        $monthlyCents = (int) config('plans.pricing.monthly.amount_cents');
+
+        return ($counts['annual'] * intdiv($annualCents, 12)) + ($counts['monthly'] * $monthlyCents);
     }
 
     /**

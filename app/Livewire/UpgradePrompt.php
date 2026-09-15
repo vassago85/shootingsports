@@ -159,6 +159,13 @@ class UpgradePrompt extends Component
         return view('livewire.upgrade-prompt', [
             'copy' => $this->copyForTrigger(),
             'pricing' => config('plans.pricing', []),
+            // Paystack is "ready" when the secret key and both plan
+            // codes are configured. When true, signed-in Free users
+            // get a "Go Pro now" button that jumps to /upgrade rather
+            // than just the waitlist CTA.
+            'paystackReady' => filled(config('services.paystack.secret_key'))
+                && filled(config('services.paystack.plan_codes.annual'))
+                && filled(config('services.paystack.plan_codes.monthly')),
         ]);
     }
 }

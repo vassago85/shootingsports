@@ -43,12 +43,27 @@ return [
     | Public pricing
     |--------------------------------------------------------------------------
     |
-    | Rendered in the UpgradePrompt and on the pricing block. No payment
-    | provider is wired in this phase — these are display values only.
+    | Numbers are the single source of truth for BOTH:
+    |   - what we display in the UI, and
+    |   - what we create in Paystack when `php artisan paystack:setup-plans`
+    |     runs (as ZAR cents — 29900 = R299.00).
+    |
+    | If either value changes, re-run the setup command so the Paystack
+    | plans stay in sync. Existing subscribers keep their old price until
+    | they cancel and re-subscribe (Paystack does not retroactively
+    | reprice active subscriptions).
     |
     */
     'pricing' => [
-        'monthly' => 'R29.99 / month',
-        'annual' => 'R249 / year',
+        'annual' => [
+            'amount_cents' => 29900,
+            'display' => 'R299 / year',
+            'summary' => 'Save R49 versus monthly',
+        ],
+        'monthly' => [
+            'amount_cents' => 2900,
+            'display' => 'R29 / month',
+            'summary' => 'Cancel any time',
+        ],
     ],
 ];

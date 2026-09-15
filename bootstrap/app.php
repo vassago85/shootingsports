@@ -29,6 +29,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             PreventClickjacking::class,
         ]);
+
+        // Paystack posts webhooks from their own IPs — no CSRF token
+        // is available. Signature verification happens inside the
+        // controller against the raw body.
+        $middleware->validateCsrfTokens(except: [
+            'paystack/webhook',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

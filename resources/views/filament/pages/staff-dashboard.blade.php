@@ -8,9 +8,29 @@
         </p>
     </div>
 
-    {{-- Pro waitlist demand-signal widget. Sits first because it is
-         the metric the freemium foundation exists to produce, and it
-         needs a scannable eye every day — not a click into Enquiries. --}}
+    {{-- Paid subscriber counter + rough MRR. Comps (no
+         paystack_subscription_code) are excluded — they are not
+         recurring revenue. Annuals are amortised over 12 months at
+         the currently configured annual price. --}}
+    <div class="desk-widget">
+        <p class="kicker">Pro subscribers · live</p>
+        @if ($proSubscribers['total'] === 0)
+            <p style="color:var(--slate)">No active paid subscribers yet.</p>
+        @else
+            <p>
+                <b>{{ $proSubscribers['total'] }}</b> active
+                ({{ $proSubscribers['annual'] }} annual, {{ $proSubscribers['monthly'] }} monthly)
+                · est. MRR <b>R{{ number_format($estimatedMrrCents / 100, 0) }}</b>
+            </p>
+            <p style="margin-top:8px">
+                <a href="{{ $usersUrl }}" style="color:var(--brass)">Manage subscribers →</a>
+            </p>
+        @endif
+    </div>
+
+    {{-- Pro waitlist demand-signal widget. Kept alongside the paid
+         subscriber count because a healthy waitlist number after
+         launch still tells us where the frictions are. --}}
     <div class="desk-widget">
         <p class="kicker">Pro waitlist · {{ now()->format('F Y') }}</p>
         @if (empty($waitlistThisMonth))
