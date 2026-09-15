@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Enums\DigestFrequency;
 use App\Enums\OrganisationUserRole;
+use App\Enums\Plan;
 use App\Enums\Province;
+use App\Models\Concerns\HasPlan;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -19,13 +21,13 @@ use Illuminate\Support\Str;
 
 #[Fillable([
     'name', 'email', 'password', 'calendar_slug', 'home_province', 'travel_radius_km',
-    'digest_frequency', 'is_staff',
+    'digest_frequency', 'is_staff', 'plan', 'plan_expires_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasPlan, Notifiable;
 
     protected function casts(): array
     {
@@ -36,6 +38,8 @@ class User extends Authenticatable implements FilamentUser
             'travel_radius_km' => 'integer',
             'digest_frequency' => DigestFrequency::class,
             'is_staff' => 'boolean',
+            'plan' => Plan::class,
+            'plan_expires_at' => 'datetime',
         ];
     }
 
@@ -118,6 +122,11 @@ class User extends Authenticatable implements FilamentUser
     public function follows(): HasMany
     {
         return $this->hasMany(Follow::class);
+    }
+
+    public function savedSearches(): HasMany
+    {
+        return $this->hasMany(SavedSearch::class);
     }
 
     public function claims(): HasMany

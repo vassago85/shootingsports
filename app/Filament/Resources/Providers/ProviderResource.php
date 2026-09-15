@@ -14,6 +14,7 @@ use App\Filament\Resources\Providers\Pages\CreateProvider;
 use App\Filament\Resources\Providers\Pages\EditProvider;
 use App\Filament\Resources\Providers\Pages\ListProviders;
 use App\Models\Provider;
+use App\Support\ProviderTierPricing;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -81,7 +82,9 @@ class ProviderResource extends Resource
                 Select::make('tier')
                     ->options(ProviderTier::class)
                     ->default('free')
-                    ->required(),
+                    ->required()
+                    ->live()
+                    ->helperText(fn ($state): ?string => ProviderTierPricing::helperFor($state)),
                 Select::make('status')
                     ->options(ListingStatus::class)
                     ->default('pending')

@@ -1,0 +1,101 @@
+<?php
+
+use App\Enums\EnquiryType;
+use App\Models\Enquiry;
+use App\Models\User;
+
+beforeEach(function () {
+    $this->withoutVite();
+});
+
+it('renders every advertising product on the rate card', function () {
+    $response = $this->get(route('advertise'))->assertOk();
+
+    foreach (config('advertising.products') as $product) {
+        $response->assertSee($product['name'])
+            ->assertSee($product['price_display']);
+    }
+});
+
+it('renders the public commitments block', function () {
+    $response = $this->get(route('advertise'))->assertOk();
+
+    foreach (config('advertising.commitments') as $line) {
+        $response->assertSee(e($line));
+    }
+});
+
+it('renders a Service JSON-LD block with one Offer per product', function () {
+    $response = $this->get(route('advertise'))->assertOk();
+    $html = $response->getContent();
+
+    expect($html)->toContain('"@type":"Service"')
+        ->and($html)->toContain('"@type":"Offer"')
+        ->and($html)->toContain('"priceCurrency":"ZAR"');
+
+    // One Offer per configured product
+    $offerCount = substr_count($html, '"@type":"Offer"');
+    expect($offerCount)->toBe(count(config('advertising.products')));
+});
+
+it('persists the selected product key into enquiries.context', function () {
+    $response = $this->post(route('enquiries.store'), [
+        'type' => 'advertise',
+        'product' => 'discover_placement',
+        'name' => 'Jane Advertiser',
+        'email' => 'jane@example.com',
+        'body' => 'We would like to sponsor the precision rifle page.',
+        'form_loaded_at' => time() - 10,
+    ]);
+
+    $response->assertRedirect(route('enquiries.thanks'));
+
+    $enquiry = Enquiry::query()->latest('id')->first();
+    expect($enquiry)->not->toBeNull()
+        ->and($enquiry->type)->toBe(EnquiryType::Advertise)
+        ->and($enquiry->context)->toBe(['product' => 'discover_placement']);
+});
+
+it('rejects an advertise enquiry with an unknown product key', function () {
+    $response = $this->post(route('enquiries.store'), [
+        'type' => 'advertise',
+        'product' => 'not_a_real_product',
+        'name' => 'Bad Bot',
+        'email' => 'bot@example.com',
+        'body' => 'Attempting to smuggle an unknown product key.',
+        'form_loaded_at' => time() - 10,
+    ]);
+
+    $response->assertSessionHasErrors('product');
+    expect(Enquiry::query()->count())->toBe(0);
+});
+
+it('allows an advertise enquiry with no product (unsure sender)', function () {
+    $response = $this->post(route('enquiries.store'), [
+        'type' => 'advertise',
+        'name' => 'Curious Advertiser',
+        'email' => 'curious@example.com',
+        'body' => 'Not sure yet, send me the options please.',
+        'form_loaded_at' => time() - 10,
+    ]);
+
+    $response->assertRedirect(route('enquiries.thanks'));
+
+    $enquiry = Enquiry::query()->latest('id')->first();
+    expect($enquiry->context)->toBeNull();
+});
+
+it('records the authed user id on any enquiry submission', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post(route('enquiries.store'), [
+        'type' => 'general',
+        'name' => $user->name,
+        'email' => $user->email,
+        'body' => 'This is my message from a signed in shooter.',
+        'form_loaded_at' => time() - 10,
+    ])->assertRedirect(route('enquiries.thanks'));
+
+    $enquiry = Enquiry::query()->latest('id')->first();
+    expect($enquiry->user_id)->toBe($user->id);
+});

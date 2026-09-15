@@ -83,6 +83,31 @@
 
     {{ $slot }}
 
+    {{-- Freemium demand-capture modal. Never opens on load; only listens
+         for the open-upgrade-prompt event dispatched by FollowButton,
+         CalendarFilter, the /my-calendar cut-off and future triggers. --}}
+    <livewire:upgrade-prompt />
+
+    {{-- Umami event helper. Bridges Livewire dispatches to the tracker
+         when both env vars are set — a no-op otherwise (silent for
+         local dev / preview). --}}
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('umami-track', (payload) => {
+                if (typeof window.umami === 'undefined' || typeof window.umami.track !== 'function') {
+                    return;
+                }
+                const event = payload && payload.name ? payload.name : 'event';
+                const data = payload && payload.trigger ? { trigger: payload.trigger } : {};
+                try {
+                    window.umami.track(event, data);
+                } catch (e) {
+                    // Do not crash the page on tracker errors.
+                }
+            });
+        });
+    </script>
+
     <footer class="site">
         <div class="wrap">
             <div class="foot-grid">

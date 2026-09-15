@@ -46,6 +46,19 @@ class EnquiryResource extends Resource
                         Select::make('type')->options(EnquiryType::class)->disabled(),
                         TextInput::make('subject')->disabled()->columnSpanFull(),
                         Textarea::make('body')->disabled()->rows(8)->columnSpanFull(),
+                        // Context is polymorphic per enquiry type:
+                        //   pro_waitlist: { trigger, answer? }
+                        //   advertise:    { product }
+                        // Rendered as JSON — enough for staff triage
+                        // without an editor UI for what is an audit trail.
+                        Textarea::make('context')
+                            ->disabled()
+                            ->rows(4)
+                            ->columnSpanFull()
+                            ->formatStateUsing(fn ($state): string => $state
+                                ? (string) json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+                                : ''
+                            ),
                         Select::make('status')
                             ->options(EnquiryStatus::class)
                             ->required(),
@@ -63,6 +76,27 @@ class EnquiryResource extends Resource
                 TextColumn::make('name')->searchable(),
                 TextColumn::make('email')->searchable(),
                 TextColumn::make('subject')->limit(40)->toggleable(),
+                // Waitlist trigger (pulled from JSON context) — makes
+                // "which cap is driving demand" a scannable column,
+                // not a click-in-to-see-JSON hunt.
+                TextColumn::make('context_trigger')
+                    ->label('Trigger')
+                    ->getStateUsing(fn (Enquiry $record): ?string => data_get($record->context, 'trigger'))
+                    ->badge()
+                    ->toggleable(),
+                // Truncated free-text answer, same intent.
+                TextColumn::make('context_answer')
+                    ->label('Answer')
+                    ->getStateUsing(fn (Enquiry $record): ?string => data_get($record->context, 'answer'))
+                    ->limit(60)
+                    ->toggleable(),
+                // Advertise product key (pro_waitlist rows leave this
+                // empty, and vice versa).
+                TextColumn::make('context_product')
+                    ->label('Product')
+                    ->getStateUsing(fn (Enquiry $record): ?string => data_get($record->context, 'product'))
+                    ->badge()
+                    ->toggleable(),
                 TextColumn::make('status')->badge(),
             ])
             ->filters([

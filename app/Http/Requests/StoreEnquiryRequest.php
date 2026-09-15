@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class StoreEnquiryRequest extends FormRequest
@@ -17,15 +18,25 @@ class StoreEnquiryRequest extends FormRequest
      */
     public function rules(): array
     {
+        $productKeys = array_keys(config('advertising.products', []));
+
         return [
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:40'],
             'subject' => ['nullable', 'string', 'max:180'],
             'body' => ['required', 'string', 'min:10', 'max:5000'],
-            'type' => ['required', 'in:general,advertise,listing'],
+            // pro_waitlist is dispatched only via the Livewire component
+            // (never through this public form), but leaving it out of
+            // the whitelist would let a bad actor spoof one via curl.
+            'type' => ['required', 'in:general,advertise,listing,pro_waitlist'],
             'about_type' => ['nullable', 'in:organisation,provider,venue'],
             'about_id' => ['nullable', 'integer'],
+            // Advertise rate-card product key. Optional — an enquiry
+            // that says "not sure, send me options" is valid.
+            'product' => $productKeys === []
+                ? ['nullable']
+                : ['nullable', 'string', Rule::in($productKeys)],
             // Honeypot — must stay empty.
             'company_website' => ['nullable', 'max:0'],
             // Time trap — form rendered_at must be at least 3 seconds ago.

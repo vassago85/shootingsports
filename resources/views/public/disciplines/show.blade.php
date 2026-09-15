@@ -39,6 +39,15 @@
                         <a href="{{ route('disciplines.show', $sibling->slug) }}" class="{{ $sibling->is($discipline) || $sibling->is($discipline->parent) ? 'on' : '' }}">{{ $sibling->name }}</a>
                     @endforeach
                 </nav>
+
+                <div style="margin-top:18px">
+                    <livewire:follow-button
+                        type="discipline"
+                        :id="$discipline->id"
+                        label="Follow this discipline"
+                        :key="'follow-disc-'.$discipline->id"
+                    />
+                </div>
             </div>
         </section>
 
@@ -109,7 +118,7 @@
                                 </div>
                                 <div class="m-body">
                                     <div class="t">{{ $event->title }}</div>
-                                    <div class="m">{{ $event->hostOrganisation?->name }} · {{ $event->locationLabel() }}</div>
+                                    <div class="m">{{ $event->hostDisplayName() }} · {{ $event->locationLabel() }}</div>
                                 </div>
                                 <div class="m-pills">
                                     @if ($format = $event->primaryDiscipline() ?? $event->disciplines->first())

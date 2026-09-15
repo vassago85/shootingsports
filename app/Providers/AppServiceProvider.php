@@ -71,6 +71,16 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Event::class, EventPolicy::class);
         Gate::policy(Organisation::class, OrganisationPolicy::class);
 
+        // Freemium gates. Every plan check in the codebase must resolve
+        // through one of these — never compare $user->plan strings
+        // inline in Livewire, Blade or controllers. Guest users are
+        // always false (the ?User signature returns null on guests, so
+        // the null-coalesce below trips false).
+        Gate::define('pro', fn (?User $user): bool => (bool) $user?->isPro());
+        Gate::define('export-season', fn (?User $user): bool => (bool) $user?->allows('export'));
+        Gate::define('unlimited-follows', fn (?User $user): bool => $user !== null && $user->limit('follows') === null);
+        Gate::define('full-history', fn (?User $user): bool => $user !== null && $user->limit('history_months') === null);
+
         $bumpPublic = static fn () => PublicCache::bump();
 
         foreach ([Event::class, Organisation::class, Venue::class, Provider::class, Discipline::class] as $model) {

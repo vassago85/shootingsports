@@ -354,3 +354,49 @@ input[type='checkbox'].fi-checkbox-input:indeterminate {
     letter-spacing: 0.04em;
     color: var(--ss-muted);
 }
+
+/* Pro waitlist widget on the staff dashboard. Kept text-heavy — this
+   is a demand-signal readout, not a marketing surface. */
+.desk-widget {
+    background: var(--ss-surface);
+    border: 1px solid var(--ss-border);
+    border-top: 2px solid var(--ss-brass);
+    padding: 1.25rem 1.5rem;
+    margin: 1.25rem 0;
+}
+.desk-widget .kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ss-brass);
+    margin: 0 0 0.75rem;
+}
+.waitlist-triggers {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+}
+.waitlist-triggers li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0.6rem 0.75rem;
+    border-left: 3px solid var(--ss-brass);
+    background: rgba(217, 174, 82, 0.04);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+}
+.waitlist-triggers .trigger {
+    color: var(--ss-muted);
+    letter-spacing: 0.05em;
+    text-transform: capitalize;
+}
+.waitlist-triggers b {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    color: var(--ss-ink);
+}

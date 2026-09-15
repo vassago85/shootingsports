@@ -21,6 +21,22 @@
         @endforeach
     </div>
 
+    @auth
+        {{-- Save-this-search sits next to the filter chips. Free users
+             may save one; the second attempt fires the UpgradePrompt
+             via the observer, not a toast. --}}
+        <div class="filters" role="group" aria-label="Save this filter set" style="margin-top:-14px">
+            <button
+                type="button"
+                class="btn ghost"
+                wire:click="saveSearch"
+                x-data="{ saved: false }"
+                x-on:search-saved.window="saved = true; setTimeout(() => saved = false, 3000)"
+                x-text="saved ? 'Saved' : 'Save this search'"
+            >Save this search</button>
+        </div>
+    @endauth
+
     @if ($events->isEmpty())
         <p class="empty">No matches in this window. Planned dates still appear on the calendar — they render as provisional.</p>
     @else

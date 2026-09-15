@@ -30,11 +30,45 @@ class EnquiryController extends Controller
 
     public function advertise(): View
     {
-        return view('public.enquiries.create', [
-            'type' => EnquiryType::Advertise,
-            'about' => null,
-            'heading' => 'Advertise on the register',
-            'intro' => 'Tell us which pages and slots you are interested in. Staff will come back with availability and pricing.',
+        $products = config('advertising.products', []);
+        $commitments = config('advertising.commitments', []);
+
+        // Product/Offer JSON-LD, one Offer per product. Search engines
+        // can surface pricing snippets and treat each product as a
+        // distinct service. Runs through the site() base graph so the
+        // WebSite + Organization identity ships too.
+        $offers = array_values(array_map(static function (array $product): array {
+            return [
+                '@type' => 'Offer',
+                'name' => $product['name'],
+                'description' => $product['summary'],
+                'price' => number_format(($product['price_per_month_cents'] ?? 0) / 100, 2, '.', ''),
+                'priceCurrency' => 'ZAR',
+                'availability' => 'https://schema.org/InStock',
+                'url' => route('advertise').'#prod-'.$product['key'],
+            ];
+        }, $products));
+
+        $jsonLd = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Service',
+            'name' => 'Shooting Sports advertising',
+            'provider' => [
+                '@type' => 'SportsOrganization',
+                'name' => 'Shooting Sports',
+                'url' => route('home'),
+            ],
+            'areaServed' => [
+                '@type' => 'Country',
+                'name' => 'South Africa',
+            ],
+            'offers' => $offers,
+        ];
+
+        return view('public.advertise', [
+            'products' => $products,
+            'commitments' => $commitments,
+            'jsonLd' => $jsonLd,
         ]);
     }
 
@@ -71,8 +105,20 @@ class EnquiryController extends Controller
         $aboutType = $request->validated('about_type');
         $aboutId = $request->validated('about_id');
 
+        $type = $request->validated('type');
+        $product = $request->validated('product');
+
+        // Merge whatever context the form supplied. Advertise carries a
+        // product key (from the rate card select); other paths get an
+        // empty context, kept as null so the column is nullable-clean.
+        $context = null;
+        if ($type === 'advertise' && filled($product)) {
+            $context = ['product' => $product];
+        }
+
         $enquiry = Enquiry::query()->create([
-            'type' => $request->validated('type'),
+            'type' => $type,
+            'user_id' => auth()->id(),
             'name' => $request->validated('name'),
             'email' => $request->validated('email'),
             'phone' => $request->validated('phone'),
@@ -80,6 +126,7 @@ class EnquiryController extends Controller
             'body' => $request->validated('body'),
             'about_type' => $aboutType,
             'about_id' => $aboutId,
+            'context' => $context,
             'status' => EnquiryStatus::New,
             'ip_address' => $request->ip(),
             'user_agent' => substr((string) $request->userAgent(), 0, 500),

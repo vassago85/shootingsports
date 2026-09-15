@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Enums\EnquiryStatus;
+use App\Enums\EnquiryType;
 use App\Enums\ListingStatus;
 use App\Filament\Resources\Enquiries\EnquiryResource;
 use App\Filament\Resources\Events\EventResource;
@@ -53,6 +54,7 @@ class StaffDashboard extends Page
             'pendingOrgs' => $pendingOrgs,
             'newEnquiries' => $newEnquiries,
             'upcoming' => $upcoming,
+            'waitlistThisMonth' => $this->waitlistThisMonth(),
             'orgsUrl' => OrganisationResource::getUrl('index'),
             'createOrgUrl' => OrganisationResource::getUrl('create'),
             'eventsUrl' => EventResource::getUrl('index'),
@@ -62,5 +64,30 @@ class StaffDashboard extends Page
             'emailUrl' => ManageMailSettings::getUrl(),
             'verificationUrl' => VerificationDashboard::getUrl(),
         ];
+    }
+
+    /**
+     * Pro waitlist signups this calendar month, bucketed by trigger.
+     * Postgres-friendly: reads context->>'trigger' via Eloquent's JSON
+     * accessor rather than a driver-specific SQL fragment.
+     *
+     * @return array<string, int>
+     */
+    private function waitlistThisMonth(): array
+    {
+        $rows = Enquiry::query()
+            ->where('type', EnquiryType::ProWaitlist)
+            ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->get(['context']);
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $trigger = data_get($row->context, 'trigger') ?: 'unknown';
+            $counts[$trigger] = ($counts[$trigger] ?? 0) + 1;
+        }
+
+        arsort($counts);
+
+        return $counts;
     }
 }
