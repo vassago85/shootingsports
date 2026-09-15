@@ -80,6 +80,12 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('export-season', fn (?User $user): bool => (bool) $user?->allows('export'));
         Gate::define('unlimited-follows', fn (?User $user): bool => $user !== null && $user->limit('follows') === null);
         Gate::define('full-history', fn (?User $user): bool => $user !== null && $user->limit('history_months') === null);
+        // Attendance log — logging up to the free cap is open to any
+        // signed-in user; the annual export PDF/CSV is Pro-only. Kept
+        // as two gates so views can hide UI cleanly without repeating
+        // the plan lookup.
+        Gate::define('log-attendance', fn (?User $user): bool => $user !== null);
+        Gate::define('export-attendance-log', fn (?User $user): bool => (bool) $user?->allows('export'));
 
         $bumpPublic = static fn () => PublicCache::bump();
 

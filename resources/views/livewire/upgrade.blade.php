@@ -79,11 +79,11 @@
                         </div>
 
                         <ul class="pro-features">
+                            <li><b>Attendance log</b> — track every match you shoot, no cap on entries</li>
+                            <li><b>Annual attendance record</b> — printable PDF + CSV for your SAPSA / PISA / KKSA dedicated-status renewals</li>
                             <li>Unlimited club, discipline and venue follows</li>
                             <li>Unlimited saved calendar searches</li>
                             <li>Full match history back to when we started tracking</li>
-                            <li>Season export (CSV + printable PDF)</li>
-                            <li>Up to 4 household shooter profiles under one subscription</li>
                         </ul>
 
                         <div class="pro-actions">

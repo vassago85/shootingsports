@@ -28,6 +28,10 @@ return [
         'history_months' => 12,
         'export' => false,
         'household_profiles' => 1,
+        // Personal shooting log. Free = 3 slots at any time (delete
+        // an old one to log a new one). Pro = unlimited history for
+        // dedicated-status renewal PDFs.
+        'attended_events_slots' => 3,
     ],
 
     Plan::Pro->value => [
@@ -36,6 +40,7 @@ return [
         'history_months' => null,
         'export' => true,
         'household_profiles' => 4,
+        'attended_events_slots' => null,
     ],
 
     /*

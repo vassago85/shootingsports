@@ -14,6 +14,7 @@ use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\PaystackController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\ShooterCalendarController;
+use App\Http\Controllers\ShooterLogController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StaticPageController;
 use App\Http\Controllers\VenueController;
@@ -132,3 +133,13 @@ Route::post('/upgrade/cancel', [PaystackController::class, 'cancel'])
     ->name('upgrade.cancel');
 Route::get('/paystack/callback', [PaystackController::class, 'callback'])->name('paystack.callback');
 Route::post('/paystack/webhook', [PaystackController::class, 'webhook'])->name('paystack.webhook');
+
+// Personal attendance log. All routes are auth-gated; the export
+// routes are additionally Pro-gated inside the controller so the UI
+// can render an upgrade CTA instead of a 403 for Free users.
+Route::middleware('auth')->group(function (): void {
+    Route::get('/my-log', [ShooterLogController::class, 'index'])->name('my-log');
+    Route::delete('/my-log/{attendedEvent}', [ShooterLogController::class, 'destroy'])->name('my-log.destroy');
+    Route::get('/my-log/export/csv', [ShooterLogController::class, 'exportCsv'])->name('my-log.export.csv');
+    Route::get('/my-log/print', [ShooterLogController::class, 'printable'])->name('my-log.print');
+});

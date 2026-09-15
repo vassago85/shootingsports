@@ -27,6 +27,7 @@ class EnforcesPlanLimits
         'history_months' => 'history_window',
         'export' => 'export',
         'household_profiles' => 'household',
+        'attended_events_slots' => 'attendance_log_limit',
     ];
 
     /**

@@ -147,6 +147,14 @@ class UpgradePrompt extends Component
                 'headline' => 'One household, one Pro subscription.',
                 'detail' => 'Pro covers up to four shooters in a household, each with their own saved calendar and follows.',
             ],
+            'attendance_log_limit' => [
+                'headline' => 'Your Free shooting log is full.',
+                'detail' => 'Pro lifts the 3-match cap so every event you shoot goes on your record — and you can export it as a signed annual attendance PDF for your SAPSA / PISA / KKSA dedicated status renewal.',
+            ],
+            'export_attendance_log' => [
+                'headline' => 'Annual attendance PDFs are a Pro feature.',
+                'detail' => 'Pro exports your full year of logged matches as a printable PDF for your accrediting body to counter-sign, plus a CSV for your own spreadsheet.',
+            ],
             default => [
                 'headline' => 'Pro is coming.',
                 'detail' => 'Get on the waitlist and tell us what you want it to do.',

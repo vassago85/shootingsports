@@ -337,6 +337,71 @@ section.block { padding: 72px 0; }
     font-size: 22px; font-weight: 600; margin: 0 0 6px;
 }
 .pro-status .pricing-summary { font-size: 14px; color: var(--slate); margin: 0; }
+
+/* Attendance log — modal shell + form grid + /my-log table */
+.log-attendance { display: inline-block; }
+.log-attendance-modal {
+    position: fixed; inset: 0; z-index: 1000; display: flex;
+    align-items: center; justify-content: center; padding: 20px;
+}
+.log-attendance-backdrop {
+    position: absolute; inset: 0; background: rgba(0,0,0,.55);
+}
+.log-attendance-panel {
+    position: relative; z-index: 1; max-width: 560px; width: 100%;
+    background: var(--surface); border: 1px solid var(--brass);
+    padding: 26px 26px 22px; max-height: 92vh; overflow: auto;
+}
+.log-attendance-close {
+    position: absolute; top: 8px; right: 10px; background: none;
+    border: 0; color: var(--slate); font-size: 24px; cursor: pointer;
+    line-height: 1;
+}
+.log-attendance-close:hover { color: var(--ink); }
+.log-attendance-form { margin-top: 12px; }
+.log-attendance-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px;
+    margin-bottom: 18px;
+}
+.log-attendance-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.my-log-table {
+    width: 100%; border-collapse: collapse; font-size: 14px;
+}
+.my-log-table th, .my-log-table td {
+    text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+}
+.my-log-table th {
+    font-family: var(--f-mono); font-size: 10px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--slate); font-weight: 400;
+}
+.my-log-table td.num { font-variant-numeric: tabular-nums; text-align: right; }
+.my-log-table .row-actions { white-space: nowrap; }
+.my-log-table .row-actions button {
+    background: none; border: 0; color: var(--slate); cursor: pointer;
+    font-size: 13px; padding: 2px 6px;
+}
+.my-log-table .row-actions button:hover { color: #f0776b; }
+
+.my-log-filters {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: end;
+    padding: 14px 0 20px; border-bottom: 1px solid var(--rule);
+    margin-bottom: 20px;
+}
+.my-log-filters .field { min-width: 140px; margin: 0; }
+.my-log-summary {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+}
+.my-log-summary div {
+    border: 1px solid var(--rule); padding: 12px 14px;
+}
+.my-log-summary span {
+    font-family: var(--f-mono); font-size: 10px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--slate); display: block;
+}
+.my-log-summary b { font-size: 22px; font-variant-numeric: tabular-nums; }
 .page-hero { background: var(--gunmetal); color: #eef0ee; padding: 48px 0 40px; }
 .page-hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); text-transform: uppercase; }
 .page-hero p { color: #b9c0bd; max-width: 58ch; }

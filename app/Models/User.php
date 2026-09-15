@@ -21,7 +21,8 @@ use Illuminate\Support\Str;
 
 #[Fillable([
     'name', 'email', 'password', 'calendar_slug', 'home_province', 'travel_radius_km',
-    'digest_frequency', 'is_staff', 'is_match_director', 'plan', 'plan_expires_at',
+    'digest_frequency', 'association_membership_number',
+    'is_staff', 'is_match_director', 'plan', 'plan_expires_at',
     'paystack_customer_code', 'paystack_subscription_code', 'paystack_authorization_code',
     'plan_billing_cycle', 'plan_cancelled_at',
 ])]
@@ -185,6 +186,11 @@ class User extends Authenticatable implements FilamentUser
     public function savedSearches(): HasMany
     {
         return $this->hasMany(SavedSearch::class);
+    }
+
+    public function attendedEvents(): HasMany
+    {
+        return $this->hasMany(AttendedEvent::class);
     }
 
     public function claims(): HasMany
