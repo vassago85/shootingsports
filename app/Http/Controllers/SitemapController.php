@@ -11,6 +11,9 @@ use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\Venue;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class SitemapController extends Controller
 {
@@ -60,10 +63,12 @@ class SitemapController extends Controller
             ->published()
             ->orderBy('starts_at')
             ->get()
-            ->map(fn (Event $event): array => [
+            ->map(fn (Event $event) => $this->safeUrl('events sitemap', $event, fn (): array => [
                 'loc' => route('matches.show', $event->slug),
                 'lastmod' => $event->updated_at?->toAtomString(),
-            ]);
+            ]))
+            ->filter()
+            ->values();
 
         return $this->xml('public.sitemaps.urlset', ['urls' => $urls]);
     }
@@ -74,12 +79,14 @@ class SitemapController extends Controller
             ->published()
             ->orderBy('name')
             ->get()
-            ->map(fn (Organisation $org): array => [
+            ->map(fn (Organisation $org) => $this->safeUrl('organisations sitemap', $org, fn (): array => [
                 'loc' => $org->isFederationListing()
                     ? route('federations.show', $org->slug)
                     : route('clubs.show', $org->slug),
                 'lastmod' => $org->updated_at?->toAtomString(),
-            ]);
+            ]))
+            ->filter()
+            ->values();
 
         return $this->xml('public.sitemaps.urlset', ['urls' => $urls]);
     }
@@ -90,10 +97,12 @@ class SitemapController extends Controller
             ->published()
             ->orderBy('name')
             ->get()
-            ->map(fn (Venue $venue): array => [
+            ->map(fn (Venue $venue) => $this->safeUrl('venues sitemap', $venue, fn (): array => [
                 'loc' => route('ranges.show', $venue->slug),
                 'lastmod' => $venue->updated_at?->toAtomString(),
-            ]);
+            ]))
+            ->filter()
+            ->values();
 
         return $this->xml('public.sitemaps.urlset', ['urls' => $urls]);
     }
@@ -105,18 +114,26 @@ class SitemapController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $urls = collect();
+        $urls = new Collection;
 
         foreach ($disciplines as $discipline) {
-            $urls->push([
+            $root = $this->safeUrl('disciplines sitemap', $discipline, fn (): array => [
                 'loc' => route('disciplines.show', $discipline->slug),
                 'lastmod' => $discipline->updated_at?->toAtomString(),
             ]);
 
+            if ($root !== null) {
+                $urls->push($root);
+            }
+
             foreach (Province::cases() as $province) {
-                $urls->push([
+                $slice = $this->safeUrl('disciplines province sitemap', $discipline, fn (): array => [
                     'loc' => route('disciplines.province', [$discipline->slug, $province->urlSlug()]),
                 ]);
+
+                if ($slice !== null) {
+                    $urls->push($slice);
+                }
             }
         }
 
@@ -125,7 +142,7 @@ class SitemapController extends Controller
 
     public function providers(): Response
     {
-        $urls = collect();
+        $urls = new Collection;
 
         foreach (ProviderCategory::cases() as $category) {
             $urls->push(['loc' => route('suppliers.category', $category->urlSlug())]);
@@ -141,13 +158,44 @@ class SitemapController extends Controller
             ->where('status', ListingStatus::Published)
             ->get()
             ->each(function (Provider $provider) use ($urls): void {
-                $urls->push([
+                $url = $this->safeUrl('providers sitemap', $provider, fn (): array => [
                     'loc' => route('suppliers.show', $provider->slug),
                     'lastmod' => $provider->updated_at?->toAtomString(),
                 ]);
+
+                if ($url !== null) {
+                    $urls->push($url);
+                }
             });
 
         return $this->xml('public.sitemaps.urlset', ['urls' => $urls]);
+    }
+
+    /**
+     * Build a single sitemap entry, logging + dropping the row on failure.
+     * Sitemap outages should never take down the whole file just because
+     * one bad row (missing slug, unroutable enum, whatever) trips
+     * route() generation — a partial sitemap is strictly better than a
+     * 500 for Search Console, which caches the last successful fetch.
+     *
+     * @param  callable(): array<string, mixed>  $build
+     * @return array<string, mixed>|null
+     */
+    private function safeUrl(string $context, object $subject, callable $build): ?array
+    {
+        try {
+            return $build();
+        } catch (Throwable $e) {
+            Log::warning('Sitemap row skipped', [
+                'context' => $context,
+                'model' => $subject::class,
+                'id' => property_exists($subject, 'id') ? $subject->id : null,
+                'slug' => property_exists($subject, 'slug') ? $subject->slug : null,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     /**
