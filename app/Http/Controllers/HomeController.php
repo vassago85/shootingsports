@@ -18,9 +18,17 @@ class HomeController extends Controller
     {
         $stats = Cache::remember(PublicCache::key('stats'), 600, function (): array {
             return [
+                // Kept strict: only membership clubs. Series and associations
+                // get their own counters so the stats bar matches the mental
+                // model users have when they see "clubs" (people they join)
+                // versus "series" (branded recurring matches they enter).
                 'clubs' => Organisation::query()->published()->where('type', OrganisationType::Club)->count(),
+                'series' => Organisation::query()->published()->where('type', OrganisationType::Series)->count(),
                 'ranges' => Venue::query()->published()->count(),
-                'matches' => Event::query()->published()->count(),
+                // Count what visitors can actually see on /calendar right now.
+                // The old published() scope included Completed/Cancelled and
+                // inflated the number 2-3x above what any user could reach.
+                'matches' => Event::query()->upcoming()->count(),
                 'disciplines' => Discipline::query()->where('is_published', true)->count(),
                 'provinces' => 9,
                 'suppliers' => Provider::query()->published()->count(),

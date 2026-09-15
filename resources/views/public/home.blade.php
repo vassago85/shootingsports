@@ -44,8 +44,9 @@
         <div class="strip">
             <div class="strip-in">
                 <div><span>Clubs</span><b>{{ $stats['clubs'] }}</b></div>
+                <div><span>Series</span><b>{{ $stats['series'] }}</b></div>
                 <div><span>Ranges</span><b>{{ $stats['ranges'] }}</b></div>
-                <div><span>Matches listed</span><b>{{ $stats['matches'] }}</b></div>
+                <div><span>Upcoming matches</span><b>{{ $stats['matches'] }}</b></div>
                 <div><span>Disciplines</span><b>{{ $stats['disciplines'] }}</b></div>
                 <div><span>Provinces</span><b>{{ $stats['provinces'] }}</b></div>
                 <div><span>Industry</span><b>{{ $stats['suppliers'] }}</b></div>
