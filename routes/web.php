@@ -33,6 +33,15 @@ Route::get('/disciplines/{discipline:slug}', [DisciplineController::class, 'show
 
 Route::get('/clubs', [OrganisationController::class, 'index'])->name('clubs.index');
 Route::get('/clubs/{organisation:slug}/calendar.ics', [IcalController::class, 'organisation'])->name('ical.organisation');
+
+// Legacy /clubs redirects for ranges that were seeded as clubs. Each of
+// these slugs now lives only in `venues` — the ghost `organisations`
+// row was removed in the 2026_09_15 reclassification migration. Kept
+// explicit (not data-driven) so an extra ghost is a two-line PR, not
+// an extra DB lookup on every /clubs/{slug} request.
+Route::redirect('/clubs/muletech-ridge-range', '/ranges/muletech-ridge-range', 301);
+Route::redirect('/clubs/dwarskloof-shooting-range', '/ranges/dwarskloof-shooting-range', 301);
+
 Route::get('/clubs/{organisation:slug}', [OrganisationController::class, 'show'])->name('clubs.show');
 Route::get('/federations/{organisation:slug}', [OrganisationController::class, 'federation'])->name('federations.show');
 

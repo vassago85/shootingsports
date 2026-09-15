@@ -6,13 +6,11 @@ use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
-use App\Enums\OrganisationType;
 use App\Enums\Province;
 use App\Enums\VenueAccess;
 use App\Enums\VerificationState;
 use App\Models\Discipline;
 use App\Models\Event;
-use App\Models\Organisation;
 use App\Models\Venue;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
@@ -23,27 +21,13 @@ class DwarskloofNightShootSeeder extends Seeder
     {
         $discipline = Discipline::query()->where('slug', 'ipsc-practical')->firstOrFail();
 
-        $host = Organisation::query()->updateOrCreate(
-            ['slug' => 'dwarskloof-shooting-range'],
-            [
-                'name' => 'Dwarskloof Shooting Range',
-                'short_name' => 'Dwarskloof',
-                'type' => OrganisationType::Club,
-                'province' => Province::Gauteng,
-                'town' => 'Randfontein',
-                'phone' => '076 250 6565',
-                'description' => 'Range at Randfontein. Hosts rimfire challenges and pistol night shoots.',
-                'accredited' => false,
-                'visitors_welcome' => true,
-                'status' => ListingStatus::Published,
-                'verification_state' => VerificationState::Unconfirmed,
-                'source' => ListingSource::Staff,
-            ],
-        );
-
-        $host->syncDisciplines([$discipline->id], $discipline->id);
-
-        $venue = Venue::query()->firstOrCreate(
+        // Dwarskloof Shooting Range is a Venue, not a Club. An earlier
+        // version of this seeder created a matching Organisation row
+        // typed `club`, which then polluted the /clubs directory. The
+        // ghost was removed in the 2026_09_15 reclassification
+        // migration; the seeder now only creates the Venue and lets
+        // the event stand hostless — the range operator is the host.
+        $venue = Venue::query()->updateOrCreate(
             ['slug' => 'dwarskloof-shooting-range'],
             [
                 'name' => 'Dwarskloof Shooting Range',
@@ -57,11 +41,13 @@ class DwarskloofNightShootSeeder extends Seeder
             ],
         );
 
+        $venue->syncDisciplines([$discipline->id], $discipline->id);
+
         $event = Event::query()->updateOrCreate(
             ['slug' => 'dwarskloof-running-gunning-night-2026'],
             [
                 'title' => 'Running & Gunning Fun Night Shoot',
-                'host_organisation_id' => $host->id,
+                'host_organisation_id' => null,
                 'venue_id' => $venue->id,
                 'starts_at' => '2026-09-12 18:00:00',
                 'ends_at' => null,

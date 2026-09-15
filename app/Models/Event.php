@@ -181,6 +181,19 @@ class Event extends Model
         return 'Venue TBC';
     }
 
+    /**
+     * "Who is putting on this match" for cards / meta lines. Prefers
+     * the host organisation, falls back to the venue when a range
+     * operator hosts the match themselves (no external club), and
+     * gives up to a neutral placeholder when neither exists.
+     */
+    public function hostDisplayName(): string
+    {
+        return $this->hostOrganisation?->name
+            ?? $this->venue?->name
+            ?? 'Independent match';
+    }
+
     public function publicUrl(): string
     {
         return route('matches.show', $this->slug);

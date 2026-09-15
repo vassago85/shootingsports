@@ -6,13 +6,11 @@ use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
-use App\Enums\OrganisationType;
 use App\Enums\Province;
 use App\Enums\VenueAccess;
 use App\Enums\VerificationState;
 use App\Models\Discipline;
 use App\Models\Event;
-use App\Models\Organisation;
 use App\Models\Venue;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
@@ -23,26 +21,12 @@ class MuletechRidgeRangeSeeder extends Seeder
     {
         $discipline = Discipline::query()->where('slug', 'precision-rifle')->firstOrFail();
 
-        $host = Organisation::query()->updateOrCreate(
-            ['slug' => 'muletech-ridge-range'],
-            [
-                'name' => 'Muletech Ridge Range',
-                'short_name' => 'Muletech',
-                'type' => OrganisationType::Club,
-                'province' => Province::FreeState,
-                'town' => 'Bothaville',
-                'phone' => '073 551 6065',
-                'description' => 'Ridge range at Bothaville. Hosts field shooting days, including the Loskuil Primary fundraiser.',
-                'accredited' => false,
-                'visitors_welcome' => true,
-                'status' => ListingStatus::Published,
-                'verification_state' => VerificationState::Unconfirmed,
-                'source' => ListingSource::Staff,
-            ],
-        );
-
-        $host->syncDisciplines([$discipline->id], $discipline->id);
-
+        // Muletech Ridge Range is a Venue, not a Club. An earlier
+        // version of this seeder created a matching Organisation row
+        // typed `club`, which then polluted the /clubs directory. The
+        // ghost was removed in the 2026_09_15 reclassification
+        // migration; the seeder now only creates the Venue and lets
+        // the event stand hostless — the range operator is the host.
         $venue = Venue::query()->updateOrCreate(
             ['slug' => 'muletech-ridge-range'],
             [
@@ -58,11 +42,13 @@ class MuletechRidgeRangeSeeder extends Seeder
             ],
         );
 
+        $venue->syncDisciplines([$discipline->id], $discipline->id);
+
         $event = Event::query()->updateOrCreate(
             ['slug' => 'muletech-loskuil-fundraising-shoot-2026'],
             [
                 'title' => 'Fundraising Shooting Day',
-                'host_organisation_id' => $host->id,
+                'host_organisation_id' => null,
                 'venue_id' => $venue->id,
                 'starts_at' => '2026-11-14 08:00:00',
                 'ends_at' => null,

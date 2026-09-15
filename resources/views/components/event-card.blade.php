@@ -35,7 +35,10 @@
     <div class="dope-top">
         <div>
             <h3>{{ $event->title }}</h3>
-            <span class="club">{{ $event->hostOrganisation?->name }}</span>
+            {{-- Falls back to the venue name when the range operator is
+                 the host (no external club), so a card never shows an
+                 empty ".club" line. --}}
+            <span class="club">{{ $event->hostDisplayName() }}</span>
         </div>
         <div class="dope-date">
             <span class="dow">{{ \App\Support\EventDate::weekday($event->starts_at) }}</span>

@@ -1,6 +1,6 @@
 <x-layouts.public
     :title="$event->title"
-    :description="$event->hostOrganisation?->name.' · '.$event->locationLabel().' · '.$event->starts_at->timezone('Africa/Johannesburg')->format('j F Y')"
+    :description="$event->hostDisplayName().' · '.$event->locationLabel().' · '.$event->starts_at->timezone('Africa/Johannesburg')->format('j F Y')"
     :json-ld="$jsonLd"
 >
     <main id="main">
@@ -8,7 +8,16 @@
             <div class="wrap">
                 <p class="label">{{ $event->starts_at->timezone('Africa/Johannesburg')->format('l j F Y') }}</p>
                 <h1>{{ $event->title }}</h1>
-                <p>{{ $event->hostOrganisation?->name }} · {{ $event->locationLabel() }}</p>
+                <p>
+                    {{ $event->hostDisplayName() }}
+                    @if ($event->hostOrganisation && $event->venue && $event->hostOrganisation->name !== $event->venue->name)
+                        · {{ $event->locationLabel() }}
+                    @elseif (! $event->hostOrganisation)
+                        · at the range
+                    @else
+                        · {{ $event->locationLabel() }}
+                    @endif
+                </p>
                 <div class="pill-row" style="position:static;margin-top:16px">
                     <x-event-status-pill :event="$event" />
                 </div>

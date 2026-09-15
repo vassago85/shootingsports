@@ -80,7 +80,29 @@ class OrganisationResource extends Resource
                         TextInput::make('short_name'),
                         Select::make('type')
                             ->options(OrganisationType::class)
-                            ->required(),
+                            ->required()
+                            ->live()
+                            // Non-blocking guard rail. If someone types
+                            // "Dwarskloof Shooting Range" and picks
+                            // Club, we point them at the Ranges resource
+                            // rather than silently create a ghost that
+                            // pollutes the /clubs directory (this was
+                            // the whole reason for the 2026_09_15
+                            // reclassification migration).
+                            ->helperText(function ($get, $state): ?string {
+                                $name = (string) $get('name');
+                                $isClub = $state === 'club' || $state === OrganisationType::Club->value;
+
+                                if (! $isClub || $name === '') {
+                                    return null;
+                                }
+
+                                if (preg_match('/\b(range|shooting range|skietbaan)\b/i', $name) !== 1) {
+                                    return null;
+                                }
+
+                                return '⚠ "'.$name.'" reads like a range. If it is a venue, not an external club, add it under Ranges instead so it does not appear on /clubs.';
+                            }),
                         Select::make('parent_id')
                             ->relationship('parent', 'name')
                             ->searchable()

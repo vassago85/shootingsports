@@ -89,8 +89,14 @@ class EventResource extends Resource
                                         ->native(false)
                                         ->live()
                                         ->afterStateUpdated(EventDisciplineSelect::prefillFromHost())
-                                        ->required()
-                                        ->columnSpan(2),
+                                        // Optional: some matches are hosted by the range
+                                        // itself (private range fundraiser, farm shoot).
+                                        // Desk form keeps this required — a director
+                                        // acts as their own org — but staff creating
+                                        // in admin may leave it blank when the venue
+                                        // is the "host".
+                                        ->columnSpan(2)
+                                        ->hintIcon(Heroicon::OutlinedInformationCircle, 'Leave blank when the range operator hosts (no external club).'),
                                     Select::make('venue_id')
                                         ->label('Venue / range')
                                         ->relationship('venue', 'name')
