@@ -12,7 +12,7 @@
 #   # create .env with UMAMI_DB_PASSWORD and UMAMI_APP_SECRET
 #   docker compose up -d
 #
-# Then point Nginx Proxy Manager for analytics.charsley.co.za at
+# Then point Nginx Proxy Manager for analytics.charsleydigital.co.za at
 # 127.0.0.1:${UMAMI_PORT:-3010}.
 
 services:
@@ -47,8 +47,12 @@ services:
       TRACKER_SCRIPT_NAME: script
       # Optional: hostname whitelist for the shared tracker script.
       # ALLOWED_FRAME_URLS: https://shootingsports.co.za,https://tuneupprecision.co.za
+    # Loopback-only bind. Nginx Proxy Manager (also on this host) is the
+    # only client — no external traffic should touch Umami directly.
+    # If you ever need to reach it from another VM, add a firewall rule
+    # rather than opening the port here.
     ports:
-      - "${UMAMI_PORT:-3010}:3000"
+      - "127.0.0.1:${UMAMI_PORT:-3010}:3000"
 
 volumes:
   umami-db:
