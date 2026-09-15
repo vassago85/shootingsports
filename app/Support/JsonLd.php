@@ -11,6 +11,54 @@ use App\Models\Venue;
 class JsonLd
 {
     /**
+     * WebSite + SportsOrganization graph that always ships on public pages.
+     * Rendered by the x-seo-meta component so every URL has a stable
+     * site identity that Google, Bing and social crawlers can pick up.
+     *
+     * @return array<string, mixed>
+     */
+    public static function site(): array
+    {
+        $siteUrl = rtrim(url('/'), '/').'/';
+        $calendarUrl = route('calendar');
+
+        return [
+            '@context' => 'https://schema.org',
+            '@graph' => [
+                [
+                    '@type' => 'WebSite',
+                    '@id' => $siteUrl.'#website',
+                    'url' => $siteUrl,
+                    'name' => 'Shooting Sports',
+                    'alternateName' => 'The SA Register of Shooting Sport',
+                    'inLanguage' => 'en-ZA',
+                    'potentialAction' => [
+                        '@type' => 'SearchAction',
+                        'target' => [
+                            '@type' => 'EntryPoint',
+                            'urlTemplate' => $calendarUrl.'?q={search_term_string}',
+                        ],
+                        'query-input' => 'required name=search_term_string',
+                    ],
+                ],
+                [
+                    '@type' => 'SportsOrganization',
+                    '@id' => $siteUrl.'#organization',
+                    'url' => $siteUrl,
+                    'name' => 'Shooting Sports',
+                    'description' => 'The independent national register of South African shooting sport: clubs, ranges, suppliers and every match on the calendar.',
+                    'logo' => asset('images/og-default.png'),
+                    'sport' => 'Shooting sport',
+                    'areaServed' => [
+                        '@type' => 'Country',
+                        'name' => 'South Africa',
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public static function event(Event $event): array

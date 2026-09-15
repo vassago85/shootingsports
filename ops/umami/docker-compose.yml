@@ -1,0 +1,54 @@
+# Shared Umami stack — /opt/umami on the Ubuntu box.
+#
+# This file lives in the Shooting Sports repo so it is versioned alongside
+# the app that consumes it, but it does NOT belong inside the Shooting
+# Sports docker-compose.yml. Rebuilding Shooting Sports must never
+# recreate Umami (see /opt/nrapa and /opt/saprf notes in project docs).
+#
+# Setup on the server:
+#   sudo mkdir -p /opt/umami
+#   sudo cp ops/umami/docker-compose.yml /opt/umami/docker-compose.yml
+#   cd /opt/umami
+#   # create .env with UMAMI_DB_PASSWORD and UMAMI_APP_SECRET
+#   docker compose up -d
+#
+# Then point Nginx Proxy Manager for analytics.charsley.co.za at
+# 127.0.0.1:${UMAMI_PORT:-3010}.
+
+services:
+  umami-db:
+    image: postgres:16-alpine
+    container_name: umami-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD}
+    volumes:
+      - umami-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: umami
+    restart: unless-stopped
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD}@umami-db:5432/umami
+      DATABASE_TYPE: postgresql
+      APP_SECRET: ${UMAMI_APP_SECRET}
+      # Trust the reverse proxy in front (Nginx Proxy Manager).
+      TRACKER_SCRIPT_NAME: script
+      # Optional: hostname whitelist for the shared tracker script.
+      # ALLOWED_FRAME_URLS: https://shootingsports.co.za,https://tuneupprecision.co.za
+    ports:
+      - "${UMAMI_PORT:-3010}:3000"
+
+volumes:
+  umami-db:

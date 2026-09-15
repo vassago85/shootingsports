@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AdSlots\Pages;
 
 use App\Filament\Resources\AdSlots\AdSlotResource;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListAdSlots extends ListRecords
@@ -12,7 +13,7 @@ class ListAdSlots extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            \Filament\Actions\CreateAction::make(),
+            CreateAction::make(),
         ];
     }
 }

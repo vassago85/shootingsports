@@ -4,6 +4,7 @@ use App\Enums\AdPage;
 use App\Enums\EnquiryStatus;
 use App\Enums\ListingStatus;
 use App\Enums\PlacementSlot;
+use App\Enums\ProviderCategory;
 use App\Enums\ProviderTier;
 use App\Mail\EnquiryReceivedMail;
 use App\Models\AdSlot;
@@ -141,14 +142,14 @@ it('sorts featured providers ahead of free listings', function () {
         'slug' => 'zebra-free',
         'tier' => ProviderTier::Free,
         'status' => ListingStatus::Published,
-        'category' => \App\Enums\ProviderCategory::Dealer,
+        'category' => ProviderCategory::Dealer,
     ]);
     Provider::factory()->create([
         'name' => 'Alpha Featured Shop',
         'slug' => 'alpha-featured',
         'tier' => ProviderTier::Featured,
         'status' => ListingStatus::Published,
-        'category' => \App\Enums\ProviderCategory::Dealer,
+        'category' => ProviderCategory::Dealer,
     ]);
 
     $html = $this->get(route('suppliers.category', 'dealer'))->assertOk()->getContent();

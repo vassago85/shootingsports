@@ -39,10 +39,10 @@ class AdminUserSeeder extends Seeder
             $user = User::query()->updateOrCreate(
                 ['email' => $admin['email']],
                 [
-                    'name'              => $admin['name'],
-                    'password'          => $password, // hashed by the User model cast
-                    'is_staff'          => true,
-                    'digest_frequency'  => DigestFrequency::None,
+                    'name' => $admin['name'],
+                    'password' => $password, // hashed by the User model cast
+                    'is_staff' => true,
+                    'digest_frequency' => DigestFrequency::None,
                     'email_verified_at' => now(),
                 ],
             );

@@ -42,4 +42,19 @@ return [
         ],
     ],
 
+    // Search Console verification (fallback). Prefer the static
+    // public/google*.html file — this meta tag is a belt-and-braces
+    // secondary handshake for the same property.
+    'google' => [
+        'site_verification' => env('GOOGLE_SITE_VERIFICATION'),
+    ],
+
+    // Shared Umami analytics (self-hosted, first-party). Both values must
+    // be set for the script tag to render; leaving either blank keeps the
+    // public layout tracker-free for local dev and previews.
+    'umami' => [
+        'script_url' => env('UMAMI_SCRIPT_URL'),
+        'website_id' => env('UMAMI_WEBSITE_ID'),
+    ],
+
 ];

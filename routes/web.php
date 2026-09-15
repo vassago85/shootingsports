@@ -9,6 +9,7 @@ use App\Http\Controllers\EnquiryController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IcalController;
+use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\ShooterCalendarController;
@@ -73,8 +74,11 @@ Route::get('/claim', [StaticPageController::class, 'claim'])->name('claim');
 Route::get('/privacy', [StaticPageController::class, 'privacy'])->name('privacy');
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/sitemaps/pages.xml', [SitemapController::class, 'pages'])->name('sitemap.pages');
 Route::get('/sitemaps/events.xml', [SitemapController::class, 'events'])->name('sitemap.events');
 Route::get('/sitemaps/organisations.xml', [SitemapController::class, 'organisations'])->name('sitemap.organisations');
 Route::get('/sitemaps/venues.xml', [SitemapController::class, 'venues'])->name('sitemap.venues');
 Route::get('/sitemaps/disciplines.xml', [SitemapController::class, 'disciplines'])->name('sitemap.disciplines');
 Route::get('/sitemaps/providers.xml', [SitemapController::class, 'providers'])->name('sitemap.providers');
+
+Route::get('/llms.txt', LlmsTxtController::class)->name('llms');

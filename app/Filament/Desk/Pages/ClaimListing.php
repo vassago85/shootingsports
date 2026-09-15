@@ -20,11 +20,11 @@ class ClaimListing extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string | \BackedEnum | null $navigationIcon = Heroicon::OutlinedHandRaised;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedHandRaised;
 
     protected static ?string $navigationLabel = 'Claim a listing';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Your listings';
+    protected static string|\UnitEnum|null $navigationGroup = 'Your listings';
 
     protected static ?string $title = 'Claim an existing listing';
 

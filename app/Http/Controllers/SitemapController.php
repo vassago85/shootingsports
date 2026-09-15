@@ -17,6 +17,7 @@ class SitemapController extends Controller
     public function index(): Response
     {
         $sitemaps = [
+            url('/sitemaps/pages.xml'),
             url('/sitemaps/events.xml'),
             url('/sitemaps/organisations.xml'),
             url('/sitemaps/venues.xml'),
@@ -25,6 +26,32 @@ class SitemapController extends Controller
         ];
 
         return $this->xml('public.sitemaps.index', ['sitemaps' => $sitemaps]);
+    }
+
+    /**
+     * Static, evergreen public URLs that Google would otherwise never find
+     * from the entity-driven sitemaps. Intentionally excludes desk, admin,
+     * my-calendar, thank-you screens, iCal feeds and oembed.
+     */
+    public function pages(): Response
+    {
+        $urls = collect([
+            'home',
+            'calendar',
+            'disciplines.index',
+            'clubs.index',
+            'ranges.index',
+            'suppliers.index',
+            'claim',
+            'advertise',
+            'contact',
+            'embed.docs',
+            'privacy',
+        ])->map(fn (string $name): array => [
+            'loc' => route($name),
+        ]);
+
+        return $this->xml('public.sitemaps.urlset', ['urls' => $urls]);
     }
 
     public function events(): Response

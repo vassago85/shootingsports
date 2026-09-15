@@ -12,6 +12,7 @@ use App\Models\Enquiry;
 use App\Models\Event;
 use App\Models\Organisation;
 use Filament\Pages\Page;
+use Filament\Panel;
 use Filament\Support\Icons\Heroicon;
 
 class StaffDashboard extends Page
@@ -28,7 +29,7 @@ class StaffDashboard extends Page
 
     protected string $view = 'filament.pages.staff-dashboard';
 
-    public static function getRoutePath(\Filament\Panel $panel): string
+    public static function getRoutePath(Panel $panel): string
     {
         return '/';
     }

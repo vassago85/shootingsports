@@ -6,12 +6,13 @@ use App\Filament\Desk\Resources\Events\EventResource;
 use App\Filament\Desk\Resources\Organisations\OrganisationResource;
 use App\Models\Event;
 use Filament\Pages\Page;
+use Filament\Panel;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
 
 class DeskDashboard extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = Heroicon::OutlinedHome;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedHome;
 
     protected static ?string $navigationLabel = 'Home';
 
@@ -23,7 +24,7 @@ class DeskDashboard extends Page
 
     protected string $view = 'filament.desk.pages.desk-dashboard';
 
-    public static function getRoutePath(\Filament\Panel $panel): string
+    public static function getRoutePath(Panel $panel): string
     {
         return '/';
     }

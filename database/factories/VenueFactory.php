@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
+use App\Enums\ProviderTier;
 use App\Enums\Province;
 use App\Enums\VenueAccess;
 use App\Enums\VerificationState;
@@ -36,7 +37,7 @@ class VenueFactory extends Factory
             'status' => ListingStatus::Published,
             'verification_state' => VerificationState::Unconfirmed,
             'source' => ListingSource::Staff,
-            'tier' => \App\Enums\ProviderTier::Free,
+            'tier' => ProviderTier::Free,
         ];
     }
 }
