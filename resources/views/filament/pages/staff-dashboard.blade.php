@@ -8,6 +8,25 @@
         </p>
     </div>
 
+    {{-- Pro waitlist demand-signal widget. Sits first because it is
+         the metric the freemium foundation exists to produce, and it
+         needs a scannable eye every day — not a click into Enquiries. --}}
+    <div class="desk-widget">
+        <p class="kicker">Pro waitlist · {{ now()->format('F Y') }}</p>
+        @if (empty($waitlistThisMonth))
+            <p style="color:var(--slate)">No waitlist signups yet this month.</p>
+        @else
+            <ul class="waitlist-triggers">
+                @foreach ($waitlistThisMonth as $trigger => $count)
+                    <li>
+                        <span class="trigger">{{ str_replace('_', ' ', $trigger) }}</span>
+                        <b>{{ $count }}</b>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+    </div>
+
     <div class="desk-grid">
         <a class="desk-card" href="{{ $createOrgUrl }}">
             <p class="kicker">01 — Directory</p>
