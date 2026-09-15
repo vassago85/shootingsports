@@ -4,7 +4,7 @@
             <div class="wrap">
                 <p class="label">Sign up · Match director</p>
                 <h1>Register as a match director</h1>
-                <p>Publish matches for a club, range, or host on Shooting Sports. Free to list. Staff review new accounts and pair you with existing organisations on the directory.</p>
+                <p>Publish matches for a club, range, or host on Shooting Sports. Free to list. <b>New requests are reviewed by staff</b> — usually within one working day — before you can post events. Your shooter account works immediately.</p>
             </div>
         </section>
         <section class="block">
@@ -30,13 +30,16 @@
                         <input type="password" wire:model="password_confirmation" required autocomplete="new-password" maxlength="255">
                     </label>
                     <label class="field">
-                        <span>Which club, range or host will you publish for? (optional)</span>
-                        <textarea wire:model="host_hint" rows="3" maxlength="500" placeholder="e.g. Pretoria Rifle &amp; Pistol Club, or Muletech Ridge Range"></textarea>
+                        <span>Which club, range, series or host will you publish for? *</span>
+                        <textarea wire:model="host_hint" rows="3" maxlength="500" required placeholder="e.g. Pretoria Rifle &amp; Pistol Club — I run the Wednesday IPSC shoots. Or: Muletech Ridge Range — I host the Steel Challenge series."></textarea>
+                        <small style="color:var(--slate);font-size:12px;display:block;margin-top:4px">
+                            This is what staff use to approve your request — the more specific, the faster it goes through.
+                        </small>
                         @error('host_hint') <span class="err">{{ $message }}</span> @enderror
                     </label>
                     <button type="submit" class="btn" wire:loading.attr="disabled" wire:target="register">
-                        <span wire:loading.remove wire:target="register">Create match director account</span>
-                        <span wire:loading wire:target="register">Creating…</span>
+                        <span wire:loading.remove wire:target="register">Submit for review</span>
+                        <span wire:loading wire:target="register">Submitting…</span>
                     </button>
                 </form>
 

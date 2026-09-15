@@ -47,25 +47,27 @@
         @endif
     </div>
 
-    {{-- New match director signups this month. Signup is open so we
-         surface the review queue here rather than blocking access —
-         staff can pair each new MD with an existing organisation
-         (or catch a bad actor early) from the linked UserResource. --}}
-    <div class="desk-widget">
-        <p class="kicker">New match directors · {{ now()->format('F Y') }}</p>
-        @if ($newMatchDirectors === 0)
-            <p style="color:var(--slate)">No new match director signups yet this month.</p>
+    {{-- MD review queue. Pending count is the action item; the
+         month-to-date approvals figure is throughput signal. Approve
+         and reject are record actions inside UserResource — this
+         widget just points there. --}}
+    <div class="desk-widget"@if ($mdRequestsPending > 0) style="border-color:var(--brass)" @endif>
+        <p class="kicker">Match director requests</p>
+        @if ($mdRequestsPending === 0)
+            <p style="color:var(--slate)">
+                Queue is empty. <b>{{ $mdApprovedThisMonth }}</b> approved this month.
+            </p>
         @else
             <p>
-                <b>{{ $newMatchDirectors }}</b> new match director{{ $newMatchDirectors === 1 ? '' : 's' }} signed up.
-                Check the accompanying MD signup enquiries in the inbox for any club/host they named,
-                then pair them with an existing organisation.
+                <b>{{ $mdRequestsPending }}</b> request{{ $mdRequestsPending === 1 ? '' : 's' }} awaiting review.
+                Read the applicant's host hint (in the linked MD signup enquiry), then approve or reject from the user row.
             </p>
             <p style="margin-top:8px">
-                <a href="{{ $usersUrl }}" style="color:var(--brass)">Review users →</a>
+                <a href="{{ $mdPendingUrl }}" style="color:var(--brass)">Review pending users →</a>
                 &nbsp;·&nbsp;
                 <a href="{{ $enquiriesUrl }}" style="color:var(--brass)">MD signup enquiries →</a>
             </p>
+            <p style="margin-top:6px;color:var(--slate);font-size:13px">{{ $mdApprovedThisMonth }} approved this month.</p>
         @endif
     </div>
 

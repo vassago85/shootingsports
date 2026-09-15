@@ -39,7 +39,7 @@ it('renders the director signup page for guests', function () {
     $this->get('/directors/register')
         ->assertOk()
         ->assertSee('Register as a match director')
-        ->assertSee('Which club, range or host');
+        ->assertSee('Which club, range, series or host');
 });
 
 it('redirects authenticated users away from guest-only auth pages', function () {
@@ -103,9 +103,9 @@ it('shooter signup rejects passwords shorter than 8 characters', function () {
         ->assertHasErrors(['password' => 'min']);
 });
 
-// ---- Director signup ----------------------------------------------
+// ---- Director signup (review-gated) --------------------------------
 
-it('creates a match director account and lands on /desk', function () {
+it('creates a PENDING match director account, lands on /my-calendar, and flashes a review message', function () {
     Event::fake([Registered::class]);
 
     Livewire::test(DirectorRegister::class)
@@ -113,19 +113,25 @@ it('creates a match director account and lands on /desk', function () {
         ->set('email', 'dana@example.test')
         ->set('password', 'longenoughpassword')
         ->set('password_confirmation', 'longenoughpassword')
+        ->set('host_hint', 'Pretoria Rifle & Pistol Club — I run the Wednesday IPSC shoots.')
         ->call('register')
-        ->assertRedirect('/desk');
+        ->assertRedirect('/my-calendar');
 
     $user = User::query()->where('email', 'dana@example.test')->firstOrFail();
 
-    expect($user->is_match_director)->toBeTrue()
-        ->and($user->is_staff)->toBeFalse();
+    expect($user->is_match_director)->toBeFalse()
+        ->and($user->is_staff)->toBeFalse()
+        ->and($user->md_requested_at)->not->toBeNull()
+        ->and($user->md_approved_at)->toBeNull()
+        ->and($user->md_rejected_at)->toBeNull()
+        ->and($user->isMdPending())->toBeTrue();
 
+    expect(session('status'))->toContain('your match director request is in');
     Event::assertDispatched(Registered::class);
     $this->assertAuthenticatedAs($user);
 });
 
-it('director signup records an md_signup enquiry when a host hint is given', function () {
+it('director signup ALWAYS records an md_signup enquiry with the host hint', function () {
     Livewire::test(DirectorRegister::class)
         ->set('name', 'Dana Director')
         ->set('email', 'dana@example.test')
@@ -139,19 +145,33 @@ it('director signup records an md_signup enquiry when a host hint is given', fun
         ->firstOrFail();
 
     expect($enquiry->email)->toBe('dana@example.test')
+        ->and($enquiry->subject)->toStartWith('MD request:')
         ->and($enquiry->body)->toBe('Pretoria Rifle & Pistol Club')
         ->and($enquiry->context['host_hint'] ?? null)->toBe('Pretoria Rifle & Pistol Club');
 });
 
-it('director signup with no hint does not create an enquiry', function () {
+it('director signup rejects an empty host_hint (required in review-gated flow)', function () {
     Livewire::test(DirectorRegister::class)
         ->set('name', 'Dana Director')
         ->set('email', 'dana@example.test')
         ->set('password', 'longenoughpassword')
         ->set('password_confirmation', 'longenoughpassword')
-        ->call('register');
+        ->set('host_hint', '')
+        ->call('register')
+        ->assertHasErrors('host_hint');
 
-    expect(Enquiry::query()->where('type', EnquiryType::MdSignup->value)->count())->toBe(0);
+    expect(User::query()->where('email', 'dana@example.test')->exists())->toBeFalse();
+});
+
+it('a PENDING match director cannot access /desk yet', function () {
+    $pending = User::factory()->create([
+        'is_match_director' => false,
+        'md_requested_at' => now(),
+    ]);
+
+    $this->actingAs($pending)
+        ->get('/desk')
+        ->assertStatus(403);
 });
 
 // ---- Login redirects follow role ----------------------------------

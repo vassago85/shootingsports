@@ -12,6 +12,27 @@
         </section>
         <section class="block">
             <div class="wrap">
+                {{-- Post-signup / persistent flash for match director
+                     requests. Session flash covers the first render right
+                     after the redirect from /directors/register; the
+                     mdStatus() check keeps the banner around on every
+                     subsequent /my-calendar visit until staff decide. --}}
+                @if (session('status'))
+                    <div class="pending-banner" role="status">
+                        {{ session('status') }}
+                    </div>
+                @elseif ($user->isMdPending())
+                    <div class="pending-banner" role="status">
+                        <b>Match director access pending.</b>
+                        Your request is with staff for review — usually approved within one working day. We will email you as soon as it is done. Your shooter calendar (below) works as normal.
+                    </div>
+                @elseif ($user->isMdRejected())
+                    <div class="pending-banner" role="status" style="border-color:#f0776b">
+                        <b>Match director request was not approved.</b>
+                        Your shooter account still works. If you think this was a mistake, reply to the email we sent you or <a href="{{ route('contact') }}">contact us</a>.
+                    </div>
+                @endif
+
                 @if ($events->isEmpty() && $past->isEmpty())
                     <p class="empty">Nothing on your calendar yet. Open a match and tap Add to my calendar.</p>
                     <p><a class="btn" href="{{ route('calendar') }}">Browse the calendar</a></p>

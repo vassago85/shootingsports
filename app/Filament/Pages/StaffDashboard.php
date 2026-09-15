@@ -57,7 +57,8 @@ class StaffDashboard extends Page
             'newEnquiries' => $newEnquiries,
             'upcoming' => $upcoming,
             'waitlistThisMonth' => $this->waitlistThisMonth(),
-            'newMatchDirectors' => $this->newMatchDirectorsThisMonth(),
+            'mdRequestsPending' => $this->mdRequestsPending(),
+            'mdApprovedThisMonth' => $this->mdApprovedThisMonth(),
             'proSubscribers' => $this->activeProSubscribers(),
             'estimatedMrrCents' => $this->estimatedMrrCents(),
             'orgsUrl' => OrganisationResource::getUrl('index'),
@@ -69,6 +70,7 @@ class StaffDashboard extends Page
             'emailUrl' => ManageMailSettings::getUrl(),
             'verificationUrl' => VerificationDashboard::getUrl(),
             'usersUrl' => UserResource::getUrl('index'),
+            'mdPendingUrl' => UserResource::getUrl('index', ['tableFilters' => ['md_status' => ['value' => 'pending']]]),
         ];
     }
 
@@ -115,17 +117,31 @@ class StaffDashboard extends Page
     }
 
     /**
-     * Match director signups this calendar month — the review lane
-     * introduced by the open-signup MD flow. Kept as a raw count with
-     * a "review" deep link rather than a table on the dashboard; if
-     * volume grows, promote it to a dedicated widget.
+     * How many MD requests are sitting in the queue right now. This
+     * is the number the dashboard needs to prompt action on — if the
+     * count is non-zero, the widget shows a "review now" CTA.
      */
-    private function newMatchDirectorsThisMonth(): int
+    private function mdRequestsPending(): int
+    {
+        return User::query()
+            ->whereNotNull('md_requested_at')
+            ->where('is_match_director', false)
+            ->whereNull('md_rejected_at')
+            ->count();
+    }
+
+    /**
+     * MD requests successfully approved this calendar month — a
+     * "throughput" metric to see whether the review lane is being
+     * worked. Deliberately scoped to md_approved_at (not created_at)
+     * so grandfathered pre-review-flow MDs do not skew it upward.
+     */
+    private function mdApprovedThisMonth(): int
     {
         return User::query()
             ->where('is_match_director', true)
             ->where('is_staff', false)
-            ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->whereBetween('md_approved_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->count();
     }
 

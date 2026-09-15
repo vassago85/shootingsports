@@ -402,6 +402,15 @@ section.block { padding: 72px 0; }
     text-transform: uppercase; color: var(--slate); display: block;
 }
 .my-log-summary b { font-size: 22px; font-variant-numeric: tabular-nums; }
+
+/* MD request pending banner (also used by post-signup flash) */
+.pending-banner {
+    background: var(--surface); border: 1px solid var(--brass);
+    padding: 14px 18px; margin: 0 0 22px;
+    color: var(--ink); font-size: 14px; line-height: 1.5;
+}
+.pending-banner b { color: var(--brass); }
+.pending-banner a { color: var(--brass); }
 .page-hero { background: var(--gunmetal); color: #eef0ee; padding: 48px 0 40px; }
 .page-hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); text-transform: uppercase; }
 .page-hero p { color: #b9c0bd; max-width: 58ch; }

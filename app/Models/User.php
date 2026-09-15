@@ -22,7 +22,9 @@ use Illuminate\Support\Str;
 #[Fillable([
     'name', 'email', 'password', 'calendar_slug', 'home_province', 'travel_radius_km',
     'digest_frequency', 'association_membership_number',
-    'is_staff', 'is_match_director', 'plan', 'plan_expires_at',
+    'is_staff', 'is_match_director',
+    'md_requested_at', 'md_approved_at', 'md_rejected_at', 'md_rejection_reason',
+    'plan', 'plan_expires_at',
     'paystack_customer_code', 'paystack_subscription_code', 'paystack_authorization_code',
     'plan_billing_cycle', 'plan_cancelled_at',
 ])]
@@ -42,10 +44,52 @@ class User extends Authenticatable implements FilamentUser
             'digest_frequency' => DigestFrequency::class,
             'is_staff' => 'boolean',
             'is_match_director' => 'boolean',
+            'md_requested_at' => 'datetime',
+            'md_approved_at' => 'datetime',
+            'md_rejected_at' => 'datetime',
             'plan' => Plan::class,
             'plan_expires_at' => 'datetime',
             'plan_cancelled_at' => 'datetime',
         ];
+    }
+
+    /**
+     * A user is "pending MD review" when they hit /directors/register
+     * but staff have not yet approved (or rejected) them. Panel access
+     * still gates on is_match_director — this flag only drives UI copy
+     * (the pending banner) and the Filament pending filter.
+     */
+    public function isMdPending(): bool
+    {
+        return $this->md_requested_at !== null
+            && $this->is_match_director === false
+            && $this->md_rejected_at === null;
+    }
+
+    /**
+     * A user is "MD rejected" when staff explicitly said no. They can
+     * re-apply — doing so clears md_rejected_at and refreshes
+     * md_requested_at. Kept separate from isMdPending() so we can
+     * show a distinct "we couldn't approve you" message.
+     */
+    public function isMdRejected(): bool
+    {
+        return $this->md_rejected_at !== null && $this->is_match_director === false;
+    }
+
+    /**
+     * One-word status for tables + filters. Deliberately a string
+     * (not an enum) — Filament TernaryFilter binds cleanly and there
+     * is no callsite that switches on this value.
+     */
+    public function mdStatus(): string
+    {
+        return match (true) {
+            $this->is_match_director === true => 'approved',
+            $this->isMdPending() => 'pending',
+            $this->isMdRejected() => 'rejected',
+            default => 'none',
+        };
     }
 
     /**
