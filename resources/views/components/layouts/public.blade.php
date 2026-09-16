@@ -47,6 +47,7 @@
             </a>
             <nav class="nav-links" aria-label="Primary">
                 <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') ? 'on' : '' }}">Calendar</a>
+                <a href="{{ route('map') }}" class="{{ request()->routeIs('map') ? 'on' : '' }}">Map</a>
                 <a href="{{ route('disciplines.index') }}" class="{{ request()->routeIs('disciplines.*') ? 'on' : '' }}">Discover</a>
                 <a href="{{ route('clubs.index') }}" class="{{ request()->routeIs('clubs.*') || request()->routeIs('ranges.*') || request()->routeIs('suppliers.*') ? 'on' : '' }}">Directory</a>
                 <a href="{{ route('claim') }}">For Clubs</a>
@@ -68,6 +69,7 @@
         </div>
         <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
             <a href="{{ route('calendar') }}">Calendar</a>
+            <a href="{{ route('map') }}">Map</a>
             <a href="{{ route('disciplines.index') }}">Discover</a>
             <a href="{{ route('clubs.index') }}">Clubs &amp; series</a>
             <a href="{{ route('ranges.index') }}">Ranges</a>

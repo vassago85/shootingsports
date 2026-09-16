@@ -20,6 +20,10 @@
     anchors, which is invalid HTML.
 --}}
 <article class="dope {{ $planned ? 'is-planned' : '' }}" data-fam="{{ $family }}">
+    {{-- Discipline-family accent tick (cool-factor). Purely visual,
+         so aria-hidden. The colour comes from the `--fam-accent`
+         custom property set by [data-fam="..."] on the article. --}}
+    <div class="dope-fam-tick" aria-hidden="true"></div>
     <div class="dope-banner {{ $coverUrl ? ($usingHostLogo ? 'logo-fallback' : 'has-poster') : 'fallback' }}">
         @if ($coverUrl && ! $usingHostLogo)
             {{-- Blurred, darkened copy of the poster fills the 3:1 crop

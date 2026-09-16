@@ -10,6 +10,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IcalController;
 use App\Http\Controllers\LlmsTxtController;
+use App\Http\Controllers\MapController;
 use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\PaystackController;
 use App\Http\Controllers\ProviderController;
@@ -30,6 +31,15 @@ $categoryPattern = implode('|', array_map(fn (ProviderCategory $category) => $ca
 
 Route::get('/', HomeController::class)->name('home');
 Route::get('/calendar', CalendarController::class)->name('calendar');
+
+/*
+ * UX audit cool-factor: province-clustered map of upcoming matches.
+ * The dedicated /map route is the canonical surface; a legacy
+ * ?view=map query on /calendar redirects here so any external
+ * link shape reaches the same page.
+ */
+Route::get('/map', MapController::class)->name('map');
+Route::get('/calendar/map', fn () => redirect()->route('map'));
 
 Route::get('/disciplines', [DisciplineController::class, 'index'])->name('disciplines.index');
 Route::get('/disciplines/{discipline:slug}/calendar.ics', [IcalController::class, 'discipline'])->name('ical.discipline');

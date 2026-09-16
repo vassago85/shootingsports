@@ -46,19 +46,11 @@ that are actively misleading users right now.
 
 ## Bundle 4 — "Cool factor"
 
-Audit's own advice: restraint is the strength, don't add chrome. Three
-things move the needle.
+- ✅ **Live reticle sweep** — homepage hero SVG wrapped in `.hero-reticle-wrap`; a rotating conic-gradient wedge (`::after`, `mask: radial-gradient` clip, 7s linear infinite) sweeps around the reticle. `@media (prefers-reduced-motion: reduce)` kills the animation entirely for motion-sensitive visitors. No JS, no per-frame layout.
+- ✅ **DOPE-card discipline-family accents** — new `--fam-accent` CSS variable set per `[data-fam]` selector: rifle stays canonical brass, handgun gets slate-blue, shotgun copper, airgun muted green, multi plum. Small diagonal `.dope-fam-tick` sits in the top-right of every card, coloured by the family. Card top-border + hover ring inherit the same variable. Kept quiet — no icons, no labels, just tone.
+- ✅ **Province-clustered map view** — new `MapController` + `/map` route + `resources/views/public/map.blade.php`. Aggregates upcoming events by `venue.province` (fall back to `hostOrganisation.province`) with a 5-minute cache, drops nine Leaflet `circleMarker`s at province centroids sized proportionally to match count. Click → `/calendar?province=<slug>`. Zero-count provinces render as muted 6px dots so the national picture reads at a glance. Text-fallback legend below the map doubles as SEO surface + no-JS support. View toggle (`.view-toggle`) added to both `/calendar` and `/map` hero blocks; `Map` link in main nav (desktop + mobile). `/calendar/map` redirects to `/map` for URL-shape parity with the audit's `?view=map` suggestion.
 
-- ⬜ **Live reticle (small)**
-  - Homepage hero radar SVG gets a slow sweep animation (`@keyframes` CSS, 8s linear infinite, respect `prefers-reduced-motion`)
-  - Stretch: range rings scale with the radius dropdown value (only if we build Bundle 2 Option B)
-- ⬜ **DOPE-card discipline identity (medium)**
-  - `resources/css/app.css` — extend the existing `[data-fam]` selectors so rifle / handgun / shotgun / precision / clay etc. each get a distinctive brass shade or a ballistic-style marker in the top-left corner
-  - Consider rendering the spec rows as ballistic table (mono, right-aligned, hairline dividers) instead of the current dt/dd label-value strip
-- ⬜ **Map view (largest)**
-  - `/calendar?view=map` toggle that renders upcoming matches on a Leaflet map, province-clustered
-  - Needs venue lat/lng (see Bundle 2 Option B). Reuse the same migration.
-  - This is the screenshot-worthy feature that makes clubs want to be listed.
+**Acceptance met:** hero reticle sweeps quietly and stops on `prefers-reduced-motion`; a wall of cards visually clusters by discipline family without needing an icon glossary; `/map` renders 9 province bubbles with real match counts and cross-links to the calendar. Note: `/map` uses province centroids because per-venue lat/lng doesn't ship until a future Venue migration — bubbles snap to province centres, which is intentional at this scale.
 
 ---
 

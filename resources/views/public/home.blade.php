@@ -1,15 +1,24 @@
 <x-layouts.public title="Find your next shoot">
     <main id="main">
         <section class="hero" style="padding:0">
-            <svg class="hero-reticle" viewBox="0 0 400 400" aria-hidden="true">
-                <circle cx="200" cy="200" r="182" fill="none" stroke="#D9AE52" stroke-width="1.5"/>
-                <circle cx="200" cy="200" r="120" fill="none" stroke="#D9AE52" stroke-width="1"/>
-                <circle cx="200" cy="200" r="52" fill="none" stroke="#D9AE52" stroke-width="1"/>
-                <path d="M200 0v150M200 250v150M0 200h150M250 200h150" stroke="#D9AE52" stroke-width="1.5"/>
-                <path d="M182 236h36M186 258h28M190 280h20M182 164h36M186 142h28M190 120h20" stroke="#D9AE52" stroke-width="1.5"/>
-                <path d="M164 182v36M142 186v28M120 190v20M236 182v36M258 186v28M280 190v20" stroke="#D9AE52" stroke-width="1.5"/>
-                <circle cx="200" cy="200" r="3.5" fill="#D9AE52"/>
-            </svg>
+            {{--
+                UX audit — cool factor: live radar sweep. The reticle
+                SVG stays static; the sweep is a slow-rotating conic-
+                gradient in the wrapper's ::after so no per-frame layout
+                and no JS. `prefers-reduced-motion` disables the
+                animation entirely for motion-sensitive visitors.
+            --}}
+            <div class="hero-reticle-wrap" aria-hidden="true">
+                <svg class="hero-reticle" viewBox="0 0 400 400">
+                    <circle cx="200" cy="200" r="182" fill="none" stroke="#D9AE52" stroke-width="1.5"/>
+                    <circle cx="200" cy="200" r="120" fill="none" stroke="#D9AE52" stroke-width="1"/>
+                    <circle cx="200" cy="200" r="52" fill="none" stroke="#D9AE52" stroke-width="1"/>
+                    <path d="M200 0v150M200 250v150M0 200h150M250 200h150" stroke="#D9AE52" stroke-width="1.5"/>
+                    <path d="M182 236h36M186 258h28M190 280h20M182 164h36M186 142h28M190 120h20" stroke="#D9AE52" stroke-width="1.5"/>
+                    <path d="M164 182v36M142 186v28M120 190v20M236 182v36M258 186v28M280 190v20" stroke="#D9AE52" stroke-width="1.5"/>
+                    <circle cx="200" cy="200" r="3.5" fill="#D9AE52"/>
+                </svg>
+            </div>
             <div class="hero-in">
                 <div>
                     <p class="label">The national register of South African shooting sport</p>

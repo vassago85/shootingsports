@@ -8,6 +8,14 @@
                 <p class="label">The calendar</p>
                 <h1>What's on, and where</h1>
                 <p>Planned dates stay on the calendar and render as provisional. Confirmed dates look different.</p>
+                {{-- UX audit cool-factor: view toggle between list and
+                     province-clustered map. Plain anchors so no-JS
+                     users, screen readers and browser history all
+                     behave. aria-pressed marks the active view. --}}
+                <div class="view-toggle" role="group" aria-label="Calendar view">
+                    <a href="{{ route('calendar') }}" aria-pressed="true">List</a>
+                    <a href="{{ route('map') }}" aria-pressed="false">Map</a>
+                </div>
             </div>
         </section>
         <section class="block">

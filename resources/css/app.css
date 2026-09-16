@@ -135,9 +135,46 @@ header.nav {
 @media (max-width: 900px) { .nav-links, .nav-cta { display: none; } .hamburger { display: block; } }
 
 .hero { position: relative; overflow: hidden; background: var(--gunmetal); color: #eef0ee; }
-.hero-reticle { position: absolute; right: -140px; top: 50%; transform: translateY(-50%); width: 720px; height: 720px; opacity: .16; pointer-events: none; }
+/* UX audit cool-factor: hero reticle wrap + slow radar sweep.
+   The reticle itself is a static SVG; the sweep is a rotating
+   conic-gradient wedge in the wrap's ::after so there's no per-
+   frame layout and no JavaScript. `mask-image` clips the wedge to
+   the reticle's radius so it doesn't bleed into the hero copy. */
+.hero-reticle-wrap {
+    position: absolute; right: -140px; top: 50%;
+    transform: translateY(-50%);
+    width: 720px; height: 720px;
+    pointer-events: none;
+}
+.hero-reticle { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .16; }
+.hero-reticle-wrap::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: conic-gradient(
+        from 0deg,
+        rgba(217, 174, 82, 0) 0deg,
+        rgba(217, 174, 82, 0) 285deg,
+        rgba(217, 174, 82, .06) 320deg,
+        rgba(217, 174, 82, .18) 355deg,
+        rgba(217, 174, 82, .22) 360deg,
+        rgba(217, 174, 82, 0) 360deg
+    );
+    border-radius: 50%;
+    -webkit-mask: radial-gradient(circle at center, black 42%, transparent 90%);
+    mask: radial-gradient(circle at center, black 42%, transparent 90%);
+    animation: hero-reticle-sweep 7s linear infinite;
+    will-change: transform;
+}
+@keyframes hero-reticle-sweep {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+/* Motion-sensitive users get the static reticle only. */
+@media (prefers-reduced-motion: reduce) {
+    .hero-reticle-wrap::after { animation: none; opacity: 0; }
+}
 .hero-in { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 74px 24px 66px; display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,.85fr); gap: 56px; }
-@media (max-width: 940px) { .hero-in { grid-template-columns: 1fr; gap: 40px; padding: 52px 24px 48px; } .hero-reticle { display: none; } }
+@media (max-width: 940px) { .hero-in { grid-template-columns: 1fr; gap: 40px; padding: 52px 24px 48px; } .hero-reticle-wrap { display: none; } }
 .hero h1 { font-size: clamp(2.6rem, 6.4vw, 4.5rem); line-height: .96; letter-spacing: -.02em; font-weight: 700; text-transform: uppercase; color: #f5f6f4; margin: 14px 0 18px; max-width: 15ch; }
 .hero h1 em { font-style: normal; color: var(--brass-lt); }
 .hero .lede { font-size: 17px; color: #b9c0bd; max-width: 46ch; margin: 0 0 26px; }
@@ -255,12 +292,102 @@ section.block { padding: 72px 0; }
 .empty-state .empty { margin-bottom: 16px; color: var(--slate); }
 .empty-actions { display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
+/* UX audit cool-factor: view toggle between /calendar (list) and
+   /map. Sits in the page hero on both surfaces, mirrors the family/
+   province chip visual language so the site reads consistent. */
+.view-toggle {
+    display: inline-flex; gap: 0; margin-top: 18px;
+    border: 1px solid var(--rule); background: var(--surface);
+}
+.view-toggle a {
+    padding: 8px 18px; font-family: var(--f-mono); font-size: 11.5px;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--slate); text-decoration: none;
+    border-right: 1px solid var(--rule);
+    transition: background .15s ease, color .15s ease;
+}
+.view-toggle a:last-child { border-right: none; }
+.view-toggle a[aria-pressed="true"] {
+    background: var(--gunmetal); color: var(--brass-lt);
+}
+.view-toggle a:not([aria-pressed="true"]):hover {
+    background: var(--surface-2); color: var(--brass-dk);
+}
+
+/* UX audit cool-factor: /map surface. The map itself is a fixed
+   height so it renders before Leaflet lands (no CLS on load); the
+   legend below doubles as a text fallback for no-JS visitors and
+   the SEO surface. */
+.ss-map {
+    height: 520px; width: 100%;
+    background: var(--surface-2); border: 1px solid var(--rule);
+    margin-bottom: 24px;
+}
+.ss-map .leaflet-container { background: #dfe4dc; }
+@media (max-width: 720px) { .ss-map { height: 380px; } }
+
+.map-legend {
+    list-style: none; padding: 0; margin: 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px; background: var(--rule); border: 1px solid var(--rule);
+}
+.map-legend li { background: var(--surface); }
+.map-legend a {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 14px 16px; text-decoration: none; gap: 12px;
+}
+.map-legend .prov {
+    font-family: var(--f-display); font-size: 15px; font-weight: 600;
+    text-transform: uppercase; color: var(--ink);
+}
+.map-legend .ct {
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--brass-dk);
+}
+.map-legend li.is-quiet .prov { color: var(--slate); }
+.map-legend li.is-quiet .ct { color: var(--slate); }
+.map-legend a:hover { background: var(--surface-2); }
+
 .dope-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
 /* Article is `position: relative` so `.dope-title-link::after` can
-   stretch across the whole card as the primary click target. */
-.dope { background: var(--surface); border: 1px solid var(--rule); border-top: 3px solid var(--brass); display: flex; flex-direction: column; text-decoration: none; position: relative; transition: border-color .15s ease, box-shadow .15s ease; }
-.dope:hover { border-color: var(--brass); box-shadow: 0 2px 12px rgba(179, 137, 43, .12); }
+   stretch across the whole card as the primary click target.
+   `--fam-accent` is the per-family accent colour set below via
+   [data-fam="..."] — defaults to brass. */
+.dope {
+    --fam-accent: var(--brass);
+    background: var(--surface); border: 1px solid var(--rule);
+    border-top: 3px solid var(--fam-accent);
+    display: flex; flex-direction: column; text-decoration: none;
+    position: relative;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.dope:hover { border-color: var(--fam-accent); box-shadow: 0 2px 12px rgba(0, 0, 0, .09); }
 .dope.is-planned { border-top-color: var(--slate); }
+.dope.is-planned { --fam-accent: var(--slate); }
+
+/* UX audit cool-factor: DOPE-card discipline-family accents.
+   Rifle stays the canonical brass. Handgun / shotgun / airgun /
+   multi each get a distinct accent tone so a shooter can scan a
+   wall of cards and pick out their sport at a glance. Kept quiet
+   — accent lives only on the top-border + a small tick in the
+   corner. No chrome bloat, no per-card icons. */
+.dope[data-fam="rifle"]   { --fam-accent: #b3892b; /* brass — canonical */ }
+.dope[data-fam="handgun"] { --fam-accent: #3b5a66; /* cool slate-blue */ }
+.dope[data-fam="shotgun"] { --fam-accent: #a26a2f; /* warm copper */ }
+.dope[data-fam="airgun"]  { --fam-accent: #4a7a4a; /* muted green */ }
+.dope[data-fam="multi"]   { --fam-accent: #7a4a68; /* plum */ }
+
+/* Small tick in the top-right of the card banner — reads at a
+   glance as "this card's discipline family colour" without needing
+   an icon or a label. Purely decorative, hidden from AT. */
+.dope-fam-tick {
+    position: absolute; top: 0; right: 0;
+    width: 22px; height: 22px;
+    background: var(--fam-accent);
+    clip-path: polygon(100% 0, 0 0, 100% 100%);
+    z-index: 3;
+    pointer-events: none;
+}
 .dope-top { display: flex; justify-content: space-between; gap: 12px; padding: 15px 17px 12px; border-bottom: 1px solid var(--rule); }
 .dope-top h3 { font-size: 18px; line-height: 1.13; text-transform: uppercase; }
 /* Title anchor is the whole-card link. Colour inherits from h3 so
