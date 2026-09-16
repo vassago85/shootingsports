@@ -744,6 +744,15 @@ section.block { padding: 72px 0; }
 .match-poster { margin: 0 0 28px; background: #1d2426; }
 .match-poster img { display: block; width: 100%; height: auto; }
 
+/* Primary "Enter here" CTA on the match page.
+   The button itself uses the shared .btn brass style; this wrapper
+   just adds the subtle "opens in a new tab" hint underneath so the
+   external hand-off doesn't feel like it happened by accident. */
+.match-entry-cta { border-top: 1px solid var(--rule); padding-top: 22px; }
+.match-entry-cta .btn { font-size: 16px; padding: 13px 26px; }
+.match-entry-note { margin: 10px 0 0; color: var(--muted); font-size: 13.5px; }
+.match-entry-note a { color: var(--brass); text-decoration: underline; }
+
 .badge-tier {
     display: inline-block;
     margin-left: .35em;

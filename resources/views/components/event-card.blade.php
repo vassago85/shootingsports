@@ -78,17 +78,18 @@
         @endforeach
     </dl>
 
-    {{-- Footer is entry-details only, filled brass = the money action.
-         Suppressed entirely when there is no entry URL (no more dead
-         "No entry link yet" placeholder for the public to see). --}}
+    {{-- Footer CTA: internal-first. "Entry details" points to the
+         match page (not the external entry form) — the match page is
+         where the actual details live (specs, description, poster,
+         host + venue links), and it's where the prominent "Enter here"
+         button sends the click on to the external URL.
+         Rendered only when there IS an entry URL, so the CTA promise
+         ("click to see how to enter") is always kept. Matches without
+         an entry link stay clickable via the whole-card overlay but
+         don't advertise a false affordance. --}}
     @if ($event->entry_url)
         <div class="dope-foot">
-            <a
-                href="{{ $event->entry_url }}"
-                class="dope-primary"
-                rel="noopener noreferrer"
-                target="_blank"
-            >Entry details</a>
+            <a href="{{ $matchUrl }}" class="dope-primary">Entry details</a>
         </div>
     @endif
 

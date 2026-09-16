@@ -42,24 +42,60 @@ it('event card makes the whole card clickable via the title anchor', function ()
         ->and($html)->toContain('href="'.route('matches.show', $event->slug).'"');
 });
 
-it('event card renders a filled Entry primary button only when entry_url exists', function () {
+it('event card Entry details button points to the internal match page (not the external entry URL)', function () {
     $withEntry = Event::factory()->create(['entry_url' => 'https://example.test/enter']);
     $withoutEntry = Event::factory()->create(['entry_url' => null]);
 
     $withHtml = view('components.event-card', ['event' => $withEntry])->render();
     $withoutHtml = view('components.event-card', ['event' => $withoutEntry])->render();
 
-    // With: primary button rendered
+    // With: primary button rendered, pointing at matches.show — NOT the
+    // external entry URL. The card is a funnel into the match page,
+    // which then shows the prominent "Enter here" CTA that opens the
+    // external form.
     expect($withHtml)
         ->toContain('class="dope-primary"')
         ->toContain('Entry details')
-        ->toContain('https://example.test/enter');
+        ->toContain('href="'.route('matches.show', $withEntry->slug).'"')
+        // The card must not link straight out to the external URL any
+        // more — that would skip the details page and defeat the
+        // whole point of this flow.
+        ->not->toContain('https://example.test/enter');
 
     // Without: no dope-foot at all (audit #7 - no dead "No entry link" placeholder)
     expect($withoutHtml)
         ->not->toContain('dope-primary')
         ->not->toContain('dope-foot')
         ->not->toContain('Entry details');
+});
+
+it('the match page shows a prominent "Enter here" button linking to the external entry URL', function () {
+    $event = Event::factory()->create([
+        'entry_url' => 'https://example.test/enter-me',
+    ]);
+
+    $response = $this->get(route('matches.show', $event->slug));
+
+    $response->assertOk()
+        ->assertSee('Enter here', false)
+        ->assertSee('https://example.test/enter-me', false)
+        // Opens in a new tab so the shooter doesn't lose the match page.
+        ->assertSee('target="_blank"', false);
+});
+
+it('the match page shows a helpful "no online entry" note when entry_url is null', function () {
+    $host = Organisation::factory()->create(['name' => 'Test Rifle Club', 'type' => 'club']);
+    $event = Event::factory()->create([
+        'entry_url' => null,
+        'host_organisation_id' => $host->id,
+    ]);
+
+    $response = $this->get(route('matches.show', $event->slug));
+
+    $response->assertOk()
+        ->assertSee('No online entry link on file', false)
+        ->assertSee('Test Rifle Club', false)
+        ->assertDontSee('Enter here');
 });
 
 // ---- Branded 404 (audit #4) --------------------------------------

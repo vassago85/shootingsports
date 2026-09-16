@@ -169,7 +169,7 @@ it('renders a federation-hosted match with entry url and fees', function () {
         ->assertSee('Rimfire PR22 MP Provincial')
         ->assertSee('South African Precision Rifle Federation')
         ->assertSee('Host federation')
-        ->assertSee('Entry details')
+        ->assertSee('Enter here')
         ->assertDontSee('Host club');
 });
 

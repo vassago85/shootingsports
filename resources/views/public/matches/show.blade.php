@@ -41,6 +41,39 @@
                 @if ($event->description)
                     <div class="prose">{!! nl2br(e($event->description)) !!}</div>
                 @endif
+
+                {{-- Primary CTA: external entry link. Promoted above the
+                     ghost secondaries because it's the money action —
+                     the whole card journey funnels the shooter here.
+                     Rendered only when the match has an entry URL; if
+                     there isn't one, an explicit "no online entry"
+                     line is shown instead of silently omitting so the
+                     visitor knows the site isn't hiding a link. --}}
+                <div class="match-entry-cta" style="margin-top:26px">
+                    @if ($event->entry_url)
+                        <a
+                            class="btn"
+                            href="{{ $event->entry_url }}"
+                            rel="noopener noreferrer"
+                            target="_blank"
+                        >Enter here →</a>
+                        <p class="match-entry-note">
+                            Opens {{ parse_url($event->entry_url, PHP_URL_HOST) ?: 'the host\'s entry page' }} in a new tab.
+                        </p>
+                    @else
+                        <p class="match-entry-note">
+                            No online entry link on file for this match.
+                            @if ($event->hostOrganisation)
+                                Contact <a href="{{ $event->hostOrganisation->isFederationListing()
+                                    ? route('federations.show', $event->hostOrganisation->slug)
+                                    : route('clubs.show', $event->hostOrganisation->slug) }}">{{ $event->hostOrganisation->name }}</a> to enter.
+                            @else
+                                Ask at the range on the day.
+                            @endif
+                        </p>
+                    @endif
+                </div>
+
                 <p style="margin-top:22px">
                     @auth
                         <livewire:save-to-calendar :event="$event" variant="button" :key="'save-match-'.$event->id" />
@@ -58,9 +91,6 @@
                     @endif
                     @if ($event->venue)
                         <a class="btn ghost" href="{{ route('ranges.show', $event->venue->slug) }}">Range</a>
-                    @endif
-                    @if ($event->entry_url)
-                        <a class="btn" href="{{ $event->entry_url }}" rel="noopener noreferrer">Entry details</a>
                     @endif
                 </p>
             </div>
