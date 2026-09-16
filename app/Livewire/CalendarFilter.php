@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Enums\DisciplineFamily;
 use App\Enums\Province;
 use App\Exceptions\PlanLimitExceeded;
+use App\Models\Discipline;
 use App\Models\SavedSearch;
 use App\Models\User;
 use App\Queries\PublicEventQuery;
@@ -73,6 +74,69 @@ class CalendarFilter extends Component
     public function clearProvinces(): void
     {
         $this->province = null;
+    }
+
+    public function clearDiscipline(): void
+    {
+        $this->discipline = null;
+    }
+
+    public function clearDates(): void
+    {
+        $this->from = null;
+        $this->to = null;
+    }
+
+    /*
+     * "Clear filters" reset used by the result-count bar. Puts every
+     * filter back to the default state, including toggles. `family`
+     * goes back to `'all'` (not null) because the family row's "All"
+     * chip binds against that exact string.
+     */
+    public function clearAll(): void
+    {
+        $this->family = 'all';
+        $this->novice = false;
+        $this->confirmed = false;
+        $this->discipline = null;
+        $this->province = null;
+        $this->radius = null;
+        $this->from = null;
+        $this->to = null;
+    }
+
+    /**
+     * True when any filter has been applied — used by the view to
+     * decide whether to render the "Clear filters" button. Family
+     * default is `'all'`, so we treat that as unfiltered.
+     */
+    public function hasActiveFilters(): bool
+    {
+        return $this->family !== 'all'
+            || $this->novice
+            || $this->confirmed
+            || filled($this->discipline)
+            || filled($this->province)
+            || filled($this->from)
+            || filled($this->to);
+    }
+
+    /**
+     * Human-readable label for the currently-applied discipline, or
+     * null when none is set. Falls back to the slug when we can't
+     * resolve it (unpublished, deleted, etc.).
+     */
+    public function activeDisciplineLabel(): ?string
+    {
+        if (! filled($this->discipline)) {
+            return null;
+        }
+
+        $name = Discipline::query()
+            ->where('slug', $this->discipline)
+            ->value('name');
+
+        return $name ?: $this->discipline;
     }
 
     /**
@@ -152,11 +216,16 @@ class CalendarFilter extends Component
             limit: $this->limit,
         );
 
+        $events = $query->get();
+
         return view('livewire.calendar-filter', [
-            'events' => $query->get(),
+            'events' => $events,
             'families' => DisciplineFamily::cases(),
             'provinces' => Province::cases(),
             'selectedProvinces' => $this->selectedProvinceSlugs(),
+            'activeDisciplineLabel' => $this->activeDisciplineLabel(),
+            'hasActiveFilters' => $this->hasActiveFilters(),
+            'resultCount' => $events->count(),
         ]);
     }
 

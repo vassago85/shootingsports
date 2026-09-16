@@ -1,14 +1,32 @@
 <?php
 
 use App\Enums\ListingStatus;
+use App\Enums\ProviderCategory;
 use App\Enums\VerificationState;
 use App\Models\Organisation;
+use App\Models\Provider;
 use App\Support\EventDate;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 beforeEach(function () {
     $this->withoutVite();
+    // UX audit #12 gates several Industry surfaces on the directory-
+    // populated cache; flush between tests so seeding takes effect.
+    Cache::flush();
 });
+
+/**
+ * Seed just enough published Provider rows to push
+ * Provider::isDirectoryPopulated() over its default threshold.
+ */
+function seedPopulatedIndustry(int $count = 5): void
+{
+    Provider::factory()->count($count)->create([
+        'status' => ListingStatus::Published,
+        'category' => ProviderCategory::Dealer,
+    ]);
+}
 
 it('renders the new tagline on the home hero', function () {
     $this->get(route('home'))
@@ -36,14 +54,21 @@ it('labels the disciplines nav link as Discover', function () {
     expect($html)->toContain('href="'.route('disciplines.index').'">Discover</a>');
 });
 
-it('labels the suppliers footer link as Industry', function () {
+it('labels the suppliers footer link as Industry (once the directory is populated)', function () {
+    // UX audit #12: footer Industry link only appears when
+    // Provider::isDirectoryPopulated() is true. Seed enough real
+    // providers so the gate opens.
+    seedPopulatedIndustry();
+
     $response = $this->get(route('home'))->assertOk();
     $html = $response->getContent();
 
     expect($html)->toContain('href="'.route('suppliers.index').'">Industry</a>');
 });
 
-it('renames the home directory column to Industry with the new blurb', function () {
+it('renames the home directory column to Industry with the new blurb (once populated)', function () {
+    seedPopulatedIndustry();
+
     $this->get(route('home'))
         ->assertOk()
         ->assertSee('<h3>Industry</h3>', false)
@@ -51,7 +76,9 @@ it('renames the home directory column to Industry with the new blurb', function 
         ->assertDontSee('<h3>Suppliers</h3>', false);
 });
 
-it('renames the home stats bar Suppliers slot to Industry', function () {
+it('renames the home stats bar Suppliers slot to Industry (once populated)', function () {
+    seedPopulatedIndustry();
+
     $this->get(route('home'))
         ->assertOk()
         ->assertSee('<span>Industry</span>', false)
@@ -145,10 +172,16 @@ it('hide-when-vacant silences the ad slot when no placements exist', function ()
         ->not->toContain('ad-vacant');
 });
 
-it('keeps the vacant ad-slot pitch on pages that do not opt out', function () {
-    // /calendar embeds ad-slots without hide-when-vacant, so the
-    // pitch should still render there as inventory for sales.
-    $response = $this->get(route('calendar'))->assertOk();
+it('hides the vacant ad-slot pitch on the calendar, ranges and suppliers pages', function () {
+    // UX audit #13: the vacant "Advertise here" pitch above the
+    // filters read as thin. Calendar, ranges and suppliers all now
+    // pass hide-when-vacant so an unsold slot renders nothing —
+    // the actual /advertise sales page still carries the rate card.
+    foreach ([route('calendar'), route('ranges.index'), route('suppliers.index')] as $url) {
+        $response = $this->get($url)->assertOk();
 
-    expect($response->getContent())->toContain('This space is available');
+        expect($response->getContent())
+            ->not->toContain('This space is available')
+            ->not->toContain('ad-vacant');
+    }
 });

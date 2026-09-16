@@ -71,7 +71,11 @@
             <a href="{{ route('disciplines.index') }}">Discover</a>
             <a href="{{ route('clubs.index') }}">Clubs &amp; series</a>
             <a href="{{ route('ranges.index') }}">Ranges</a>
-            <a href="{{ route('suppliers.index') }}">Industry</a>
+            {{-- UX audit #12: hide the mobile Industry link until the
+                 directory is populated enough to be worth clicking. --}}
+            @if (\App\Models\Provider::isDirectoryPopulated())
+                <a href="{{ route('suppliers.index') }}">Industry</a>
+            @endif
             <a href="{{ route('claim') }}">For Clubs</a>
             @auth
                 <a href="{{ route('my-calendar') }}">My calendar</a>
@@ -140,7 +144,12 @@
                         <li><a href="{{ route('disciplines.index') }}">Discover</a></li>
                         <li><a href="{{ route('clubs.index') }}">Clubs &amp; series</a></li>
                         <li><a href="{{ route('ranges.index') }}">Ranges</a></li>
-                        <li><a href="{{ route('suppliers.index') }}">Industry</a></li>
+                        {{-- UX audit #12: hide footer Industry link when
+                             the directory has fewer than the threshold of
+                             live listings. --}}
+                        @if (\App\Models\Provider::isDirectoryPopulated())
+                            <li><a href="{{ route('suppliers.index') }}">Industry</a></li>
+                        @endif
                     </ul>
                 </div>
                 <div>

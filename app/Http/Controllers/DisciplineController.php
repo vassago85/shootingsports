@@ -14,17 +14,31 @@ class DisciplineController extends Controller
     public function index(): View
     {
         $upcomingCounts = Discipline::upcomingCounts();
+        /*
+         * UX audit #11: sort by upcoming-match count (desc) first, then
+         * name. The default sort by family/sort_order buried disciplines
+         * with actual matches under 19 zero-count tiles — the second
+         * section on the site was mostly dead ends. Zero-count tiles
+         * still render (a follow button in the view keeps them useful)
+         * but sink to the bottom.
+         */
         $disciplines = Discipline::query()
             ->where('is_published', true)
             ->whereNull('parent_id')
-            ->orderBy('family')
-            ->orderBy('sort_order')
             ->get()
             ->map(function (Discipline $discipline) use ($upcomingCounts): Discipline {
                 $discipline->setAttribute('events_count', $upcomingCounts[$discipline->id] ?? 0);
 
                 return $discipline;
-            });
+            })
+            ->sort(function (Discipline $a, Discipline $b): int {
+                // Composite sort: upcoming count DESC, then name ASC.
+                // Using <=> on arrays gives us a single-pass stable
+                // comparator without three chained sortBy calls.
+                return [$b->getAttribute('events_count'), $a->name]
+                    <=> [$a->getAttribute('events_count'), $b->name];
+            })
+            ->values();
 
         return view('public.disciplines.index', [
             'disciplines' => $disciplines,

@@ -20,16 +20,9 @@
                     @endforeach
                 </select>
             </label>
-            <label class="field">
-                <span>Within</span>
-                <select wire:model="radius">
-                    <option value="">Any distance</option>
-                    <option value="50">50 km</option>
-                    <option value="150">150 km</option>
-                    <option value="300">300 km</option>
-                    <option value="500">500 km</option>
-                </select>
-            </label>
+            {{-- Radius dropdown removed (UX audit #1) — see MatchFinder
+                 PHP for why. Do not re-add without venue coordinates
+                 and a working Haversine scope on PublicEventQuery. --}}
         </div>
         <div class="console-grid" style="margin-top:10px">
             <label class="field">

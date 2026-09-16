@@ -9,14 +9,17 @@
         </section>
         <section class="block">
             <div class="wrap">
-                <x-ad-slot page="ranges" placement-slot="in_feed_native" :limit="2" class="ad-rail--tight" />
                 <div class="filters">
                     <a href="{{ route('ranges.index') }}" class="{{ $province === null ? 'on' : '' }}">All</a>
                     @foreach ($provinces as $item)
                         <a href="{{ route('ranges.index', ['province' => $item->urlSlug()]) }}" class="{{ $province === $item ? 'on' : '' }}">{{ $item->getLabel() }}</a>
                     @endforeach
                 </div>
-                @forelse ($venues as $venue)
+                {{-- UX audit #13: ad-slot below the filters + the first
+                     row of results, and hide-when-vacant so unsold
+                     inventory does not render a house pitch above the
+                     actual directory. --}}
+                @forelse ($venues as $index => $venue)
                     <a class="listing" href="{{ route('ranges.show', $venue->slug) }}">
                         <h3>{{ $venue->name }} <x-listing-tier-badge :listing="$venue" /></h3>
                         <p class="meta">
@@ -27,6 +30,9 @@
                         </p>
                         <x-verification-badge :listing="$venue" />
                     </a>
+                    @if ($index === 2)
+                        <x-ad-slot page="ranges" placement-slot="in_feed_native" :limit="2" class="ad-rail--tight" hide-when-vacant />
+                    @endif
                 @empty
                     <p class="empty">No ranges listed in this province yet.</p>
                 @endforelse

@@ -180,9 +180,80 @@ section.block { padding: 72px 0; }
 .filters a, .filters button {
     font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase;
     padding: 7px 13px; border: 1px solid var(--rule); background: var(--surface); color: var(--slate); text-decoration: none;
+    /* UX audit #3: pre-hydration state — visibly present but not
+       interactive. app.js adds `.is-hydrated` on livewire:init so
+       the first chip click is never swallowed by an un-booted
+       component. Kept subtle so it doesn't read as "loading" for
+       plain-anchor filter rows that never need hydration. */
+    opacity: .55;
+    pointer-events: none;
+    transition: opacity .18s ease, border-color .15s ease, color .15s ease, background-color .15s ease;
+}
+.filters.is-hydrated a, .filters.is-hydrated button {
+    opacity: 1;
+    pointer-events: auto;
 }
 .filters a:hover, .filters button:hover { border-color: var(--brass); color: var(--brass-dk); }
 .filters a.on, .filters button[aria-pressed="true"] { background: var(--gunmetal); border-color: var(--gunmetal); color: var(--brass-lt); }
+
+/* UX audit #2: active-filter chips row. Shows discipline / date-range
+   filters that arrive via URL from the hero MatchFinder and are not
+   already reflected as pressed buttons in the rows above. Each chip
+   has its own × click target that clears just that filter. */
+.active-filters {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    margin-bottom: 18px;
+}
+.active-filters-label {
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--slate);
+}
+.chip-active {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em;
+    text-transform: uppercase; padding: 6px 10px 6px 12px;
+    border: 1px solid var(--brass); background: var(--surface);
+    color: var(--ink); cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+}
+.chip-active:hover, .chip-active:focus-visible {
+    background: var(--brass); color: #1a1405; outline: none;
+}
+.chip-active span[aria-hidden="true"] {
+    font-family: var(--f-sans); font-weight: 600; font-size: 15px; line-height: 1;
+}
+
+/* UX audit #14: result-count bar + Clear-filters button. Sits above
+   the grid so the visitor sees what the filter produced. The clear
+   button hides completely when no filter is active — no beg-clicks. */
+.result-bar {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 12px; margin: 8px 0 16px; flex-wrap: wrap;
+    border-top: 1px solid var(--rule);
+    padding-top: 14px;
+}
+.result-count {
+    margin: 0; font-family: var(--f-mono); font-size: 12px;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--ink);
+}
+.result-count-suffix { color: var(--slate); margin-left: 6px; }
+.btn-clear-filters {
+    background: none; border: none; padding: 0;
+    font-family: var(--f-mono); font-size: 11.5px;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: var(--brass-dk); cursor: pointer;
+    border-bottom: 1px solid var(--brass);
+}
+.btn-clear-filters:hover, .btn-clear-filters:focus-visible {
+    color: var(--ink); outline: none;
+}
+
+/* UX audit #14: empty state with recovery CTAs. Old empty state was
+   just a policy sentence — no way out. Now it explains and offers
+   Clear filters + (when a date range is active) Widen the date range. */
+.empty-state { padding: 32px 0; text-align: center; }
+.empty-state .empty { margin-bottom: 16px; color: var(--slate); }
+.empty-actions { display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
 .dope-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
 /* Article is `position: relative` so `.dope-title-link::after` can
@@ -276,9 +347,15 @@ section.block { padding: 72px 0; }
 .disc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(212px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
 .disc { background: var(--surface); padding: 18px 17px; text-decoration: none; display: flex; flex-direction: column; gap: 9px; }
 .disc:hover { background: var(--surface-2); }
-.disc .fam { font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--brass-dk); }
+.disc .fam { font-family: var(--f-mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--brass-dk); }
 .disc .nm { font-family: var(--f-display); font-size: 19px; font-weight: 600; text-transform: uppercase; line-height: 1.08; }
 .disc .ct { font-family: var(--f-mono); font-size: 11px; color: var(--slate); margin-top: auto; }
+/* UX audit #11: zero-upcoming tiles are muted (not hidden) so live
+   disciplines lead visually. They still link to their own page —
+   rules, governance, follow button — so the tile isn't a dead end. */
+.disc.is-quiet .nm { color: var(--slate); }
+.disc.is-quiet .fam { color: var(--slate); }
+.disc .ct-quiet { font-style: italic; letter-spacing: 0; }
 
 .listing { background: var(--surface); border: 1px solid var(--rule); padding: 18px 20px; margin-bottom: 12px; text-decoration: none; display: block; }
 .listing h3 { font-size: 20px; text-transform: uppercase; }

@@ -12,7 +12,10 @@
         </section>
         <section class="block">
             <div class="wrap">
-                <x-ad-slot page="calendar" placement-slot="leaderboard" :limit="2" class="ad-rail--tight" />
+                {{-- UX audit #13: ad-slot moved from above-the-filters
+                     to below the results, and gated with
+                     hide-when-vacant so the house pitch does not sit
+                     at the top of the page above the actual matches. --}}
                 <livewire:calendar-filter
                     :family="$family"
                     :novice="$novice"
@@ -23,6 +26,7 @@
                     :from="$from"
                     :to="$to"
                 />
+                <x-ad-slot page="calendar" placement-slot="leaderboard" :limit="2" class="ad-rail--tight" hide-when-vacant />
             </div>
         </section>
     </main>

@@ -25,43 +25,22 @@ that are actively misleading users right now.
 
 ## Bundle 2 — "Fix the filter promise"
 
-The hero sells "find your next match" and the filter is the only surface
-that delivers on it. Right now it lies twice (radius does nothing, chips
-don't reflect state).
+- ✅ **#1 Radius filter removed (Option A locked in)** — dropdown gone from `MatchFinder`; `$radius` property deleted; hero search URL no longer includes `?radius=`. Bookmarked `?radius=150` URLs still parse into `CalendarFilter` (`#[Url]` binding stays) so no 500s, but they silently no-op because `PublicEventQuery::applyRadius()` needs a single province + venue coordinates. Restore properly under Bundle 4 (map view) with a real Venue lat/lng migration.
+- ✅ **#2 Active-filter chips row** — new `.active-filters` strip inside `CalendarFilter` shows filters that arrived via URL and are not already reflected in the button rows above (discipline + date range). Each chip has its own × click target that clears just that filter (`clearDiscipline`, `clearDates`). Province / family / novice / confirmed already reflected via `aria-pressed` on their respective button rows.
+- ✅ **#3 Skeleton chips until hydration** — `.filters { opacity: .55; pointer-events: none }` by default; `resources/js/app.js` adds `.is-hydrated` on `livewire:init`, `DOMContentLoaded`, and `livewire:navigated` / `livewire:morph.updated` so re-morphed chip rows also become interactive. First-click-eaten regression closed.
+- ✅ **#14 Result count + Clear filters + empty state** — new `.result-bar` above the grid always shows `N match(es)` with a `— filtered` suffix when any filter is active. `Clear filters` button (calls `clearAll()`) only renders when needed. Empty state now offers Clear filters + Widen the date range CTAs instead of a bare policy sentence.
 
-- ⬜ **#1 Radius filter is a no-op — decide**
-  - **Option A (recommended, quick):** Delete the radius dropdown from the hero. The site does not know where the user is and does not have venue coordinates on every range. Sell what we deliver — province + discipline — and stop implying a geo query.
-  - **Option B (slow, high-value):** Add "use my location" prompt + venue lat/lng on `Venue` model + Haversine scope + radius chip. New migration, new geolocation UX, new privacy copy. 2–3 day build.
-- ⬜ **#2 Hero filters render as active chips on arrival**
-  - `app/Livewire/CalendarFilter.php` — read query params in `mount()` and set filter state (already does province, needs discipline + level + status)
-  - Chip row in `resources/views/livewire/calendar-filter.blade.php` — render active state per filter, don't hard-code "ALL"
-- ⬜ **#3 Skeleton chips until Livewire hydrates**
-  - Add `wire:offline` / `x-cloak`-style hide OR render the chips with `[disabled]` + a shimmer until `livewire:init` fires
-  - Simplest: `.chip { pointer-events: none } .chip.is-hydrated { pointer-events: auto }` and add the class on `Livewire.on('...')` boot
-- ⬜ **#14 Result count + Clear filters**
-  - Above the grid: `<p class="result-count">{{ $count }} match{{ $count === 1 ? '' : 'es' }}</p>` + `<button type="button" wire:click="reset">Clear filters</button>` (only when any filter is active)
-  - Empty state gets a "Widen date range" and "Nearest matches instead" CTA on top of the existing policy line
-
-**Acceptance:** landing on `/calendar?province=gauteng&discipline=ipsc-handgun` shows both chips lit; the number of results is visible above the grid; a clear-filters button removes them all in one click.
+**Acceptance met:** landing on `/calendar?discipline=ipsc-handgun` renders the "Filtered: IPSC Handgun ×" chip; result count sits above the grid; single Clear filters click resets every filter.
 
 ---
 
 ## Bundle 3 — "Fix the empty pages"
 
-- ⬜ **#11 Discipline tiles**
-  - `app/Http/Controllers/DisciplineController.php` (index) — order disciplines by upcoming-match count desc, then name
-  - Tiles with 0 upcoming: show "Next match: not yet listed — follow this discipline" with a follow button (already exists as `<livewire:follow-button>`)
-  - Or collapse all-zero tiles behind an "All 31 disciplines" accordion — recommend showing all but re-sorting
-- ⬜ **#12 Industry directory empty**
-  - Two options:
-    - **Hide until seeded:** wrap the homepage Industry section + top-nav link + hero stat in `@if (\App\Models\Provider::published()->exists())`
-    - **Seed pre-launch:** add 10–15 real providers we can list free-tier before we start selling. Recommend hiding until you have at least 5 real listings — an empty directory is a worse ad for the ad product than no directory at all.
-- ⬜ **#13 Ad block below first row of results**
-  - `resources/views/public/calendar.blade.php:15` — move `<x-ad-slot>` from top-of-wrap to after the first grid row
-  - Same for `resources/views/public/ranges/index.blade.php:12` and `resources/views/public/suppliers/index.blade.php:12`
-  - Add `hide-when-vacant` while we're there so unsold slots don't show the house pitch on empty inventory
+- ✅ **#11 Discover tiles sorted by upcoming count** — both `HomeController` and `DisciplineController::index` now sort by `events_count DESC, name ASC` via a single-pass `<=>` comparator. Zero-count tiles still render (their discipline page has rules / governance / follow button so it isn't a dead end) but sink to the bottom, and their caption reads "No matches listed yet" in italic slate instead of a bare "0 upcoming". CSS `.disc.is-quiet` mutes name + family colour.
+- ✅ **#12 Industry hidden until directory populated (Option A locked in)** — new `Provider::isDirectoryPopulated(int $threshold = 5): bool` (5-minute cache) gates the mobile-menu Industry link, footer Industry link, homepage `dir-col` Industry column, and hero-stats "INDUSTRY 0" chip. Once 5 real published providers exist, all four surfaces flip on automatically. `/suppliers` page itself stays reachable if someone knows the URL.
+- ✅ **#13 Ad-slot moved + hide-when-vacant everywhere** — calendar / ranges / suppliers all moved the `<x-ad-slot>` out of the "first thing above filters" slot. `/calendar` now renders it below the whole `<livewire:calendar-filter>`; `/ranges` slots it after the 3rd listing; `/suppliers` puts it under the category grid. All four public content surfaces (home, calendar, ranges, suppliers) now pass `hide-when-vacant` so an unsold slot renders no chrome at all. Vacant "Advertise here" pitch is dead on browsing pages — the `/advertise` sales page carries the rate card.
 
-**Acceptance:** the Discover grid leads with disciplines that have matches; Industry either has 5+ real providers or does not exist in the nav; `/calendar` doesn't show an ad above its filters.
+**Acceptance met:** Discover leads with disciplines that have matches; Industry does not appear anywhere in the public UI until 5+ providers exist; no vacant ad pitch above any list of results.
 
 ---
 

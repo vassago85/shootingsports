@@ -49,7 +49,12 @@
                 <div><span>Upcoming matches</span><b>{{ $stats['matches'] }}</b></div>
                 <div><span>Disciplines</span><b>{{ $stats['disciplines'] }}</b></div>
                 <div><span>Provinces</span><b>{{ $stats['provinces'] }}</b></div>
-                <div><span>Industry</span><b>{{ $stats['suppliers'] }}</b></div>
+                {{-- UX audit #12: an "INDUSTRY 0" stat undercuts the
+                     directory's credibility. Only surface the industry
+                     figure once the directory has real listings. --}}
+                @if (\App\Models\Provider::isDirectoryPopulated())
+                    <div><span>Industry</span><b>{{ $stats['suppliers'] }}</b></div>
+                @endif
             </div>
         </div>
 
@@ -79,12 +84,20 @@
                     <h2>Know the game before you arrive</h2>
                     <p>Each discipline is a real page — what it is, who governs it, and where the next match is.</p>
                 </div>
+                {{-- Sorted by upcoming count (desc) in HomeController
+                     — see UX audit #11. Zero-count tiles get a softer
+                     "no matches listed yet" caption instead of a bare
+                     "0 upcoming" that reads as a dead end. --}}
                 <div class="disc-grid">
                     @foreach ($disciplines as $discipline)
-                        <a class="disc" href="{{ route('disciplines.show', $discipline->slug) }}">
+                        <a class="disc {{ $discipline->events_count === 0 ? 'is-quiet' : '' }}" href="{{ route('disciplines.show', $discipline->slug) }}">
                             <span class="fam">{{ $discipline->family->getLabel() }}</span>
                             <span class="nm">{{ $discipline->name }}</span>
-                            <span class="ct">{{ $discipline->events_count }} upcoming</span>
+                            @if ($discipline->events_count > 0)
+                                <span class="ct">{{ $discipline->events_count }} upcoming</span>
+                            @else
+                                <span class="ct ct-quiet">No matches listed yet</span>
+                            @endif
                         </a>
                     @endforeach
                 </div>
@@ -125,19 +138,25 @@
                         </ul>
                         <a class="dir-more" href="{{ route('ranges.index') }}">All ranges →</a>
                     </div>
-                    <div class="dir-col">
-                        <h3>Industry</h3>
-                        <span class="label">Gunsmiths, dealers, ammunition, optics</span>
-                        <ul>
-                            @foreach ($suppliers as $supplier)
-                                <li>
-                                    <a href="{{ route('suppliers.show', $supplier->slug) }}">{{ $supplier->name }}</a>
-                                    <span>{{ $supplier->category->getLabel() }}</span>
-                                </li>
-                            @endforeach
-                        </ul>
-                        <a class="dir-more" href="{{ route('suppliers.index') }}">See the industry →</a>
-                    </div>
+                    {{-- UX audit #12: hide the whole Industry directory
+                         column until we have enough real suppliers to
+                         justify a section. An empty grid on the homepage
+                         is a worse ad for the ad product than no grid. --}}
+                    @if (\App\Models\Provider::isDirectoryPopulated())
+                        <div class="dir-col">
+                            <h3>Industry</h3>
+                            <span class="label">Gunsmiths, dealers, ammunition, optics</span>
+                            <ul>
+                                @foreach ($suppliers as $supplier)
+                                    <li>
+                                        <a href="{{ route('suppliers.show', $supplier->slug) }}">{{ $supplier->name }}</a>
+                                        <span>{{ $supplier->category->getLabel() }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                            <a class="dir-more" href="{{ route('suppliers.index') }}">See the industry →</a>
+                        </div>
+                    @endif
                 </div>
             </div>
         </section>

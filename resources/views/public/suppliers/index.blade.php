@@ -9,7 +9,6 @@
         </section>
         <section class="block">
             <div class="wrap">
-                <x-ad-slot page="suppliers" placement-slot="in_feed_native" :limit="2" class="ad-rail--tight" />
                 <div class="disc-grid">
                     @foreach ($categories as $category)
                         <a class="disc" href="{{ route('suppliers.category', $category->urlSlug()) }}">
@@ -19,6 +18,11 @@
                         </a>
                     @endforeach
                 </div>
+                {{-- UX audit #13: ad-slot below the category grid + hide
+                     when vacant. The old placement above the grid was
+                     the first thing a visitor saw on the Industry page,
+                     and it was a house ad for empty inventory. --}}
+                <x-ad-slot page="suppliers" placement-slot="in_feed_native" :limit="2" class="ad-rail--tight" hide-when-vacant />
             </div>
         </section>
     </main>

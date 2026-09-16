@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 
 #[Fillable([
     'slug', 'name', 'category', 'province', 'town', 'metro', 'lat', 'lng',
@@ -67,5 +68,27 @@ class Provider extends Model
         return $query
             ->orderByRaw("case tier when 'featured' then 0 when 'verified' then 1 else 2 end")
             ->orderBy('name');
+    }
+
+    /**
+     * UX audit #12 — Directory-populated gate.
+     *
+     * Returns true when the public Industry directory has enough real
+     * listings to be worth showing. An empty "10 categories, 0 listed"
+     * grid is a worse ad for a paid listing product than no directory
+     * at all, so nav / homepage sections / hero stats all check this
+     * before rendering.
+     *
+     * The threshold is deliberately conservative (5) — bump it once
+     * we have more real listings if the grid still reads thin. Cached
+     * because it's called from the layout on every request.
+     */
+    public static function isDirectoryPopulated(int $threshold = 5): bool
+    {
+        return Cache::remember(
+            'provider.directory-populated.'.$threshold,
+            300,
+            fn (): bool => static::query()->published()->count() >= $threshold,
+        );
     }
 }

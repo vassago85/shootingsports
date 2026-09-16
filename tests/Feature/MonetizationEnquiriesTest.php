@@ -190,28 +190,19 @@ it('renders active placements for a page slot', function () {
         ->assertDontSee('This space is available');
 });
 
-it('offers vacant advertising space without prices', function () {
-    // The home page opts out of the vacant pitch (hide-when-vacant) to
-    // stop an "Advertise here" block appearing above the first match
-    // on a young directory. /calendar and /suppliers keep the vacant
-    // pitch since advertising is the whole point of the surface.
-    $this->get(route('calendar'))
-        ->assertOk()
-        ->assertSee('This space is available')
-        ->assertSee('Advertise here')
-        ->assertSee(route('advertise'), false)
-        ->assertDontSee('R ')
-        ->assertDontSee('rate card')
-        ->assertDontSee('price_cents');
+it('suppresses the vacant "Advertise here" pitch on every public browsing surface', function () {
+    // UX audit #13: the vacant pitch above the first row of matches
+    // was flagged as thin — every content page (home, calendar,
+    // ranges, suppliers) now passes hide-when-vacant so an unsold
+    // slot renders no chrome at all. The /advertise sales page is
+    // where the pitch lives now, not shoulder-tapping every visitor.
+    foreach ([route('home'), route('calendar'), route('ranges.index'), route('suppliers.index')] as $url) {
+        $response = $this->get($url)->assertOk();
 
-    $this->get(route('suppliers.index'))
-        ->assertOk()
-        ->assertSee('This space is available');
-
-    // Home explicitly should NOT show the vacant pitch.
-    $this->get(route('home'))
-        ->assertOk()
-        ->assertDontSee('This space is available');
+        expect($response->getContent())
+            ->not->toContain('This space is available')
+            ->not->toContain('ad-vacant');
+    }
 });
 
 it('marks enquiries read when opened', function () {
