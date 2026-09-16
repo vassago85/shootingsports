@@ -33,6 +33,21 @@
                     </div>
                 @endif
 
+                {{-- Pro trial in-progress banner. Sits at the top of the
+                     calendar so the countdown is always visible without
+                     forcing users to visit /upgrade to see how much time
+                     they have left. Only shows during an active trial
+                     (not for paid Pro, not after the trial expires). --}}
+                @if ($user->isOnTrial())
+                    <div class="trial-progress" role="status">
+                        <p class="pricing-label">Pro trial · {{ $user->trialDaysRemaining() }} {{ $user->trialDaysRemaining() === 1 ? 'day' : 'days' }} left</p>
+                        <p>
+                            You're on Pro until {{ $user->plan_expires_at->format('j M Y') }} — unlimited follows, saved searches and attendance-log entries.
+                            <a href="{{ route('upgrade') }}"><b>Add a card</b></a> to keep Pro after that. No auto-billing — we never took a card in the first place.
+                        </p>
+                    </div>
+                @endif
+
                 @if ($events->isEmpty() && $past->isEmpty())
                     <p class="empty">Nothing on your calendar yet. Open a match and tap Add to my calendar.</p>
                     <p><a class="btn" href="{{ route('calendar') }}">Browse the calendar</a></p>

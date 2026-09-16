@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\User;
+use App\Support\EmailPreferences;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -28,6 +29,7 @@ class MdRequestApproved extends Notification
             ->line('You can now sign in and open the match director desk to publish and manage events for your club or series.')
             ->action('Open the desk', url('/desk'))
             ->line('If a staff member has already paired your account with your club, you will see it on the desk. If not, reply to this email with the club name and we will link you up.')
+            ->line('Manage which emails you receive: '.EmailPreferences::preferencesUrl())
             ->salutation('— Shooting Sports');
     }
 }

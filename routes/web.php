@@ -18,10 +18,12 @@ use App\Http\Controllers\ShooterCalendarController;
 use App\Http\Controllers\ShooterLogController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StaticPageController;
+use App\Http\Controllers\UnsubscribeController;
 use App\Http\Controllers\VenueController;
 use App\Livewire\Auth\DirectorRegister;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\ShooterRegister;
+use App\Livewire\Settings\NotificationPreferences;
 use App\Livewire\Upgrade;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -153,3 +155,13 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/my-log/export/csv', [ShooterLogController::class, 'exportCsv'])->name('my-log.export.csv');
     Route::get('/my-log/print', [ShooterLogController::class, 'printable'])->name('my-log.print');
 });
+
+// Email preferences. Two unauthenticated endpoints (one-click
+// unsubscribe + resubscribe) that identify the user via a per-account
+// token so they work from any inbox. One authenticated endpoint
+// (/settings/notifications) for the full per-category preferences UI.
+Route::get('/email/unsubscribe/{token}', [UnsubscribeController::class, 'show'])->name('email.unsubscribe');
+Route::post('/email/unsubscribe/{token}', [UnsubscribeController::class, 'resubscribe'])->name('email.resubscribe');
+Route::get('/settings/notifications', NotificationPreferences::class)
+    ->middleware('auth')
+    ->name('settings.notifications');

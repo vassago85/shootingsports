@@ -628,6 +628,48 @@ section.block { padding: 72px 0; }
 .pending-banner b { color: var(--brass); }
 .pending-banner a { color: var(--brass); }
 
+/* Notification preferences form (Settings → Notifications) */
+.prefs-form { display: flex; flex-direction: column; gap: 14px; }
+.prefs-row {
+    border: 1px solid var(--rule); background: var(--surface);
+    padding: 16px 18px;
+}
+.prefs-row label {
+    display: grid; grid-template-columns: 22px 1fr; align-items: start; gap: 12px;
+    cursor: pointer;
+}
+.prefs-row input[type="checkbox"] { margin-top: 4px; width: 18px; height: 18px; }
+.prefs-row b { display: block; margin-bottom: 4px; }
+.prefs-row p { margin: 0; color: var(--slate); font-size: 13px; line-height: 1.55; }
+.prefs-master { border-color: var(--brass); }
+.prefs-cats { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
+.prefs-cats.is-locked { opacity: .55; }
+.prefs-cats.is-locked input[type="checkbox"] { cursor: not-allowed; }
+.prefs-locked .prefs-lock {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.prefs-locked .pill {
+    background: var(--brass); color: #fff; padding: 4px 10px;
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em;
+}
+.prefs-actions { margin-top: 8px; }
+
+/* Pro trial banners on /upgrade + /my-calendar */
+.trial-cta {
+    border: 1px solid var(--brass); background: var(--surface);
+    padding: 22px 24px; margin: 0 0 22px;
+}
+.trial-cta .label { color: var(--brass); }
+.trial-cta h2 { margin: 6px 0 8px; font-size: 22px; }
+.trial-cta p { margin: 0 0 10px; color: var(--ink); font-size: 14px; line-height: 1.55; }
+.trial-cta .btn { margin-top: 6px; }
+.trial-progress {
+    border: 1px solid var(--rule); background: var(--surface);
+    padding: 18px 22px; margin: 0 0 22px;
+}
+.trial-progress b { color: var(--brass); }
+.trial-progress p { margin: 6px 0 0; color: var(--slate); font-size: 13px; }
+
 /* Utility — visually hidden but still read by screen readers. */
 .sr-only {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;

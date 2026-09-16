@@ -6,6 +6,7 @@ use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
 use App\Models\Enquiry;
 use App\Models\User;
+use App\Services\StartProTrial;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -51,6 +52,14 @@ class DirectorRegister extends Component
     #[Validate('required|string|min:5|max:500')]
     public string $host_hint = '';
 
+    /**
+     * Opt-in for the 30-day no-CC Pro trial. Same defaults as the
+     * shooter signup — checked by default. The attendance log is
+     * genuinely useful for MDs too (their own personal shooting
+     * record, separate from the matches they run).
+     */
+    public bool $start_trial = true;
+
     public function register(): void
     {
         $this->validate();
@@ -63,6 +72,10 @@ class DirectorRegister extends Component
             'is_match_director' => false,
             'md_requested_at' => now(),
         ]);
+
+        if ($this->start_trial) {
+            StartProTrial::for($user);
+        }
 
         event(new Registered($user));
 

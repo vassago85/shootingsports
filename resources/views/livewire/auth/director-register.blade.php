@@ -37,6 +37,15 @@
                         </small>
                         @error('host_hint') <span class="err">{{ $message }}</span> @enderror
                     </label>
+
+                    <label class="prefs-row" style="margin-top:6px">
+                        <input type="checkbox" wire:model="start_trial">
+                        <div>
+                            <b>Start my 30-day Pro trial — no card needed</b>
+                            <p>Runs on your personal shooter account (separate from your MD role). Unlimited follows, saved searches, full attendance log for 30 days. Auto-reverts to Free at the end, because we never asked for a card.</p>
+                        </div>
+                    </label>
+
                     <button type="submit" class="btn" wire:loading.attr="disabled" wire:target="register">
                         <span wire:loading.remove wire:target="register">Submit for review</span>
                         <span wire:loading wire:target="register">Submitting…</span>

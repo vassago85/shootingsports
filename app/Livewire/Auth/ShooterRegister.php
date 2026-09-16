@@ -3,6 +3,7 @@
 namespace App\Livewire\Auth;
 
 use App\Models\User;
+use App\Services\StartProTrial;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -34,6 +35,14 @@ class ShooterRegister extends Component
     #[Validate('required|string')]
     public string $password_confirmation = '';
 
+    /**
+     * Opt-in for the 30-day no-CC Pro trial. Checked by default —
+     * every signup should get the full-feature experience unless they
+     * explicitly say no. Nothing bills at the end, ever, so there is
+     * no dark-pattern angle here (there IS no card).
+     */
+    public bool $start_trial = true;
+
     public function register(): void
     {
         $this->validate();
@@ -45,6 +54,12 @@ class ShooterRegister extends Component
             'is_staff' => false,
             'is_match_director' => false,
         ]);
+
+        if ($this->start_trial) {
+            // Ignore the return — StartProTrial::for is idempotent
+            // and a fresh user is always eligible. No-op on failure.
+            StartProTrial::for($user);
+        }
 
         event(new Registered($user));
 

@@ -27,6 +27,10 @@ use Illuminate\Support\Str;
     'plan', 'plan_expires_at',
     'paystack_customer_code', 'paystack_subscription_code', 'paystack_authorization_code',
     'plan_billing_cycle', 'plan_cancelled_at',
+    'emails_marketing_enabled', 'emails_match_alerts_enabled',
+    'emails_weekly_digest_enabled', 'emails_product_updates_enabled',
+    'emails_trial_nudges_enabled',
+    'pro_trial_started_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
@@ -50,7 +54,31 @@ class User extends Authenticatable implements FilamentUser
             'plan' => Plan::class,
             'plan_expires_at' => 'datetime',
             'plan_cancelled_at' => 'datetime',
+            'emails_marketing_enabled' => 'boolean',
+            'emails_match_alerts_enabled' => 'boolean',
+            'emails_weekly_digest_enabled' => 'boolean',
+            'emails_product_updates_enabled' => 'boolean',
+            'emails_trial_nudges_enabled' => 'boolean',
+            'unsubscribed_at' => 'datetime',
+            'pro_trial_started_at' => 'datetime',
+            'pro_trial_ending_notified_at' => 'datetime',
+            'pro_trial_ended_notified_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Every user gets a permanent, unguessable one-click unsubscribe
+     * token the first time we persist them. New signups get one via
+     * this observer; migrations back-fill existing users. Never rotated
+     * (old email footers must keep working forever).
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (self $user): void {
+            if (blank($user->unsubscribe_token)) {
+                $user->unsubscribe_token = Str::random(48);
+            }
+        });
     }
 
     /**
@@ -124,9 +152,65 @@ class User extends Authenticatable implements FilamentUser
         return match (true) {
             $this->hasActiveSubscription() => 'Active — renews automatically',
             $this->isCancelling() => 'Cancelled — Pro until '.$this->plan_expires_at?->format('j M Y'),
+            $this->isOnTrial() => 'Trial — Pro until '.$this->plan_expires_at?->format('j M Y'),
             $this->isPro() => 'Active (comp / manual)',
             default => 'Free',
         };
+    }
+
+    /**
+     * True while the user is inside their 30-day no-CC Pro trial. A
+     * trial is identified by pro_trial_started_at being set AND them
+     * having no Paystack subscription code — once they add a card the
+     * subscription takes over and the trial concept no longer applies.
+     * Expiry is handled naturally by HasPlan::isPro() checking
+     * plan_expires_at, so this method returns false the moment the
+     * trial window ends.
+     */
+    public function isOnTrial(): bool
+    {
+        return $this->pro_trial_started_at !== null
+            && $this->paystack_subscription_code === null
+            && $this->isPro();
+    }
+
+    /**
+     * True if this user has ever started a Pro trial. Used by the
+     * StartProTrial component to block re-triggering — each account
+     * gets exactly one 30-day trial in its lifetime, whether they
+     * completed it or converted mid-way.
+     */
+    public function hasHadTrial(): bool
+    {
+        return $this->pro_trial_started_at !== null;
+    }
+
+    /**
+     * Whole days remaining on the trial. Returns 0 once expired
+     * (never negative). Callers wanting a "1 day left" nudge should
+     * check for exactly 1 or use daysRemaining < 4.
+     */
+    public function trialDaysRemaining(): int
+    {
+        if (! $this->isOnTrial() || $this->plan_expires_at === null) {
+            return 0;
+        }
+
+        return max(0, (int) round(now()->diffInDays($this->plan_expires_at, false)));
+    }
+
+    /**
+     * Route-model-binding helper for the public unsubscribe endpoints.
+     * The token is looked up as-is; failed lookups return null so the
+     * controller can 404 without leaking whether the address exists.
+     */
+    public static function findByUnsubscribeToken(string $token): ?self
+    {
+        if (trim($token) === '') {
+            return null;
+        }
+
+        return static::query()->where('unsubscribe_token', $token)->first();
     }
 
     public function canAccessPanel(Panel $panel): bool

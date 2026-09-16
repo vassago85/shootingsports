@@ -76,7 +76,7 @@ it('renders the waitlist-only variant when Paystack is not configured yet', func
 
     Livewire::actingAs($user)
         ->test(Upgrade::class)
-        ->assertSee('Pro is not open for subscriptions yet')
+        ->assertSee('Pro is not open for paid subscriptions yet')
         ->assertDontSee('Continue to secure checkout');
 });
 

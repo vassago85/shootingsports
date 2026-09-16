@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\User;
 use App\Services\Paystack\PaystackClient;
+use App\Services\StartProTrial;
 use Livewire\Component;
 use RuntimeException;
 
@@ -40,6 +41,38 @@ class Upgrade extends Component
     public function pick(string $cycle): void
     {
         $this->selected = in_array($cycle, ['annual', 'monthly'], true) ? $cycle : 'annual';
+    }
+
+    /**
+     * Start the one-time 30-day no-CC Pro trial. Returns immediately
+     * if the user is ineligible (has trialed before, currently Pro, or
+     * inside a cancelled-but-not-expired paid window). Otherwise sets
+     * the trial fields and flashes a welcome message. The Livewire
+     * re-render will show the trial-in-progress banner because
+     * StartProTrial::for updated the User model in place.
+     */
+    public function startTrial(): void
+    {
+        $user = auth()->user();
+
+        if (! $user instanceof User) {
+            $this->redirectRoute('login', navigate: false);
+
+            return;
+        }
+
+        if (! StartProTrial::for($user)) {
+            session()->flash('status', 'Your trial is not available — either you have already used it or Pro is already active on this account.');
+
+            return;
+        }
+
+        // Bounce to /my-calendar so the user immediately sees the Pro
+        // features unlocked (unlimited follows/log/searches). Landing
+        // back on /upgrade after starting a trial feels weird — nothing
+        // more to do here.
+        session()->flash('status', 'Your 30-day Pro trial has started. No card, no commitment.');
+        $this->redirect('/my-calendar', navigate: false);
     }
 
     public function checkout(PaystackClient $paystack): void
@@ -106,6 +139,8 @@ class Upgrade extends Component
             'user' => $user,
             'pricing' => config('plans.pricing'),
             'ready' => $this->paystackReady(),
+            'trialEligible' => StartProTrial::isEligible($user),
+            'trialDays' => StartProTrial::TRIAL_DAYS,
         ])->layout('components.layouts.public', ['title' => 'Upgrade to Pro']);
     }
 }

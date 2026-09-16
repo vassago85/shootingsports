@@ -29,6 +29,15 @@
                         <span>Confirm password</span>
                         <input type="password" wire:model="password_confirmation" required autocomplete="new-password" maxlength="255">
                     </label>
+
+                    <label class="prefs-row" style="margin-top:6px">
+                        <input type="checkbox" wire:model="start_trial">
+                        <div>
+                            <b>Start my 30-day Pro trial — no card needed</b>
+                            <p>Get unlimited follows, saved searches, and the full attendance log for 30 days. Auto-reverts to Free at the end, because we never asked for a card. You can start it later from /upgrade too.</p>
+                        </div>
+                    </label>
+
                     <button type="submit" class="btn" wire:loading.attr="disabled" wire:target="register">
                         <span wire:loading.remove wire:target="register">Create account</span>
                         <span wire:loading wire:target="register">Creating…</span>

@@ -82,6 +82,7 @@
             @auth
                 <a href="{{ route('my-calendar') }}">My calendar</a>
                 <a href="{{ route('my-log') }}">My log</a>
+                <a href="{{ route('settings.notifications') }}">Notifications</a>
                 @if (auth()->user()?->is_staff || auth()->user()?->is_match_director)
                     <a href="{{ url('/desk') }}">Desk</a>
                 @endif
@@ -161,6 +162,7 @@
                         @auth
                             <li><a href="{{ route('my-calendar') }}">My calendar</a></li>
                             <li><a href="{{ route('my-log') }}">My log</a></li>
+                            <li><a href="{{ route('settings.notifications') }}">Email preferences</a></li>
                         @else
                             <li><a href="{{ route('login') }}">Log in</a></li>
                             <li><a href="{{ route('register') }}">Create a shooter account</a></li>

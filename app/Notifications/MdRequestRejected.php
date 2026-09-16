@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\User;
+use App\Support\EmailPreferences;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -37,6 +38,7 @@ class MdRequestRejected extends Notification
         return $mail
             ->line('If you think this was a mistake — for example if we could not link your name to the club you named — reply to this email and we will take another look. Your shooter account still works exactly as before.')
             ->action('Open your calendar', url('/my-calendar'))
+            ->line('Manage which emails you receive: '.EmailPreferences::preferencesUrl())
             ->salutation('— Shooting Sports');
     }
 }
