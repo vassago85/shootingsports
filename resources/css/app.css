@@ -309,6 +309,71 @@ section.block { padding: 72px 0; }
     background: var(--surface-2); color: var(--brass-dk);
 }
 
+/* Month calendar grid */
+.month-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin: 8px 0 4px; flex-wrap: wrap;
+}
+.month-nav-label {
+    margin: 0; font-family: var(--f-display); font-size: 22px;
+    font-weight: 600; letter-spacing: .02em;
+}
+.month-nav-actions { display: flex; gap: 8px; align-items: center; }
+.month-cal {
+    border: 1px solid var(--rule); background: var(--surface);
+    margin-bottom: 24px;
+}
+.month-cal-head {
+    display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface-2);
+}
+.month-cal-head > div {
+    padding: 8px 6px; font-family: var(--f-mono); font-size: 10.5px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--slate);
+    text-align: center;
+}
+.month-cal-body {
+    display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.month-cal-day {
+    min-height: 96px; padding: 6px;
+    border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+}
+.month-cal-day:nth-child(7n) { border-right: none; }
+.month-cal-day.is-outside { background: color-mix(in srgb, var(--surface-2) 70%, transparent); opacity: .55; }
+.month-cal-day.is-today .month-cal-num {
+    background: var(--gunmetal); color: var(--brass-lt);
+    border-radius: 999px; padding: 0 6px;
+}
+.month-cal-num {
+    display: inline-block; font-family: var(--f-mono); font-size: 11px;
+    color: var(--slate); margin-bottom: 4px;
+}
+.month-cal-chips { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.month-cal-chips a {
+    display: block; text-decoration: none; color: inherit;
+    padding: 3px 5px; background: var(--surface-2); border-left: 2px solid var(--brass);
+    font-size: 11.5px; line-height: 1.25;
+}
+.month-cal-chips a:hover { background: var(--gunmetal); color: #edefed; }
+.month-cal-chips .chip-title { display: block; font-family: var(--f-sans); font-weight: 600; }
+.month-cal-chips .chip-town {
+    display: block; font-family: var(--f-mono); font-size: 10px;
+    color: var(--slate); letter-spacing: .04em;
+}
+.month-cal-more a {
+    border-left: none; background: transparent; color: var(--brass-dk);
+    font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .08em;
+    text-transform: uppercase; padding: 2px 0;
+}
+@media (max-width: 720px) {
+    .month-cal-day { min-height: 72px; padding: 4px; }
+    .month-cal-chips .chip-town { display: none; }
+    .month-cal-chips a { font-size: 10.5px; padding: 2px 4px; }
+}
+
 /* UX audit cool-factor: /map surface. The map itself is a fixed
    height so it renders before Leaflet lands (no CLS on load); the
    legend below doubles as a text fallback for no-JS visitors and

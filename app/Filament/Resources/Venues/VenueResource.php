@@ -11,10 +11,12 @@ use App\Enums\Province;
 use App\Enums\VenueAccess;
 use App\Enums\VerificationState;
 use App\Filament\Actions\MarkVerifiedBulkAction;
+use App\Filament\Actions\MergeVenuesBulkAction;
 use App\Filament\Resources\Venues\Pages\CreateVenue;
 use App\Filament\Resources\Venues\Pages\EditVenue;
 use App\Filament\Resources\Venues\Pages\ListVenues;
 use App\Models\Venue;
+use App\Support\CoordinatePaste;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -26,6 +28,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -63,6 +66,22 @@ class VenueResource extends Resource
                     ->required(),
                 Select::make('metro')
                     ->options(GautengMetro::class),
+                TextInput::make('coordinate_paste')
+                    ->label('Paste coordinates')
+                    ->helperText('Paste from Google Maps, e.g. -25.952912873030343, 28.486456735843475')
+                    ->dehydrated(false)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function (?string $state, Set $set): void {
+                        $parsed = CoordinatePaste::parse($state);
+
+                        if ($parsed === null) {
+                            return;
+                        }
+
+                        $set('lat', $parsed['lat']);
+                        $set('lng', $parsed['lng']);
+                        $set('coordinate_paste', null);
+                    }),
                 TextInput::make('lat')
                     ->numeric()
                     ->helperText('Saving lat/lng marks the pin as staff-locked so imports never overwrite it.'),
@@ -188,6 +207,7 @@ class VenueResource extends Resource
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    MergeVenuesBulkAction::make(),
                     MarkVerifiedBulkAction::make(),
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),

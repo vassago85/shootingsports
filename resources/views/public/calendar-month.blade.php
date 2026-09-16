@@ -9,25 +9,17 @@
             <div class="wrap">
                 <p class="label">The calendar</p>
                 <h1>What's on, and where</h1>
-                <p>Planned dates stay on the calendar and render as provisional. Confirmed dates look different.</p>
-                {{-- UX audit cool-factor: view toggle between list and
-                     province-clustered map. Plain anchors so no-JS
-                     users, screen readers and browser history all
-                     behave. aria-pressed marks the active view. --}}
+                <p>Upcoming matches on a month grid. Planned dates stay provisional; confirmed dates look different on the match page.</p>
                 <div class="view-toggle" role="group" aria-label="Calendar view">
-                    <a href="{{ route('calendar', request()->query()) }}" aria-pressed="true">List</a>
-                    <a href="{{ route('calendar.month', request()->query()) }}" aria-pressed="false">Month</a>
+                    <a href="{{ route('calendar', request()->except('month')) }}" aria-pressed="false">List</a>
+                    <a href="{{ route('calendar.month', request()->query()) }}" aria-pressed="true">Month</a>
                     <a href="{{ route('map') }}" aria-pressed="false">Map</a>
                 </div>
             </div>
         </section>
         <section class="block">
             <div class="wrap">
-                {{-- UX audit #13: ad-slot moved from above-the-filters
-                     to below the results, and gated with
-                     hide-when-vacant so the house pitch does not sit
-                     at the top of the page above the actual matches. --}}
-                <livewire:calendar-filter
+                <livewire:calendar-month
                     :family="$family"
                     :novice="$novice"
                     :confirmed="$confirmed"
@@ -39,6 +31,7 @@
                     :lng="$lng ?? null"
                     :from="$from"
                     :to="$to"
+                    :month="$month"
                 />
                 <x-ad-slot page="calendar" placement-slot="leaderboard" :limit="2" class="ad-rail--tight" hide-when-vacant />
             </div>

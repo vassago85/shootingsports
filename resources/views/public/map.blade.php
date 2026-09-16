@@ -16,6 +16,7 @@
                 </p>
                 <div class="view-toggle" role="group" aria-label="Calendar view">
                     <a href="{{ route('calendar') }}" aria-pressed="false">List</a>
+                    <a href="{{ route('calendar.month') }}" aria-pressed="false">Month</a>
                     <a href="{{ route('map') }}" aria-pressed="true">Map</a>
                 </div>
             </div>

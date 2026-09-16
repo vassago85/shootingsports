@@ -3,6 +3,7 @@
 use App\Enums\ProviderCategory;
 use App\Enums\Province;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\CalendarMonthController;
 use App\Http\Controllers\DisciplineController;
 use App\Http\Controllers\EmbedController;
 use App\Http\Controllers\EnquiryController;
@@ -33,6 +34,7 @@ $categoryPattern = implode('|', array_map(fn (ProviderCategory $category) => $ca
 
 Route::get('/', HomeController::class)->name('home');
 Route::get('/calendar', CalendarController::class)->name('calendar');
+Route::get('/calendar/month', CalendarMonthController::class)->name('calendar.month');
 
 /*
  * UX audit cool-factor: province-clustered map of upcoming matches.

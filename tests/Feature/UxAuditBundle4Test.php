@@ -187,7 +187,8 @@ it('calendar page renders a view toggle linking to /map', function () {
 
     expect($html)
         ->toContain('class="view-toggle"')
-        ->toContain('href="'.route('map').'"');
+        ->toContain('href="'.route('map').'"')
+        ->toContain('href="'.route('calendar.month'));
 });
 
 it('map page renders a view toggle linking back to /calendar', function () {
@@ -195,7 +196,8 @@ it('map page renders a view toggle linking back to /calendar', function () {
 
     expect($html)
         ->toContain('class="view-toggle"')
-        ->toContain('href="'.route('calendar').'"');
+        ->toContain('href="'.route('calendar').'"')
+        ->toContain('href="'.route('calendar.month'));
 });
 
 it('primary nav includes the Map link on both desktop and mobile menus', function () {
