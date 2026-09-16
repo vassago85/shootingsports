@@ -135,34 +135,52 @@ header.nav {
 @media (max-width: 900px) { .nav-links, .nav-cta { display: none; } .hamburger { display: block; } }
 
 .hero { position: relative; overflow: hidden; background: var(--gunmetal); color: #eef0ee; }
-/* UX audit cool-factor: hero reticle wrap + slow radar sweep.
-   The reticle itself is a static SVG; the sweep is a rotating
-   conic-gradient wedge in the wrap's ::after so there's no per-
-   frame layout and no JavaScript. `mask-image` clips the wedge to
-   the reticle's radius so it doesn't bleed into the hero copy. */
+/* UX audit cool-factor: hero reticle wrap + slow sweep glint.
+   The reticle itself is a static SVG that must remain the dominant
+   element — crosshairs first, animation second. The sweep is a
+   thin, low-opacity conic wedge behind the SVG that glints past
+   the crosshairs every 9s. Kept subtle on purpose: the reticle
+   should read as a rifle scope with a hint of life, not a radar
+   screen. If it starts to look like a radar, halve the peak
+   opacity again before touching anything else. */
 .hero-reticle-wrap {
     position: absolute; right: -140px; top: 50%;
     transform: translateY(-50%);
     width: 720px; height: 720px;
     pointer-events: none;
+    /* Own stacking context so the SVG can sit above ::after. */
+    isolation: isolate;
 }
-.hero-reticle { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .16; }
+.hero-reticle {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: .16;
+    /* Lift the reticle above the sweep wedge so the crosshairs
+       stay the strongest thing in the composition. */
+    z-index: 2;
+}
 .hero-reticle-wrap::after {
     content: "";
     position: absolute; inset: 0;
+    z-index: 1;
+    /*
+     * Narrow blade — only the last ~20° of the sweep carries any
+     * colour, and even that peaks at .09 (well under the reticle's
+     * .16 stroke). Everything before the blade is fully transparent,
+     * so what the eye sees is a slow glint sliding around the dial
+     * rather than a lit radar sector.
+     */
     background: conic-gradient(
         from 0deg,
-        rgba(217, 174, 82, 0) 0deg,
-        rgba(217, 174, 82, 0) 285deg,
-        rgba(217, 174, 82, .06) 320deg,
-        rgba(217, 174, 82, .18) 355deg,
-        rgba(217, 174, 82, .22) 360deg,
-        rgba(217, 174, 82, 0) 360deg
+        rgba(217, 174, 82, 0)    0deg,
+        rgba(217, 174, 82, 0)  340deg,
+        rgba(217, 174, 82, .04) 352deg,
+        rgba(217, 174, 82, .09) 359deg,
+        rgba(217, 174, 82, 0)  360deg
     );
     border-radius: 50%;
-    -webkit-mask: radial-gradient(circle at center, black 42%, transparent 90%);
-    mask: radial-gradient(circle at center, black 42%, transparent 90%);
-    animation: hero-reticle-sweep 7s linear infinite;
+    -webkit-mask: radial-gradient(circle at center, transparent 8%, black 32%, black 78%, transparent 90%);
+            mask: radial-gradient(circle at center, transparent 8%, black 32%, black 78%, transparent 90%);
+    animation: hero-reticle-sweep 9s linear infinite;
     will-change: transform;
 }
 @keyframes hero-reticle-sweep {
