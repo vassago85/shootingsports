@@ -115,7 +115,7 @@ it('/map shows empty-province claim copy instead of a bare zero', function () {
     expect($html)
         ->toContain('know a club here?')
         ->toContain(route('claim'))
-        ->toContain('basemaps.cartocdn.com/light_all');
+        ->toContain('tile.openstreetmap.org');
 });
 
 it('/map bubbles link to the calendar filtered by that province', function () {

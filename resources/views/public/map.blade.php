@@ -96,13 +96,13 @@
                                 attributionControl: true,
                             }).setView([-28.8, 25.0], 5);
 
-                            // Bundle A #5: muted CARTO Positron tiles —
-                            // bright OSM blue sea / red roads fought the
-                            // cream-and-gunmetal palette.
-                            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                            // Free OSM tiles + CSS mute (see .ss-map .leaflet-tile-pane).
+                            // CARTO Positron now watermarks "API KEY REQUIRED" without
+                            // a paid key — we do not ship third-party map credentials.
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                                 maxZoom: 12,
                                 minZoom: 4,
-                                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
                             }).addTo(map);
 
                             markers.forEach(function (m) {
