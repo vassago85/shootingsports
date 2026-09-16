@@ -7,20 +7,31 @@
     $coverUrl = $event->coverImageUrl();
     $usingHostLogo = $coverUrl && ! $bannerUrl;
     $family = $event->primaryDiscipline()?->family->value ?? $event->disciplines->first()?->family->value;
+    $matchUrl = route('matches.show', $event->slug);
 @endphp
 
+{{--
+    Whole-card link via the title-anchor + ::after overlay pattern:
+    the h3's anchor stretches invisibly across the entire article,
+    so clicking anywhere navigates to the match detail page. Inner
+    interactive elements (entry link, add-to-calendar) get
+    `position: relative; z-index: 1` in the CSS so they sit above
+    the overlay and still fire their own clicks — without nesting
+    anchors, which is invalid HTML.
+--}}
 <article class="dope {{ $planned ? 'is-planned' : '' }}" data-fam="{{ $family }}">
     <div class="dope-banner {{ $coverUrl ? ($usingHostLogo ? 'logo-fallback' : 'has-poster') : 'fallback' }}">
         @if ($coverUrl && ! $usingHostLogo)
-            {{-- Blurred, darkened copy of the poster fills the 3:1 crop so
-                 posters that are square or portrait (most of them) stop
-                 losing 88% of themselves to object-fit: cover. --}}
+            {{-- Blurred, darkened copy of the poster fills the 3:1 crop
+                 so square / portrait posters (most of them) do not lose
+                 88% of themselves to object-fit: cover. --}}
             <img class="dope-banner-bg" src="{{ $coverUrl }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
-            <img class="dope-banner-fg" src="{{ $coverUrl }}" alt="{{ $event->title.' match banner' }}" loading="lazy" decoding="async">
+            <img class="dope-banner-fg" src="{{ $coverUrl }}" alt="" loading="lazy" decoding="async">
         @elseif ($coverUrl)
             {{-- Host-logo fallback: no backdrop, just the logo centred. --}}
             <img src="{{ $coverUrl }}" alt="{{ $event->hostOrganisation?->name.' logo' }}" loading="lazy" decoding="async">
         @else
+            {{-- No poster, no host logo: the reticle plate is the identity. --}}
             <svg viewBox="0 0 40 40" aria-hidden="true">
                 <circle cx="20" cy="20" r="17" fill="none" stroke="#D9AE52" stroke-width="1.2"/>
                 <circle cx="20" cy="20" r="7" fill="none" stroke="#D9AE52" stroke-width=".9"/>
@@ -30,11 +41,19 @@
         <div class="pill-row">
             <x-event-status-pill :event="$event" />
         </div>
-        <span class="banner-caption">{{ $coverUrl ? $event->title : 'No match banner yet' }}</span>
+        {{-- Deliberately no banner caption: the h3 in dope-top is the
+             title. Printing it twice was ugly on posters and collided
+             with host logos. --}}
     </div>
     <div class="dope-top">
         <div>
-            <h3>{{ $event->title }}</h3>
+            <h3>
+                {{-- The title anchor is the primary/whole-card link.
+                     `.dope-title-link::after` in CSS overlays the entire
+                     article so a click anywhere on the card lands on
+                     matches.show — without nesting <a> tags. --}}
+                <a href="{{ $matchUrl }}" class="dope-title-link">{{ $event->title }}</a>
+            </h3>
             {{-- Falls back to the venue name when the range operator is
                  the host (no external club), so a card never shows an
                  empty ".club" line. --}}
@@ -54,14 +73,22 @@
             </div>
         @endforeach
     </dl>
-    <div class="dope-foot">
-        <a href="{{ route('matches.show', $event->slug) }}">Match details</a>
-        @if ($event->entry_url)
-            <a href="{{ $event->entry_url }}" rel="noopener noreferrer">Entry details</a>
-        @else
-            <span>No entry link yet</span>
-        @endif
-    </div>
+
+    {{-- Footer is entry-details only, filled brass = the money action.
+         Suppressed entirely when there is no entry URL (no more dead
+         "No entry link yet" placeholder for the public to see). --}}
+    @if ($event->entry_url)
+        <div class="dope-foot">
+            <a
+                href="{{ $event->entry_url }}"
+                class="dope-primary"
+                rel="noopener noreferrer"
+                target="_blank"
+            >Entry details</a>
+        </div>
+    @endif
+
+    {{-- Add-to-calendar sits below the footer as a ghost secondary. --}}
     @auth
         <livewire:save-to-calendar :event="$event" :key="'save-'.$event->id" />
     @else
