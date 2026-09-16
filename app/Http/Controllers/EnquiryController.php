@@ -32,6 +32,18 @@ class EnquiryController extends Controller
     {
         $products = config('advertising.products', []);
         $commitments = config('advertising.commitments', []);
+        $industryOpen = Provider::isDirectoryPopulated();
+
+        // Bundle A #1: don't sell "Enhanced supplier listing — move
+        // above free listings" while the Industry directory is empty.
+        // Keep the product in config for when we seed; drop it from
+        // the public rate card + enquiry dropdown until then.
+        if (! $industryOpen) {
+            $products = array_filter(
+                $products,
+                static fn (array $product): bool => ($product['key'] ?? '') !== 'featured',
+            );
+        }
 
         // Product/Offer JSON-LD, one Offer per product. Search engines
         // can surface pricing snippets and treat each product as a
@@ -69,6 +81,7 @@ class EnquiryController extends Controller
             'products' => $products,
             'commitments' => $commitments,
             'jsonLd' => $jsonLd,
+            'industryOpen' => $industryOpen,
         ]);
     }
 

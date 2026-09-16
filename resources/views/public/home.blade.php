@@ -56,18 +56,15 @@
 
         <div class="strip">
             <div class="strip-in">
-                <div><span>Clubs</span><b>{{ $stats['clubs'] }}</b></div>
-                <div><span>Series</span><b>{{ $stats['series'] }}</b></div>
+                {{-- Bundle A #4: traction stats only. Drop Provinces
+                     (geography, not traction) and Industry (gated until
+                     seeded). Clubs & series combine membership clubs
+                     with branded series so the number matches the
+                     directory the visitor actually opens. --}}
+                <div><span>Matches</span><b>{{ $stats['matches'] }}</b></div>
                 <div><span>Ranges</span><b>{{ $stats['ranges'] }}</b></div>
-                <div><span>Upcoming matches</span><b>{{ $stats['matches'] }}</b></div>
                 <div><span>Disciplines</span><b>{{ $stats['disciplines'] }}</b></div>
-                <div><span>Provinces</span><b>{{ $stats['provinces'] }}</b></div>
-                {{-- UX audit #12: an "INDUSTRY 0" stat undercuts the
-                     directory's credibility. Only surface the industry
-                     figure once the directory has real listings. --}}
-                @if (\App\Models\Provider::isDirectoryPopulated())
-                    <div><span>Industry</span><b>{{ $stats['suppliers'] }}</b></div>
-                @endif
+                <div><span>Clubs &amp; series</span><b>{{ $stats['clubs'] + $stats['series'] }}</b></div>
             </div>
         </div>
 
@@ -97,23 +94,37 @@
                     <h2>Know the game before you arrive</h2>
                     <p>Each discipline is a real page — what it is, who governs it, and where the next match is.</p>
                 </div>
-                {{-- Sorted by upcoming count (desc) in HomeController
-                     — see UX audit #11. Zero-count tiles get a softer
-                     "no matches listed yet" caption instead of a bare
-                     "0 upcoming" that reads as a dead end. --}}
-                <div class="disc-grid">
-                    @foreach ($disciplines as $discipline)
-                        <a class="disc {{ $discipline->events_count === 0 ? 'is-quiet' : '' }}" href="{{ route('disciplines.show', $discipline->slug) }}">
+                {{-- Bundle A #2: lead with populated tiles; empty ones
+                     sit behind a "Show all" toggle so Discover doesn't
+                     open as a wall of italic apologies. --}}
+                @php
+                    $populated = $disciplines->filter(fn ($d) => ($d->events_count ?? 0) > 0);
+                    $empty = $disciplines->filter(fn ($d) => ($d->events_count ?? 0) === 0);
+                    $total = $disciplines->count();
+                @endphp
+                <div class="disc-grid" id="disc-populated">
+                    @foreach ($populated as $discipline)
+                        <a class="disc" href="{{ route('disciplines.show', $discipline->slug) }}">
                             <span class="fam">{{ $discipline->family->getLabel() }}</span>
                             <span class="nm">{{ $discipline->name }}</span>
-                            @if ($discipline->events_count > 0)
-                                <span class="ct">{{ $discipline->events_count }} upcoming</span>
-                            @else
-                                <span class="ct ct-quiet">No matches listed yet</span>
-                            @endif
+                            <span class="ct">{{ $discipline->events_count }} upcoming</span>
                         </a>
                     @endforeach
                 </div>
+                @if ($empty->isNotEmpty())
+                    <details class="disc-more">
+                        <summary>Show all {{ $total }} disciplines →</summary>
+                        <div class="disc-grid" style="margin-top:1px">
+                            @foreach ($empty as $discipline)
+                                <a class="disc is-quiet" href="{{ route('disciplines.show', $discipline->slug) }}">
+                                    <span class="fam">{{ $discipline->family->getLabel() }}</span>
+                                    <span class="nm">{{ $discipline->name }}</span>
+                                    <span class="ct ct-quiet">No matches listed yet</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </details>
+                @endif
             </div>
         </section>
 

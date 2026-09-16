@@ -87,11 +87,13 @@ class MapController extends Controller
                 return [
                     'slug' => $province->urlSlug(),
                     'label' => $province->getLabel(),
+                    'short' => $province->code(),
                     'lat' => $lat,
                     'lng' => $lng,
                     'count' => $count,
                     'radius' => $radius,
                     'calendar_url' => route('calendar', ['province' => $province->urlSlug()]),
+                    'claim_url' => route('claim'),
                 ];
             })
             ->values()

@@ -3,18 +3,30 @@
     :description="$event->hostDisplayName().' · '.$event->locationLabel().' · '.$event->starts_at->timezone('Africa/Johannesburg')->format('j F Y')"
     :json-ld="$jsonLd"
 >
+    @php
+        $host = $event->hostOrganisation;
+        $venue = $event->venue;
+        $hostUrl = $host
+            ? ($host->isFederationListing()
+                ? route('federations.show', $host->slug)
+                : route('clubs.show', $host->slug))
+            : null;
+        $rangeUrl = $venue ? route('ranges.show', $venue->slug) : null;
+    @endphp
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
                 <p class="label">{{ $event->starts_at->timezone('Africa/Johannesburg')->format('l j F Y') }}</p>
                 <h1>{{ $event->title }}</h1>
                 <p>
-                    {{ $event->hostDisplayName() }}
-                    @if ($event->hostOrganisation && $event->venue && $event->hostOrganisation->name !== $event->venue->name)
-                        · {{ $event->locationLabel() }}
-                    @elseif (! $event->hostOrganisation)
-                        · at the range
+                    @if ($hostUrl)
+                        <a href="{{ $hostUrl }}">{{ $event->hostDisplayName() }}</a>
                     @else
+                        {{ $event->hostDisplayName() }}
+                    @endif
+                    @if ($rangeUrl)
+                        · <a href="{{ $rangeUrl }}">{{ $event->locationLabel() }}</a>
+                    @elseif ($event->locationLabel() !== 'Venue TBC')
                         · {{ $event->locationLabel() }}
                     @endif
                 </p>
@@ -24,75 +36,92 @@
             </div>
         </section>
         <section class="block">
-            <div class="wrap" style="max-width:760px">
-                @if ($bannerUrl = $event->bannerUrl())
-                    <figure class="match-poster">
-                        <img src="{{ $bannerUrl }}" alt="{{ $event->title }} match poster">
-                    </figure>
-                @endif
-                <dl class="dope-rows" style="padding:0 0 24px">
-                    @foreach ($specs as [$label, $value])
-                        <div class="r"><dt>{{ $label }}</dt><dd>{{ $value }}</dd></div>
-                    @endforeach
-                    @if ($event->level)
-                        <div class="r"><dt>Level</dt><dd>{{ $event->level->getLabel() }}</dd></div>
-                    @endif
-                </dl>
-                @if ($event->description)
-                    <div class="prose">{!! nl2br(e($event->description)) !!}</div>
-                @endif
+            <div class="wrap">
+                {{-- Bundle A #6: facts-first two-column layout.
+                     Poster capped left; sticky fact card right with
+                     the primary Enter here CTA. --}}
+                <div class="match-layout">
+                    <div class="match-layout-media">
+                        @if ($bannerUrl = $event->bannerUrl())
+                            <figure class="match-poster">
+                                <img src="{{ $bannerUrl }}" alt="{{ $event->title }} match poster">
+                            </figure>
+                        @endif
+                        @if ($event->description)
+                            <div class="prose">{!! nl2br(e($event->description)) !!}</div>
+                        @endif
+                    </div>
 
-                {{-- Primary CTA: external entry link. Promoted above the
-                     ghost secondaries because it's the money action —
-                     the whole card journey funnels the shooter here.
-                     Rendered only when the match has an entry URL; if
-                     there isn't one, an explicit "no online entry"
-                     line is shown instead of silently omitting so the
-                     visitor knows the site isn't hiding a link. --}}
-                <div class="match-entry-cta" style="margin-top:26px">
-                    @if ($event->entry_url)
-                        <a
-                            class="btn"
-                            href="{{ $event->entry_url }}"
-                            rel="noopener noreferrer"
-                            target="_blank"
-                        >Enter here →</a>
-                        <p class="match-entry-note">
-                            Opens {{ parse_url($event->entry_url, PHP_URL_HOST) ?: 'the host\'s entry page' }} in a new tab.
-                        </p>
-                    @else
-                        <p class="match-entry-note">
-                            No online entry link on file for this match.
-                            @if ($event->hostOrganisation)
-                                Contact <a href="{{ $event->hostOrganisation->isFederationListing()
-                                    ? route('federations.show', $event->hostOrganisation->slug)
-                                    : route('clubs.show', $event->hostOrganisation->slug) }}">{{ $event->hostOrganisation->name }}</a> to enter.
+                    <aside class="match-facts">
+                        <dl class="dope-rows">
+                            <div class="r">
+                                <dt>Date</dt>
+                                <dd>{{ $event->starts_at->timezone('Africa/Johannesburg')->format('D j M Y') }}</dd>
+                            </div>
+                            @foreach ($specs as [$label, $value])
+                                @if ($label === 'Venue' && $rangeUrl)
+                                    <div class="r">
+                                        <dt>Venue</dt>
+                                        <dd>
+                                            <a href="{{ $rangeUrl }}">{{ $value }}</a>
+                                            @if ($venue)
+                                                · <a href="{{ $venue->directionsUrl() }}" rel="noopener noreferrer" target="_blank">Directions</a>
+                                            @endif
+                                        </dd>
+                                    </div>
+                                @else
+                                    <div class="r"><dt>{{ $label }}</dt><dd>{{ $value }}</dd></div>
+                                @endif
+                            @endforeach
+                            @if ($event->level)
+                                <div class="r"><dt>Level</dt><dd>{{ $event->level->getLabel() }}</dd></div>
+                            @endif
+                        </dl>
+
+                        <div class="match-entry-cta">
+                            @if ($event->entry_url)
+                                <a
+                                    class="btn"
+                                    href="{{ $event->entry_url }}"
+                                    rel="noopener noreferrer"
+                                    target="_blank"
+                                >Enter here →</a>
+                                <p class="match-entry-note">
+                                    Opens {{ parse_url($event->entry_url, PHP_URL_HOST) ?: 'the host\'s entry page' }} in a new tab.
+                                </p>
                             @else
-                                Ask at the range on the day.
+                                <p class="match-entry-note">
+                                    No online entry link on file for this match.
+                                    @if ($hostUrl)
+                                        Contact <a href="{{ $hostUrl }}">{{ $host->name }}</a> to enter.
+                                    @else
+                                        Ask at the range on the day.
+                                    @endif
+                                </p>
+                            @endif
+                        </div>
+
+                        <div class="match-secondary">
+                            @auth
+                                <livewire:save-to-calendar :event="$event" variant="button" :key="'save-match-'.$event->id" />
+                                <livewire:log-attendance :event="$event" :key="'log-match-'.$event->id" />
+                            @else
+                                <a class="btn ghost" href="{{ route('login') }}">Add to my calendar</a>
+                                <a class="btn ghost" href="{{ route('login') }}">I shot this</a>
+                            @endauth
+                        </div>
+
+                        <p class="match-named-links">
+                            @if ($hostUrl)
+                                <a href="{{ $hostUrl }}">{{ $host->name }}</a>
+                            @endif
+                            @if ($rangeUrl)
+                                @if ($hostUrl) · @endif
+                                <a href="{{ $rangeUrl }}">{{ $venue->name }}</a>
                             @endif
                         </p>
-                    @endif
+                    </aside>
                 </div>
-
-                <p style="margin-top:22px">
-                    @auth
-                        <livewire:save-to-calendar :event="$event" variant="button" :key="'save-match-'.$event->id" />
-                        <livewire:log-attendance :event="$event" :key="'log-match-'.$event->id" />
-                    @else
-                        <a class="btn ghost" href="{{ route('login') }}">Add to my calendar</a>
-                        <a class="btn ghost" href="{{ route('login') }}">I shot this</a>
-                    @endauth
-                    @if ($event->hostOrganisation)
-                        @if ($event->hostOrganisation->isFederationListing())
-                            <a class="btn ghost" href="{{ route('federations.show', $event->hostOrganisation->slug) }}">Host federation</a>
-                        @else
-                            <a class="btn ghost" href="{{ route('clubs.show', $event->hostOrganisation->slug) }}">Host club</a>
-                        @endif
-                    @endif
-                    @if ($event->venue)
-                        <a class="btn ghost" href="{{ route('ranges.show', $event->venue->slug) }}">Range</a>
-                    @endif
-                </p>
             </div>
         </section>
     </main>

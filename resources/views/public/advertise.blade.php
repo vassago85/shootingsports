@@ -19,6 +19,14 @@
                     <h2>Ad products</h2>
                 </div>
 
+                @unless ($industryOpen)
+                    <p class="empty" style="margin-bottom:22px">
+                        The Industry directory is still filling up.
+                        Paid directory upgrades open once we have real free listings to sit above —
+                        <a href="{{ route('claim') }}">claim a free listing</a> now to get in early.
+                    </p>
+                @endunless
+
                 <div class="rate-card">
                     @foreach ($products as $product)
                         <article class="rate-card-row" id="prod-{{ $product['key'] }}">

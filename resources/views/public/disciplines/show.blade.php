@@ -129,7 +129,10 @@
                                 </div>
                             </a>
                         @empty
-                            <p class="empty">No upcoming matches in this slice yet. Clubs can still list a planned date.</p>
+                            <p class="empty">
+                                Nobody has listed a {{ $discipline->name }} match yet.
+                                Follow this discipline and we’ll surface it when one lands.
+                            </p>
                         @endforelse
                         <p style="margin-top:18px">
                             <a class="label" href="{{ route('calendar', ['discipline' => $discipline->slug, 'province' => $province?->urlSlug()]) }}" style="text-decoration:none;border-bottom:1px solid var(--brass)">Open in the calendar →</a>

@@ -157,7 +157,8 @@ it('Discover renders "No matches listed yet" copy on zero-upcoming tiles', funct
 
     $this->get(route('disciplines.index'))
         ->assertSee('Empty Sport')
-        ->assertSee('No matches listed yet');
+        ->assertSee('No matches listed yet')
+        ->assertSee('Show all', false);
 });
 
 // #12 Industry hidden below threshold
@@ -185,10 +186,11 @@ it('homepage hides the "Industry" hero stat when directory is not populated', fu
     // Zero providers.
     $html = $this->get(route('home'))->getContent();
 
-    // Hero stats block should show Clubs/Series/Ranges/Matches/Disciplines/Provinces
-    // but NOT the "Industry" chip.
-    expect($html)->toContain('<span>Clubs</span>')
-        ->and($html)->not->toContain('<span>Industry</span>');
+    // Bundle A #4: traction stats only — no Industry, no Provinces.
+    expect($html)->toContain('<span>Matches</span>')
+        ->and($html)->toContain('<span>Clubs &amp; series</span>')
+        ->and($html)->not->toContain('<span>Industry</span>')
+        ->and($html)->not->toContain('<span>Provinces</span>');
 });
 
 // #13 Ad slot moves + hide-when-vacant

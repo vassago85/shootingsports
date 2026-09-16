@@ -26,7 +26,10 @@
                         <x-verification-badge :listing="$provider" />
                     </a>
                 @empty
-                    <p class="empty">No suppliers listed in this slice yet.</p>
+                    <p class="empty">
+                        Free to list — <a href="{{ route('claim') }}">claim this category</a>
+                        and your business appears here.
+                    </p>
                 @endforelse
             </div>
         </section>

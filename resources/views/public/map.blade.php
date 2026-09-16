@@ -48,10 +48,17 @@
                 <ul class="map-legend">
                     @foreach ($markers as $marker)
                         <li class="{{ $marker['count'] === 0 ? 'is-quiet' : '' }}">
-                            <a href="{{ $marker['calendar_url'] }}">
-                                <span class="prov">{{ $marker['label'] }}</span>
-                                <span class="ct">{{ $marker['count'] }} {{ $marker['count'] === 1 ? 'match' : 'matches' }}</span>
-                            </a>
+                            @if ($marker['count'] === 0)
+                                <a href="{{ $marker['claim_url'] }}">
+                                    <span class="prov">{{ $marker['label'] }}</span>
+                                    <span class="ct">No matches listed in {{ $marker['short'] }} — know a club here?</span>
+                                </a>
+                            @else
+                                <a href="{{ $marker['calendar_url'] }}">
+                                    <span class="prov">{{ $marker['label'] }}</span>
+                                    <span class="ct">{{ $marker['count'] }} {{ $marker['count'] === 1 ? 'match' : 'matches' }}</span>
+                                </a>
+                            @endif
                         </li>
                     @endforeach
                 </ul>
@@ -89,17 +96,17 @@
                                 attributionControl: true,
                             }).setView([-28.8, 25.0], 5);
 
-                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            // Bundle A #5: muted CARTO Positron tiles —
+                            // bright OSM blue sea / red roads fought the
+                            // cream-and-gunmetal palette.
+                            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                                 maxZoom: 12,
                                 minZoom: 4,
-                                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
                             }).addTo(map);
 
                             markers.forEach(function (m) {
                                 if (m.count === 0) {
-                                    // Quiet dot for provinces with
-                                    // nothing scheduled — muted so
-                                    // active provinces read stronger.
                                     L.circleMarker([m.lat, m.lng], {
                                         radius: 6,
                                         color: '#5a6360',
@@ -107,9 +114,11 @@
                                         fillColor: '#5a6360',
                                         fillOpacity: 0.35,
                                     }).bindTooltip(
-                                        m.label + ' — no matches listed',
+                                        'No matches listed in ' + m.short + ' — know a club here?',
                                         { direction: 'top' }
-                                    ).addTo(map);
+                                    ).on('click', function () {
+                                        window.location.href = m.claim_url;
+                                    }).addTo(map);
                                     return;
                                 }
                                 var marker = L.circleMarker([m.lat, m.lng], {

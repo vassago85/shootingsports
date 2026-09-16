@@ -744,14 +744,48 @@ section.block { padding: 72px 0; }
 .match-poster { margin: 0 0 28px; background: #1d2426; }
 .match-poster img { display: block; width: 100%; height: auto; }
 
-/* Primary "Enter here" CTA on the match page.
-   The button itself uses the shared .btn brass style; this wrapper
-   just adds the subtle "opens in a new tab" hint underneath so the
-   external hand-off doesn't feel like it happened by accident. */
-.match-entry-cta { border-top: 1px solid var(--rule); padding-top: 22px; }
-.match-entry-cta .btn { font-size: 16px; padding: 13px 26px; }
+/* Bundle A #6: facts-first match page */
+.match-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+    gap: 40px;
+    align-items: start;
+    padding-bottom: 48px;
+}
+@media (max-width: 860px) {
+    .match-layout { grid-template-columns: 1fr; gap: 28px; }
+}
+.match-layout-media .match-poster { margin-bottom: 22px; max-width: 420px; }
+.match-facts {
+    position: sticky;
+    top: calc(var(--nav-h, 64px) + 16px);
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    padding: 20px 22px 22px;
+}
+.match-facts .dope-rows { padding: 0 0 18px; }
+.match-facts .dope-rows a { color: var(--brass-dk, #7a5c12); text-decoration: underline; text-underline-offset: 2px; }
+.match-entry-cta { border-top: 1px solid var(--rule); padding-top: 18px; }
+.match-entry-cta .btn { display: inline-flex; width: 100%; justify-content: center; font-size: 16px; padding: 13px 26px; }
 .match-entry-note { margin: 10px 0 0; color: var(--muted); font-size: 13.5px; }
-.match-entry-note a { color: var(--brass); text-decoration: underline; }
+.match-entry-note a { color: var(--brass-dk, #7a5c12); text-decoration: underline; }
+.match-secondary { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.match-named-links { margin: 18px 0 0; font-size: 14px; color: var(--muted); }
+.match-named-links a { color: var(--brass-dk, #7a5c12); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Bundle A #2: show-all disciplines toggle */
+.disc-more { margin-top: 18px; }
+.disc-more summary {
+    cursor: pointer;
+    font-family: var(--f-display);
+    font-size: 14px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--brass-dk, #7a5c12);
+    list-style: none;
+}
+.disc-more summary::-webkit-details-marker { display: none; }
+.disc-more[open] summary { margin-bottom: 12px; }
 
 .badge-tier {
     display: inline-block;

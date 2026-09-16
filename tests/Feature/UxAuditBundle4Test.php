@@ -109,11 +109,27 @@ it('/map shows the correct upcoming match count per province', function () {
         ->toContain('1 match');        // Western Cape (singular)
 });
 
-it('/map bubbles link to the calendar filtered by that province', function () {
+it('/map shows empty-province claim copy instead of a bare zero', function () {
     $html = $this->get(route('map'))->assertOk()->getContent();
 
-    // The controller pre-computes calendar_url for each marker and
-    // renders it in the legend anchor. Assert one representative.
+    expect($html)
+        ->toContain('know a club here?')
+        ->toContain(route('claim'))
+        ->toContain('basemaps.cartocdn.com/light_all');
+});
+
+it('/map bubbles link to the calendar filtered by that province', function () {
+    $host = Organisation::factory()->create(['status' => ListingStatus::Published, 'type' => OrganisationType::Club]);
+    $gp = Venue::factory()->create(['province' => Province::Gauteng, 'status' => ListingStatus::Published]);
+    Event::factory()->confirmed()->create([
+        'host_organisation_id' => $host->id,
+        'venue_id' => $gp->id,
+        'starts_at' => now()->addDays(4),
+    ]);
+
+    $html = $this->get(route('map'))->assertOk()->getContent();
+
+    // Populated provinces link to the calendar; zeros link to claim.
     expect($html)->toContain(route('calendar', ['province' => 'gauteng']));
 });
 

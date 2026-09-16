@@ -1,20 +1,43 @@
 <?php
 
 use App\Enums\EnquiryType;
+use App\Enums\ListingStatus;
 use App\Models\Enquiry;
+use App\Models\Provider;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 
 beforeEach(function () {
     $this->withoutVite();
 });
 
 it('renders every advertising product on the rate card', function () {
+    // Bundle A: Enhanced supplier listing is gated until Industry has
+    // real listings — seed past the threshold so the full rate card
+    // still renders for this assertion.
+    Provider::factory()->count(5)->create([
+        'status' => ListingStatus::Published,
+    ]);
+    Cache::flush();
+
     $response = $this->get(route('advertise'))->assertOk();
 
     foreach (config('advertising.products') as $product) {
         $response->assertSee($product['name'])
             ->assertSee($product['price_display']);
     }
+});
+
+it('hides the Enhanced supplier listing pitch when Industry is empty', function () {
+    Provider::query()->delete();
+    Cache::flush();
+
+    $html = $this->get(route('advertise'))->assertOk()->getContent();
+
+    expect($html)
+        ->not->toContain('Enhanced supplier listing')
+        ->toContain('Industry directory is still filling up')
+        ->toContain(route('claim'));
 });
 
 it('renders the public commitments block', function () {
@@ -26,6 +49,13 @@ it('renders the public commitments block', function () {
 });
 
 it('renders a Service JSON-LD block with one Offer per product', function () {
+    // Match the public rate card: featured is omitted until Industry
+    // is populated.
+    $expectedProducts = array_filter(
+        config('advertising.products'),
+        static fn (array $p): bool => ($p['key'] ?? '') !== 'featured',
+    );
+
     $response = $this->get(route('advertise'))->assertOk();
     $html = $response->getContent();
 
@@ -33,9 +63,8 @@ it('renders a Service JSON-LD block with one Offer per product', function () {
         ->and($html)->toContain('"@type":"Offer"')
         ->and($html)->toContain('"priceCurrency":"ZAR"');
 
-    // One Offer per configured product
     $offerCount = substr_count($html, '"@type":"Offer"');
-    expect($offerCount)->toBe(count(config('advertising.products')));
+    expect($offerCount)->toBe(count($expectedProducts));
 });
 
 it('persists the selected product key into enquiries.context', function () {

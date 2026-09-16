@@ -76,13 +76,16 @@ it('renames the home directory column to Industry with the new blurb (once popul
         ->assertDontSee('<h3>Suppliers</h3>', false);
 });
 
-it('renames the home stats bar Suppliers slot to Industry (once populated)', function () {
+it('keeps Industry out of the home stats bar even when the directory is populated', function () {
+    // Bundle A #4: traction stats only. Industry lives in the directory
+    // column (when populated), not in the strip.
     seedPopulatedIndustry();
 
     $this->get(route('home'))
         ->assertOk()
-        ->assertSee('<span>Industry</span>', false)
-        ->assertDontSee('<span>Suppliers</span>', false);
+        ->assertDontSee('<span>Industry</span>', false)
+        ->assertDontSee('<span>Suppliers</span>', false)
+        ->assertSee('<span>Clubs &amp; series</span>', false);
 });
 
 it('rebrands the /suppliers page as Industry', function () {
@@ -131,7 +134,7 @@ it('EventDate::short includes the year when the date rolls into a new calendar y
     Carbon::setTestNow();
 });
 
-it('verification badge renders Unconfirmed with the silent variant class', function () {
+it('verification badge renders nothing when the listing is unconfirmed', function () {
     $listing = Organisation::factory()->create([
         'status' => ListingStatus::Published,
         'verification_state' => VerificationState::Unconfirmed,
@@ -140,10 +143,9 @@ it('verification badge renders Unconfirmed with the silent variant class', funct
 
     $html = view('components.verification-badge', ['listing' => $listing])->render();
 
-    expect($html)
-        ->toContain('badge-verified--unconfirmed')
-        ->toContain('Unconfirmed')
-        ->not->toContain('badge-verified--verified');
+    expect(trim($html))->toBe('')
+        ->and($html)->not->toContain('Unconfirmed')
+        ->and($html)->not->toContain('badge-verified');
 });
 
 it('verification badge renders Confirmed with the earned-state variant class', function () {

@@ -4,11 +4,14 @@
     $state = $listing->verification_state ?? null;
     $at = $listing->last_verified_at;
 
-    // Emphasis flips with earned status. Unconfirmed goes silent (default
-    // for every new listing) so gold reads as "someone actually confirmed
-    // this", not the noise the reviewer flagged.
+    // UX audit Bundle A #3: Unconfirmed is the default for every new
+    // listing — printing it on almost every club/range row makes the
+    // register look untrusted. Render nothing until someone confirms.
+    if ($at === null) {
+        return;
+    }
+
     [$text, $variant] = match (true) {
-        $at === null => ['Unconfirmed', 'unconfirmed'],
         $state === \App\Enums\VerificationState::Ageing => ['Last confirmed '.$at->timezone('Africa/Johannesburg')->format('F Y'), 'ageing'],
         default => ['Confirmed '.$at->timezone('Africa/Johannesburg')->format('F Y'), 'verified'],
     };

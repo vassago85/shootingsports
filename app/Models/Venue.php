@@ -12,6 +12,7 @@ use App\Enums\VerificationState;
 use App\Models\Concerns\HasDisciplines;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\HasVerification;
+use App\Support\Geo;
 use Database\Factories\VenueFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -71,5 +72,24 @@ class Venue extends Model
         return $query
             ->orderByRaw("case tier when 'featured' then 0 when 'verified' then 1 else 2 end")
             ->orderBy('name');
+    }
+
+    /**
+     * Google Maps directions URL when we have usable coordinates,
+     * otherwise a search fallback on the venue name + town.
+     */
+    public function directionsUrl(): string
+    {
+        if ($this->lat !== null && $this->lng !== null
+            && Geo::isInsideSouthAfrica((float) $this->lat, (float) $this->lng)) {
+            return 'https://www.google.com/maps/dir/?api=1&destination='
+                .urlencode((float) $this->lat.','.(float) $this->lng);
+        }
+
+        $query = collect([$this->name, $this->town, $this->province?->getLabel(), 'South Africa'])
+            ->filter()
+            ->implode(', ');
+
+        return 'https://www.google.com/maps/search/?api=1&query='.urlencode($query);
     }
 }
