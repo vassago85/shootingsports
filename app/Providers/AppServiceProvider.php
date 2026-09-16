@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Responses\LogoutResponse as PublicHomeLogoutResponse;
 use App\Models\Discipline;
 use App\Models\Enquiry;
 use App\Models\Event;
@@ -13,6 +14,7 @@ use App\Policies\EventPolicy;
 use App\Policies\OrganisationPolicy;
 use App\Support\MailSettings;
 use App\Support\PublicCache;
+use Filament\Auth\Http\Responses\Contracts\LogoutResponse as FilamentLogoutResponse;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -24,7 +26,19 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // Filament (both /admin and /desk) ships you back to the panel
+        // login screen after signing out — reads as "the site kicked
+        // me out". Override the contract to redirect to the public
+        // home page instead. See App\Http\Responses\LogoutResponse.
         //
+        // Registered via ->booted() (not directly) because each
+        // Filament PanelProvider::packageBooted() calls scoped() on the
+        // same contract, which runs AFTER AppServiceProvider::register.
+        // A booted() callback runs after every provider has booted, so
+        // our bind is the final one and wins for both panels.
+        $this->app->booted(function (): void {
+            $this->app->bind(FilamentLogoutResponse::class, PublicHomeLogoutResponse::class);
+        });
     }
 
     public function boot(): void

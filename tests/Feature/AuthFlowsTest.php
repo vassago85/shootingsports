@@ -259,6 +259,28 @@ it('301s the legacy /desk/register bookmark to /directors/register', function ()
         ->assertRedirect('/directors/register');
 });
 
+// ---- Logout redirect (Filament panels) -----------------------------
+
+it('signs a staff user out of the admin panel and drops them on the home page', function () {
+    $staff = User::factory()->staff()->create();
+
+    $this->actingAs($staff)
+        ->post('/admin/logout')
+        ->assertRedirect('/');
+
+    expect(auth()->check())->toBeFalse();
+});
+
+it('signs a match director out of the desk panel and drops them on the home page', function () {
+    $director = User::factory()->matchDirector()->create();
+
+    $this->actingAs($director)
+        ->post('/desk/logout')
+        ->assertRedirect('/');
+
+    expect(auth()->check())->toBeFalse();
+});
+
 // ---- Migration back-fill (regression) ------------------------------
 
 it('User::canAccessPanel(desk) returns true for staff even without the MD flag', function () {
