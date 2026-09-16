@@ -392,6 +392,39 @@ section.block { padding: 72px 0; }
 }
 @media (max-width: 720px) { .ss-map { height: 380px; } }
 
+/* Marker clusters (Gauteng overlap at country zoom) */
+.ss-cluster {
+    background: transparent !important;
+}
+.ss-cluster-inner {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 52px; height: 52px; border-radius: 999px;
+    border: 2px solid #8a6516;
+    background: rgba(179, 137, 43, 0.88);
+    color: #1a1405;
+    box-shadow: 0 1px 4px rgba(26, 20, 5, 0.25);
+    font-family: var(--f-mono);
+    line-height: 1.05;
+    text-align: center;
+}
+.ss-cluster-inner b {
+    font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.ss-cluster-inner em {
+    font-style: normal; font-size: 8.5px; letter-spacing: .04em;
+    text-transform: uppercase; opacity: .8; max-width: 44px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ss-cluster.is-quiet .ss-cluster-inner {
+    border-color: #5a6360;
+    background: rgba(90, 99, 96, 0.75);
+    color: #edefed;
+}
+.leaflet-cluster-anim .leaflet-marker-icon,
+.leaflet-cluster-anim .leaflet-marker-shadow {
+    transition: transform 0.25s ease-out, opacity 0.25s ease-in;
+}
+
 .map-legend {
     list-style: none; padding: 0; margin: 0;
     display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

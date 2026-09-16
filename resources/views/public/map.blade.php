@@ -27,6 +27,9 @@
                 <link rel="stylesheet"
                       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
                       crossorigin="">
+                <link rel="stylesheet"
+                      href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+                      crossorigin="">
 
                 <div
                     id="ss-map"
@@ -76,14 +79,16 @@
                 @endif
 
                 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-                        crossorigin=""
-                        defer></script>
+                        crossorigin=""></script>
+                <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
+                        crossorigin=""></script>
                 <script>
                     (function () {
                         var mount = function () {
-                            if (typeof L === 'undefined') return;
+                            if (typeof L === 'undefined' || typeof L.markerClusterGroup !== 'function') return;
                             var el = document.getElementById('ss-map');
-                            if (! el) return;
+                            if (! el || el.dataset.mapReady === '1') return;
+                            el.dataset.mapReady = '1';
                             var pins = JSON.parse(el.dataset.pins || '[]');
 
                             var map = L.map(el, {
@@ -110,6 +115,32 @@
 
                             if (! pins.length) return;
 
+                            var cluster = L.markerClusterGroup({
+                                showCoverageOnHover: false,
+                                maxClusterRadius: 56,
+                                // Country / province zoom stays clustered;
+                                // city-level zoom shows individual range pins.
+                                disableClusteringAtZoom: 10,
+                                spiderfyOnMaxZoom: true,
+                                iconCreateFunction: function (c) {
+                                    var children = c.getAllChildMarkers();
+                                    var ranges = children.length;
+                                    var matches = 0;
+                                    for (var i = 0; i < children.length; i++) {
+                                        matches += children[i].options.matchCount || 0;
+                                    }
+                                    var size = matches > 0 ? 'is-hot' : 'is-quiet';
+                                    var label = matches > 0
+                                        ? (matches + (matches === 1 ? ' match' : ' matches'))
+                                        : (ranges + (ranges === 1 ? ' range' : ' ranges'));
+                                    return L.divIcon({
+                                        html: '<span class="ss-cluster-inner"><b>' + ranges + '</b><em>' + label + '</em></span>',
+                                        className: 'ss-cluster ' + size,
+                                        iconSize: L.point(52, 52),
+                                    });
+                                },
+                            });
+
                             var bounds = [];
                             pins.forEach(function (p) {
                                 var colour = p.count > 0 ? '#b3892b' : '#5a6360';
@@ -119,6 +150,7 @@
                                     weight: 2,
                                     fillColor: colour,
                                     fillOpacity: p.count > 0 ? 0.65 : 0.35,
+                                    matchCount: p.count || 0,
                                 });
                                 var tip = p.label;
                                 if (p.count > 0) {
@@ -130,9 +162,11 @@
                                 marker.on('click', function () {
                                     window.location.href = p.url;
                                 });
-                                marker.addTo(map);
+                                cluster.addLayer(marker);
                                 bounds.push([p.lat, p.lng]);
                             });
+
+                            map.addLayer(cluster);
 
                             if (bounds.length > 1) {
                                 map.fitBounds(bounds, { padding: [36, 36], maxZoom: 9 });

@@ -172,7 +172,10 @@ it('/map serves a Leaflet-backed interactive map element', function () {
     expect($html)
         ->toContain('id="ss-map"')
         ->toContain('data-pins=')
-        ->toContain('unpkg.com/leaflet@1.9.4');
+        ->toContain('unpkg.com/leaflet@1.9.4')
+        ->toContain('leaflet.markercluster')
+        ->toContain('markerClusterGroup')
+        ->toContain('disableClusteringAtZoom');
 });
 
 it('/map view is set to noindex when there are zero upcoming matches (avoid an empty map in the SERP)', function () {
