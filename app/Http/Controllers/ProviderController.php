@@ -19,9 +19,40 @@ class ProviderController extends Controller
             ->get()
             ->groupBy(fn (Provider $provider) => $provider->category->value);
 
+        $total = $providers->reduce(fn (int $carry, $group): int => $carry + $group->count(), 0);
+        $countPhrase = match ($total) {
+            0 => 'No industry listings yet',
+            1 => '1 industry supplier',
+            default => $total.' industry suppliers',
+        };
+
+        $seoTitle = 'Industry';
+        $seoDescription = $countPhrase.' on the South African register — gunsmiths, dealers, ammunition, optics, safes and more.';
+
+        // ItemList by category since suppliers are grouped that way in
+        // the UI. Passing category landing pages (not per-supplier)
+        // keeps the list a manageable size for Google.
+        $itemList = JsonLd::itemList(
+            collect(ProviderCategory::cases())
+                ->filter(fn (ProviderCategory $c): bool => $providers->has($c->value))
+                ->map(fn (ProviderCategory $c): array => [
+                    'name' => $c->getLabel(),
+                    'url' => route('suppliers.category', $c->urlSlug()),
+                ])->values()->all(),
+            'Firearms industry categories',
+        );
+
+        $breadcrumbs = JsonLd::breadcrumbs([
+            ['name' => 'Home', 'url' => route('home')],
+            ['name' => 'Industry', 'url' => route('suppliers.index')],
+        ]);
+
         return view('public.suppliers.index', [
             'grouped' => $providers,
             'categories' => ProviderCategory::cases(),
+            'seoTitle' => $seoTitle,
+            'seoDescription' => $seoDescription,
+            'jsonLd' => [$itemList, $breadcrumbs],
         ]);
     }
 
@@ -40,12 +71,26 @@ class ProviderController extends Controller
             ->orderByTier()
             ->get();
 
+        $crumbs = [
+            ['name' => 'Home', 'url' => route('home')],
+            ['name' => 'Industry', 'url' => route('suppliers.index')],
+            ['name' => $categoryEnum->getLabel(), 'url' => route('suppliers.category', $categoryEnum->urlSlug())],
+        ];
+
+        if ($provinceEnum !== null) {
+            $crumbs[] = [
+                'name' => $provinceEnum->getLabel(),
+                'url' => route('suppliers.province', [$categoryEnum->urlSlug(), $provinceEnum->urlSlug()]),
+            ];
+        }
+
         return view('public.suppliers.category', [
             'category' => $categoryEnum,
             'province' => $provinceEnum,
             'providers' => $providers,
             'provinces' => Province::cases(),
             'noindex' => $provinceEnum !== null && $providers->count() < 3,
+            'jsonLd' => [JsonLd::breadcrumbs($crumbs)],
         ]);
     }
 
@@ -57,7 +102,15 @@ class ProviderController extends Controller
 
         return view('public.suppliers.show', [
             'provider' => $provider,
-            'jsonLd' => JsonLd::provider($provider),
+            'jsonLd' => [
+                JsonLd::provider($provider),
+                JsonLd::breadcrumbs([
+                    ['name' => 'Home', 'url' => route('home')],
+                    ['name' => 'Industry', 'url' => route('suppliers.index')],
+                    ['name' => $provider->category->getLabel(), 'url' => route('suppliers.category', $provider->category->urlSlug())],
+                    ['name' => $provider->name, 'url' => route('suppliers.show', $provider->slug)],
+                ]),
+            ],
         ]);
     }
 }

@@ -16,10 +16,36 @@ class EventController extends Controller
 
         $event->load(['hostOrganisation.parent', 'venue', 'disciplines', 'flags', 'banner']);
 
+        // Breadcrumb: Home › Calendar › (Province)? › Match title. The
+        // province rung uses the venue's province so a match in a
+        // random venue-less town doesn't invent geography — falls
+        // through to the host org's province, then omits entirely.
+        $province = $event->venue?->province ?? $event->hostOrganisation?->province;
+
+        $crumbs = [
+            ['name' => 'Home', 'url' => route('home')],
+            ['name' => 'Calendar', 'url' => route('calendar')],
+        ];
+
+        if ($province !== null) {
+            $crumbs[] = [
+                'name' => $province->getLabel(),
+                'url' => route('calendar', ['province' => $province->urlSlug()]),
+            ];
+        }
+
+        $crumbs[] = [
+            'name' => $event->title,
+            'url' => $event->publicUrl(),
+        ];
+
         return view('public.matches.show', [
             'event' => $event,
             'specs' => EventSpecRows::for($event),
-            'jsonLd' => JsonLd::event($event),
+            'jsonLd' => [
+                JsonLd::event($event),
+                JsonLd::breadcrumbs($crumbs),
+            ],
         ]);
     }
 }

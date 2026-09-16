@@ -2,6 +2,7 @@
     :title="$province ? $category->getLabel().' in '.$province->getLabel() : $category->getLabel()"
     :description="'Suppliers in '.$category->getLabel().($province ? ' — '.$province->getLabel() : '').'.'"
     :robots="$noindex ? 'noindex,follow' : null"
+    :json-ld="$jsonLd"
 >
     <main id="main">
         <section class="page-hero">

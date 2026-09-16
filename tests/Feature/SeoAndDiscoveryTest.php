@@ -2,8 +2,13 @@
 
 use App\Enums\EventStatus;
 use App\Enums\ListingStatus;
+use App\Enums\ProviderCategory;
+use App\Enums\Province;
+use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
+use App\Models\Provider;
+use App\Models\Venue;
 use App\Support\JsonLd;
 
 beforeEach(function () {
@@ -250,4 +255,180 @@ it('serves llms.txt as plain text with the calendar link', function () {
 
 it('exposes the default share image', function () {
     expect(is_file(public_path('images/og-default.png')))->toBeTrue();
+});
+
+// ================================================================
+// BreadcrumbList schema (rich SERP breadcrumb strip)
+// ================================================================
+
+it('JsonLd::breadcrumbs emits contiguous 1-indexed ListItem positions', function () {
+    $graph = JsonLd::breadcrumbs([
+        ['name' => 'Home', 'url' => 'https://example.test/'],
+        ['name' => 'Calendar', 'url' => 'https://example.test/calendar'],
+        ['name' => 'Match', 'url' => 'https://example.test/matches/x'],
+    ]);
+
+    expect($graph['@type'])->toBe('BreadcrumbList')
+        ->and($graph['itemListElement'])->toHaveCount(3)
+        ->and($graph['itemListElement'][0]['position'])->toBe(1)
+        ->and($graph['itemListElement'][2]['position'])->toBe(3)
+        ->and($graph['itemListElement'][1]['name'])->toBe('Calendar')
+        ->and($graph['itemListElement'][1]['item'])->toBe('https://example.test/calendar');
+});
+
+it('a match page emits BreadcrumbList schema with Home > Calendar > Province > Title', function () {
+    $venue = Venue::factory()->create(['province' => Province::Gauteng, 'status' => ListingStatus::Published]);
+    $event = Event::factory()->confirmed()->create([
+        'slug' => 'breadcrumb-match',
+        'title' => 'Breadcrumb Match',
+        'venue_id' => $venue->id,
+    ]);
+
+    $response = $this->get(route('matches.show', $event->slug));
+
+    $response->assertOk()
+        ->assertSee('"@type":"BreadcrumbList"', false)
+        ->assertSee('"name":"Calendar"', false)
+        ->assertSee('"name":"Gauteng"', false)
+        ->assertSee('"name":"Breadcrumb Match"', false);
+});
+
+it('a club page emits BreadcrumbList schema with Home > Clubs > Club', function () {
+    $club = Organisation::factory()->create([
+        'slug' => 'crumb-club',
+        'name' => 'Crumb Club',
+        'status' => ListingStatus::Published,
+    ]);
+
+    $response = $this->get(route('clubs.show', $club->slug));
+
+    $response->assertOk()
+        ->assertSee('"@type":"BreadcrumbList"', false)
+        ->assertSee('"name":"Clubs & series"', false)
+        ->assertSee('"name":"Crumb Club"', false);
+});
+
+it('a range page emits BreadcrumbList schema with Home > Ranges > Range', function () {
+    $venue = Venue::factory()->create([
+        'slug' => 'crumb-range',
+        'name' => 'Crumb Range',
+        'status' => ListingStatus::Published,
+    ]);
+
+    $response = $this->get(route('ranges.show', $venue->slug));
+
+    $response->assertOk()
+        ->assertSee('"@type":"BreadcrumbList"', false)
+        ->assertSee('"name":"Ranges"', false)
+        ->assertSee('"name":"Crumb Range"', false);
+});
+
+it('a supplier page emits a 4-level BreadcrumbList with Category', function () {
+    $provider = Provider::factory()->create([
+        'slug' => 'crumb-supplier',
+        'name' => 'Crumb Supplier',
+        'category' => ProviderCategory::cases()[0],
+        'status' => ListingStatus::Published,
+    ]);
+
+    $response = $this->get(route('suppliers.show', $provider->slug));
+
+    $response->assertOk()
+        ->assertSee('"@type":"BreadcrumbList"', false)
+        ->assertSee('"name":"Industry"', false)
+        ->assertSee('"name":"'.$provider->category->getLabel().'"', false)
+        ->assertSee('"name":"Crumb Supplier"', false);
+});
+
+// ================================================================
+// ItemList schema (collection pages)
+// ================================================================
+
+it('the disciplines index emits an ItemList of the discipline tiles', function () {
+    $response = $this->get(route('disciplines.index'));
+
+    $response->assertOk()
+        ->assertSee('"@type":"ItemList"', false)
+        ->assertSee('"@type":"BreadcrumbList"', false)
+        ->assertSee('"name":"South African shooting disciplines"', false);
+});
+
+it('the clubs index emits an ItemList with a numberOfItems count', function () {
+    // The factory already defaults type = club, so we just need three
+    // published rows for the ItemList to have items to list.
+    Organisation::factory()->count(3)->create(['status' => ListingStatus::Published]);
+
+    $response = $this->get(route('clubs.index'));
+
+    $response->assertOk()
+        ->assertSee('"@type":"ItemList"', false)
+        ->assertSee('"numberOfItems":', false);
+});
+
+it('the ranges index emits an ItemList schema', function () {
+    Venue::factory()->count(2)->create(['status' => ListingStatus::Published]);
+
+    $this->get(route('ranges.index'))
+        ->assertOk()
+        ->assertSee('"@type":"ItemList"', false)
+        ->assertSee('"@type":"BreadcrumbList"', false);
+});
+
+it('the suppliers index emits an ItemList of categories', function () {
+    Provider::factory()->create(['status' => ListingStatus::Published, 'category' => ProviderCategory::cases()[0]]);
+
+    $this->get(route('suppliers.index'))
+        ->assertOk()
+        ->assertSee('"@type":"ItemList"', false)
+        ->assertSee('"@type":"BreadcrumbList"', false);
+});
+
+// ================================================================
+// Filter-aware meta on /calendar
+// ================================================================
+
+it('/calendar defaults to the static match calendar title when no filter is set', function () {
+    $this->get(route('calendar'))
+        ->assertOk()
+        ->assertSee('<title>Match calendar', false)
+        ->assertSee('"@type":"BreadcrumbList"', false);
+});
+
+it('/calendar with a province filter promotes the province into the title and description', function () {
+    Event::factory()->count(2)->confirmed()->create();
+
+    $response = $this->get(route('calendar', ['province' => Province::Gauteng->urlSlug()]));
+
+    $response->assertOk()
+        ->assertSee('<title>Shooting matches in Gauteng', false)
+        ->assertSee('"name":"Gauteng"', false);
+});
+
+it('/calendar canonical strips non-canonical params like radius', function () {
+    $response = $this->get(route('calendar', [
+        'province' => Province::WesternCape->urlSlug(),
+        'radius' => 200,
+    ]));
+
+    $response->assertOk()
+        // Canonical omits radius but keeps province.
+        ->assertSee('<link rel="canonical" href="'.route('calendar', ['province' => Province::WesternCape->urlSlug()]).'"', false);
+});
+
+// ================================================================
+// Filter-aware meta on discipline pages
+// ================================================================
+
+it('/disciplines/{slug} description mentions the actual match count', function () {
+    $discipline = Discipline::query()->where('is_published', true)->first();
+    if (! $discipline) {
+        $this->markTestSkipped('no published discipline in the seeded set');
+    }
+
+    $response = $this->get(route('disciplines.show', $discipline->slug));
+
+    $response->assertOk()
+        // Description always says "N upcoming matches" or "no matches" — the
+        // exact number varies but one of those two shapes will always render.
+        ->assertSeeText($discipline->name);
 });

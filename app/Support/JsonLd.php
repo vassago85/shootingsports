@@ -192,6 +192,74 @@ class JsonLd
         ];
     }
 
+    /**
+     * BreadcrumbList schema for the SERP breadcrumb strip. Each item
+     * is an associative array with 'name' and 'url' keys. Order
+     * matters — position 1 is the closest to the root.
+     *
+     * Google's Rich Results docs are strict about a couple of things
+     * this helper handles automatically:
+     *   - Position must be a 1-indexed integer, contiguous.
+     *   - Every item URL must be absolute. Callers are expected to
+     *     pass absolute URLs already, but if a relative URL slips in
+     *     the enclosing url() helper on the view side will have
+     *     rendered it — nothing else to do here.
+     *
+     * @param  list<array{name: string, url: string}>  $items
+     * @return array<string, mixed>
+     */
+    public static function breadcrumbs(array $items): array
+    {
+        return [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => array_values(array_map(
+                fn (array $item, int $index): array => [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'name' => $item['name'],
+                    'item' => $item['url'],
+                ],
+                $items,
+                array_keys($items),
+            )),
+        ];
+    }
+
+    /**
+     * ItemList schema for collection pages (calendar, directory
+     * indexes, discipline landings). Google uses this to show a
+     * carousel-style rich result and to understand that a page is a
+     * curated list of N pointers, not a single canonical entity.
+     *
+     * Each item is passed as a plain array (usually built from a
+     * paginator slice) — this helper wraps the required boilerplate.
+     *
+     * @param  list<array{url: string, name?: string}>  $items
+     * @return array<string, mixed>
+     */
+    public static function itemList(array $items, string $name): array
+    {
+        $elements = array_values(array_map(
+            fn (array $item, int $index): array => array_filter([
+                '@type' => 'ListItem',
+                'position' => $index + 1,
+                'url' => $item['url'],
+                'name' => $item['name'] ?? null,
+            ]),
+            $items,
+            array_keys($items),
+        ));
+
+        return [
+            '@context' => 'https://schema.org',
+            '@type' => 'ItemList',
+            'name' => $name,
+            'numberOfItems' => count($elements),
+            'itemListElement' => $elements,
+        ];
+    }
+
     private static function offerAvailability(Event $event): string
     {
         // Match the outer eventStatus for cancelled / postponed events

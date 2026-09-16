@@ -1,4 +1,4 @@
-<x-layouts.public title="Industry" description="Gunsmiths, dealers, ammunition, optics and other shooting-related businesses listed on the South African register.">
+<x-layouts.public :title="$seoTitle" :description="$seoDescription" :json-ld="$jsonLd">
     <main id="main">
         <section class="page-hero">
             <div class="wrap">

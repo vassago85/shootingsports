@@ -58,8 +58,23 @@
 
 <script type="application/ld+json">{!! json_encode($siteGraph, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 
+{{--
+    The jsonLd prop accepts EITHER a single associative schema array
+    (single script block, backward-compatible) OR a list of associative
+    schema arrays (renders one <script> per entry). Google's own docs
+    prefer multiple separate blocks over cramming into @graph — easier
+    to debug in Rich Results Test and no per-block failures cascade.
+--}}
 @if ($jsonLd)
-    <script type="application/ld+json">{!! json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    @php
+        $isList = is_array($jsonLd)
+            && array_keys($jsonLd) === range(0, count($jsonLd) - 1)
+            && (empty($jsonLd) || is_array(reset($jsonLd)));
+        $blocks = $isList ? $jsonLd : [$jsonLd];
+    @endphp
+    @foreach ($blocks as $block)
+        <script type="application/ld+json">{!! json_encode($block, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    @endforeach
 @endif
 
 @if ($umamiScriptUrl && $umamiWebsiteId)

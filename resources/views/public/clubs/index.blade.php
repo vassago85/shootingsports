@@ -1,4 +1,4 @@
-<x-layouts.public title="Clubs & series" description="Membership clubs, associations, and branded match series on the South African shooting sports register, listed by home province.">
+<x-layouts.public :title="$seoTitle" :description="$seoDescription" :json-ld="$jsonLd">
     <main id="main">
         <section class="page-hero">
             <div class="wrap">

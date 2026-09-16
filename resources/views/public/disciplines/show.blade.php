@@ -1,7 +1,8 @@
 <x-layouts.public
     :title="$province ? $discipline->name.' in '.$province->getLabel() : $discipline->name"
-    :description="$discipline->short_blurb"
+    :description="$seoDescription"
     :robots="$noindex ? 'noindex,follow' : null"
+    :json-ld="$jsonLd"
 >
     <main id="main">
         <section class="dhero" data-family="{{ $discipline->family->value }}">

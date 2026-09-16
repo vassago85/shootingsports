@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\Province;
 use App\Models\Event;
 use App\Support\Geo;
+use App\Support\JsonLd;
 use App\Support\PublicCache;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
@@ -98,9 +99,20 @@ class MapController extends Controller
 
         $totalMatches = array_sum($provinceCounts);
 
+        $seoDescription = $totalMatches > 0
+            ? $totalMatches.' upcoming shooting matches across South Africa, plotted by province. Click any bubble to open that province\'s calendar.'
+            : 'Upcoming shooting matches across South Africa, plotted by province — click a bubble to see the calendar for that province.';
+
         return view('public.map', [
             'markers' => $markers,
             'totalMatches' => $totalMatches,
+            'seoDescription' => $seoDescription,
+            'jsonLd' => [
+                JsonLd::breadcrumbs([
+                    ['name' => 'Home', 'url' => route('home')],
+                    ['name' => 'Map', 'url' => route('map')],
+                ]),
+            ],
         ]);
     }
 }

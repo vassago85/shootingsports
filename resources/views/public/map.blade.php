@@ -1,7 +1,8 @@
 <x-layouts.public
     title="Match map"
-    description="Upcoming shooting matches across South Africa, plotted by province — click a bubble to see the calendar for that province."
+    :description="$seoDescription"
     :canonical="route('map')"
+    :json-ld="$jsonLd"
 >
     <main id="main">
         <section class="page-hero">

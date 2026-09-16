@@ -1,6 +1,7 @@
 <x-layouts.public
     title="Discover"
     description="Every shooting discipline on the South African register — what it is, who shoots it, and where the next match is."
+    :json-ld="$jsonLd"
 >
     <main id="main">
         <section class="page-hero">

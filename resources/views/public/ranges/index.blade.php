@@ -1,4 +1,4 @@
-<x-layouts.public title="Ranges" description="Shooting ranges and venues on the South African register. The venue lives on the event, not on the club.">
+<x-layouts.public :title="$seoTitle" :description="$seoDescription" :json-ld="$jsonLd">
     <main id="main">
         <section class="page-hero">
             <div class="wrap">

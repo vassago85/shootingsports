@@ -26,11 +26,44 @@ class OrganisationController extends Controller
             ->orderBy('name')
             ->get();
 
+        $countPhrase = $this->countPhrase($clubs->count(), 'club', 'clubs');
+        $seoTitle = $province ? 'Shooting clubs in '.$province->getLabel() : 'Clubs & series';
+        $seoDescription = $province
+            ? 'Shooting clubs, ranges and series in '.$province->getLabel().' — '.$countPhrase.' on the South African register.'
+            : $countPhrase.' — membership clubs, associations and branded match series across South Africa.';
+
+        $itemList = JsonLd::itemList(
+            $clubs->map(fn (Organisation $club): array => [
+                'name' => $club->name,
+                'url' => $club->isFederationListing()
+                    ? route('federations.show', $club->slug)
+                    : route('clubs.show', $club->slug),
+            ])->all(),
+            $seoTitle,
+        );
+
+        $breadcrumbs = JsonLd::breadcrumbs([
+            ['name' => 'Home', 'url' => route('home')],
+            ['name' => 'Clubs & series', 'url' => route('clubs.index')],
+        ]);
+
         return view('public.clubs.index', [
             'clubs' => $clubs,
             'province' => $province,
             'provinces' => Province::cases(),
+            'seoTitle' => $seoTitle,
+            'seoDescription' => $seoDescription,
+            'jsonLd' => [$itemList, $breadcrumbs],
         ]);
+    }
+
+    private function countPhrase(int $count, string $singular, string $plural): string
+    {
+        return match ($count) {
+            0 => 'No listings yet',
+            1 => '1 '.$singular,
+            default => $count.' '.$plural,
+        };
     }
 
     public function show(Organisation $organisation): View
@@ -45,7 +78,14 @@ class OrganisationController extends Controller
         return view('public.clubs.show', [
             'organisation' => $organisation,
             'events' => $events,
-            'jsonLd' => JsonLd::organisation($organisation),
+            'jsonLd' => [
+                JsonLd::organisation($organisation),
+                JsonLd::breadcrumbs([
+                    ['name' => 'Home', 'url' => route('home')],
+                    ['name' => 'Clubs & series', 'url' => route('clubs.index')],
+                    ['name' => $organisation->name, 'url' => route('clubs.show', $organisation->slug)],
+                ]),
+            ],
         ]);
     }
 
@@ -61,7 +101,14 @@ class OrganisationController extends Controller
         return view('public.federations.show', [
             'organisation' => $organisation,
             'events' => $events,
-            'jsonLd' => JsonLd::organisation($organisation),
+            'jsonLd' => [
+                JsonLd::organisation($organisation),
+                JsonLd::breadcrumbs([
+                    ['name' => 'Home', 'url' => route('home')],
+                    ['name' => 'Clubs & series', 'url' => route('clubs.index')],
+                    ['name' => $organisation->name, 'url' => route('federations.show', $organisation->slug)],
+                ]),
+            ],
         ]);
     }
 

@@ -1,6 +1,8 @@
 <x-layouts.public
-    title="Match calendar"
-    description="Every listed match in South African shooting sport, filterable by discipline, province, and how far you will drive."
+    :title="$seoTitle"
+    :description="$seoDescription"
+    :canonical="$canonical"
+    :json-ld="$jsonLd"
 >
     <main id="main">
         <section class="page-hero">

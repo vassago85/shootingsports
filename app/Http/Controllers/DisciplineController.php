@@ -7,6 +7,7 @@ use App\Models\Discipline;
 use App\Models\Organisation;
 use App\Models\Venue;
 use App\Queries\PublicEventQuery;
+use App\Support\JsonLd;
 use Illuminate\View\View;
 
 class DisciplineController extends Controller
@@ -40,8 +41,26 @@ class DisciplineController extends Controller
             })
             ->values();
 
+        // ItemList: the ordered discipline tiles as a schema.org list
+        // so Google understands this is a curated collection page and
+        // can render a rich results carousel. Zero-count tiles are
+        // included because they still lead somewhere useful.
+        $itemList = JsonLd::itemList(
+            $disciplines->map(fn (Discipline $d): array => [
+                'name' => $d->name,
+                'url' => route('disciplines.show', $d->slug),
+            ])->all(),
+            'South African shooting disciplines',
+        );
+
+        $breadcrumbs = JsonLd::breadcrumbs([
+            ['name' => 'Home', 'url' => route('home')],
+            ['name' => 'Discover', 'url' => route('disciplines.index')],
+        ]);
+
         return view('public.disciplines.index', [
             'disciplines' => $disciplines,
+            'jsonLd' => [$itemList, $breadcrumbs],
         ]);
     }
 
@@ -114,6 +133,25 @@ class DisciplineController extends Controller
             ->distinct()
             ->count('province');
 
+        // Filter-aware SEO description: "12 upcoming IPSC matches at
+        // 4 clubs in Gauteng." Numbers change over time; keeping them
+        // in the description (not the title) avoids CTR volatility
+        // from Google re-rendering title tags.
+        $seoDescription = $this->composeDescription($discipline, $province, $events->count(), $clubs->count());
+
+        $crumbs = [
+            ['name' => 'Home', 'url' => route('home')],
+            ['name' => 'Discover', 'url' => route('disciplines.index')],
+            ['name' => $discipline->name, 'url' => route('disciplines.show', $discipline->slug)],
+        ];
+
+        if ($province !== null) {
+            $crumbs[] = [
+                'name' => $province->getLabel(),
+                'url' => route('disciplines.province', [$discipline->slug, $province->urlSlug()]),
+            ];
+        }
+
         return [
             'discipline' => $discipline,
             'province' => $province,
@@ -128,6 +166,31 @@ class DisciplineController extends Controller
                 'distance' => $discipline->typical_distances,
                 'provinces' => $provincesActive,
             ],
+            'seoDescription' => $seoDescription,
+            'jsonLd' => [JsonLd::breadcrumbs($crumbs)],
         ];
+    }
+
+    private function composeDescription(Discipline $discipline, ?Province $province, int $matchCount, int $clubCount): string
+    {
+        $where = $province ? ' in '.$province->getLabel() : ' across South Africa';
+
+        $matches = match ($matchCount) {
+            0 => 'no matches on the calendar right now',
+            1 => '1 upcoming match',
+            default => "{$matchCount} upcoming matches",
+        };
+
+        $clubs = match ($clubCount) {
+            0 => '',
+            1 => ' at 1 listed club',
+            default => " at {$clubCount} listed clubs",
+        };
+
+        $blurb = $discipline->short_blurb
+            ? ' '.rtrim($discipline->short_blurb, '.').'.'
+            : '';
+
+        return $discipline->name.$where.' — '.$matches.$clubs.'.'.$blurb;
     }
 }
