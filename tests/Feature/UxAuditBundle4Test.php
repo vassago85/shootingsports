@@ -25,15 +25,22 @@ it('homepage hero reticle wraps the SVG in an animated container', function () {
         ->and($html)->toContain('class="hero-reticle"');
 });
 
-it('the reticle sweep animation is disabled for prefers-reduced-motion visitors', function () {
-    // The CSS bundle keeps the animation-disable rule inside the
-    // reduced-motion media query. Read it directly from source so
-    // this test does not depend on Vite build state in CI.
+it('the reticle animation is disabled for prefers-reduced-motion visitors', function () {
+    // The rotating sweep was replaced by a single-element pulse on
+    // the centre dot (was reading as radar, not reticle). Assert
+    // both the pulse rule exists and it is disabled inside a
+    // reduced-motion media query.
     $css = file_get_contents(resource_path('css/app.css'));
 
     expect($css)
         ->toContain('prefers-reduced-motion')
-        ->and($css)->toContain('.hero-reticle-wrap::after { animation: none; opacity: 0; }');
+        ->and($css)->toContain('.hero-reticle-dot { animation: none; }');
+});
+
+it('the homepage centre bullseye carries the pulse class', function () {
+    $html = $this->get(route('home'))->assertOk()->getContent();
+
+    expect($html)->toContain('class="hero-reticle-dot"');
 });
 
 // ---- DOPE-card discipline-family accents --------------------------

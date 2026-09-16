@@ -16,7 +16,11 @@
                     <path d="M200 0v150M200 250v150M0 200h150M250 200h150" stroke="#D9AE52" stroke-width="1.5"/>
                     <path d="M182 236h36M186 258h28M190 280h20M182 164h36M186 142h28M190 120h20" stroke="#D9AE52" stroke-width="1.5"/>
                     <path d="M164 182v36M142 186v28M120 190v20M236 182v36M258 186v28M280 190v20" stroke="#D9AE52" stroke-width="1.5"/>
-                    <circle cx="200" cy="200" r="3.5" fill="#D9AE52"/>
+                    {{-- UX audit cool-factor: this centre dot is the
+                         only thing that moves. See .hero-reticle-dot
+                         in app.css for the pulse rule (rotating sweep
+                         was ripped out — read as radar). --}}
+                    <circle class="hero-reticle-dot" cx="200" cy="200" r="3.5" fill="#D9AE52"/>
                 </svg>
             </div>
             <div class="hero-in">
