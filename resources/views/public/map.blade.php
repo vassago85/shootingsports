@@ -36,8 +36,9 @@
 
                 <div
                     id="ss-map"
-                    class="ss-map"
+                    class="ss-map {{ $cartoApiKey ? '' : 'is-osm-fallback' }}"
                     data-markers="{{ json_encode($markers, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}"
+                    @if ($cartoApiKey) data-carto-key="{{ $cartoApiKey }}" @endif
                     role="region"
                     aria-label="Map of upcoming matches by province"
                 ></div>
@@ -96,14 +97,25 @@
                                 attributionControl: true,
                             }).setView([-28.8, 25.0], 5);
 
-                            // Free OSM tiles + CSS mute (see .ss-map .leaflet-tile-pane).
-                            // CARTO Positron now watermarks "API KEY REQUIRED" without
-                            // a paid key — we do not ship third-party map credentials.
-                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                                maxZoom: 12,
-                                minZoom: 4,
-                                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                            }).addTo(map);
+                            // Prefer CARTO Positron when CARTO_API_KEY is set
+                            // (no watermark). Key is a ?key= query param per
+                            // https://carto.com/basemaps/apikey. Otherwise
+                            // free OSM with the CSS mute class on the mount.
+                            var cartoKey = el.dataset.cartoKey || '';
+                            if (cartoKey) {
+                                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=' + encodeURIComponent(cartoKey), {
+                                    maxZoom: 12,
+                                    minZoom: 4,
+                                    subdomains: 'abcd',
+                                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                                }).addTo(map);
+                            } else {
+                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                    maxZoom: 12,
+                                    minZoom: 4,
+                                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                                }).addTo(map);
+                            }
 
                             markers.forEach(function (m) {
                                 if (m.count === 0) {

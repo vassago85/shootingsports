@@ -3,6 +3,7 @@
 use App\Imports\CgpsaCalendarImporter;
 use App\Imports\MpsaCalendarImporter;
 use App\Imports\SaprfCalendarImporter;
+use App\Imports\VektorCalendarImporter;
 
 return [
     [
@@ -28,6 +29,14 @@ return [
         'mode' => 'import',
         'importer' => CgpsaCalendarImporter::class,
         'notes' => 'The Events Calendar REST API. Title, dates, venue and category. No fees.',
+    ],
+    [
+        'key' => 'vektor',
+        'name' => 'Vektor Shooting Club',
+        'url' => 'https://www.vektor.co.za/?post_type=tribe_events',
+        'mode' => 'import',
+        'importer' => VektorCalendarImporter::class,
+        'notes' => 'The Events Calendar REST API. Monthly Handgun / Rifle&PCC / Shotgun club shoots in Centurion. No fees in feed.',
     ],
     [
         'key' => 'ctsasa',

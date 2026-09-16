@@ -18,6 +18,7 @@ it('lists scrape and sell sources', function () {
         ->assertSuccessful()
         ->expectsOutputToContain('saprf')
         ->expectsOutputToContain('cgpsa')
+        ->expectsOutputToContain('vektor')
         ->expectsOutputToContain('import')
         ->expectsOutputToContain('sapsa')
         ->expectsOutputToContain('sahunters')
@@ -219,6 +220,79 @@ it('parses a CGPSA shotgun title onto sporting clays', function () {
     expect($matches)->toHaveCount(1)
         ->and($matches[0]->disciplineSlug)->toBe('sporting-clays')
         ->and($matches[0]->level)->toBe(EventLevel::Club);
+});
+
+it('imports Vektor Events Calendar JSON onto the Centurion club range', function () {
+    Discipline::factory()->create(['slug' => 'ipsc-practical', 'name' => 'IPSC']);
+    Discipline::factory()->create(['slug' => 'multigun', 'name' => 'Multigun']);
+    Discipline::factory()->create(['slug' => 'sporting-clays', 'name' => 'Sporting Clays']);
+
+    Http::fake([
+        'www.vektor.co.za/wp-json/tribe/events/v1/events*' => Http::response([
+            'events' => [
+                [
+                    'id' => 9791,
+                    'title' => 'Handgun Club Shoot &#8211; Jan 2026',
+                    'url' => 'https://www.vektor.co.za/event/handgun-club-shoot-jan-2026/',
+                    'start_date' => '2026-10-10 08:00:00',
+                    'end_date' => '2026-10-10 16:00:00',
+                    'description' => '<p>Visitors R150.</p>',
+                    'categories' => [],
+                    'venue' => [],
+                ],
+                [
+                    'id' => 9795,
+                    'title' => 'Rifle &#038; PCC Club Shoot &#8211; Jan',
+                    'url' => 'https://www.vektor.co.za/event/rifle-pcc-club-shoot-jan/',
+                    'start_date' => '2026-10-24 08:00:00',
+                    'end_date' => '2026-10-24 16:00:00',
+                    'description' => '',
+                    'categories' => [],
+                    'venue' => [],
+                ],
+                [
+                    'id' => 9794,
+                    'title' => 'Shotgun Club Shoot &#8211; Jan 2026',
+                    'url' => 'https://www.vektor.co.za/event/shotgun-club-shoot-jan-2026/',
+                    'start_date' => '2026-10-24 08:00:00',
+                    'end_date' => '2026-10-24 16:00:00',
+                    'description' => '',
+                    'categories' => [],
+                    'venue' => [],
+                ],
+            ],
+        ], 200),
+    ]);
+
+    $this->artisan('calendar:import vektor')->assertSuccessful();
+
+    $handgun = Event::query()->where('slug', 'vektor-event-9791')->first();
+
+    expect($handgun)->not->toBeNull()
+        ->and($handgun->title)->toBe('Handgun Club Shoot – Jan 2026')
+        ->and($handgun->starts_at->toDateString())->toBe('2026-10-10')
+        ->and($handgun->level)->toBe(EventLevel::Club)
+        ->and($handgun->status)->toBe(EventStatus::Confirmed)
+        ->and($handgun->entry_fee_cents)->toBeNull()
+        ->and($handgun->entry_url)->toBe('https://www.vektor.co.za/event/handgun-club-shoot-jan-2026/')
+        ->and($handgun->venue?->name)->toBe('Vektor Shooting Club')
+        ->and($handgun->venue?->town)->toBe('Centurion')
+        ->and($handgun->venue?->province)->toBe(Province::Gauteng)
+        ->and($handgun->disciplines->pluck('slug')->all())->toBe(['ipsc-practical']);
+
+    $rifle = Event::query()->where('slug', 'vektor-event-9795')->first();
+    expect($rifle)->not->toBeNull()
+        ->and($rifle->title)->toBe('Rifle & PCC Club Shoot – Jan')
+        ->and($rifle->disciplines->pluck('slug')->all())->toBe(['multigun']);
+
+    $shotgun = Event::query()->where('slug', 'vektor-event-9794')->first();
+    expect($shotgun)->not->toBeNull()
+        ->and($shotgun->disciplines->pluck('slug')->all())->toBe(['sporting-clays']);
+
+    expect(Organisation::query()->where('slug', 'vektor')->first())
+        ->type->toBe(OrganisationType::Club)
+        ->name->toBe('Vektor Shooting Club')
+        ->town->toBe('Centurion');
 });
 
 it('tells staff to sell the embed when a source has no feed', function () {

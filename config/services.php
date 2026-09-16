@@ -57,6 +57,13 @@ return [
         'website_id' => env('UMAMI_WEBSITE_ID'),
     ],
 
+    // Optional CARTO basemap key for /map. When blank, the map falls
+    // back to free OSM tiles with a CSS mute — CARTO watermarks
+    // "API KEY REQUIRED" without a key.
+    'carto' => [
+        'api_key' => env('CARTO_API_KEY'),
+    ],
+
     // Paystack subscriptions. Test keys start pk_test_ / sk_test_ and are
     // safe to commit around (they only touch the sandbox). Live keys start
     // pk_live_ / sk_live_ and are set on the server only, never here.

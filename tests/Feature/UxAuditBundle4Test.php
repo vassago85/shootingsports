@@ -115,7 +115,20 @@ it('/map shows empty-province claim copy instead of a bare zero', function () {
     expect($html)
         ->toContain('know a club here?')
         ->toContain(route('claim'))
+        ->toContain('is-osm-fallback')
         ->toContain('tile.openstreetmap.org');
+});
+
+it('/map uses CARTO Positron when CARTO_API_KEY is configured', function () {
+    config(['services.carto.api_key' => 'test-carto-key']);
+
+    $html = $this->get(route('map'))->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('data-carto-key="test-carto-key"')
+        ->toContain('basemaps.cartocdn.com/light_all')
+        ->toContain('?key=')
+        ->not->toContain('class="ss-map is-osm-fallback"');
 });
 
 it('/map bubbles link to the calendar filtered by that province', function () {

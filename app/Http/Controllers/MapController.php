@@ -109,6 +109,9 @@ class MapController extends Controller
             'markers' => $markers,
             'totalMatches' => $totalMatches,
             'seoDescription' => $seoDescription,
+            'cartoApiKey' => filled(config('services.carto.api_key'))
+                ? (string) config('services.carto.api_key')
+                : null,
             'jsonLd' => [
                 JsonLd::breadcrumbs([
                     ['name' => 'Home', 'url' => route('home')],

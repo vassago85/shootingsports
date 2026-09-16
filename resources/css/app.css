@@ -319,10 +319,10 @@ section.block { padding: 72px 0; }
     margin-bottom: 24px;
 }
 .ss-map .leaflet-container { background: #dfe4dc; }
-/* Mute bright OSM blues/reds into the cream-gunmetal palette without
-   a paid basemap key (CARTO Positron now requires one). Markers live
-   in .leaflet-overlay-pane and stay full-colour. */
-.ss-map .leaflet-tile-pane {
+/* Mute bright OSM blues/reds into the cream-gunmetal palette when
+   CARTO_API_KEY is unset. Markers live in .leaflet-overlay-pane and
+   stay full-colour. With a CARTO key the class is omitted. */
+.ss-map.is-osm-fallback .leaflet-tile-pane {
     filter: grayscale(0.45) saturate(0.4) brightness(1.04) contrast(0.94);
 }
 @media (max-width: 720px) { .ss-map { height: 380px; } }
