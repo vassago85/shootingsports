@@ -335,19 +335,22 @@ section.block { padding: 72px 0; }
 .map-legend li { background: var(--surface); }
 .map-legend a {
     display: flex; justify-content: space-between; align-items: baseline;
-    padding: 14px 16px; text-decoration: none; gap: 12px;
+    gap: 12px; padding: 12px 14px; text-decoration: none; color: inherit;
 }
-.map-legend .prov {
-    font-family: var(--f-display); font-size: 15px; font-weight: 600;
-    text-transform: uppercase; color: var(--ink);
-}
-.map-legend .ct {
-    font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em;
-    text-transform: uppercase; color: var(--brass-dk);
-}
-.map-legend li.is-quiet .prov { color: var(--slate); }
-.map-legend li.is-quiet .ct { color: var(--slate); }
+.map-legend .prov { font-family: var(--f-display); font-weight: 600; font-size: 14px; letter-spacing: .03em; text-transform: uppercase; }
+.map-legend .ct { color: var(--muted); font-size: 13px; }
+.map-legend li.is-quiet .prov { color: var(--muted); }
 .map-legend a:hover { background: var(--surface-2); }
+
+.distance-filters {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+}
+.distance-filters .distance-near input,
+.distance-filters select {
+    font: inherit; font-size: 13.5px; padding: 8px 12px;
+    border: 1px solid var(--rule); background: var(--surface); color: var(--ink);
+    min-width: 140px;
+}
 
 .dope-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
 /* Article is `position: relative` so `.dope-title-link::after` can

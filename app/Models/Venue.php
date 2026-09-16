@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\GautengMetro;
+use App\Enums\GeocodeSource;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
 use App\Enums\ProviderTier;
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'slug', 'name', 'province', 'town', 'metro', 'lat', 'lng', 'address',
+    'geocode_source', 'geocoded_at',
     'max_distance_m', 'bay_count', 'access', 'day_fee_cents', 'facilities',
     'notes', 'tier', 'status', 'verification_state', 'last_verified_at',
     'verification_token', 'claimed_by', 'source',
@@ -39,6 +41,8 @@ class Venue extends Model
             'metro' => GautengMetro::class,
             'lat' => 'decimal:7',
             'lng' => 'decimal:7',
+            'geocode_source' => GeocodeSource::class,
+            'geocoded_at' => 'immutable_datetime',
             'max_distance_m' => 'integer',
             'bay_count' => 'integer',
             'access' => VenueAccess::class,
@@ -50,6 +54,16 @@ class Venue extends Model
             'last_verified_at' => 'immutable_datetime',
             'source' => ListingSource::class,
         ];
+    }
+
+    public function hasCoordinates(): bool
+    {
+        return $this->lat !== null && $this->lng !== null;
+    }
+
+    public function isStaffPinned(): bool
+    {
+        return $this->geocode_source === GeocodeSource::Staff;
     }
 
     public function claimedBy(): BelongsTo

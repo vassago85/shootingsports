@@ -11,6 +11,7 @@ use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Venue;
+use App\Services\Geocoding\VenueGeocoder;
 
 class CalendarImporter
 {
@@ -103,7 +104,7 @@ class CalendarImporter
             return null;
         }
 
-        return Venue::query()->firstOrCreate(
+        $venue = Venue::query()->firstOrCreate(
             [
                 'name' => $match->venueName,
                 'province' => $match->province,
@@ -116,5 +117,17 @@ class CalendarImporter
                 'source' => ListingSource::Import,
             ],
         );
+
+        // Soft geocode on first create / when still unpinned. Staff
+        // pins are never overwritten by VenueGeocoder.
+        if (! $venue->hasCoordinates()) {
+            try {
+                app(VenueGeocoder::class)->fill($venue);
+            } catch (\Throwable) {
+                // Import must not fail because Nominatim is slow/down.
+            }
+        }
+
+        return $venue->fresh();
     }
 }

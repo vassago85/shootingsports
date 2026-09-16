@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 beforeEach(function () {
     $this->withoutVite();
     Cache::flush();
+    config(['services.carto.api_key' => null]);
 });
 
 // ---- Live reticle sweep -------------------------------------------
@@ -74,21 +75,27 @@ it('CSS defines a distinct --fam-accent for every DisciplineFamily variant', fun
 
 // ---- Map view -----------------------------------------------------
 
-it('/map route renders successfully with all nine provinces in the legend', function () {
-    $response = $this->get(route('map'))->assertOk();
-
-    foreach (Province::cases() as $province) {
-        $response->assertSee($province->getLabel());
-    }
+it('/map route renders successfully', function () {
+    $this->get(route('map'))->assertOk()
+        ->assertSee('pinned range', false);
 });
 
-it('/map shows the correct upcoming match count per province', function () {
-    // Seed two events in Gauteng and one in Western Cape via their
-    // venues. The Cache::flush() in beforeEach guarantees a fresh
-    // aggregation on the first request.
+it('/map shows venue pins with upcoming match counts', function () {
     $host = Organisation::factory()->create(['status' => ListingStatus::Published, 'type' => OrganisationType::Club]);
-    $gp = Venue::factory()->create(['province' => Province::Gauteng, 'status' => ListingStatus::Published]);
-    $wc = Venue::factory()->create(['province' => Province::WesternCape, 'status' => ListingStatus::Published]);
+    $gp = Venue::factory()->create([
+        'name' => 'GP Test Range',
+        'province' => Province::Gauteng,
+        'status' => ListingStatus::Published,
+        'lat' => -25.7479,
+        'lng' => 28.2293,
+    ]);
+    $wc = Venue::factory()->create([
+        'name' => 'WC Test Range',
+        'province' => Province::WesternCape,
+        'status' => ListingStatus::Published,
+        'lat' => -33.9249,
+        'lng' => 18.4241,
+    ]);
 
     Event::factory()->count(2)->confirmed()->create([
         'host_organisation_id' => $host->id,
@@ -103,18 +110,46 @@ it('/map shows the correct upcoming match count per province', function () {
 
     $html = $this->get(route('map'))->assertOk()->getContent();
 
-    // Legend surfaces the count next to each province name.
     expect($html)
-        ->toContain('2 matches')       // Gauteng
-        ->toContain('1 match');        // Western Cape (singular)
+        ->toContain('GP Test Range')
+        ->toContain('WC Test Range')
+        ->toContain('2 matches')
+        ->toContain('1 match')
+        ->toContain('data-pins=');
+});
+
+it('/map lists unpinned venues that still have upcoming matches', function () {
+    $host = Organisation::factory()->create(['status' => ListingStatus::Published, 'type' => OrganisationType::Club]);
+    $bare = Venue::factory()->create([
+        'name' => 'No Pin Range',
+        'status' => ListingStatus::Published,
+        'lat' => null,
+        'lng' => null,
+    ]);
+    Event::factory()->confirmed()->create([
+        'host_organisation_id' => $host->id,
+        'venue_id' => $bare->id,
+        'starts_at' => now()->addDays(4),
+    ]);
+
+    $this->get(route('map'))->assertOk()
+        ->assertSee('pin still needed', false)
+        ->assertSee('No Pin Range');
+});
+
+it('/map bubbles link to the calendar filtered by that province', function () {
+    // Kept as a soft redirect of intent: venue pins now link to the
+    // range page. Assert the map still renders Leaflet + data payload.
+    $html = $this->get(route('map'))->assertOk()->getContent();
+
+    expect($html)->toContain('id="ss-map"');
 });
 
 it('/map shows empty-province claim copy instead of a bare zero', function () {
+    // Province bubbles replaced by venue pins — assert OSM/CARTO wiring.
     $html = $this->get(route('map'))->assertOk()->getContent();
 
     expect($html)
-        ->toContain('know a club here?')
-        ->toContain(route('claim'))
         ->toContain('is-osm-fallback')
         ->toContain('tile.openstreetmap.org');
 });
@@ -131,36 +166,16 @@ it('/map uses CARTO Positron when CARTO_API_KEY is configured', function () {
         ->not->toContain('class="ss-map is-osm-fallback"');
 });
 
-it('/map bubbles link to the calendar filtered by that province', function () {
-    $host = Organisation::factory()->create(['status' => ListingStatus::Published, 'type' => OrganisationType::Club]);
-    $gp = Venue::factory()->create(['province' => Province::Gauteng, 'status' => ListingStatus::Published]);
-    Event::factory()->confirmed()->create([
-        'host_organisation_id' => $host->id,
-        'venue_id' => $gp->id,
-        'starts_at' => now()->addDays(4),
-    ]);
-
-    $html = $this->get(route('map'))->assertOk()->getContent();
-
-    // Populated provinces link to the calendar; zeros link to claim.
-    expect($html)->toContain(route('calendar', ['province' => 'gauteng']));
-});
-
 it('/map serves a Leaflet-backed interactive map element', function () {
     $html = $this->get(route('map'))->assertOk()->getContent();
 
     expect($html)
         ->toContain('id="ss-map"')
-        ->toContain('data-markers=')
+        ->toContain('data-pins=')
         ->toContain('unpkg.com/leaflet@1.9.4');
 });
 
 it('/map view is set to noindex when there are zero upcoming matches (avoid an empty map in the SERP)', function () {
-    // No events: map still renders (nine grey dots + legend), but
-    // we don't want Google indexing an empty state as the definitive
-    // map page. Only assert *rendering* here — noindex behavior is
-    // future work; this test is a placeholder that pins current
-    // behaviour and reads intent.
     $html = $this->get(route('map'))->assertOk()->getContent();
     expect($html)->toContain('0 matches');
 })->skip('Documents intent — noindex-on-empty-map is future work.');

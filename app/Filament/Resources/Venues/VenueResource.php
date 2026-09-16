@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Venues;
 
 use App\Enums\GautengMetro;
+use App\Enums\GeocodeSource;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
 use App\Enums\ProviderTier;
@@ -63,9 +64,15 @@ class VenueResource extends Resource
                 Select::make('metro')
                     ->options(GautengMetro::class),
                 TextInput::make('lat')
-                    ->numeric(),
+                    ->numeric()
+                    ->helperText('Saving lat/lng marks the pin as staff-locked so imports never overwrite it.'),
                 TextInput::make('lng')
                     ->numeric(),
+                Select::make('geocode_source')
+                    ->options(GeocodeSource::class)
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->helperText('Set automatically: nominatim / staff / google.'),
                 Textarea::make('address')
                     ->columnSpanFull(),
                 TextInput::make('max_distance_m')

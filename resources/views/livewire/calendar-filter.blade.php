@@ -35,7 +35,7 @@
         filter. Family / province / novice / confirmed are already
         reflected via aria-pressed on the button rows above.
     --}}
-    @if (filled($activeDisciplineLabel) || filled($from) || filled($to))
+    @if (filled($activeDisciplineLabel) || filled($from) || filled($to) || filled($near) || filled($lat) || filled($radius))
         <div class="active-filters" role="group" aria-label="Active filters" style="margin-top:-14px">
             <span class="active-filters-label">Filtered:</span>
             @if (filled($activeDisciplineLabel))
@@ -52,9 +52,39 @@
                     <span class="sr-only">— clear date range filter</span>
                 </button>
             @endif
+            @if (filled($near) || filled($lat) || filled($radius))
+                <button type="button" class="chip-active" wire:click="clearDistance">
+                    <span>
+                        @if (filled($near))
+                            Within {{ $radius ?: '…' }} km of {{ $near }}
+                        @elseif (filled($lat))
+                            Within {{ $radius ?: '…' }} km of my location
+                        @else
+                            Within {{ $radius }} km
+                        @endif
+                    </span>
+                    <span aria-hidden="true">×</span>
+                    <span class="sr-only">— clear distance filter</span>
+                </button>
+            @endif
         </div>
     @endif
 
+    <div class="filters distance-filters" role="group" aria-label="Distance filter" style="margin-top:-14px" x-data="calendarNearGeo()">
+        <label class="distance-near">
+            <span class="sr-only">Near town</span>
+            <input type="text" wire:model.live.debounce.400ms="near" placeholder="Near town…" aria-label="Near town">
+        </label>
+        <select wire:model.live="radius" aria-label="Within distance">
+            <option value="">Any distance</option>
+            @foreach ($radii as $km)
+                <option value="{{ $km }}">{{ $km }} km</option>
+            @endforeach
+        </select>
+        <button type="button" class="btn ghost" style="padding:8px 12px" @click="locate" :disabled="locating">
+            <span x-text="locating ? 'Locating…' : 'Use my location'"></span>
+        </button>
+    </div>
     @auth
         {{-- Save-this-search sits next to the filter chips. Free users
              may save one; the second attempt fires the UpgradePrompt
@@ -83,6 +113,9 @@
             {{ $resultCount }} {{ $resultCount === 1 ? 'match' : 'matches' }}
             @if ($hasActiveFilters)
                 <span class="result-count-suffix">— filtered</span>
+            @endif
+            @if (($unpinnedSkipped ?? 0) > 0)
+                <span class="result-count-suffix">· {{ $unpinnedSkipped }} without a map pin yet</span>
             @endif
         </p>
         @if ($hasActiveFilters)
@@ -116,3 +149,28 @@
         </p>
     @endif
 </div>
+
+<script>
+    function calendarNearGeo() {
+        return {
+            locating: false,
+            locate() {
+                if (! navigator.geolocation) return;
+                this.locating = true;
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        this.locating = false;
+                        @this.set('lat', String(pos.coords.latitude));
+                        @this.set('lng', String(pos.coords.longitude));
+                        @this.set('near', '');
+                        if (! @this.get('radius')) {
+                            @this.set('radius', '150');
+                        }
+                    },
+                    () => { this.locating = false; },
+                    { enableHighAccuracy: false, timeout: 10000 }
+                );
+            }
+        };
+    }
+</script>

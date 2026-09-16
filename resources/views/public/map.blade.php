@@ -11,11 +11,9 @@
                 <h1>What's on, where</h1>
                 <p>
                     {{ $totalMatches }} upcoming {{ $totalMatches === 1 ? 'match' : 'matches' }}
-                    across the country. Click a province to see the calendar filtered to that region.
+                    on {{ count($pins) }} {{ count($pins) === 1 ? 'pinned range' : 'pinned ranges' }}.
+                    Click a pin for the range page.
                 </p>
-                {{-- View toggle: two anchors, one aria-pressed. Kept
-                     as plain links (not JS) so it works with no-script
-                     and the browser back button behaves as expected. --}}
                 <div class="view-toggle" role="group" aria-label="Calendar view">
                     <a href="{{ route('calendar') }}" aria-pressed="false">List</a>
                     <a href="{{ route('map') }}" aria-pressed="true">Map</a>
@@ -25,11 +23,6 @@
 
         <section class="block">
             <div class="wrap">
-                {{-- Leaflet lives entirely on this page. Loaded from
-                     unpkg so we don't pay the bundle cost on any
-                     other route. If we ever pin a real SRI hash it
-                     goes here; leaving it off for now so a Leaflet
-                     patch release doesn't silently break the map. --}}
                 <link rel="stylesheet"
                       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
                       crossorigin="">
@@ -37,59 +30,60 @@
                 <div
                     id="ss-map"
                     class="ss-map {{ $cartoApiKey ? '' : 'is-osm-fallback' }}"
-                    data-markers="{{ json_encode($markers, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}"
+                    data-pins="{{ json_encode($pins, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}"
                     @if ($cartoApiKey) data-carto-key="{{ $cartoApiKey }}" @endif
                     role="region"
-                    aria-label="Map of upcoming matches by province"
+                    aria-label="Map of shooting ranges with upcoming matches"
                 ></div>
 
-                {{-- Text fallback + SEO surface: the same data as
-                     the map, rendered as a list so screen readers,
-                     no-JS visitors and Google all see it. --}}
                 <ul class="map-legend">
-                    @foreach ($markers as $marker)
-                        <li class="{{ $marker['count'] === 0 ? 'is-quiet' : '' }}">
-                            @if ($marker['count'] === 0)
-                                <a href="{{ $marker['claim_url'] }}">
-                                    <span class="prov">{{ $marker['label'] }}</span>
-                                    <span class="ct">No matches listed in {{ $marker['short'] }} — know a club here?</span>
-                                </a>
-                            @else
-                                <a href="{{ $marker['calendar_url'] }}">
-                                    <span class="prov">{{ $marker['label'] }}</span>
-                                    <span class="ct">{{ $marker['count'] }} {{ $marker['count'] === 1 ? 'match' : 'matches' }}</span>
-                                </a>
-                            @endif
+                    @forelse ($pins as $pin)
+                        <li class="{{ $pin['count'] === 0 ? 'is-quiet' : '' }}">
+                            <a href="{{ $pin['url'] }}">
+                                <span class="prov">{{ $pin['label'] }}</span>
+                                <span class="ct">
+                                    @if ($pin['count'] > 0)
+                                        {{ $pin['count'] }} {{ $pin['count'] === 1 ? 'match' : 'matches' }}
+                                    @else
+                                        {{ $pin['town'] }}{{ $pin['province'] ? ' · '.$pin['province'] : '' }}
+                                    @endif
+                                </span>
+                            </a>
                         </li>
-                    @endforeach
+                    @empty
+                        <li class="is-quiet">
+                            <span class="prov">No pinned ranges yet</span>
+                            <span class="ct">Run venues:geocode after deploy</span>
+                        </li>
+                    @endforelse
                 </ul>
+
+                @if (count($unpinned) > 0)
+                    <div class="map-unpinned" style="margin-top:28px">
+                        <p class="label">Upcoming matches — pin still needed</p>
+                        <ul class="map-legend">
+                            @foreach ($unpinned as $row)
+                                <li class="is-quiet">
+                                    <a href="{{ $row['url'] }}">
+                                        <span class="prov">{{ $row['label'] }}</span>
+                                        <span class="ct">{{ $row['count'] }} {{ $row['count'] === 1 ? 'match' : 'matches' }} · {{ $row['town'] }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
                 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
                         crossorigin=""
                         defer></script>
                 <script>
-                    /*
-                     * UX audit cool-factor: province-clustered map.
-                     *
-                     * Reads the marker payload from the container's
-                     * data attribute, drops a size-scaled circle per
-                     * province, and links each bubble to the calendar
-                     * filtered to that province. No clustering
-                     * library needed — nine bubbles never overlap.
-                     *
-                     * Bail silently if Leaflet failed to load (bad
-                     * network, ad-blocker) so the legend below stays
-                     * the source of truth.
-                     */
                     (function () {
                         var mount = function () {
-                            if (typeof L === 'undefined') {
-                                return;
-                            }
+                            if (typeof L === 'undefined') return;
                             var el = document.getElementById('ss-map');
                             if (! el) return;
-                            var markers = JSON.parse(el.dataset.markers || '[]');
-                            if (! markers.length) return;
+                            var pins = JSON.parse(el.dataset.pins || '[]');
 
                             var map = L.map(el, {
                                 zoomControl: true,
@@ -97,59 +91,53 @@
                                 attributionControl: true,
                             }).setView([-28.8, 25.0], 5);
 
-                            // Prefer CARTO Positron when CARTO_API_KEY is set
-                            // (no watermark). Key is a ?key= query param per
-                            // https://carto.com/basemaps/apikey. Otherwise
-                            // free OSM with the CSS mute class on the mount.
                             var cartoKey = el.dataset.cartoKey || '';
                             if (cartoKey) {
                                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=' + encodeURIComponent(cartoKey), {
-                                    maxZoom: 12,
+                                    maxZoom: 14,
                                     minZoom: 4,
                                     subdomains: 'abcd',
                                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
                                 }).addTo(map);
                             } else {
                                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                                    maxZoom: 12,
+                                    maxZoom: 14,
                                     minZoom: 4,
                                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
                                 }).addTo(map);
                             }
 
-                            markers.forEach(function (m) {
-                                if (m.count === 0) {
-                                    L.circleMarker([m.lat, m.lng], {
-                                        radius: 6,
-                                        color: '#5a6360',
-                                        weight: 1,
-                                        fillColor: '#5a6360',
-                                        fillOpacity: 0.35,
-                                    }).bindTooltip(
-                                        'No matches listed in ' + m.short + ' — know a club here?',
-                                        { direction: 'top' }
-                                    ).on('click', function () {
-                                        window.location.href = m.claim_url;
-                                    }).addTo(map);
-                                    return;
-                                }
-                                var marker = L.circleMarker([m.lat, m.lng], {
-                                    radius: m.radius,
-                                    color: '#8a6516',
+                            if (! pins.length) return;
+
+                            var bounds = [];
+                            pins.forEach(function (p) {
+                                var colour = p.count > 0 ? '#b3892b' : '#5a6360';
+                                var marker = L.circleMarker([p.lat, p.lng], {
+                                    radius: p.radius,
+                                    color: p.count > 0 ? '#8a6516' : '#5a6360',
                                     weight: 2,
-                                    fillColor: '#b3892b',
-                                    fillOpacity: 0.55,
+                                    fillColor: colour,
+                                    fillOpacity: p.count > 0 ? 0.65 : 0.35,
                                 });
-                                marker.bindTooltip(
-                                    m.label + ' — ' + m.count + ' ' +
-                                    (m.count === 1 ? 'match' : 'matches'),
-                                    { direction: 'top', permanent: false }
-                                );
+                                var tip = p.label;
+                                if (p.count > 0) {
+                                    tip += ' — ' + p.count + (p.count === 1 ? ' match' : ' matches');
+                                } else if (p.town) {
+                                    tip += ' — ' + p.town;
+                                }
+                                marker.bindTooltip(tip, { direction: 'top' });
                                 marker.on('click', function () {
-                                    window.location.href = m.calendar_url;
+                                    window.location.href = p.url;
                                 });
                                 marker.addTo(map);
+                                bounds.push([p.lat, p.lng]);
                             });
+
+                            if (bounds.length > 1) {
+                                map.fitBounds(bounds, { padding: [36, 36], maxZoom: 9 });
+                            } else if (bounds.length === 1) {
+                                map.setView(bounds[0], 9);
+                            }
                         };
 
                         if (document.readyState === 'loading') {
@@ -157,8 +145,6 @@
                         } else {
                             mount();
                         }
-                        // Leaflet is `defer`red — hook the load event
-                        // too in case it lands after DOMContentLoaded.
                         window.addEventListener('load', mount);
                     })();
                 </script>

@@ -12,6 +12,8 @@ use App\Models\User;
 use App\Models\Venue;
 use App\Policies\EventPolicy;
 use App\Policies\OrganisationPolicy;
+use App\Services\Geocoding\Geocoder;
+use App\Services\Geocoding\NominatimGeocoder;
 use App\Support\MailSettings;
 use App\Support\PublicCache;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as FilamentLogoutResponse;
@@ -39,6 +41,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->booted(function (): void {
             $this->app->bind(FilamentLogoutResponse::class, PublicHomeLogoutResponse::class);
         });
+
+        $this->app->bind(
+            Geocoder::class,
+            NominatimGeocoder::class,
+        );
     }
 
     public function boot(): void

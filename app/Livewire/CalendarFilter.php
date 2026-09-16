@@ -34,6 +34,15 @@ class CalendarFilter extends Component
     public ?string $radius = null;
 
     #[Url]
+    public ?string $near = null;
+
+    #[Url]
+    public ?string $lat = null;
+
+    #[Url]
+    public ?string $lng = null;
+
+    #[Url]
     public ?string $from = null;
 
     #[Url]
@@ -87,6 +96,14 @@ class CalendarFilter extends Component
         $this->to = null;
     }
 
+    public function clearDistance(): void
+    {
+        $this->near = null;
+        $this->lat = null;
+        $this->lng = null;
+        $this->radius = null;
+    }
+
     /*
      * "Clear filters" reset used by the result-count bar. Puts every
      * filter back to the default state, including toggles. `family`
@@ -101,6 +118,9 @@ class CalendarFilter extends Component
         $this->discipline = null;
         $this->province = null;
         $this->radius = null;
+        $this->near = null;
+        $this->lat = null;
+        $this->lng = null;
         $this->from = null;
         $this->to = null;
     }
@@ -117,6 +137,9 @@ class CalendarFilter extends Component
             || $this->confirmed
             || filled($this->discipline)
             || filled($this->province)
+            || filled($this->radius)
+            || filled($this->near)
+            || filled($this->lat)
             || filled($this->from)
             || filled($this->to);
     }
@@ -165,6 +188,9 @@ class CalendarFilter extends Component
                     'discipline' => $this->discipline,
                     'province' => $this->province,
                     'radius' => $this->radius,
+                    'near' => $this->near,
+                    'lat' => $this->lat,
+                    'lng' => $this->lng,
                     'from' => $this->from,
                     'to' => $this->to,
                 ], static fn ($v): bool => $v !== null && $v !== false && $v !== ''),
@@ -209,6 +235,9 @@ class CalendarFilter extends Component
             disciplineSlug: $this->discipline,
             provinceSlug: $this->province,
             radiusKm: $this->radius ? (int) $this->radius : null,
+            nearLat: filled($this->lat) ? (float) $this->lat : null,
+            nearLng: filled($this->lng) ? (float) $this->lng : null,
+            near: $this->near,
             from: $this->safeDate($this->from),
             to: $this->safeDate($this->to),
             novice: $this->novice,
@@ -226,6 +255,8 @@ class CalendarFilter extends Component
             'activeDisciplineLabel' => $this->activeDisciplineLabel(),
             'hasActiveFilters' => $this->hasActiveFilters(),
             'resultCount' => $events->count(),
+            'unpinnedSkipped' => $query->unpinnedSkipped,
+            'radii' => [50, 100, 150, 250, 400],
         ]);
     }
 

@@ -33,6 +33,9 @@
                     :discipline="$discipline"
                     :province="$province"
                     :radius="$radius"
+                    :near="$near ?? null"
+                    :lat="$lat ?? null"
+                    :lng="$lng ?? null"
                     :from="$from"
                     :to="$to"
                 />

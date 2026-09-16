@@ -9,11 +9,13 @@ use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\User;
 use App\Models\Venue;
+use App\Services\Geocoding\VenueGeocoder;
 use App\Support\Geo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class PublicEventQuery
 {
@@ -22,6 +24,9 @@ class PublicEventQuery
         public ?string $disciplineSlug = null,
         public ?string $provinceSlug = null,
         public ?int $radiusKm = null,
+        public ?float $nearLat = null,
+        public ?float $nearLng = null,
+        public ?string $near = null,
         public ?Carbon $from = null,
         public ?Carbon $to = null,
         public bool $novice = false,
@@ -34,15 +39,24 @@ class PublicEventQuery
         public ?array $eventIds = null,
     ) {}
 
+    /** How many events were dropped for lacking venue pins (after get()). */
+    public int $unpinnedSkipped = 0;
+
     public static function fromRequest(Request $request): self
     {
         $radius = $request->integer('radius') ?: null;
+        $nearLat = $request->filled('lat') ? (float) $request->input('lat') : null;
+        $nearLng = $request->filled('lng') ? (float) $request->input('lng') : null;
+        $near = $request->string('near')->toString() ?: null;
 
         return new self(
             family: $request->string('family')->toString() ?: null,
             disciplineSlug: $request->string('discipline')->toString() ?: null,
             provinceSlug: $request->string('province')->toString() ?: null,
             radiusKm: $radius,
+            nearLat: $nearLat,
+            nearLng: $nearLng,
+            near: $near,
             from: self::date($request->input('from')),
             to: self::date($request->input('to')),
             novice: $request->boolean('novice'),
@@ -159,27 +173,65 @@ class PublicEventQuery
      */
     private function applyRadius(Collection $events): Collection
     {
-        if (! $this->radiusKm) {
+        $this->unpinnedSkipped = 0;
+
+        if (! $this->radiusKm || $this->radiusKm <= 0) {
             return $events;
         }
 
-        $provinces = $this->resolvedProvinces();
+        $origin = $this->resolveOrigin();
 
-        if (count($provinces) !== 1) {
+        if ($origin === null) {
+            // Radius without a usable origin is a no-op — better than
+            // pretending province centroids are "near me".
             return $events;
         }
 
-        [$lat, $lng] = Geo::provinceCentroid($provinces[0]);
+        [$lat, $lng] = $origin;
+        $skipped = 0;
 
-        return $events->filter(function (Event $event) use ($lat, $lng): bool {
+        $filtered = $events->filter(function (Event $event) use ($lat, $lng, &$skipped): bool {
             $venue = $event->venue;
 
-            if ($venue?->lat === null || $venue->lng === null) {
+            if ($venue === null || ! $venue->hasCoordinates()) {
+                $skipped++;
+
                 return false;
             }
 
             return Geo::haversineKm($lat, $lng, (float) $venue->lat, (float) $venue->lng) <= $this->radiusKm;
         })->values();
+
+        $this->unpinnedSkipped = $skipped;
+
+        return $filtered;
+    }
+
+    /**
+     * @return array{0: float, 1: float}|null
+     */
+    private function resolveOrigin(): ?array
+    {
+        if ($this->nearLat !== null && $this->nearLng !== null
+            && Geo::isInsideSouthAfrica($this->nearLat, $this->nearLng)) {
+            return [$this->nearLat, $this->nearLng];
+        }
+
+        if (! filled($this->near)) {
+            return null;
+        }
+
+        $cacheKey = 'geocode.near.'.md5(mb_strtolower(trim($this->near)));
+
+        $result = Cache::remember($cacheKey, 86400, function () {
+            return app(VenueGeocoder::class)->geocodePlace((string) $this->near);
+        });
+
+        if ($result === null) {
+            return null;
+        }
+
+        return [$result->lat, $result->lng];
     }
 
     /**

@@ -4,7 +4,6 @@ use App\Enums\DisciplineFamily;
 use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
 use App\Enums\ProviderCategory;
-use App\Enums\Province;
 use App\Livewire\CalendarFilter;
 use App\Livewire\MatchFinder;
 use App\Models\Discipline;
@@ -22,29 +21,35 @@ beforeEach(function () {
 
 // ---- Bundle 2 -----------------------------------------------------
 
-// #1 Radius killed
-it('hero MatchFinder no longer exposes a radius dropdown', function () {
+// ---- Distance filter restored with real venue pins ---------------
+
+it('hero MatchFinder exposes near + radius and Use my location', function () {
     Livewire::test(MatchFinder::class)
-        ->assertDontSee('Within')
-        ->assertDontSee('Any distance')
-        ->assertDontSee('50 km');
+        ->assertSee('Near town')
+        ->assertSee('Within')
+        ->assertSee('Any distance')
+        ->assertSee('Use my location');
 });
 
-it('MatchFinder submit URL no longer includes ?radius', function () {
+it('MatchFinder submit includes near + radius when both set', function () {
     Livewire::test(MatchFinder::class)
         ->set('discipline', 'ipsc-handgun')
-        ->set('province', 'gauteng')
+        ->set('near', 'Centurion')
+        ->set('radius', '100')
         ->call('search')
         ->assertRedirect(route('calendar', [
             'discipline' => 'ipsc-handgun',
-            'province' => 'gauteng',
+            'near' => 'Centurion',
+            'radius' => '100',
         ]));
 });
 
-it('MatchFinder no longer has a $radius property', function () {
-    expect(property_exists(MatchFinder::class, 'radius'))->toBeFalse();
+it('MatchFinder drops radius when no origin is set', function () {
+    Livewire::test(MatchFinder::class)
+        ->set('radius', '150')
+        ->call('search')
+        ->assertRedirect(route('calendar'));
 });
-
 // #2 + #14 Chip state + result count + clear filters
 it('CalendarFilter renders an active-filter chip when discipline URL param is set', function () {
     Discipline::factory()->create(['slug' => 'ipsc-handgun', 'name' => 'IPSC Handgun', 'is_published' => true]);
@@ -222,12 +227,9 @@ it('the suppliers page renders the ad-slot with hide-when-vacant', function () {
 
 // ---- Regression sanity --------------------------------------------
 
-it('CalendarFilter still passes a bookmarked ?radius= URL param through without error', function () {
-    // Bookmarked URLs with the deprecated radius param should not
-    // break the page — CalendarFilter still accepts the property so
-    // pre-existing bookmarks continue to work (radius silently no-ops
-    // because PublicEventQuery needs a single province + venue coords).
-    Livewire::test(CalendarFilter::class, ['radius' => '150'])
+it('CalendarFilter accepts bookmarked radius + near params', function () {
+    Livewire::test(CalendarFilter::class, ['radius' => '150', 'near' => 'Pretoria'])
         ->assertSet('radius', '150')
+        ->assertSet('near', 'Pretoria')
         ->assertOk();
 });
