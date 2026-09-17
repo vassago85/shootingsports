@@ -36,6 +36,7 @@ class LlmsTxtController extends Controller
             '- '.route('advertise').' — Advertise',
             '- '.route('contact').' — Contact',
             '- '.route('privacy').' — Privacy and POPIA',
+            '- '.route('terms').' — Terms of Use',
             '',
             '## Sitemaps',
             '',

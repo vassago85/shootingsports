@@ -168,6 +168,7 @@
                     <h4>About</h4>
                     <ul>
                         <li><a href="{{ route('advertise') }}">Advertise</a></li>
+                        <li><a href="{{ route('terms') }}">Terms of Use</a></li>
                         <li><a href="{{ route('privacy') }}">Privacy &amp; POPIA</a></li>
                     </ul>
                 </div>

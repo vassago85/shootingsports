@@ -106,6 +106,7 @@ Route::post('/enquiries', [EnquiryController::class, 'store'])
 Route::get('/enquiries/thanks', [EnquiryController::class, 'thanks'])->name('enquiries.thanks');
 Route::get('/claim', [StaticPageController::class, 'claim'])->name('claim');
 Route::get('/privacy', [StaticPageController::class, 'privacy'])->name('privacy');
+Route::get('/terms', [StaticPageController::class, 'terms'])->name('terms');
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/sitemaps/pages.xml', [SitemapController::class, 'pages'])->name('sitemap.pages');

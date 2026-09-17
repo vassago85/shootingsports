@@ -55,6 +55,7 @@ class SitemapController extends Controller
             'contact',
             'embed.docs',
             'privacy',
+            'terms',
         ])->map(fn (string $name): array => [
             'loc' => route($name),
             'lastmod' => $now,

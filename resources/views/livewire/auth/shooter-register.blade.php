@@ -38,6 +38,13 @@
                         </div>
                     </label>
 
+                    <p style="margin-top:14px;color:var(--slate);font-size:0.92rem">
+                        By creating an account you agree to the
+                        <a href="{{ route('terms') }}">Terms of Use</a>
+                        and
+                        <a href="{{ route('privacy') }}">Privacy &amp; POPIA</a> notice.
+                    </p>
+
                     <button type="submit" class="btn" wire:loading.attr="disabled" wire:target="register">
                         <span wire:loading.remove wire:target="register">Create account</span>
                         <span wire:loading wire:target="register">Creating…</span>

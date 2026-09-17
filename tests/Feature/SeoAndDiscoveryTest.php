@@ -238,6 +238,7 @@ it('serves the pages sitemap with static URLs and skips private surfaces', funct
         ->assertSee(route('map'), false)
         ->assertSee(route('calendar.month'), false)
         ->assertSee(route('privacy'), false)
+        ->assertSee(route('terms'), false)
         ->assertSee(route('embed.docs'), false)
         ->assertSee('<lastmod>', false)
         ->assertDontSee('/desk', false)
@@ -259,7 +260,20 @@ it('serves llms.txt as plain text with the calendar link', function () {
     $response
         ->assertSee('Shooting Sports')
         ->assertSee(route('calendar'), false)
+        ->assertSee(route('terms'), false)
         ->assertSee('/desk and /admin');
+});
+
+it('serves the terms of use page and links it from the public footer', function () {
+    $this->get('/terms')
+        ->assertOk()
+        ->assertSee('Terms of Use')
+        ->assertSee('independent discovery register', false)
+        ->assertSee('Not a firearms dealer', false);
+
+    $this->get('/')
+        ->assertOk()
+        ->assertSee(route('terms'), false);
 });
 
 it('exposes the default share image', function () {

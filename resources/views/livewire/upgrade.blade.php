@@ -151,6 +151,7 @@
                             <p class="pro-fineprint">
                                 You'll be handed off to Paystack Checkout. Your card is stored by Paystack (PCI-DSS compliant) — never on our servers.
                                 Cancel any time from this page. Pro stays active until the end of the current billing period.
+                                Subscriptions are subject to our <a href="{{ route('terms') }}">Terms of Use</a>.
                             </p>
                         </div>
                     @endif

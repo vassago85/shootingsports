@@ -32,14 +32,18 @@ it('renders the public login page for guests', function () {
 it('renders the shooter signup page for guests', function () {
     $this->get('/register')
         ->assertOk()
-        ->assertSee('Create your shooter account');
+        ->assertSee('Create your shooter account')
+        ->assertSee('Terms of Use')
+        ->assertSee(route('terms'), false);
 });
 
 it('renders the director signup page for guests', function () {
     $this->get('/directors/register')
         ->assertOk()
         ->assertSee('Register as a match director')
-        ->assertSee('Which club, range, series or host');
+        ->assertSee('Which club, range, series or host')
+        ->assertSee('Terms of Use')
+        ->assertSee(route('terms'), false);
 });
 
 it('redirects authenticated users away from guest-only auth pages', function () {
