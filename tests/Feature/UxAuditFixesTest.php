@@ -140,7 +140,7 @@ it('the 404 page still works when the visitor is authenticated (nav shows my cal
 
 // ---- Regression sweep ---------------------------------------------
 
-it('the calendar page still renders event cards after the card rewrite', function () {
+it('the calendar page renders dense match-board rows for each upcoming match', function () {
     $host = Organisation::factory()->create(['status' => 'published']);
     Event::factory()->count(2)->create([
         'host_organisation_id' => $host->id,
@@ -149,5 +149,9 @@ it('the calendar page still renders event cards after the card rewrite', functio
 
     $this->get('/calendar')
         ->assertOk()
-        ->assertSee('class="dope', false); // dope-grid + dope article
+        // Dark board shell + dense horizontal row component replaces the
+        // old .dope-grid / <x-event-card> for the Matches list view. Entity
+        // pages (clubs/ranges/etc.) still render DOPE cards.
+        ->assertSee('class="match-board', false)
+        ->assertSee('class="mb-row', false);
 });

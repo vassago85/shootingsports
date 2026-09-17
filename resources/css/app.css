@@ -197,6 +197,47 @@ header.nav {
 .console { background: var(--gunmetal-2); border: 1px solid rgba(255,255,255,.12); border-top: 2px solid var(--brass); padding: 18px; }
 .console-head { font-family: var(--f-mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--brass-lt); margin-bottom: 14px; display: flex; justify-content: space-between; }
 .console-head span { color: var(--slate); }
+
+/* Match Finder primary row — Discipline / Province / When / Search. Uses
+   fractional columns so all four align on desktop and stack on narrow. */
+.console-primary {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: end;
+}
+.console-primary .btn.console-search {
+    width: auto; margin: 0; padding: 10px 22px; height: 40px;
+    justify-content: center; white-space: nowrap;
+}
+@media (max-width: 720px) {
+    .console-primary { grid-template-columns: 1fr 1fr; }
+    .console-primary .btn.console-search { grid-column: 1 / -1; margin-top: 6px; }
+}
+@media (max-width: 480px) {
+    .console-primary { grid-template-columns: 1fr; }
+}
+
+/* Progressive-disclosure toggle for the advanced filter panel. */
+.console-secondary {
+    display: flex; justify-content: flex-start; margin-top: 12px;
+}
+.console-secondary .btn.console-more {
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase; padding: 7px 14px;
+    background: transparent; border: 1px solid rgba(255,255,255,.22);
+    color: var(--brass-lt); width: auto; margin: 0;
+}
+.console-secondary .btn.console-more:hover {
+    background: rgba(217, 174, 82, .08); border-color: var(--brass-lt);
+}
+
+/* Advanced filter panel — hidden by default, revealed via Alpine. */
+.console-more-panel {
+    margin-top: 12px; padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,.08);
+    display: flex; flex-direction: column; gap: 10px;
+}
 .console-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 @media (max-width: 620px) { .console-grid { grid-template-columns: 1fr; } }
 .field { display: flex; flex-direction: column; gap: 5px; }
@@ -210,11 +251,34 @@ header.nav {
 .hero-rail { max-height: 34rem; overflow-y: auto; padding-right: 8px; scrollbar-width: thin; scrollbar-color: rgba(217, 174, 82, 0.35) transparent; }
 .rail-head { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,.14); padding-bottom: 8px; margin-bottom: 4px; }
 .rail-head h3 { font-size: 17px; text-transform: uppercase; letter-spacing: .04em; color: #edefed; }
-.rail-item { display: grid; grid-template-columns: 54px 1fr; gap: 14px; padding: 13px 0; border-bottom: 1px solid rgba(255,255,255,.09); text-decoration: none; }
+/* Rail rows are the homepage counterpart to `.mb-row` — same date rail
+   language, same thin-line list treatment. Hover lifts the title to brass
+   and nudges the row so the whole area reads as a click target. */
+.rail-item {
+    display: grid; grid-template-columns: 54px 1fr; gap: 14px;
+    padding: 13px 6px 13px 4px;
+    border-bottom: 1px solid rgba(255,255,255,.09);
+    text-decoration: none;
+    transition: background-color .15s ease, padding-left .15s ease;
+}
+.rail-item:hover, .rail-item:focus-visible {
+    background: rgba(255,255,255,.03);
+    padding-left: 10px;
+    outline: none;
+}
+.rail-item:hover .t, .rail-item:focus-visible .t { color: var(--brass-lt); }
 .rail-date { font-family: var(--f-mono); font-size: 11px; line-height: 1.25; color: var(--brass-lt); text-align: right; }
-.rail-date b { display: block; font-size: 20px; font-weight: 600; color: #f0f2f0; }
-.rail-body .t { font-family: var(--f-display); font-size: 16px; font-weight: 600; color: #edefed; line-height: 1.2; }
-.rail-body .m { font-family: var(--f-mono); font-size: 11px; color: var(--slate); margin-top: 3px; }
+.rail-date b { display: block; font-size: 22px; font-weight: 700; color: #f5f7f4; letter-spacing: 0; }
+.rail-body { min-width: 0; }
+.rail-body .t {
+    font-family: var(--f-display); font-size: 16.5px; font-weight: 600;
+    color: #f2f3f0; line-height: 1.2; text-transform: uppercase;
+    transition: color .15s ease;
+}
+.rail-body .m {
+    font-family: var(--f-mono); font-size: 11px; color: #a4aca8;
+    margin-top: 4px; letter-spacing: .04em;
+}
 
 .strip { background: var(--brass); color: #1a1405; }
 .strip-in { max-width: 1200px; margin: 0 auto; padding: 15px 24px; display: flex; flex-wrap: wrap; gap: 10px 34px; justify-content: space-between; font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .11em; text-transform: uppercase; }
@@ -469,6 +533,482 @@ section.block { padding: 72px 0; }
     border: 1px solid var(--rule); background: var(--surface); color: var(--ink);
     min-width: 140px;
 }
+
+/* ============================================================
+   MATCH BOARD (Matches list/month/map + homepage teaser).
+   Scoped dark surface built on the existing gunmetal/brass tokens
+   so homepage hero + Matches read as one product without flipping
+   any global CSS variables. Everything inside `.match-board`
+   inherits a local dark palette; entity pages that keep the
+   cream `.dope` grid are unaffected.
+   ============================================================ */
+.match-board {
+    --mb-page: var(--gunmetal);
+    --mb-surface: var(--gunmetal-2);
+    --mb-ink: #f2f0e9;
+    --mb-ink-muted: #9da4a0;
+    --mb-ink-quiet: #737d79;
+    --mb-accent: var(--brass);
+    --mb-accent-lt: var(--brass-lt);
+    --mb-rule: rgba(255, 255, 255, .09);
+    --mb-rule-strong: rgba(255, 255, 255, .18);
+
+    background: var(--mb-page);
+    color: var(--mb-ink);
+    padding: 20px 0 56px;
+}
+.match-board a { color: inherit; }
+.match-board.is-teaser { padding: 4px 0 20px; }
+
+/* Compact toolbar (Matches / result count / primary chips / view toggle).
+   Sticky under the nav so filters stay in reach while scrolling the board. */
+.mb-toolbar {
+    position: sticky;
+    top: var(--nav-h);
+    z-index: 40;
+    background: var(--mb-page);
+    border-bottom: 1px solid var(--mb-rule);
+    padding: 10px 0 12px;
+    margin: 0 0 6px;
+}
+.mb-toolbar-in {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px 16px;
+    align-items: center;
+}
+.mb-toolbar-title {
+    margin: 0;
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    font-family: var(--f-display); font-weight: 600;
+    font-size: 15px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--mb-accent-lt);
+}
+.mb-toolbar-title small {
+    font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .14em;
+    font-weight: 400; color: var(--mb-ink-muted); text-transform: uppercase;
+}
+.mb-toolbar-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    grid-column: 1 / -1;
+    /* Hydration guard — same behaviour as .filters so first click isn't eaten. */
+    opacity: .55; pointer-events: none;
+    transition: opacity .18s ease;
+}
+.mb-toolbar-chips.is-hydrated { opacity: 1; pointer-events: auto; }
+.mb-chip {
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase; padding: 6px 12px;
+    background: transparent; border: 1px solid var(--mb-rule-strong);
+    color: var(--mb-ink-muted); cursor: pointer; text-decoration: none;
+    transition: color .15s ease, border-color .15s ease, background-color .15s ease;
+}
+.mb-chip:hover, .mb-chip:focus-visible {
+    color: var(--mb-accent-lt); border-color: var(--mb-accent-lt);
+    outline: none;
+}
+.mb-chip[aria-pressed="true"], .mb-chip.is-active {
+    background: var(--mb-accent); border-color: var(--mb-accent); color: #1a1405;
+}
+.mb-chip[aria-expanded="true"] { border-color: var(--mb-accent-lt); color: var(--mb-accent-lt); }
+
+/* View toggle (List / Month / Map) inside the toolbar. Dark chrome override
+   for the shared `.view-toggle` — keeps the same class name so existing tests
+   that assert `class="view-toggle"` on the calendar / map pages still pass. */
+.mb-toolbar .view-toggle {
+    background: transparent;
+    border-color: var(--mb-rule-strong);
+    justify-self: end;
+    margin: 0;
+}
+.mb-toolbar .view-toggle a {
+    color: var(--mb-ink-muted);
+    border-right-color: var(--mb-rule-strong);
+}
+.mb-toolbar .view-toggle a:last-child { border-right: none; }
+.mb-toolbar .view-toggle a[aria-pressed="true"] {
+    background: rgba(217, 174, 82, .12); color: var(--mb-accent-lt);
+}
+.mb-toolbar .view-toggle a:not([aria-pressed="true"]):hover {
+    color: var(--mb-ink); background: rgba(255,255,255,.04);
+}
+
+/* Active-filter chip row + Clear all. */
+.mb-active {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--mb-rule);
+}
+.mb-active-label {
+    font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--mb-ink-quiet);
+}
+.mb-active .chip-active {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em;
+    text-transform: uppercase; padding: 5px 8px 5px 10px;
+    background: transparent; border: 1px solid var(--mb-accent);
+    color: var(--mb-ink); cursor: pointer;
+}
+.mb-active .chip-active:hover, .mb-active .chip-active:focus-visible {
+    background: var(--mb-accent); color: #1a1405; outline: none;
+}
+.mb-active .chip-active span[aria-hidden="true"] {
+    font-family: var(--f-body); font-weight: 600; font-size: 14px; line-height: 1;
+}
+.mb-active .btn-clear-filters {
+    background: none; border: none; padding: 0;
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--mb-accent-lt); cursor: pointer;
+    border-bottom: 1px solid var(--mb-accent);
+    margin-left: auto;
+}
+.mb-active .btn-clear-filters:hover { color: var(--mb-ink); }
+
+/* Advanced filters panel — progressive disclosure under "More filters". */
+.mb-more {
+    display: grid; gap: 12px 14px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 14px 0 16px;
+    border-bottom: 1px solid var(--mb-rule);
+}
+@media (max-width: 900px) { .mb-more { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .mb-more { grid-template-columns: 1fr; } }
+.mb-more .field { display: flex; flex-direction: column; gap: 5px; }
+.mb-more .field span {
+    font-family: var(--f-mono); font-size: 10px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--mb-ink-muted);
+}
+.mb-more .field select, .mb-more .field input {
+    background: rgba(0, 0, 0, .22); color: var(--mb-ink);
+    border: 1px solid var(--mb-rule-strong);
+    font: 13px var(--f-mono); padding: 8px 10px; width: 100%;
+    color-scheme: dark;
+}
+.mb-more .field select:focus, .mb-more .field input:focus {
+    outline: none; border-color: var(--mb-accent-lt);
+}
+.mb-more-toggles {
+    grid-column: 1 / -1;
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding-top: 4px;
+}
+.mb-more-toggles button, .mb-more-toggles .btn {
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase; padding: 6px 12px;
+    background: transparent; border: 1px solid var(--mb-rule-strong);
+    color: var(--mb-ink-muted); cursor: pointer;
+}
+.mb-more-toggles button:hover, .mb-more-toggles .btn:hover {
+    color: var(--mb-accent-lt); border-color: var(--mb-accent-lt);
+}
+.mb-more-toggles button[aria-pressed="true"] {
+    background: var(--mb-accent); border-color: var(--mb-accent); color: #1a1405;
+}
+.mb-more-note {
+    grid-column: 1 / -1;
+    font-family: var(--f-mono); font-size: 10.5px; color: var(--mb-ink-quiet);
+    letter-spacing: .04em;
+    margin: 0;
+}
+
+/* Result count line above the board. */
+.mb-count {
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--mb-ink-muted);
+    margin: 14px 0 4px;
+}
+.mb-count b { color: var(--mb-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.mb-count .result-count-suffix { margin-left: 6px; color: var(--mb-ink-quiet); }
+
+/* Section grouping (This weekend / October). Thin rules + typography,
+   no giant containers. */
+.mb-section {
+    padding-top: 22px;
+}
+.mb-section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; padding: 0 0 8px;
+    border-bottom: 1px solid var(--mb-rule);
+    margin-bottom: 2px;
+}
+.mb-section-head h2,
+.mb-section-head h3 {
+    margin: 0;
+    font-family: var(--f-display); font-weight: 600;
+    font-size: 14px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--mb-accent-lt);
+}
+.mb-section-head .mb-section-count {
+    font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--mb-ink-quiet);
+}
+
+/* The match row itself — dense horizontal layout. */
+.mb-list { display: flex; flex-direction: column; }
+.mb-row {
+    display: grid;
+    grid-template-columns: 68px minmax(0, 1fr) auto auto;
+    gap: 22px;
+    align-items: center;
+    padding: 16px 6px;
+    border-bottom: 1px solid var(--mb-rule);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    transition: background-color .15s ease, box-shadow .15s ease, padding-left .15s ease;
+}
+.mb-row:hover, .mb-row:focus-within {
+    background: rgba(255, 255, 255, .03);
+    box-shadow: inset 3px 0 0 var(--mb-accent);
+    padding-left: 12px;
+}
+.mb-row.is-planned { opacity: .82; }
+
+.mb-date {
+    font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .18em;
+    line-height: 1.15; text-transform: uppercase;
+    color: var(--mb-ink-muted);
+    text-align: center;
+    padding: 2px 0;
+}
+.mb-date .dow { display: block; color: var(--mb-ink-muted); }
+.mb-date b {
+    display: block;
+    font-family: var(--f-display); font-size: 32px; font-weight: 700;
+    color: var(--mb-ink); letter-spacing: 0; margin: 2px 0;
+    font-variant-numeric: tabular-nums;
+}
+.mb-date .mo { display: block; color: var(--mb-accent-lt); letter-spacing: .18em; }
+.mb-row.is-planned .mb-date b { color: var(--mb-ink-muted); }
+.mb-row.is-planned .mb-date .mo { color: var(--mb-ink-quiet); }
+
+.mb-info { min-width: 0; }
+.mb-title-wrap { margin: 0; }
+.mb-title {
+    display: block;
+    font-family: var(--f-display); font-size: 19px; font-weight: 600;
+    line-height: 1.15; text-transform: uppercase; letter-spacing: -.005em;
+    color: var(--mb-ink);
+    overflow-wrap: break-word;
+    transition: color .15s ease;
+}
+.mb-title-link { color: inherit; text-decoration: none; }
+.mb-title-link::after {
+    content: ""; position: absolute; inset: 0; z-index: 0;
+}
+.mb-title-link:focus-visible {
+    outline: 2px solid var(--mb-accent);
+    outline-offset: -2px;
+}
+.mb-row:hover .mb-title, .mb-row:focus-within .mb-title { color: var(--mb-accent-lt); }
+
+.mb-host {
+    font-family: var(--f-body); font-size: 13.5px; line-height: 1.35;
+    color: var(--mb-ink-muted); margin-top: 4px;
+}
+.mb-place {
+    font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mb-ink-quiet); margin-top: 5px;
+}
+
+.mb-meta { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.mb-tags { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
+
+/* Classification tags — outlined, quiet. */
+.mb-tag {
+    font-family: var(--f-mono); font-size: 10px; letter-spacing: .16em;
+    text-transform: uppercase; padding: 3px 8px;
+    border: 1px solid var(--mb-rule-strong);
+    color: var(--mb-ink-muted); background: transparent;
+}
+.mb-tag.is-national { border-color: rgba(217, 174, 82, .5); color: var(--mb-accent-lt); }
+.mb-tag.is-series { border-color: rgba(154, 141, 90, .5); color: #d8c48a; }
+.mb-tag.is-novice { border-color: rgba(217, 174, 82, .35); background: rgba(217, 174, 82, .08); color: var(--mb-accent-lt); }
+
+/* State pills — filled colour = current state. */
+.mb-state {
+    font-family: var(--f-mono); font-size: 10px; letter-spacing: .16em;
+    text-transform: uppercase; padding: 3px 8px; font-weight: 500;
+}
+.mb-state.is-confirmed { background: #235f45; color: #e6f4ec; }
+.mb-state.is-open { background: var(--brass); color: #1a1405; }
+.mb-state.is-planned { background: transparent; color: #cdd0cc; border: 1px solid rgba(238, 240, 238, .3); }
+.mb-state.is-full { background: #6c4a44; color: #f6e6e3; }
+.mb-state.is-cancelled { background: #5a2a2a; color: #f2d6d1; }
+.mb-state.is-postponed, .mb-state.is-completed {
+    background: rgba(255,255,255,.06); color: var(--mb-ink-muted); border: 1px solid var(--mb-rule);
+}
+
+/* Primary action — text + arrow. Whole row is clickable via the title
+   overlay; the visible arrow is the affordance. */
+.mb-action-wrap {
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .16em;
+    text-transform: uppercase; font-weight: 600;
+    color: var(--mb-accent-lt);
+    white-space: nowrap;
+    padding: 4px 0;
+    transition: color .15s ease;
+}
+.mb-action-arrow {
+    display: inline-block; margin-left: 4px;
+    transition: transform .15s ease;
+}
+.mb-row:hover .mb-action-wrap, .mb-row:focus-within .mb-action-wrap { color: var(--mb-accent); }
+.mb-row:hover .mb-action-arrow, .mb-row:focus-within .mb-action-arrow { transform: translateX(3px); }
+
+/* Empty state — dark board styling, replaces cream .empty-state. */
+.mb-empty {
+    padding: 40px 24px;
+    margin: 20px 0;
+    text-align: center;
+    border: 1px dashed var(--mb-rule-strong);
+    background: rgba(255, 255, 255, .02);
+}
+.mb-empty h3 {
+    margin: 0 0 10px;
+    font-family: var(--f-display); font-weight: 600;
+    font-size: 15px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--mb-accent-lt);
+}
+.mb-empty p {
+    color: var(--mb-ink-muted); font-size: 14px; line-height: 1.5;
+    margin: 0 0 16px; max-width: 42ch; margin-left: auto; margin-right: auto;
+}
+.mb-empty-actions { display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.mb-empty-actions .btn { padding: 8px 14px; font-size: 12.5px; }
+
+/* "All matches →" show-more link (homepage teaser). */
+.mb-more-link {
+    display: block; padding: 16px 6px 4px; margin-top: 8px;
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--mb-accent-lt); text-decoration: none;
+    border-top: 1px solid var(--mb-rule);
+}
+.mb-more-link:hover { color: var(--mb-ink); }
+
+/* Mobile stacking — several rows visible per viewport, no giant cards. */
+@media (max-width: 720px) {
+    .mb-row {
+        grid-template-columns: 60px minmax(0, 1fr);
+        grid-template-areas:
+            "date info"
+            "date meta"
+            "date action";
+        gap: 6px 14px;
+        padding: 14px 4px;
+    }
+    .mb-row > .mb-date { grid-area: date; align-self: start; padding-top: 4px; }
+    .mb-row > .mb-info { grid-area: info; }
+    .mb-row > .mb-meta { grid-area: meta; align-items: flex-start; margin-top: 6px; }
+    .mb-tags { justify-content: flex-start; }
+    .mb-row > .mb-action-wrap { grid-area: action; margin-top: 4px; }
+    .mb-title { font-size: 16px; }
+    .mb-date b { font-size: 26px; }
+    .mb-row:hover, .mb-row:focus-within {
+        padding-left: 4px; box-shadow: none;
+        background: rgba(255,255,255,.04);
+    }
+    .mb-toolbar-in { grid-template-columns: 1fr; }
+    .mb-view-toggle { justify-self: start; }
+    .mb-toolbar-title { font-size: 13px; }
+}
+
+/* Match Board — override light chrome for widgets that live inside the
+   board (month calendar, map legend, province filters, distance filter,
+   save-search button). Only applies under .match-board. */
+.match-board .filters button, .match-board .filters a {
+    background: transparent; color: var(--mb-ink-muted);
+    border-color: var(--mb-rule-strong);
+}
+.match-board .filters button:hover, .match-board .filters a:hover {
+    color: var(--mb-accent-lt); border-color: var(--mb-accent-lt);
+}
+.match-board .filters button[aria-pressed="true"], .match-board .filters a.on {
+    background: var(--mb-accent); border-color: var(--mb-accent); color: #1a1405;
+}
+.match-board .distance-filters .distance-near input,
+.match-board .distance-filters select {
+    background: rgba(0, 0, 0, .22); color: var(--mb-ink);
+    border-color: var(--mb-rule-strong);
+    color-scheme: dark;
+}
+.match-board .btn.ghost {
+    color: var(--mb-accent-lt); border-color: var(--mb-accent-lt);
+    background: transparent;
+}
+.match-board .btn.ghost:hover { background: rgba(217, 174, 82, .1); }
+
+/* Month calendar inside the board. */
+.match-board .month-nav-label { color: var(--mb-ink); }
+.match-board .month-cal {
+    background: transparent; border-color: var(--mb-rule-strong);
+}
+.match-board .month-cal-head {
+    background: rgba(255, 255, 255, .04);
+    border-bottom-color: var(--mb-rule);
+}
+.match-board .month-cal-head > div { color: var(--mb-ink-muted); }
+.match-board .month-cal-day {
+    border-color: var(--mb-rule);
+}
+.match-board .month-cal-day.is-outside {
+    background: rgba(255, 255, 255, .015);
+    opacity: .55;
+}
+.match-board .month-cal-num { color: var(--mb-ink-quiet); }
+.match-board .month-cal-day.is-today .month-cal-num {
+    background: var(--mb-accent); color: #1a1405;
+}
+.match-board .month-cal-chips a {
+    background: rgba(255, 255, 255, .05);
+    border-left-color: var(--mb-accent);
+    color: var(--mb-ink);
+}
+.match-board .month-cal-chips a:hover {
+    background: rgba(217, 174, 82, .16); color: var(--mb-accent-lt);
+}
+.match-board .month-cal-chips .chip-town { color: var(--mb-ink-quiet); }
+.match-board .month-cal-more a { color: var(--mb-accent-lt); }
+
+/* Map view inside the board — dark chrome around a light map. */
+.match-board .ss-map { border-color: var(--mb-rule-strong); }
+.match-board .map-legend {
+    background: var(--mb-rule); border-color: var(--mb-rule-strong);
+}
+.match-board .map-legend li { background: rgba(255, 255, 255, .04); }
+.match-board .map-legend a { color: var(--mb-ink); }
+.match-board .map-legend .prov { color: var(--mb-accent-lt); }
+.match-board .map-legend .ct { color: var(--mb-ink-muted); }
+.match-board .map-legend li.is-quiet .prov { color: var(--mb-ink-muted); }
+.match-board .map-legend a:hover { background: rgba(255, 255, 255, .08); }
+
+/* Result-bar (legacy) inside the board — kept for calendar-month reuse. */
+.match-board .result-bar {
+    border-top-color: var(--mb-rule);
+}
+.match-board .result-count { color: var(--mb-ink); }
+.match-board .result-count-suffix { color: var(--mb-ink-muted); }
+.match-board .btn-clear-filters { color: var(--mb-accent-lt); border-bottom-color: var(--mb-accent); }
+.match-board .btn-clear-filters:hover { color: var(--mb-ink); }
+
+/* Active-filters bar (existing chips row) inside the board. */
+.match-board .active-filters-label { color: var(--mb-ink-quiet); }
+.match-board .chip-active {
+    background: transparent; border-color: var(--mb-accent); color: var(--mb-ink);
+}
+.match-board .chip-active:hover { background: var(--mb-accent); color: #1a1405; }
+
+/* Empty state (legacy) inside the board. */
+.match-board .empty-state { color: var(--mb-ink-muted); }
+.match-board .empty { color: var(--mb-ink-muted); }
+
+/* Section header (used on homepage teaser). Keep the sec-head hierarchy
+   but flip its ink to the dark palette. */
+.match-board .sec-head p { color: var(--mb-ink-muted); }
+.match-board .sec-head h2 { color: var(--mb-ink); }
+.match-board .sec-head .label { color: var(--mb-accent-lt); }
 
 .dope-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
 /* Article is `position: relative` so `.dope-title-link::after` can

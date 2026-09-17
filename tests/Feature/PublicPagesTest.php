@@ -275,7 +275,10 @@ it('falls a match card cover back to the host organisation logo', function () {
     expect($event->bannerUrl())->toBeNull()
         ->and($event->coverImageUrl())->toEndWith('/media/organisation-logos/saprf.png');
 
-    $this->get(route('calendar'))
+    // The list-view match board is intentionally image-free (dense rows,
+    // no banners) so the fallback logo now only surfaces on entity show
+    // pages, which still render DOPE cards via <x-event-card>.
+    $this->get(route('federations.show', $federation->slug))
         ->assertOk()
         ->assertSee('/media/organisation-logos/saprf.png', false)
         ->assertSee('Centrefire 1 Day')

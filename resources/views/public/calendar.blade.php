@@ -9,17 +9,16 @@
             <div class="wrap">
                 <p class="label">Matches</p>
                 <h1>What's on, and where</h1>
-                <p>Planned dates stay listed and render as provisional. Confirmed dates look different.</p>
-                {{-- View toggle: List / Month / Map. Map is a Matches
-                     view, not a separate top-level destination. --}}
-                <div class="view-toggle" role="group" aria-label="Matches view">
-                    <a href="{{ route('calendar', request()->query()) }}" aria-pressed="true">List</a>
-                    <a href="{{ route('calendar.month', request()->query()) }}" aria-pressed="false">Month</a>
-                    <a href="{{ route('map', request()->except(['month'])) }}" aria-pressed="false">Map</a>
-                </div>
+                <p>South Africa's national match programme. Planned dates render as provisional; confirmed dates look different.</p>
             </div>
         </section>
-        <section class="block">
+        {{--
+            Match board — dark surface for the results list, sticky filter
+            toolbar, dense horizontal rows. The Livewire component owns the
+            toolbar, active-filter chips, More filters panel, and the List /
+            Month / Map view toggle (which forwards the current query string).
+        --}}
+        <section class="match-board">
             <div class="wrap">
                 {{-- UX audit #13: ad-slot moved from above-the-filters
                      to below the results, and gated with

@@ -17,7 +17,7 @@
                 </div>
             </div>
         </section>
-        <section class="block">
+        <section class="match-board">
             <div class="wrap">
                 <livewire:calendar-month
                     :family="$family"

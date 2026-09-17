@@ -1,138 +1,187 @@
-<div>
-    {{--
-        Family row. `.filters` gets `.is-hydrated` from app.js once
-        Livewire boots — until then CSS keeps the buttons at reduced
-        opacity + pointer-events:none so the first click is not eaten
-        by an un-hydrated component (UX audit #3).
-    --}}
-    <div class="filters" role="group" aria-label="Filter matches by discipline family">
-        <button type="button" wire:click="setFamily('all')" aria-pressed="{{ $family === 'all' ? 'true' : 'false' }}">All</button>
-        @foreach ($families as $item)
-            <button type="button" wire:click="setFamily('{{ $item->value }}')" aria-pressed="{{ $family === $item->value ? 'true' : 'false' }}">{{ $item->getLabel() }}</button>
-        @endforeach
-    </div>
-    <div class="filters" role="group" aria-label="Additional filters" style="margin-top:-14px">
-        <button type="button" wire:click="toggleWeekend" aria-pressed="{{ $weekend ? 'true' : 'false' }}">This weekend</button>
-        <button type="button" wire:click="toggleNovice" aria-pressed="{{ $novice ? 'true' : 'false' }}">New shooter friendly</button>
-        <button type="button" wire:click="toggleConfirmed" aria-pressed="{{ $confirmed ? 'true' : 'false' }}">Confirmed dates only</button>
-    </div>
-    <div class="filters" role="group" aria-label="Filter matches by province" style="margin-top:-14px">
-        <button type="button" wire:click="clearProvinces" aria-pressed="{{ $selectedProvinces === [] ? 'true' : 'false' }}">All provinces</button>
-        @foreach ($provinces as $item)
-            <button
-                type="button"
-                wire:click="toggleProvince('{{ $item->urlSlug() }}')"
-                aria-pressed="{{ in_array($item->urlSlug(), $selectedProvinces, true) ? 'true' : 'false' }}"
-                title="{{ $item->getLabel() }}"
-            >{{ $item->getLabel() }}</button>
-        @endforeach
-    </div>
+@php
+    $isTeaser = (bool) $showMore;
+    $moreFiltersOpen = filled($near ?? null) || filled($lat ?? null) || filled($radius ?? null) || filled($from ?? null) || filled($to ?? null);
+@endphp
 
-    {{--
-        Active-filter chips row (UX audit #2). Renders visible chips
-        for filters that arrive via URL params from the hero MatchFinder
-        and are NOT already shown as pressed buttons above — discipline
-        and date range. Each chip has its own × to clear that single
-        filter. Family / province / novice / confirmed / weekend are
-        already reflected via aria-pressed on the button rows above.
-    --}}
-    @if (filled($activeDisciplineLabel) || ((! $weekend) && (filled($from) || filled($to))) || filled($near) || filled($lat) || filled($radius))
-        <div class="active-filters" role="group" aria-label="Active filters" style="margin-top:-14px">
-            <span class="active-filters-label">Filtered:</span>
-            @if (filled($activeDisciplineLabel))
-                <button type="button" class="chip-active" wire:click="clearDiscipline">
-                    <span>{{ $activeDisciplineLabel }}</span>
-                    <span aria-hidden="true">×</span>
-                    <span class="sr-only">— clear discipline filter</span>
-                </button>
-            @endif
-            @if ((! $weekend) && (filled($from) || filled($to)))
-                <button type="button" class="chip-active" wire:click="clearDates">
-                    <span>{{ $from ?: '…' }} → {{ $to ?: '…' }}</span>
-                    <span aria-hidden="true">×</span>
-                    <span class="sr-only">— clear date range filter</span>
-                </button>
-            @endif
-            @if (filled($near) || filled($lat) || filled($radius))
-                <button type="button" class="chip-active" wire:click="clearDistance">
-                    <span>
-                        @if (filled($near))
-                            Within {{ $radius ?: '…' }} km of {{ $near }}
-                        @elseif (filled($lat))
-                            Within {{ $radius ?: '…' }} km of my location
-                        @else
-                            Within {{ $radius }} km
+<div
+    class="match-board {{ $isTeaser ? 'is-teaser' : '' }}"
+    x-data="{ moreOpen: {{ $moreFiltersOpen ? 'true' : 'false' }} }"
+>
+    @unless ($isTeaser)
+        {{--
+            Compact sticky toolbar: title / count on the left, primary chips
+            underneath, view toggle on the right. Advanced filters live in the
+            #mb-more panel toggled by the More filters chip. Every filter still
+            binds to the same #[Url] Livewire properties, so URLs, bookmarks and
+            the existing test surface are unchanged.
+        --}}
+        <div class="mb-toolbar">
+            <div class="mb-toolbar-in">
+                <h2 class="mb-toolbar-title">
+                    Matches
+                    <small>
+                        {{ $resultCount }} {{ $resultCount === 1 ? 'match' : 'matches' }}
+                        @if ($hasActiveFilters)
+                            <span class="result-count-suffix">— filtered</span>
                         @endif
-                    </span>
-                    <span aria-hidden="true">×</span>
-                    <span class="sr-only">— clear distance filter</span>
-                </button>
-            @endif
-        </div>
-    @endif
+                    </small>
+                </h2>
+                <div class="view-toggle" role="group" aria-label="Matches view">
+                    <a href="{{ route('calendar', request()->query()) }}" aria-pressed="true">List</a>
+                    <a href="{{ route('calendar.month', request()->query()) }}" aria-pressed="false">Month</a>
+                    <a href="{{ route('map', request()->except(['month'])) }}" aria-pressed="false">Map</a>
+                </div>
 
-    <div class="filters distance-filters" role="group" aria-label="Distance filter" style="margin-top:-14px" x-data="calendarNearGeo()">
-        <label class="distance-near">
-            <span class="sr-only">Near town</span>
-            <input type="text" wire:model.live.debounce.400ms="near" placeholder="Near town…" aria-label="Near town">
-        </label>
-        <select wire:model.live="radius" aria-label="Within distance">
-            <option value="">Any distance</option>
-            @foreach ($radii as $km)
-                <option value="{{ $km }}">{{ $km }} km</option>
-            @endforeach
-        </select>
-        <button type="button" class="btn ghost" style="padding:8px 12px" @click="locate" :disabled="locating">
-            <span x-text="locating ? 'Locating…' : 'Use my location'"></span>
-        </button>
-    </div>
-    @auth
-        {{-- Save-this-search sits next to the filter chips. Free users
-             may save one; the second attempt fires the UpgradePrompt
-             via the observer, not a toast. --}}
-        <div class="filters" role="group" aria-label="Save this filter set" style="margin-top:-14px">
-            <button
-                type="button"
-                class="btn ghost"
-                wire:click="saveSearch"
-                x-data="{ saved: false }"
-                x-on:search-saved.window="saved = true; setTimeout(() => saved = false, 3000)"
-                x-text="saved ? 'Saved' : 'Save this search'"
-            >Save this search</button>
+                <div class="mb-toolbar-chips filters" role="group" aria-label="Primary match filters">
+                    <button type="button" class="mb-chip" wire:click="toggleWeekend" aria-pressed="{{ $weekend ? 'true' : 'false' }}">This weekend</button>
+                    <button type="button" class="mb-chip" wire:click="setFamily('all')" aria-pressed="{{ $family === 'all' ? 'true' : 'false' }}">All disciplines</button>
+                    @foreach ($families as $item)
+                        <button type="button" class="mb-chip" wire:click="setFamily('{{ $item->value }}')" aria-pressed="{{ $family === $item->value ? 'true' : 'false' }}">{{ $item->getLabel() }}</button>
+                    @endforeach
+                    <button type="button" class="mb-chip" wire:click="toggleNovice" aria-pressed="{{ $novice ? 'true' : 'false' }}">New shooter</button>
+                    <button
+                        type="button"
+                        class="mb-chip"
+                        @click="moreOpen = ! moreOpen"
+                        :aria-expanded="moreOpen ? 'true' : 'false'"
+                        aria-controls="mb-more-panel"
+                    >More filters</button>
+                </div>
+            </div>
         </div>
-    @endauth
+
+        {{-- Advanced filters panel (progressive disclosure).
+             Every control here still writes to the same Livewire property. --}}
+        <div
+            id="mb-more-panel"
+            class="mb-more"
+            x-show="moreOpen"
+            x-cloak
+            role="group"
+            aria-label="Advanced filters"
+        >
+            <label class="field">
+                <span>Near town</span>
+                <input type="text" wire:model.live.debounce.400ms="near" placeholder="e.g. Centurion" autocomplete="address-level2">
+            </label>
+            <label class="field">
+                <span>Within</span>
+                <select wire:model.live="radius">
+                    <option value="">Any distance</option>
+                    @foreach ($radii as $km)
+                        <option value="{{ $km }}">{{ $km }} km</option>
+                    @endforeach
+                </select>
+            </label>
+            <label class="field">
+                <span>From</span>
+                <input type="date" wire:model.live="from">
+            </label>
+            <label class="field">
+                <span>To</span>
+                <input type="date" wire:model.live="to">
+            </label>
+
+            <div class="mb-more-toggles" x-data="calendarNearGeo()">
+                <button type="button" @click="locate" :disabled="locating">
+                    <span x-text="locating ? 'Locating…' : 'Use my location'"></span>
+                </button>
+                <button type="button" wire:click="toggleConfirmed" aria-pressed="{{ $confirmed ? 'true' : 'false' }}">Confirmed dates only</button>
+                @auth
+                    <button
+                        type="button"
+                        class="btn ghost"
+                        wire:click="saveSearch"
+                        x-data="{ saved: false }"
+                        x-on:search-saved.window="saved = true; setTimeout(() => saved = false, 3000)"
+                        x-text="saved ? 'Saved' : 'Save this search'"
+                    >Save this search</button>
+                @endauth
+            </div>
+
+            <div class="mb-more-toggles filters" role="group" aria-label="Filter matches by province">
+                <button type="button" class="mb-chip" wire:click="clearProvinces" aria-pressed="{{ $selectedProvinces === [] ? 'true' : 'false' }}">All provinces</button>
+                @foreach ($provinces as $item)
+                    <button
+                        type="button"
+                        class="mb-chip"
+                        wire:click="toggleProvince('{{ $item->urlSlug() }}')"
+                        aria-pressed="{{ in_array($item->urlSlug(), $selectedProvinces, true) ? 'true' : 'false' }}"
+                        title="{{ $item->getLabel() }}"
+                    >{{ $item->getLabel() }}</button>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Active-filter chips row: only surfaces filters that arrived via URL
+             (from the hero MatchFinder) and are not already pressed above. --}}
+        @if (filled($activeDisciplineLabel) || ((! $weekend) && (filled($from) || filled($to))) || filled($near) || filled($lat) || filled($radius))
+            <div class="mb-active active-filters" role="group" aria-label="Active filters">
+                <span class="mb-active-label active-filters-label">Filtered:</span>
+                @if (filled($activeDisciplineLabel))
+                    <button type="button" class="chip-active" wire:click="clearDiscipline">
+                        <span>{{ $activeDisciplineLabel }}</span>
+                        <span aria-hidden="true">×</span>
+                        <span class="sr-only">— clear discipline filter</span>
+                    </button>
+                @endif
+                @if ((! $weekend) && (filled($from) || filled($to)))
+                    <button type="button" class="chip-active" wire:click="clearDates">
+                        <span>{{ $from ?: '…' }} → {{ $to ?: '…' }}</span>
+                        <span aria-hidden="true">×</span>
+                        <span class="sr-only">— clear date range filter</span>
+                    </button>
+                @endif
+                @if (filled($near) || filled($lat) || filled($radius))
+                    <button type="button" class="chip-active" wire:click="clearDistance">
+                        <span>
+                            @if (filled($near))
+                                Within {{ $radius ?: '…' }} km of {{ $near }}
+                            @elseif (filled($lat))
+                                Within {{ $radius ?: '…' }} km of my location
+                            @else
+                                Within {{ $radius }} km
+                            @endif
+                        </span>
+                        <span aria-hidden="true">×</span>
+                        <span class="sr-only">— clear distance filter</span>
+                    </button>
+                @endif
+                @if ($hasActiveFilters)
+                    <button type="button" class="btn-clear-filters" wire:click="clearAll">Clear all</button>
+                @endif
+            </div>
+        @elseif ($hasActiveFilters)
+            <div class="mb-active">
+                <button type="button" class="btn-clear-filters" wire:click="clearAll" style="margin-left:auto">Clear filters</button>
+            </div>
+        @endif
+
+        @if (($unpinnedSkipped ?? 0) > 0)
+            <p class="mb-count">
+                <b>{{ $resultCount }}</b> {{ $resultCount === 1 ? 'match' : 'matches' }}
+                <span class="result-count-suffix">· {{ $unpinnedSkipped }} without a map pin yet</span>
+            </p>
+        @endif
+    @endunless
 
     {{--
-        Result-count bar (UX audit #14). Always visible above the grid
-        so the visitor knows the filter actually did something. The
-        Clear filters button only renders when a filter has been
-        applied — hides completely on the default calendar view so it
-        doesn't beg to be clicked.
+        The match board itself. Grouped into "This weekend" / "Next weekend"
+        / month buckets so the calendar reads like a national programme
+        instead of a flat product grid. Empty state is dark board styling
+        with recovery CTAs — same wording as the previous implementation so
+        the ThisWeekendFilterTest strings remain stable.
     --}}
-    <div class="result-bar">
-        <p class="result-count">
-            {{ $resultCount }} {{ $resultCount === 1 ? 'match' : 'matches' }}
-            @if ($hasActiveFilters)
-                <span class="result-count-suffix">— filtered</span>
-            @endif
-            @if (($unpinnedSkipped ?? 0) > 0)
-                <span class="result-count-suffix">· {{ $unpinnedSkipped }} without a map pin yet</span>
-            @endif
-        </p>
-        @if ($hasActiveFilters)
-            <button type="button" class="btn-clear-filters" wire:click="clearAll">Clear filters</button>
-        @endif
-    </div>
-
     @if ($events->isEmpty())
-        <div class="empty-state">
+        <div class="mb-empty">
+            <h3>No matches found</h3>
             @if ($weekend)
                 <p class="empty">Nothing listed for this weekend ({{ $weekendLabel }}). Planned dates still appear when clubs publish them — try next month or clear the filter.</p>
             @else
                 <p class="empty">No matches in this window. Planned dates still appear on the calendar — they render as provisional.</p>
             @endif
             @if ($hasActiveFilters)
-                <div class="empty-actions">
+                <div class="mb-empty-actions empty-actions">
                     <button type="button" class="btn ghost" wire:click="clearAll">Clear filters</button>
                     @if ($weekend)
                         <button type="button" class="btn ghost" wire:click="toggleWeekend">Show all upcoming</button>
@@ -143,17 +192,23 @@
             @endif
         </div>
     @else
-        <div class="dope-grid">
-            @foreach ($events as $event)
-                <x-event-card :event="$event" />
-            @endforeach
-        </div>
+        @foreach ($grouped as $group)
+            <section class="mb-section" aria-labelledby="mb-section-{{ $loop->index }}">
+                <div class="mb-section-head">
+                    <h3 id="mb-section-{{ $loop->index }}">{{ $group['label'] }}</h3>
+                    <span class="mb-section-count">{{ $group['events']->count() }} {{ $group['events']->count() === 1 ? 'match' : 'matches' }}</span>
+                </div>
+                <div class="mb-list">
+                    @foreach ($group['events'] as $event)
+                        <x-match-row :event="$event" />
+                    @endforeach
+                </div>
+            </section>
+        @endforeach
     @endif
 
     @if ($showMore)
-        <p style="margin-top:22px">
-            <a class="label" href="{{ route('calendar') }}" style="text-decoration:none;border-bottom:1px solid var(--brass)">All matches →</a>
-        </p>
+        <a class="mb-more-link" href="{{ route('calendar') }}">All matches →</a>
     @endif
 </div>
 

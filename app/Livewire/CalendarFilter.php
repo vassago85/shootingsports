@@ -6,11 +6,13 @@ use App\Enums\DisciplineFamily;
 use App\Enums\Province;
 use App\Exceptions\PlanLimitExceeded;
 use App\Models\Discipline;
+use App\Models\Event;
 use App\Models\SavedSearch;
 use App\Models\User;
 use App\Queries\PublicEventQuery;
 use App\Support\ThisWeekend;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -271,6 +273,7 @@ class CalendarFilter extends Component
 
         return view('livewire.calendar-filter', [
             'events' => $events,
+            'grouped' => $this->groupByTime($events),
             'families' => DisciplineFamily::cases(),
             'provinces' => Province::cases(),
             'selectedProvinces' => $this->selectedProvinceSlugs(),
@@ -281,6 +284,49 @@ class CalendarFilter extends Component
             'radii' => [50, 100, 150, 250, 400],
             'weekendLabel' => ThisWeekend::label(),
         ]);
+    }
+
+    /**
+     * Group events into "This weekend", "Next weekend", then month buckets
+     * so the match board reads like a national programme instead of a flat
+     * grid. Preserves the underlying event order — the query already sorts
+     * by starts_at ascending.
+     *
+     * @param  Collection<int, Event>  $events
+     * @return list<array{label: string, events: Collection<int, Event>}>
+     */
+    private function groupByTime(Collection $events): array
+    {
+        if ($events->isEmpty()) {
+            return [];
+        }
+
+        $tz = config('app.timezone');
+        [$weekendStart, $weekendEnd] = ThisWeekend::range();
+        $nextWeekendStart = $weekendStart->copy()->addWeek()->startOfDay();
+        $nextWeekendEnd = $weekendEnd->copy()->addWeek()->endOfDay();
+
+        $buckets = [];
+
+        foreach ($events as $event) {
+            $startsAt = $event->starts_at->timezone($tz);
+
+            if ($startsAt->gte($weekendStart) && $startsAt->lte($weekendEnd)) {
+                $key = 'this-weekend';
+                $label = 'This weekend · '.ThisWeekend::label();
+            } elseif ($startsAt->gte($nextWeekendStart) && $startsAt->lte($nextWeekendEnd)) {
+                $key = 'next-weekend';
+                $label = 'Next weekend · '.$nextWeekendStart->format('j').'–'.$nextWeekendEnd->format('j M');
+            } else {
+                $key = $startsAt->format('Y-m');
+                $label = $startsAt->format('F Y');
+            }
+
+            $buckets[$key] ??= ['label' => $label, 'events' => collect()];
+            $buckets[$key]['events']->push($event);
+        }
+
+        return array_values($buckets);
     }
 
     private function safeDate(?string $value): ?Carbon

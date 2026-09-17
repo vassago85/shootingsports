@@ -80,7 +80,7 @@
             </div>
         </div>
 
-        <section class="block" id="calendar">
+        <section class="block match-board is-teaser" id="calendar" style="padding-top:56px">
             <div class="wrap">
                 <div class="sec-head">
                     <p class="label">01 — Matches</p>

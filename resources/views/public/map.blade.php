@@ -22,7 +22,7 @@
             </div>
         </section>
 
-        <section class="block">
+        <section class="match-board">
             <div class="wrap">
                 <link rel="stylesheet"
                       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
