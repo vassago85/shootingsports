@@ -287,6 +287,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(Event::class, 'saved_events')->withTimestamps();
     }
 
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
     public function ensureCalendarSlug(): string
     {
         if (filled($this->calendar_slug)) {
