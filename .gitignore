@@ -27,6 +27,8 @@
 /storage/*.key
 /storage/pail
 /vendor
+# Expo mobile scaffold — local/dev only; not part of the Laravel deploy.
+/apps/
 _ide_helper.php
 Homestead.json
 Homestead.yaml
