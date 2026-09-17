@@ -103,6 +103,21 @@ class CalendarFilter extends Component
         $this->province = null;
     }
 
+    public function clearFamily(): void
+    {
+        $this->family = 'all';
+    }
+
+    public function clearNovice(): void
+    {
+        $this->novice = false;
+    }
+
+    public function clearConfirmed(): void
+    {
+        $this->confirmed = false;
+    }
+
     public function clearDiscipline(): void
     {
         $this->discipline = null;
@@ -112,6 +127,11 @@ class CalendarFilter extends Component
     {
         $this->from = null;
         $this->to = null;
+        $this->weekend = false;
+    }
+
+    public function clearWeekend(): void
+    {
         $this->weekend = false;
     }
 

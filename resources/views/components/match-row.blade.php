@@ -12,6 +12,10 @@
     $level = $event->level;
     $planned = $event->isProvisional();
 
+    $host = $event->hostOrganisation;
+    $logoUrl = $host?->logoUrl() ?? $host?->parent?->logoUrl();
+    $hostName = $event->hostDisplayName();
+
     $venue = $event->venue;
     $venueName = $venue?->name;
     $venuePlace = collect([
@@ -52,19 +56,36 @@
     </div>
 
     <div class="mb-info">
-        <h3 class="mb-title-wrap">
-            <a href="{{ $matchUrl }}" class="mb-title-link mb-title">{{ $event->title }}</a>
-        </h3>
-        <div class="mb-host">{{ $event->hostDisplayName() }}</div>
-        @if (filled($venueName) || filled($venuePlace))
-            <div class="mb-place">
-                @if (filled($venueName)){{ $venueName }}@endif
-                @if (filled($venueName) && filled($venuePlace)) · @endif
-                @if (filled($venuePlace)){{ $venuePlace }}@endif
+        <div class="mb-info-main">
+            @if ($logoUrl)
+                <div class="mb-logo">
+                    <img
+                        src="{{ $logoUrl }}"
+                        alt="{{ $hostName }}"
+                        title="{{ $hostName }}"
+                        loading="lazy"
+                        decoding="async"
+                        width="40"
+                        height="40"
+                    >
+                </div>
+            @endif
+            <div class="mb-info-text">
+                <h3 class="mb-title-wrap">
+                    <a href="{{ $matchUrl }}" class="mb-title-link mb-title">{{ $event->title }}</a>
+                </h3>
+                <div class="mb-host">{{ $hostName }}</div>
+                @if (filled($venueName) || filled($venuePlace))
+                    <div class="mb-place">
+                        @if (filled($venueName)){{ $venueName }}@endif
+                        @if (filled($venueName) && filled($venuePlace)) · @endif
+                        @if (filled($venuePlace)){{ $venuePlace }}@endif
+                    </div>
+                @elseif ($event->locationLabel() !== '')
+                    <div class="mb-place">{{ $event->locationLabel() }}</div>
+                @endif
             </div>
-        @elseif ($event->locationLabel() !== '')
-            <div class="mb-place">{{ $event->locationLabel() }}</div>
-        @endif
+        </div>
     </div>
 
     <div class="mb-meta">

@@ -25,6 +25,9 @@
                             <span class="result-count-suffix">— filtered</span>
                         @endif
                     </small>
+                    @if ($hasActiveFilters)
+                        <button type="button" class="btn-clear-filters mb-toolbar-clear" wire:click="clearAll">Clear all</button>
+                    @endif
                 </h2>
                 <div class="view-toggle" role="group" aria-label="Matches view">
                     <a href="{{ route('calendar', request()->query()) }}" aria-pressed="true">List</a>
@@ -48,6 +51,83 @@
                     >More filters</button>
                 </div>
             </div>
+
+            {{--
+                Active chips for every applied filter — including ones that live
+                behind More filters (province, confirmed, distance, dates).
+                Sticky with the toolbar so a filter is always one × away from gone.
+            --}}
+            @if ($hasActiveFilters)
+                <div class="mb-active active-filters" role="group" aria-label="Active filters">
+                    <span class="mb-active-label active-filters-label">Filtered:</span>
+                    @if ($weekend)
+                        <button type="button" class="chip-active" wire:click="clearWeekend">
+                            <span>This weekend</span>
+                            <span aria-hidden="true">×</span>
+                            <span class="sr-only">— clear this weekend filter</span>
+                        </button>
+                    @endif
+                    @if ($family !== 'all')
+                        <button type="button" class="chip-active" wire:click="clearFamily">
+                            <span>{{ \App\Enums\DisciplineFamily::tryFrom($family)?->getLabel() ?? ucfirst($family) }}</span>
+                            <span aria-hidden="true">×</span>
+                            <span class="sr-only">— clear discipline family filter</span>
+                        </button>
+                    @endif
+                    @if ($novice)
+                        <button type="button" class="chip-active" wire:click="clearNovice">
+                            <span>New shooter</span>
+                            <span aria-hidden="true">×</span>
+                            <span class="sr-only">— clear new shooter filter</span>
+                        </button>
+                    @endif
+                    @if ($confirmed)
+                        <button type="button" class="chip-active" wire:click="clearConfirmed">
+                            <span>Confirmed only</span>
+                            <span aria-hidden="true">×</span>
+                            <span class="sr-only">— clear confirmed dates filter</span>
+                        </button>
+                    @endif
+                    @if (filled($activeDisciplineLabel))
+                        <button type="button" class="chip-active" wire:click="clearDiscipline">
+                            <span>{{ $activeDisciplineLabel }}</span>
+                            <span aria-hidden="true">×</span>
+                            <span class="sr-only">— clear discipline filter</span>
+                        </button>
+                    @endif
+                    @foreach ($selectedProvinces as $slug)
+                        @php $provinceLabel = \App\Enums\Province::fromUrlSlug($slug)?->getLabel() ?? $slug; @endphp
+                        <button type="button" class="chip-active" wire:click="toggleProvince('{{ $slug }}')">
+                            <span>{{ $provinceLabel }}</span>
+                            <span aria-hidden="true">×</span>
+                            <span class="sr-only">— clear {{ $provinceLabel }} filter</span>
+                        </button>
+                    @endforeach
+                    @if ((! $weekend) && (filled($from) || filled($to)))
+                        <button type="button" class="chip-active" wire:click="clearDates">
+                            <span>{{ $from ?: '…' }} → {{ $to ?: '…' }}</span>
+                            <span aria-hidden="true">×</span>
+                            <span class="sr-only">— clear date range filter</span>
+                        </button>
+                    @endif
+                    @if (filled($near) || filled($lat) || filled($radius))
+                        <button type="button" class="chip-active" wire:click="clearDistance">
+                            <span>
+                                @if (filled($near))
+                                    Within {{ $radius ?: '…' }} km of {{ $near }}
+                                @elseif (filled($lat))
+                                    Within {{ $radius ?: '…' }} km of my location
+                                @else
+                                    Within {{ $radius }} km
+                                @endif
+                            </span>
+                            <span aria-hidden="true">×</span>
+                            <span class="sr-only">— clear distance filter</span>
+                        </button>
+                    @endif
+                    <button type="button" class="btn-clear-filters" wire:click="clearAll">Clear all</button>
+                </div>
+            @endif
         </div>
 
         {{-- Advanced filters panel (progressive disclosure).
@@ -112,50 +192,6 @@
                 @endforeach
             </div>
         </div>
-
-        {{-- Active-filter chips row: only surfaces filters that arrived via URL
-             (from the hero MatchFinder) and are not already pressed above. --}}
-        @if (filled($activeDisciplineLabel) || ((! $weekend) && (filled($from) || filled($to))) || filled($near) || filled($lat) || filled($radius))
-            <div class="mb-active active-filters" role="group" aria-label="Active filters">
-                <span class="mb-active-label active-filters-label">Filtered:</span>
-                @if (filled($activeDisciplineLabel))
-                    <button type="button" class="chip-active" wire:click="clearDiscipline">
-                        <span>{{ $activeDisciplineLabel }}</span>
-                        <span aria-hidden="true">×</span>
-                        <span class="sr-only">— clear discipline filter</span>
-                    </button>
-                @endif
-                @if ((! $weekend) && (filled($from) || filled($to)))
-                    <button type="button" class="chip-active" wire:click="clearDates">
-                        <span>{{ $from ?: '…' }} → {{ $to ?: '…' }}</span>
-                        <span aria-hidden="true">×</span>
-                        <span class="sr-only">— clear date range filter</span>
-                    </button>
-                @endif
-                @if (filled($near) || filled($lat) || filled($radius))
-                    <button type="button" class="chip-active" wire:click="clearDistance">
-                        <span>
-                            @if (filled($near))
-                                Within {{ $radius ?: '…' }} km of {{ $near }}
-                            @elseif (filled($lat))
-                                Within {{ $radius ?: '…' }} km of my location
-                            @else
-                                Within {{ $radius }} km
-                            @endif
-                        </span>
-                        <span aria-hidden="true">×</span>
-                        <span class="sr-only">— clear distance filter</span>
-                    </button>
-                @endif
-                @if ($hasActiveFilters)
-                    <button type="button" class="btn-clear-filters" wire:click="clearAll">Clear all</button>
-                @endif
-            </div>
-        @elseif ($hasActiveFilters)
-            <div class="mb-active">
-                <button type="button" class="btn-clear-filters" wire:click="clearAll" style="margin-left:auto">Clear filters</button>
-            </div>
-        @endif
 
         @if (($unpinnedSkipped ?? 0) > 0)
             <p class="mb-count">

@@ -50,6 +50,59 @@ it('groups CalendarFilter results into "This weekend" and month buckets', functi
     Carbon::setTestNow();
 });
 
+it('match row shows the host organisation logo when one is set', function () {
+    $host = Organisation::factory()->create([
+        'name' => 'South African Precision Rifle Federation',
+        'status' => ListingStatus::Published,
+        'type' => OrganisationType::Federation,
+        'logo_path' => 'organisation-logos/saprf.png',
+    ]);
+
+    $event = Event::factory()->create([
+        'title' => 'Centrefire Open',
+        'host_organisation_id' => $host->id,
+        'status' => EventStatus::Confirmed,
+        'starts_at' => now()->addDays(5),
+    ]);
+    $event->load('hostOrganisation');
+
+    $html = view('components.match-row', ['event' => $event])->render();
+
+    expect($html)
+        ->toContain('class="mb-logo"')
+        ->toContain('/media/organisation-logos/saprf.png')
+        ->toContain('alt="South African Precision Rifle Federation"');
+});
+
+it('match row falls back to the parent federation logo when the club has none', function () {
+    $federation = Organisation::factory()->create([
+        'status' => ListingStatus::Published,
+        'type' => OrganisationType::Federation,
+        'logo_path' => 'organisation-logos/parent-fed.png',
+    ]);
+    $club = Organisation::factory()->create([
+        'name' => 'Local Rifle Club',
+        'status' => ListingStatus::Published,
+        'type' => OrganisationType::Club,
+        'parent_id' => $federation->id,
+        'logo_path' => null,
+    ]);
+
+    $event = Event::factory()->create([
+        'title' => 'Club Day',
+        'host_organisation_id' => $club->id,
+        'status' => EventStatus::Confirmed,
+        'starts_at' => now()->addDays(5),
+    ]);
+    $event->load(['hostOrganisation.parent']);
+
+    $html = view('components.match-row', ['event' => $event])->render();
+
+    expect($html)
+        ->toContain('class="mb-logo"')
+        ->toContain('/media/organisation-logos/parent-fed.png');
+});
+
 it('match row renders classification tags (national, series, novice) as outlined chips', function () {
     $host = Organisation::factory()->create([
         'status' => ListingStatus::Published,
@@ -126,4 +179,40 @@ it('More filters chip exposes advanced controls in the DOM (aria-expanded toggle
         ->assertSee('aria-controls="mb-more-panel"', false)
         ->assertSee('Near town')
         ->assertSee('Within');
+});
+
+it('shows dismissible chips for every active filter including provinces behind More filters', function () {
+    Livewire::test(CalendarFilter::class)
+        ->set('family', 'rifle')
+        ->set('province', 'gauteng')
+        ->set('confirmed', true)
+        ->assertSee('Filtered:')
+        ->assertSee('Clear all')
+        ->assertSee('wire:click="clearFamily"', false)
+        ->assertSee('wire:click="clearConfirmed"', false)
+        ->assertSee("wire:click=\"toggleProvince('gauteng')\"", false)
+        ->call('clearFamily')
+        ->assertSet('family', 'all')
+        ->call('clearAll')
+        ->assertSet('province', null)
+        ->assertSet('confirmed', false)
+        ->assertDontSee('Filtered:');
+});
+
+it('stacks family, weekend and province filters without clearing earlier ones', function () {
+    Livewire::test(CalendarFilter::class)
+        ->call('setFamily', 'rifle')
+        ->assertSet('family', 'rifle')
+        ->call('toggleWeekend')
+        ->assertSet('weekend', true)
+        ->assertSet('family', 'rifle')
+        ->call('toggleProvince', 'gauteng')
+        ->assertSet('province', 'gauteng')
+        ->assertSet('family', 'rifle')
+        ->assertSet('weekend', true)
+        ->call('toggleNovice')
+        ->assertSet('novice', true)
+        ->assertSet('family', 'rifle')
+        ->assertSet('weekend', true)
+        ->assertSet('province', 'gauteng');
 });

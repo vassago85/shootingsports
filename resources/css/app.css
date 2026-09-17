@@ -588,14 +588,23 @@ section.block { padding: 72px 0; }
     font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .14em;
     font-weight: 400; color: var(--mb-ink-muted); text-transform: uppercase;
 }
+.mb-toolbar-clear {
+    margin-left: 4px;
+    font-size: 10.5px;
+}
+.mb-toolbar .mb-active {
+    margin-top: 10px;
+    padding: 8px 0 2px;
+    border-bottom: none;
+    border-top: 1px solid var(--mb-rule);
+}
 .mb-toolbar-chips {
     display: flex; flex-wrap: wrap; gap: 6px;
     grid-column: 1 / -1;
-    /* Hydration guard — same behaviour as .filters so first click isn't eaten. */
-    opacity: .55; pointer-events: none;
-    transition: opacity .18s ease;
+    /* Hydration is handled by the shared `.filters` chip rules — do not
+       add a second pointer-events gate on the container or a morph that
+       drops `.is-hydrated` will lock the whole toolbar after one click. */
 }
-.mb-toolbar-chips.is-hydrated { opacity: 1; pointer-events: auto; }
 .mb-chip {
     font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em;
     text-transform: uppercase; padding: 6px 12px;
@@ -784,6 +793,24 @@ section.block { padding: 72px 0; }
 .mb-row.is-planned .mb-date .mo { color: var(--mb-ink-quiet); }
 
 .mb-info { min-width: 0; }
+.mb-info-main {
+    display: flex; align-items: flex-start; gap: 14px;
+    min-width: 0;
+}
+.mb-info-text { min-width: 0; flex: 1; }
+.mb-logo {
+    flex: 0 0 40px;
+    width: 40px; height: 40px;
+    border: 1px solid var(--mb-rule-strong);
+    background: rgba(255, 255, 255, .04);
+    overflow: hidden;
+    margin-top: 2px;
+}
+.mb-logo img {
+    display: block; width: 100%; height: 100%;
+    object-fit: contain;
+    background: #0e1214;
+}
 .mb-title-wrap { margin: 0; }
 .mb-title {
     display: block;
@@ -906,6 +933,8 @@ section.block { padding: 72px 0; }
     .mb-row > .mb-action-wrap { grid-area: action; margin-top: 4px; }
     .mb-title { font-size: 16px; }
     .mb-date b { font-size: 26px; }
+    .mb-logo { flex-basis: 32px; width: 32px; height: 32px; }
+    .mb-info-main { gap: 10px; }
     .mb-row:hover, .mb-row:focus-within {
         padding-left: 4px; box-shadow: none;
         background: rgba(255,255,255,.04);
