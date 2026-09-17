@@ -50,3 +50,38 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
 // `.filters` blocks after each morph.
 document.addEventListener('livewire:navigated', () => hydrateFilters());
 document.addEventListener('livewire:morph.updated', () => hydrateFilters());
+
+/*
+ * Homepage "Near me" quick action: request geolocation, then open
+ * the matches list with lat/lng/radius so the visitor does not have
+ * to discover the distance filter first. Falls back to plain
+ * /calendar when geolocation is denied or unavailable.
+ */
+document.addEventListener('click', (event) => {
+    const link = event.target.closest('[data-near-me]');
+
+    if (! link) {
+        return;
+    }
+
+    if (! navigator.geolocation) {
+        return;
+    }
+
+    event.preventDefault();
+    link.setAttribute('aria-busy', 'true');
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const url = new URL(link.href, window.location.origin);
+            url.searchParams.set('lat', String(pos.coords.latitude));
+            url.searchParams.set('lng', String(pos.coords.longitude));
+            url.searchParams.set('radius', '150');
+            window.location.assign(url.toString());
+        },
+        () => {
+            window.location.assign(link.href);
+        },
+        { enableHighAccuracy: false, timeout: 10000 },
+    );
+});

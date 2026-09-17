@@ -28,7 +28,16 @@
                     <p class="label">The national register of South African shooting sport</p>
                     <h1>Find your <em>sport</em>. Find your <em>club</em>. Find your <em>match</em>.</h1>
                     <p class="lede">Every discipline, every province, one calendar. Free to list, free to browse, no account needed to look around.</p>
+                    <p class="hero-weekend">
+                        <a class="btn" href="{{ route('calendar', ['weekend' => 1]) }}">What's shooting this weekend?</a>
+                    </p>
                     <livewire:match-finder />
+                    <div class="quick-actions" role="group" aria-label="Quick match filters">
+                        <a href="{{ route('calendar', ['weekend' => 1]) }}">This weekend</a>
+                        <a href="{{ route('calendar') }}" data-near-me>Near me</a>
+                        <a href="{{ route('calendar', ['province' => 'gauteng']) }}">Gauteng</a>
+                        <a href="{{ route('calendar', ['novice' => 1]) }}">New shooter friendly</a>
+                    </div>
                 </div>
                 <div class="hero-rail">
                     <div class="rail-head">
@@ -50,6 +59,9 @@
                     @empty
                         <p class="empty">No upcoming matches listed yet.</p>
                     @endforelse
+                    <p class="rail-more">
+                        <a href="{{ route('calendar', ['weekend' => 1]) }}">This weekend →</a>
+                    </p>
                 </div>
             </div>
         </section>
@@ -71,7 +83,7 @@
         <section class="block" id="calendar">
             <div class="wrap">
                 <div class="sec-head">
-                    <p class="label">01 — The calendar</p>
+                    <p class="label">01 — Matches</p>
                     <h2>What's on, and where</h2>
                     <p>Every match from every club, in one place. Free to list, free to browse, no account needed.</p>
                 </div>
@@ -90,9 +102,9 @@
         <section class="block" id="disciplines" style="padding-top:0">
             <div class="wrap">
                 <div class="sec-head">
-                    <p class="label">02 — Discover</p>
+                    <p class="label">02 — Sports</p>
                     <h2>Know the game before you arrive</h2>
-                    <p>Each discipline is a real page — what it is, who governs it, and where the next match is.</p>
+                    <p>Each sport is a real page — what it is, who governs it, and where the next match is.</p>
                 </div>
                 {{-- Bundle A #2: lead with populated tiles; empty ones
                      sit behind a "Show all" toggle so Discover doesn't

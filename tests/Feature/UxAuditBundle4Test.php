@@ -222,11 +222,14 @@ it('map page renders a view toggle linking back to /calendar', function () {
         ->toContain('href="'.route('calendar.month'));
 });
 
-it('primary nav includes the Map link on both desktop and mobile menus', function () {
+it('primary nav promotes Matches over a standalone Map link', function () {
     $html = $this->get(route('home'))->assertOk()->getContent();
 
-    // Two matching href occurrences: desktop nav + mobile menu.
-    expect(substr_count($html, 'href="'.route('map').'"'))->toBeGreaterThanOrEqual(2);
+    // Map lives under Matches (List | Month | Map), not as a top-level
+    // destination. Desktop + mobile both advertise Matches instead.
+    expect($html)
+        ->toContain('href="'.route('calendar').'">Matches</a>')
+        ->not->toContain('href="'.route('map').'">Map</a>');
 });
 
 it('legacy /calendar/map URL redirects to /map', function () {

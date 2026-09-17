@@ -44,14 +44,32 @@ it('emits the tagline as the default meta description', function () {
         ->assertSee('name="description" content="Find your sport. Find your club. Find your match.', false);
 });
 
-it('labels the disciplines nav link as Discover', function () {
+it('labels the disciplines nav link as Sports', function () {
     $response = $this->get(route('home'))->assertOk();
 
     // Nav link points at the existing /disciplines URL — we only
     // change the visible label, not the route.
     $html = $response->getContent();
 
-    expect($html)->toContain('href="'.route('disciplines.index').'">Discover</a>');
+    expect($html)->toContain('href="'.route('disciplines.index').'">Sports</a>');
+});
+
+it('labels the calendar nav link as Matches and keeps Map off the primary nav', function () {
+    $html = $this->get(route('home'))->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('href="'.route('calendar').'">Matches</a>')
+        ->toContain('href="'.route('clubs.index').'">Clubs</a>')
+        ->toContain('href="'.route('ranges.index').'">Ranges</a>')
+        ->not->toContain('href="'.route('map').'">Map</a>');
+});
+
+it('offers This weekend shortcuts on the homepage', function () {
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('What\'s shooting this weekend?', false)
+        ->assertSee(route('calendar', ['weekend' => 1]), false)
+        ->assertSee('New shooter friendly', false);
 });
 
 it('labels the suppliers footer link as Industry', function () {
@@ -90,11 +108,12 @@ it('rebrands the /suppliers page as Industry', function () {
         ->assertDontSee('<h1>Suppliers</h1>', false);
 });
 
-it('rebrands the /disciplines page as Discover', function () {
+it('rebrands the /disciplines page as Sports', function () {
     $this->get(route('disciplines.index'))
         ->assertOk()
-        ->assertSee('<h1>Discover</h1>', false)
+        ->assertSee('<h1>Sports</h1>', false)
         ->assertDontSee('<h1>Disciplines</h1>', false)
+        ->assertDontSee('<h1>Discover</h1>', false)
         ->assertDontSee('noindexed, not deleted');
 });
 

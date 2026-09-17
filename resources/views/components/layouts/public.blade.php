@@ -46,33 +46,29 @@
                 </span>
             </a>
             <nav class="nav-links" aria-label="Primary">
-                <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') || request()->routeIs('calendar.month') ? 'on' : '' }}">Calendar</a>
-                <a href="{{ route('map') }}" class="{{ request()->routeIs('map') ? 'on' : '' }}">Map</a>
-                <a href="{{ route('disciplines.index') }}" class="{{ request()->routeIs('disciplines.*') ? 'on' : '' }}">Discover</a>
-                <a href="{{ route('clubs.index') }}" class="{{ request()->routeIs('clubs.*') || request()->routeIs('ranges.*') ? 'on' : '' }}">Directory</a>
+                <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') || request()->routeIs('calendar.month') || request()->routeIs('map') ? 'on' : '' }}">Matches</a>
+                <a href="{{ route('disciplines.index') }}" class="{{ request()->routeIs('disciplines.*') ? 'on' : '' }}">Sports</a>
+                <a href="{{ route('clubs.index') }}" class="{{ request()->routeIs('clubs.*') || request()->routeIs('federations.*') ? 'on' : '' }}">Clubs</a>
+                <a href="{{ route('ranges.index') }}" class="{{ request()->routeIs('ranges.*') ? 'on' : '' }}">Ranges</a>
                 <a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'on' : '' }}">Industry</a>
-                <a href="{{ route('claim') }}">For Clubs</a>
-                <a href="{{ route('advertise') }}">Advertise</a>
             </nav>
             <div class="nav-cta">
+                <a class="btn ghost on-dark" href="{{ route('claim') }}">For Clubs</a>
                 @auth
-                    <a class="btn ghost on-dark" href="{{ route('my-calendar') }}">My calendar</a>
-                    <a class="btn ghost on-dark" href="{{ route('my-log') }}">My log</a>
+                    <a class="btn ghost on-dark" href="{{ route('my-calendar') }}">Account</a>
                     @if (auth()->user()?->is_staff || auth()->user()?->is_match_director)
                         <a class="btn" href="{{ url('/desk') }}">Desk</a>
                     @endif
                 @else
-                    <a class="btn ghost on-dark" href="{{ route('login') }}">Log in</a>
-                    <a class="btn" href="{{ route('directors.register') }}">List your club</a>
+                    <a class="btn ghost on-dark" href="{{ route('login') }}">Sign in</a>
                 @endauth
             </div>
             <button class="hamburger" id="burger" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">Menu</button>
         </div>
         <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
-            <a href="{{ route('calendar') }}">Calendar</a>
-            <a href="{{ route('map') }}">Map</a>
-            <a href="{{ route('disciplines.index') }}">Discover</a>
-            <a href="{{ route('clubs.index') }}">Clubs &amp; series</a>
+            <a href="{{ route('calendar') }}">Matches</a>
+            <a href="{{ route('disciplines.index') }}">Sports</a>
+            <a href="{{ route('clubs.index') }}">Clubs</a>
             <a href="{{ route('ranges.index') }}">Ranges</a>
             <a href="{{ route('suppliers.index') }}">Industry</a>
             <a href="{{ route('claim') }}">For Clubs</a>
@@ -84,7 +80,7 @@
                     <a href="{{ url('/desk') }}">Desk</a>
                 @endif
             @else
-                <a href="{{ route('login') }}">Log in</a>
+                <a href="{{ route('login') }}">Sign in</a>
                 <a href="{{ route('register') }}">Create a shooter account</a>
                 <a href="{{ route('directors.register') }}">List your club</a>
             @endauth
@@ -140,8 +136,8 @@
                 <div>
                     <h4>Browse</h4>
                     <ul>
-                        <li><a href="{{ route('calendar') }}">Match calendar</a></li>
-                        <li><a href="{{ route('disciplines.index') }}">Discover</a></li>
+                        <li><a href="{{ route('calendar') }}">Matches</a></li>
+                        <li><a href="{{ route('disciplines.index') }}">Sports</a></li>
                         <li><a href="{{ route('clubs.index') }}">Clubs &amp; series</a></li>
                         <li><a href="{{ route('ranges.index') }}">Ranges</a></li>
                         <li><a href="{{ route('suppliers.index') }}">Industry</a></li>

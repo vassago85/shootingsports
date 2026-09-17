@@ -9,6 +9,7 @@ use App\Models\Discipline;
 use App\Models\SavedSearch;
 use App\Models\User;
 use App\Queries\PublicEventQuery;
+use App\Support\ThisWeekend;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -23,6 +24,9 @@ class CalendarFilter extends Component
 
     #[Url]
     public bool $confirmed = false;
+
+    #[Url]
+    public bool $weekend = false;
 
     #[Url]
     public ?string $discipline = null;
@@ -67,6 +71,18 @@ class CalendarFilter extends Component
         $this->confirmed = ! $this->confirmed;
     }
 
+    public function toggleWeekend(): void
+    {
+        $this->weekend = ! $this->weekend;
+
+        if ($this->weekend) {
+            // Explicit from/to would fight the weekend window — clear
+            // them so the URL stays shareable as ?weekend=1.
+            $this->from = null;
+            $this->to = null;
+        }
+    }
+
     public function toggleProvince(string $slug): void
     {
         $selected = $this->selectedProvinceSlugs();
@@ -94,6 +110,7 @@ class CalendarFilter extends Component
     {
         $this->from = null;
         $this->to = null;
+        $this->weekend = false;
     }
 
     public function clearDistance(): void
@@ -115,6 +132,7 @@ class CalendarFilter extends Component
         $this->family = 'all';
         $this->novice = false;
         $this->confirmed = false;
+        $this->weekend = false;
         $this->discipline = null;
         $this->province = null;
         $this->radius = null;
@@ -135,6 +153,7 @@ class CalendarFilter extends Component
         return $this->family !== 'all'
             || $this->novice
             || $this->confirmed
+            || $this->weekend
             || filled($this->discipline)
             || filled($this->province)
             || filled($this->radius)
@@ -185,6 +204,7 @@ class CalendarFilter extends Component
                     'family' => $this->family !== 'all' ? $this->family : null,
                     'novice' => $this->novice ?: null,
                     'confirmed' => $this->confirmed ?: null,
+                    'weekend' => $this->weekend ?: null,
                     'discipline' => $this->discipline,
                     'province' => $this->province,
                     'radius' => $this->radius,
@@ -205,6 +225,7 @@ class CalendarFilter extends Component
     private function searchName(): string
     {
         $bits = array_filter([
+            $this->weekend ? 'This weekend' : null,
             $this->family !== 'all' ? ucfirst($this->family) : null,
             $this->discipline,
             $this->province ? str_replace(',', ' + ', $this->province) : null,
@@ -240,6 +261,7 @@ class CalendarFilter extends Component
             near: $this->near,
             from: $this->safeDate($this->from),
             to: $this->safeDate($this->to),
+            weekend: $this->weekend,
             novice: $this->novice,
             confirmedOnly: $this->confirmed,
             limit: $this->limit,
@@ -257,6 +279,7 @@ class CalendarFilter extends Component
             'resultCount' => $events->count(),
             'unpinnedSkipped' => $query->unpinnedSkipped,
             'radii' => [50, 100, 150, 250, 400],
+            'weekendLabel' => ThisWeekend::label(),
         ]);
     }
 

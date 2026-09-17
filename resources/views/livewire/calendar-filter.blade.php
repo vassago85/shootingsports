@@ -12,6 +12,7 @@
         @endforeach
     </div>
     <div class="filters" role="group" aria-label="Additional filters" style="margin-top:-14px">
+        <button type="button" wire:click="toggleWeekend" aria-pressed="{{ $weekend ? 'true' : 'false' }}">This weekend</button>
         <button type="button" wire:click="toggleNovice" aria-pressed="{{ $novice ? 'true' : 'false' }}">New shooter friendly</button>
         <button type="button" wire:click="toggleConfirmed" aria-pressed="{{ $confirmed ? 'true' : 'false' }}">Confirmed dates only</button>
     </div>
@@ -32,10 +33,10 @@
         for filters that arrive via URL params from the hero MatchFinder
         and are NOT already shown as pressed buttons above — discipline
         and date range. Each chip has its own × to clear that single
-        filter. Family / province / novice / confirmed are already
-        reflected via aria-pressed on the button rows above.
+        filter. Family / province / novice / confirmed / weekend are
+        already reflected via aria-pressed on the button rows above.
     --}}
-    @if (filled($activeDisciplineLabel) || filled($from) || filled($to) || filled($near) || filled($lat) || filled($radius))
+    @if (filled($activeDisciplineLabel) || ((! $weekend) && (filled($from) || filled($to))) || filled($near) || filled($lat) || filled($radius))
         <div class="active-filters" role="group" aria-label="Active filters" style="margin-top:-14px">
             <span class="active-filters-label">Filtered:</span>
             @if (filled($activeDisciplineLabel))
@@ -45,7 +46,7 @@
                     <span class="sr-only">— clear discipline filter</span>
                 </button>
             @endif
-            @if (filled($from) || filled($to))
+            @if ((! $weekend) && (filled($from) || filled($to)))
                 <button type="button" class="chip-active" wire:click="clearDates">
                     <span>{{ $from ?: '…' }} → {{ $to ?: '…' }}</span>
                     <span aria-hidden="true">×</span>
@@ -125,11 +126,17 @@
 
     @if ($events->isEmpty())
         <div class="empty-state">
-            <p class="empty">No matches in this window. Planned dates still appear on the calendar — they render as provisional.</p>
+            @if ($weekend)
+                <p class="empty">Nothing listed for this weekend ({{ $weekendLabel }}). Planned dates still appear when clubs publish them — try next month or clear the filter.</p>
+            @else
+                <p class="empty">No matches in this window. Planned dates still appear on the calendar — they render as provisional.</p>
+            @endif
             @if ($hasActiveFilters)
                 <div class="empty-actions">
                     <button type="button" class="btn ghost" wire:click="clearAll">Clear filters</button>
-                    @if (filled($from) || filled($to))
+                    @if ($weekend)
+                        <button type="button" class="btn ghost" wire:click="toggleWeekend">Show all upcoming</button>
+                    @elseif (filled($from) || filled($to))
                         <button type="button" class="btn ghost" wire:click="clearDates">Widen the date range</button>
                     @endif
                 </div>
@@ -145,7 +152,7 @@
 
     @if ($showMore)
         <p style="margin-top:22px">
-            <a class="label" href="{{ route('calendar') }}" style="text-decoration:none;border-bottom:1px solid var(--brass)">Full calendar →</a>
+            <a class="label" href="{{ route('calendar') }}" style="text-decoration:none;border-bottom:1px solid var(--brass)">All matches →</a>
         </p>
     @endif
 </div>

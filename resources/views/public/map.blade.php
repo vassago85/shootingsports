@@ -7,14 +7,14 @@
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
-                <p class="label">The register on the map</p>
+                <p class="label">Matches</p>
                 <h1>What's on, where</h1>
                 <p>
                     {{ $totalMatches }} upcoming {{ $totalMatches === 1 ? 'match' : 'matches' }}
                     on {{ count($pins) }} {{ count($pins) === 1 ? 'pinned range' : 'pinned ranges' }}.
                     Click a pin for the range page.
                 </p>
-                <div class="view-toggle" role="group" aria-label="Calendar view">
+                <div class="view-toggle" role="group" aria-label="Matches view">
                     <a href="{{ route('calendar') }}" aria-pressed="false">List</a>
                     <a href="{{ route('calendar.month') }}" aria-pressed="false">Month</a>
                     <a href="{{ route('map') }}" aria-pressed="true">Map</a>

@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Venue;
 use App\Services\Geocoding\VenueGeocoder;
 use App\Support\Geo;
+use App\Support\ThisWeekend;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -29,6 +30,7 @@ class PublicEventQuery
         public ?string $near = null,
         public ?Carbon $from = null,
         public ?Carbon $to = null,
+        public bool $weekend = false,
         public bool $novice = false,
         public bool $confirmedOnly = false,
         public ?int $organisationId = null,
@@ -37,7 +39,13 @@ class PublicEventQuery
         public ?int $limit = null,
         /** @var list<int>|null */
         public ?array $eventIds = null,
-    ) {}
+    ) {
+        if ($this->weekend) {
+            [$weekendFrom, $weekendTo] = ThisWeekend::range();
+            $this->from = $weekendFrom;
+            $this->to = $weekendTo;
+        }
+    }
 
     /** How many events were dropped for lacking venue pins (after get()). */
     public int $unpinnedSkipped = 0;
@@ -59,6 +67,7 @@ class PublicEventQuery
             near: $near,
             from: self::date($request->input('from')),
             to: self::date($request->input('to')),
+            weekend: $request->boolean('weekend'),
             novice: $request->boolean('novice'),
             confirmedOnly: $request->boolean('confirmed'),
             organisationId: self::publishedOrganisationId($request),

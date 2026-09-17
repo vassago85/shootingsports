@@ -42,7 +42,7 @@ class CalendarController extends Controller
         // a SERP where breadcrumbs render as a single line.
         $crumbs = [
             ['name' => 'Home', 'url' => route('home')],
-            ['name' => 'Calendar', 'url' => route('calendar')],
+            ['name' => 'Matches', 'url' => route('calendar')],
         ];
 
         if ($discipline instanceof Discipline) {
@@ -71,6 +71,7 @@ class CalendarController extends Controller
             'family' => $request->string('family')->toString() ?: 'all',
             'novice' => $request->boolean('novice'),
             'confirmed' => $request->boolean('confirmed'),
+            'weekend' => $request->boolean('weekend'),
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,
             'canonical' => $this->canonical($discipline, $province),

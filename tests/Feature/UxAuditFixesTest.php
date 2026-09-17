@@ -42,30 +42,28 @@ it('event card makes the whole card clickable via the title anchor', function ()
         ->and($html)->toContain('href="'.route('matches.show', $event->slug).'"');
 });
 
-it('event card Entry details button points to the internal match page (not the external entry URL)', function () {
+it('event card View match button points to the internal match page (not the external entry URL)', function () {
     $withEntry = Event::factory()->create(['entry_url' => 'https://example.test/enter']);
     $withoutEntry = Event::factory()->create(['entry_url' => null]);
 
     $withHtml = view('components.event-card', ['event' => $withEntry])->render();
     $withoutHtml = view('components.event-card', ['event' => $withoutEntry])->render();
 
-    // With: primary button rendered, pointing at matches.show — NOT the
-    // external entry URL. The card is a funnel into the match page,
-    // which then shows the prominent "Enter here" CTA that opens the
-    // external form.
+    // Primary CTA always points at matches.show — never straight out
+    // to the organiser entry form. The match page owns "Enter here".
     expect($withHtml)
         ->toContain('class="dope-primary"')
-        ->toContain('Entry details')
+        ->toContain('View match')
         ->toContain('href="'.route('matches.show', $withEntry->slug).'"')
-        // The card must not link straight out to the external URL any
-        // more — that would skip the details page and defeat the
-        // whole point of this flow.
-        ->not->toContain('https://example.test/enter');
+        ->not->toContain('https://example.test/enter')
+        ->not->toContain('Entry details');
 
-    // Without: no dope-foot at all (audit #7 - no dead "No entry link" placeholder)
+    // Without an entry URL the card still offers View match so the
+    // hierarchy stays consistent on mobile WhatsApp shares.
     expect($withoutHtml)
-        ->not->toContain('dope-primary')
-        ->not->toContain('dope-foot')
+        ->toContain('class="dope-primary"')
+        ->toContain('View match')
+        ->toContain('href="'.route('matches.show', $withoutEntry->slug).'"')
         ->not->toContain('Entry details');
 });
 

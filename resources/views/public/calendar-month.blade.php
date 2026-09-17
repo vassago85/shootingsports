@@ -7,13 +7,13 @@
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
-                <p class="label">The calendar</p>
+                <p class="label">Matches</p>
                 <h1>What's on, and where</h1>
                 <p>Upcoming matches on a month grid. Planned dates stay provisional; confirmed dates look different on the match page.</p>
-                <div class="view-toggle" role="group" aria-label="Calendar view">
+                <div class="view-toggle" role="group" aria-label="Matches view">
                     <a href="{{ route('calendar', request()->except('month')) }}" aria-pressed="false">List</a>
                     <a href="{{ route('calendar.month', request()->query()) }}" aria-pressed="true">Month</a>
-                    <a href="{{ route('map') }}" aria-pressed="false">Map</a>
+                    <a href="{{ route('map', request()->except(['month'])) }}" aria-pressed="false">Map</a>
                 </div>
             </div>
         </section>

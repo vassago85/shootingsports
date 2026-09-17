@@ -7,7 +7,7 @@
         <section class="page-hero">
             <div class="wrap">
                 <p class="label">Find your sport</p>
-                <h1>Discover</h1>
+                <h1>Sports</h1>
                 <p>Precision rifle, IPSC, clays, benchrest, gong, PR22 — every discipline shot in South Africa, what it is, who governs it, and where the next match is.</p>
             </div>
         </section>

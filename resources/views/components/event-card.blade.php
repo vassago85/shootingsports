@@ -6,8 +6,24 @@
     $bannerUrl = $event->bannerUrl();
     $coverUrl = $event->coverImageUrl();
     $usingHostLogo = $coverUrl && ! $bannerUrl;
-    $family = $event->primaryDiscipline()?->family->value ?? $event->disciplines->first()?->family->value;
+    $discipline = $event->primaryDiscipline() ?? $event->disciplines->first();
+    $family = $discipline?->family->value;
     $matchUrl = route('matches.show', $event->slug);
+    $venue = $event->venue;
+    $venueName = $venue?->name;
+    $venuePlace = collect([
+        $venue?->town,
+        $venue?->province?->getLabel() ?? $venue?->province?->code(),
+    ])->filter()->implode(' · ');
+    $fee = \App\Support\Money::rand($event->entry_fee_cents);
+    $rounds = $event->round_count ? $event->round_count.' rounds' : null;
+    $highlight = collect([$rounds, $fee])->filter()->implode(' · ');
+    // Spec rows already cover venue / rounds / fee — drop those labels
+    // from the dense list so the card hierarchy stays readable.
+    $secondarySpecs = collect($specs)
+        ->reject(fn (array $row): bool => in_array($row[0], ['Venue', 'Rounds', 'Min rounds', 'Entry', 'Discipline'], true))
+        ->values()
+        ->all();
 @endphp
 
 {{--
@@ -20,22 +36,14 @@
     anchors, which is invalid HTML.
 --}}
 <article class="dope {{ $planned ? 'is-planned' : '' }}" data-fam="{{ $family }}">
-    {{-- Discipline-family accent tick (cool-factor). Purely visual,
-         so aria-hidden. The colour comes from the `--fam-accent`
-         custom property set by [data-fam="..."] on the article. --}}
     <div class="dope-fam-tick" aria-hidden="true"></div>
     <div class="dope-banner {{ $coverUrl ? ($usingHostLogo ? 'logo-fallback' : 'has-poster') : 'fallback' }}">
         @if ($coverUrl && ! $usingHostLogo)
-            {{-- Blurred, darkened copy of the poster fills the 3:1 crop
-                 so square / portrait posters (most of them) do not lose
-                 88% of themselves to object-fit: cover. --}}
             <img class="dope-banner-bg" src="{{ $coverUrl }}" alt="" aria-hidden="true" loading="lazy" decoding="async">
             <img class="dope-banner-fg" src="{{ $coverUrl }}" alt="" loading="lazy" decoding="async">
         @elseif ($coverUrl)
-            {{-- Host-logo fallback: no backdrop, just the logo centred. --}}
             <img src="{{ $coverUrl }}" alt="{{ $event->hostOrganisation?->name.' logo' }}" loading="lazy" decoding="async">
         @else
-            {{-- No poster, no host logo: the reticle plate is the identity. --}}
             <svg viewBox="0 0 40 40" aria-hidden="true">
                 <circle cx="20" cy="20" r="17" fill="none" stroke="#D9AE52" stroke-width="1.2"/>
                 <circle cx="20" cy="20" r="7" fill="none" stroke="#D9AE52" stroke-width=".9"/>
@@ -45,22 +53,12 @@
         <div class="pill-row">
             <x-event-status-pill :event="$event" />
         </div>
-        {{-- Deliberately no banner caption: the h3 in dope-top is the
-             title. Printing it twice was ugly on posters and collided
-             with host logos. --}}
     </div>
     <div class="dope-top">
         <div>
             <h3>
-                {{-- The title anchor is the primary/whole-card link.
-                     `.dope-title-link::after` in CSS overlays the entire
-                     article so a click anywhere on the card lands on
-                     matches.show — without nesting <a> tags. --}}
                 <a href="{{ $matchUrl }}" class="dope-title-link">{{ $event->title }}</a>
             </h3>
-            {{-- Falls back to the venue name when the range operator is
-                 the host (no external club), so a card never shows an
-                 empty ".club" line. --}}
             <span class="club">{{ $event->hostDisplayName() }}</span>
         </div>
         <div class="dope-date">
@@ -69,31 +67,43 @@
             <span class="mo">{{ \App\Support\EventDate::monthWithYear($event->starts_at) }}</span>
         </div>
     </div>
-    <dl class="dope-rows">
-        @foreach ($specs as [$label, $value])
-            <div class="r">
-                <dt>{{ $label }}</dt>
-                <dd>{{ $value }}</dd>
-            </div>
-        @endforeach
-    </dl>
 
-    {{-- Footer CTA: internal-first. "Entry details" points to the
-         match page (not the external entry form) — the match page is
-         where the actual details live (specs, description, poster,
-         host + venue links), and it's where the prominent "Enter here"
-         button sends the click on to the external URL.
-         Rendered only when there IS an entry URL, so the CTA promise
-         ("click to see how to enter") is always kept. Matches without
-         an entry link stay clickable via the whole-card overlay but
-         don't advertise a false affordance. --}}
-    @if ($event->entry_url)
-        <div class="dope-foot">
-            <a href="{{ $matchUrl }}" class="dope-primary">Entry details</a>
-        </div>
+    <div class="dope-where">
+        @if ($venueName)
+            <div class="dope-venue">{{ $venueName }}</div>
+        @endif
+        <div class="dope-place">{{ $venuePlace !== '' ? $venuePlace : $event->locationLabel() }}</div>
+        @if ($highlight !== '')
+            <div class="dope-highlight">{{ $highlight }}</div>
+        @endif
+    </div>
+
+    <div class="dope-tags">
+        @if ($discipline)
+            <span class="dope-tag">{{ $discipline->name }}</span>
+        @endif
+        @foreach ($event->flags as $flag)
+            @if ($flag->slug === 'new-shooter-friendly')
+                <span class="dope-tag is-novice">{{ $flag->name }}</span>
+            @endif
+        @endforeach
+    </div>
+
+    @if ($secondarySpecs !== [])
+        <dl class="dope-rows">
+            @foreach ($secondarySpecs as [$label, $value])
+                <div class="r">
+                    <dt>{{ $label }}</dt>
+                    <dd>{{ $value }}</dd>
+                </div>
+            @endforeach
+        </dl>
     @endif
 
-    {{-- Add-to-calendar sits below the footer as a ghost secondary. --}}
+    <div class="dope-foot">
+        <a href="{{ $matchUrl }}" class="dope-primary">View match →</a>
+    </div>
+
     @auth
         <livewire:save-to-calendar :event="$event" :key="'save-'.$event->id" />
     @else

@@ -28,8 +28,12 @@ it('starts a 30-day Pro trial for an eligible Free user', function () {
         ->and($user->plan)->toBe(Plan::Pro)
         ->and($user->plan_expires_at)->not->toBeNull()
         ->and($user->plan_expires_at->isFuture())->toBeTrue()
-        ->and((int) round(now()->diffInDays($user->plan_expires_at, false)))->toBeGreaterThanOrEqual(29)
-        ->and((int) round(now()->diffInDays($user->plan_expires_at, false)))->toBeLessThanOrEqual(30)
+        // End-of-day 30 days out (service contract). Compare dates,
+        // not wall-clock hour counts — endOfDay makes diffInDays
+        // round past 30 depending on when the suite runs.
+        ->and($user->plan_expires_at->toDateString())
+        ->toBe(now()->addDays(30)->toDateString())
+        ->and($user->plan_expires_at->isEndOfDay())->toBeTrue()
         ->and($user->pro_trial_started_at)->not->toBeNull();
 });
 
