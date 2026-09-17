@@ -67,7 +67,11 @@ Route::get('/clubs/{organisation:slug}', [OrganisationController::class, 'show']
 Route::get('/federations/{organisation:slug}', [OrganisationController::class, 'federation'])->name('federations.show');
 
 Route::get('/ranges', [VenueController::class, 'index'])->name('ranges.index');
-Route::get('/ranges/{venue:slug}', [VenueController::class, 'show'])->name('ranges.show');
+// Plain-string param instead of implicit `{venue:slug}` binding so
+// the controller can resolve aliases and 301 old slugs onto the
+// canonical URL. Route generation stays the same:
+// `route('ranges.show', $venue->slug)` still works.
+Route::get('/ranges/{slug}', [VenueController::class, 'show'])->name('ranges.show');
 
 Route::get('/suppliers', [ProviderController::class, 'index'])->name('suppliers.index');
 Route::get('/suppliers/{category}/{province}', [ProviderController::class, 'category'])

@@ -4,14 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Enums\Province;
 use App\Models\Discipline;
-use App\Models\Organisation;
-use App\Models\Venue;
 use App\Queries\PublicEventQuery;
+use App\Services\Discovery\DiscoveryStats;
 use App\Support\JsonLd;
 use Illuminate\View\View;
 
 class DisciplineController extends Controller
 {
+    public function __construct(private readonly DiscoveryStats $stats) {}
+
     public function index(): View
     {
         $upcomingCounts = Discipline::upcomingCounts();
@@ -87,20 +88,13 @@ class DisciplineController extends Controller
             provinceSlug: $province?->urlSlug(),
         ))->get();
 
-        $clubs = Organisation::query()
-            ->published()
-            ->clubs()
-            ->whereHas('disciplines', fn ($q) => $q->whereIn('disciplines.id', $discipline->treeIds()))
-            ->when($province, fn ($q) => $q->where('province', $province))
-            ->with('disciplines')
-            ->orderBy('name')
-            ->get();
+        // Derived-first: a club that hosts published PRS matches but
+        // never had `precision-rifle` attached to its pivot row still
+        // belongs on this page. The service unions the pivot with
+        // real event history.
+        $clubs = $this->stats->clubsForDiscipline($discipline, $province);
 
-        $ranges = Venue::query()
-            ->published()
-            ->whereHas('disciplines', fn ($q) => $q->whereIn('disciplines.id', $discipline->treeIds()))
-            ->when($province, fn ($q) => $q->where('province', $province))
-            ->count();
+        $ranges = $this->stats->rangesCountForDiscipline($discipline, $province);
 
         $listingCount = $clubs->count() + $events->count() + $ranges;
         $noindex = $province !== null && $listingCount < 3;
@@ -126,12 +120,11 @@ class DisciplineController extends Controller
             ->limit(4)
             ->get();
 
-        $provincesActive = Organisation::query()
-            ->published()
-            ->whereHas('disciplines', fn ($q) => $q->whereIn('disciplines.id', $discipline->treeIds()))
-            ->whereNotNull('province')
-            ->distinct()
-            ->count('province');
+        // Active-provinces uses the same derivation as `clubs` — it
+        // must count Gauteng, MP and WC when there are published PRS
+        // matches in each, whether or not clubs remembered to attach
+        // the discipline to themselves.
+        $provincesActive = $this->stats->activeProvincesForDiscipline($discipline);
 
         // Filter-aware SEO description: "12 upcoming IPSC matches at
         // 4 clubs in Gauteng." Numbers change over time; keeping them

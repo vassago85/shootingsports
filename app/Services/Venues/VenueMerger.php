@@ -6,6 +6,7 @@ use App\Enums\GeocodeSource;
 use App\Enums\ListingStatus;
 use App\Models\Event;
 use App\Models\Venue;
+use App\Models\VenueAlias;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -15,8 +16,12 @@ class VenueMerger
     /**
      * Absorb $losers into $primary. Events move; losers are archived.
      *
+     * Each loser's name and slug are recorded on `venue_aliases` so
+     * later imports do not recreate the duplicate and so old
+     * `/ranges/{loser-slug}` URLs 301 to the canonical venue.
+     *
      * @param  Collection<int, Venue>|list<Venue>  $losers
-     * @return array{events: int, archived: int}
+     * @return array{events: int, archived: int, aliases: int}
      */
     public function merge(Venue $primary, Collection|array $losers): array
     {
@@ -39,8 +44,10 @@ class VenueMerger
             $this->backfillPrimary($primary, $losers);
 
             $archived = 0;
+            $aliases = 0;
 
             foreach ($losers as $loser) {
+                $aliases += $this->recordAliases($primary, $loser);
                 $loser->forceFill(['status' => ListingStatus::Archived])->save();
                 $archived++;
             }
@@ -48,8 +55,36 @@ class VenueMerger
             return [
                 'events' => $moved,
                 'archived' => $archived,
+                'aliases' => $aliases,
             ];
         });
+    }
+
+    /**
+     * Persist the loser's name and slug on `venue_aliases` so later
+     * imports match on either string and public range URLs still
+     * resolve after the merge. Stored as a single row per loser
+     * (name + slug together) to fit the `(venue_id, name)` unique
+     * key. `updateOrCreate` keeps re-runs idempotent.
+     */
+    private function recordAliases(Venue $primary, Venue $loser): int
+    {
+        if (! filled($loser->name)) {
+            return 0;
+        }
+
+        $attributes = ['source' => 'merge'];
+
+        if (filled($loser->slug) && $loser->slug !== $primary->slug) {
+            $attributes['slug'] = $loser->slug;
+        }
+
+        VenueAlias::query()->updateOrCreate(
+            ['venue_id' => $primary->id, 'name' => $loser->name],
+            $attributes,
+        );
+
+        return 1;
     }
 
     /**

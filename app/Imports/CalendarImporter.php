@@ -12,6 +12,7 @@ use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Venue;
 use App\Services\Geocoding\VenueGeocoder;
+use App\Services\Venues\VenueResolver;
 
 class CalendarImporter
 {
@@ -104,19 +105,32 @@ class CalendarImporter
             return null;
         }
 
-        $venue = Venue::query()->firstOrCreate(
-            [
-                'name' => $match->venueName,
-                'province' => $match->province,
-            ],
-            [
-                'town' => $match->venueTown ?? $match->venueName,
-                'access' => VenueAccess::GuestByArrangement,
-                'status' => ListingStatus::Published,
-                'verification_state' => VerificationState::Unconfirmed,
-                'source' => ListingSource::Import,
-            ],
-        );
+        // Prefer an alias-driven match before creating a new venue.
+        // "Legends" / "Legends Adventure Farm" / "Legends Rayton" all
+        // collapse onto the same canonical row once an alias exists.
+        $resolver = app(VenueResolver::class);
+        $venue = $resolver->findByName($match->venueName);
+
+        if ($venue === null) {
+            $venue = Venue::query()->firstOrCreate(
+                [
+                    'name' => $match->venueName,
+                    'province' => $match->province,
+                ],
+                [
+                    'town' => $match->venueTown ?? $match->venueName,
+                    'access' => VenueAccess::GuestByArrangement,
+                    'status' => ListingStatus::Published,
+                    'verification_state' => VerificationState::Unconfirmed,
+                    'source' => ListingSource::Import,
+                ],
+            );
+        } elseif ($venue->name !== $match->venueName) {
+            // Alias resolved but the incoming string is a new spelling
+            // we have not seen before — record it so the *next* import
+            // is a direct hit rather than a fuzzy fingerprint later.
+            $resolver->rememberAliasName($venue, $match->venueName);
+        }
 
         // Soft geocode on first create / when still unpinned. Staff
         // pins are never overwritten by VenueGeocoder.

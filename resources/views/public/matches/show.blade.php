@@ -12,6 +12,11 @@
                 : route('clubs.show', $host->slug))
             : null;
         $rangeUrl = $venue ? route('ranges.show', $venue->slug) : null;
+        // Multi-venue: `allVenues()` returns the pivot rows when set,
+        // otherwise falls back to the single `venue_id` — same list
+        // whether the match is at one range or three.
+        $allVenues = $event->allVenues();
+        $isMultiVenue = $allVenues->count() > 1;
     @endphp
     <main id="main">
         <section class="page-hero">
@@ -59,7 +64,26 @@
                                 <dd>{{ $event->starts_at->timezone('Africa/Johannesburg')->format('D j M Y') }}</dd>
                             </div>
                             @foreach ($specs as [$label, $value])
-                                @if ($label === 'Venue' && $rangeUrl)
+                                @if ($label === 'Venue' && $isMultiVenue)
+                                    {{-- Multi-venue matches list every range on its own row,
+                                         each with a day label and directions link. --}}
+                                    <div class="r">
+                                        <dt>{{ $allVenues->count() }} venues</dt>
+                                        <dd>
+                                            <ul style="list-style:none;margin:0;padding:0;display:grid;gap:6px">
+                                                @foreach ($allVenues as $ev)
+                                                    <li>
+                                                        @if ($ev->pivot?->day_label)
+                                                            <b>{{ $ev->pivot->day_label }}:</b>
+                                                        @endif
+                                                        <a href="{{ route('ranges.show', $ev->slug) }}">{{ $ev->name }}</a>
+                                                        · <a href="{{ $ev->directionsUrl() }}" rel="noopener noreferrer" target="_blank">Directions</a>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </dd>
+                                    </div>
+                                @elseif ($label === 'Venue' && $rangeUrl)
                                     <div class="r">
                                         <dt>Venue</dt>
                                         <dd>

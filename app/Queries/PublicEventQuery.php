@@ -83,7 +83,15 @@ class PublicEventQuery
         }
 
         if ($this->venueId) {
-            $query->where('venue_id', $this->venueId);
+            // Dual-read: the venue may be the legacy single `venue_id`
+            // or one of several rows on the `event_venue` pivot. Both
+            // paths must catch it so a Day 2 range still shows the
+            // match on its /ranges/ page.
+            $venueId = $this->venueId;
+            $query->where(function (Builder $q) use ($venueId): void {
+                $q->where('venue_id', $venueId)
+                    ->orWhereHas('venues', fn (Builder $v) => $v->where('venues.id', $venueId));
+            });
         }
 
         if ($this->eventIds !== null) {

@@ -35,7 +35,7 @@
                     <a class="btn" href="{{ route('enquiries.listing', ['type' => 'venue', 'id' => $venue->id]) }}">Enquire via platform</a>
                 </p>
                 <div class="club-tags" style="margin-bottom:28px">
-                    @foreach ($venue->disciplines as $discipline)
+                    @foreach ($inferredDisciplines as $discipline)
                         <a class="tag" href="{{ route('disciplines.show', $discipline->slug) }}">{{ $discipline->name }}</a>
                     @endforeach
                 </div>
@@ -52,6 +52,24 @@
                         @endforeach
                     </div>
                 @endif
+
+                @if ($clubsUsingRange->isNotEmpty())
+                    <div class="sec-head" style="margin-top:36px">
+                        <p class="label">Regulars</p>
+                        <h2>Clubs using this range</h2>
+                    </div>
+                    <ul class="range-clubs" style="list-style:none;padding:0;margin:0 0 28px;display:grid;gap:8px">
+                        @foreach ($clubsUsingRange as $club)
+                            <li>
+                                <a href="{{ $club->isFederationListing() ? route('federations.show', $club->slug) : route('clubs.show', $club->slug) }}">{{ $club->name }}</a>
+                                @if ($club->province)
+                                    <span style="color:var(--slate);font-family:var(--f-mono);font-size:13px"> · {{ $club->province->code() }}</span>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+
                 <x-embed-snippet :venue="$venue->slug" />
             </div>
         </section>

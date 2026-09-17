@@ -89,13 +89,23 @@ class Discipline extends Model
         $counts = [];
 
         foreach (Event::query()->upcoming()->with('disciplines')->get() as $event) {
+            // Build the set of discipline ids this event should
+            // contribute to *before* incrementing, so an event tagged
+            // with both a parent and a child (or two siblings) never
+            // adds more than +1 to the parent tile.
+            $countedIds = [];
+
             foreach ($event->disciplines as $discipline) {
-                $counts[$discipline->id] = ($counts[$discipline->id] ?? 0) + 1;
+                $countedIds[$discipline->id] = true;
                 $rootId = $discipline->parent_id ?? $discipline->id;
 
                 if ($rootId !== $discipline->id) {
-                    $counts[$rootId] = ($counts[$rootId] ?? 0) + 1;
+                    $countedIds[$rootId] = true;
                 }
+            }
+
+            foreach (array_keys($countedIds) as $id) {
+                $counts[$id] = ($counts[$id] ?? 0) + 1;
             }
         }
 

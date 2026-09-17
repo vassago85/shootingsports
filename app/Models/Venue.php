@@ -76,6 +76,11 @@ class Venue extends Model
         return $this->hasMany(Event::class);
     }
 
+    public function aliases(): HasMany
+    {
+        return $this->hasMany(VenueAlias::class);
+    }
+
     public function scopePublished($query)
     {
         return $query->where('status', ListingStatus::Published);

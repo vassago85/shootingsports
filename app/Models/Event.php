@@ -69,6 +69,73 @@ class Event extends Model
         return $this->belongsTo(Venue::class);
     }
 
+    /**
+     * Multi-venue pivot. `events.venue_id` still holds the primary
+     * venue for back-compat with importers, filters, JSON-LD, and the
+     * map — it must always match the pivot row with the lowest
+     * `sort_order`. Use `syncVenues()` to keep both sides consistent.
+     */
+    public function venues(): BelongsToMany
+    {
+        return $this->belongsToMany(Venue::class, 'event_venue')
+            ->withPivot(['day_label', 'starts_on', 'sort_order'])
+            ->withTimestamps()
+            ->orderBy('event_venue.sort_order');
+    }
+
+    /**
+     * Every venue attached to this match, in display order. Falls
+     * back to the single `venue_id` column when the pivot is empty —
+     * the dual-read that lets legacy single-venue events keep working
+     * while multi-venue rolls out.
+     *
+     * @return \Illuminate\Support\Collection<int, Venue>
+     */
+    public function allVenues(): \Illuminate\Support\Collection
+    {
+        $this->loadMissing('venues');
+
+        if ($this->venues->isNotEmpty()) {
+            return $this->venues->values();
+        }
+
+        return $this->venue ? collect([$this->venue]) : collect();
+    }
+
+    /**
+     * Replace the multi-venue pivot with the supplied rows and keep
+     * `events.venue_id` in sync with the primary (lowest sort_order).
+     *
+     * @param  list<array{venue_id: int, day_label?: string|null, starts_on?: string|\DateTimeInterface|null}>  $rows
+     */
+    public function syncVenues(array $rows): void
+    {
+        $payload = [];
+        $order = 0;
+
+        foreach ($rows as $row) {
+            $venueId = (int) ($row['venue_id'] ?? 0);
+
+            if ($venueId <= 0 || isset($payload[$venueId])) {
+                continue;
+            }
+
+            $payload[$venueId] = [
+                'day_label' => $row['day_label'] ?? null,
+                'starts_on' => $row['starts_on'] ?? null,
+                'sort_order' => $order++,
+            ];
+        }
+
+        $this->venues()->sync($payload);
+
+        // Primary venue_id mirrors the first pivot row. Empty pivot
+        // clears venue_id — the caller can still set it directly for
+        // legacy single-venue writes that never touch the pivot.
+        $primary = array_key_first($payload);
+        $this->forceFill(['venue_id' => $primary])->save();
+    }
+
     public function banner(): BelongsTo
     {
         return $this->belongsTo(Media::class, 'banner_media_id');
@@ -165,6 +232,17 @@ class Event extends Model
 
     public function locationLabel(): string
     {
+        // Multi-venue: show a count instead of the primary alone so
+        // the card doesn't misrepresent a two-range match. Detail
+        // page still enumerates each range in full.
+        $venueCount = $this->relationLoaded('venues') ? $this->venues->count() : 0;
+
+        if ($venueCount > 1) {
+            $primary = $this->venues->first();
+
+            return ($primary?->town ?: $primary?->name).' + '.($venueCount - 1).' more';
+        }
+
         if ($this->venue) {
             return collect([
                 $this->venue->town ?: $this->venue->name,

@@ -6,12 +6,15 @@ use App\Enums\ListingStatus;
 use App\Enums\Province;
 use App\Models\Organisation;
 use App\Queries\PublicEventQuery;
+use App\Services\Discovery\DiscoveryStats;
 use App\Support\JsonLd;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class OrganisationController extends Controller
 {
+    public function __construct(private readonly DiscoveryStats $stats) {}
+
     public function index(Request $request): View
     {
         $province = $request->string('province')->toString()
@@ -78,6 +81,11 @@ class OrganisationController extends Controller
         return view('public.clubs.show', [
             'organisation' => $organisation,
             'events' => $events,
+            // Disciplines derived from event history + explicit pivot,
+            // so a club that has run three PRS matches shows the PRS
+            // tag whether or not staff attached it manually.
+            'inferredDisciplines' => $this->stats->inferredDisciplinesForOrganisation($organisation),
+            'commonRanges' => $this->stats->commonRangesForOrganisation($organisation),
             'jsonLd' => [
                 JsonLd::organisation($organisation),
                 JsonLd::breadcrumbs([
@@ -101,6 +109,8 @@ class OrganisationController extends Controller
         return view('public.federations.show', [
             'organisation' => $organisation,
             'events' => $events,
+            'inferredDisciplines' => $this->stats->inferredDisciplinesForOrganisation($organisation),
+            'commonRanges' => $this->stats->commonRangesForOrganisation($organisation),
             'jsonLd' => [
                 JsonLd::organisation($organisation),
                 JsonLd::breadcrumbs([

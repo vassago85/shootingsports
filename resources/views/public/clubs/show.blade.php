@@ -39,7 +39,7 @@
                     />
                 </p>
                 <div class="club-tags" style="margin:16px 0 28px">
-                    @foreach ($organisation->disciplines as $discipline)
+                    @foreach ($inferredDisciplines as $discipline)
                         <a class="tag" href="{{ route('disciplines.show', $discipline->slug) }}">{{ $discipline->name }}</a>
                     @endforeach
                 </div>
@@ -60,6 +60,24 @@
                 <p style="margin-top:18px">
                     <a class="label" href="{{ route('ical.organisation', $organisation->slug) }}" style="text-decoration:none;border-bottom:1px solid var(--brass)">Subscribe via iCal →</a>
                 </p>
+
+                @if ($commonRanges->isNotEmpty())
+                    <div class="sec-head" style="margin-top:36px">
+                        <p class="label">Where they shoot</p>
+                        <h2>Ranges commonly used</h2>
+                    </div>
+                    <ul class="club-ranges" style="list-style:none;padding:0;margin:0 0 28px;display:grid;gap:8px">
+                        @foreach ($commonRanges as $range)
+                            <li>
+                                <a href="{{ route('ranges.show', $range->slug) }}">{{ $range->name }}</a>
+                                @if ($range->town || $range->province)
+                                    <span style="color:var(--slate);font-family:var(--f-mono);font-size:13px"> · {{ collect([$range->town, $range->province?->code()])->filter()->implode(' · ') }}</span>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+
                 <x-embed-snippet :club="$organisation->slug" />
             </div>
         </section>

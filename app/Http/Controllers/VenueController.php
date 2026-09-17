@@ -6,12 +6,20 @@ use App\Enums\ListingStatus;
 use App\Enums\Province;
 use App\Models\Venue;
 use App\Queries\PublicEventQuery;
+use App\Services\Discovery\DiscoveryStats;
+use App\Services\Venues\VenueResolver;
 use App\Support\JsonLd;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class VenueController extends Controller
 {
+    public function __construct(
+        private readonly DiscoveryStats $stats,
+        private readonly VenueResolver $resolver,
+    ) {}
+
     public function index(Request $request): View
     {
         $province = $request->string('province')->toString()
@@ -59,9 +67,20 @@ class VenueController extends Controller
         ]);
     }
 
-    public function show(Venue $venue): View
+    public function show(string $slug): View|RedirectResponse
     {
-        abort_unless($venue->status === ListingStatus::Published, 404);
+        $resolved = $this->resolver->findBySlug($slug);
+
+        abort_if($resolved === null, 404);
+
+        // Alias hit: send the client to the canonical URL with a 301
+        // so search engines collapse the old slug and shared links do
+        // not accumulate duplicate impressions.
+        if (! $resolved['canonical']) {
+            return redirect()->route('ranges.show', $resolved['venue']->slug, status: 301);
+        }
+
+        $venue = $resolved['venue'];
 
         $venue->load('disciplines');
 
@@ -70,6 +89,10 @@ class VenueController extends Controller
         return view('public.ranges.show', [
             'venue' => $venue,
             'events' => $events,
+            // Same derivation story as clubs: disciplines a range has
+            // actually hosted, plus the clubs that have hosted here.
+            'inferredDisciplines' => $this->stats->inferredDisciplinesForVenue($venue),
+            'clubsUsingRange' => $this->stats->clubsUsingVenue($venue),
             'jsonLd' => [
                 JsonLd::venue($venue),
                 JsonLd::breadcrumbs([

@@ -135,8 +135,12 @@ it('binds public listing routes to the slug column', function () {
     expect($routes->getByName('matches.show')->bindingFields())->toBe(['event' => 'slug'])
         ->and($routes->getByName('clubs.show')->bindingFields())->toBe(['organisation' => 'slug'])
         ->and($routes->getByName('federations.show')->bindingFields())->toBe(['organisation' => 'slug'])
-        ->and($routes->getByName('ranges.show')->bindingFields())->toBe(['venue' => 'slug'])
         ->and($routes->getByName('suppliers.show')->bindingFields())->toBe(['provider' => 'slug']);
+
+    // Ranges intentionally use a plain-string slug (no implicit model
+    // binding) so the controller can look the slug up against
+    // `venue_aliases` and 301 old slugs after a merge.
+    expect($routes->getByName('ranges.show')->parameterNames())->toBe(['slug']);
 });
 
 it('renders a federation-hosted match with entry url and fees', function () {

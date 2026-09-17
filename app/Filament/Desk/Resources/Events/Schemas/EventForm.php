@@ -7,6 +7,7 @@ use App\Enums\EventStatus;
 use App\Enums\OrganisationUserRole;
 use App\Filament\Support\EventDisciplineSelect;
 use App\Filament\Support\EventFlagSelect;
+use App\Filament\Support\EventVenueRepeater;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -77,8 +78,10 @@ class EventForm
                             ->label('Venue / range')
                             ->relationship('venue', 'name')
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->helperText('Primary range. Add extras below if the match spans more than one venue.'),
                         EventDisciplineSelect::make(),
+                        EventVenueRepeater::make(),
                         Textarea::make('description')
                             ->rows(4)
                             ->columnSpanFull(),

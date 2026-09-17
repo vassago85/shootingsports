@@ -10,6 +10,7 @@ use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Support\EventDisciplineSelect;
 use App\Filament\Support\EventFlagSelect;
+use App\Filament\Support\EventVenueRepeater;
 use App\Models\Event;
 use BackedEnum;
 use Filament\Actions\BulkAction;
@@ -103,10 +104,11 @@ class EventResource extends Resource
                                         ->searchable()
                                         ->preload()
                                         ->native(false)
-                                        ->hintIcon(Heroicon::OutlinedInformationCircle, 'Leave blank if it is hosted at the club range.'),
+                                        ->hintIcon(Heroicon::OutlinedInformationCircle, 'Primary venue. Use "Additional venues" below for multi-day/multi-range matches.'),
                                 ]),
                                 EventDisciplineSelect::make()
                                     ->helperText('First selected is the primary on cards.'),
+                                EventVenueRepeater::make(),
                                 Textarea::make('description')
                                     ->rows(8)
                                     ->columnSpanFull(),
