@@ -90,8 +90,8 @@ it('serves every sitemap endpoint with a rich, enum-covering dataset', function 
         'is_published' => false,
     ]);
 
-    // One published provider per category exercises every category ×
-    // province combination the providers sitemap builds.
+    // One published provider per category — category roots enter the
+    // providers sitemap; thin province slices stay out until ≥3 listings.
     foreach (ProviderCategory::cases() as $i => $category) {
         Provider::factory()->create([
             'slug' => 'provider-'.$category->value,
@@ -155,7 +155,7 @@ it('does not include draft events in the events sitemap', function () {
         ->assertDontSee('draft-event', false);
 });
 
-it('includes every province slug in the disciplines sitemap', function () {
+it('omits thin discipline province slices from the disciplines sitemap', function () {
     Discipline::factory()->create([
         'slug' => 'coverage-check',
         'is_published' => true,
@@ -163,21 +163,37 @@ it('includes every province slug in the disciplines sitemap', function () {
 
     $response = $this->get('/sitemaps/disciplines.xml');
 
-    $response->assertOk();
+    $response->assertOk()
+        ->assertSee('/disciplines/coverage-check</loc>', false);
 
+    // No clubs/events/ranges → every province slice is thin and excluded.
     foreach (Province::cases() as $province) {
-        $response->assertSee('/disciplines/coverage-check/'.$province->urlSlug(), false);
+        $response->assertDontSee('/disciplines/coverage-check/'.$province->urlSlug(), false);
     }
 });
 
-it('includes every category slug in the providers sitemap', function () {
+it('omits empty provider categories from the providers sitemap', function () {
     $response = $this->get('/sitemaps/providers.xml');
 
     $response->assertOk();
 
     foreach (ProviderCategory::cases() as $category) {
-        $response->assertSee('/suppliers/'.$category->urlSlug(), false);
+        $response->assertDontSee('/suppliers/'.$category->urlSlug().'</loc>', false);
     }
+});
+
+it('includes a provider category once it has at least one listing', function () {
+    $category = ProviderCategory::cases()[0];
+
+    Provider::factory()->create([
+        'category' => $category,
+        'status' => ListingStatus::Published,
+        'province' => Province::Gauteng,
+    ]);
+
+    $this->get('/sitemaps/providers.xml')
+        ->assertOk()
+        ->assertSee('/suppliers/'.$category->urlSlug(), false);
 });
 
 /**

@@ -1,4 +1,4 @@
-<x-layouts.public title="Find your next shoot">
+<x-layouts.public title="Shooting matches in South Africa">
     <main id="main">
         <section class="hero" style="padding:0">
             {{--

@@ -46,10 +46,11 @@
                 </span>
             </a>
             <nav class="nav-links" aria-label="Primary">
-                <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') ? 'on' : '' }}">Calendar</a>
+                <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') || request()->routeIs('calendar.month') ? 'on' : '' }}">Calendar</a>
                 <a href="{{ route('map') }}" class="{{ request()->routeIs('map') ? 'on' : '' }}">Map</a>
                 <a href="{{ route('disciplines.index') }}" class="{{ request()->routeIs('disciplines.*') ? 'on' : '' }}">Discover</a>
-                <a href="{{ route('clubs.index') }}" class="{{ request()->routeIs('clubs.*') || request()->routeIs('ranges.*') || request()->routeIs('suppliers.*') ? 'on' : '' }}">Directory</a>
+                <a href="{{ route('clubs.index') }}" class="{{ request()->routeIs('clubs.*') || request()->routeIs('ranges.*') ? 'on' : '' }}">Directory</a>
+                <a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'on' : '' }}">Industry</a>
                 <a href="{{ route('claim') }}">For Clubs</a>
                 <a href="{{ route('advertise') }}">Advertise</a>
             </nav>
@@ -73,11 +74,7 @@
             <a href="{{ route('disciplines.index') }}">Discover</a>
             <a href="{{ route('clubs.index') }}">Clubs &amp; series</a>
             <a href="{{ route('ranges.index') }}">Ranges</a>
-            {{-- UX audit #12: hide the mobile Industry link until the
-                 directory is populated enough to be worth clicking. --}}
-            @if (\App\Models\Provider::isDirectoryPopulated())
-                <a href="{{ route('suppliers.index') }}">Industry</a>
-            @endif
+            <a href="{{ route('suppliers.index') }}">Industry</a>
             <a href="{{ route('claim') }}">For Clubs</a>
             @auth
                 <a href="{{ route('my-calendar') }}">My calendar</a>
@@ -147,12 +144,7 @@
                         <li><a href="{{ route('disciplines.index') }}">Discover</a></li>
                         <li><a href="{{ route('clubs.index') }}">Clubs &amp; series</a></li>
                         <li><a href="{{ route('ranges.index') }}">Ranges</a></li>
-                        {{-- UX audit #12: hide footer Industry link when
-                             the directory has fewer than the threshold of
-                             live listings. --}}
-                        @if (\App\Models\Provider::isDirectoryPopulated())
-                            <li><a href="{{ route('suppliers.index') }}">Industry</a></li>
-                        @endif
+                        <li><a href="{{ route('suppliers.index') }}">Industry</a></li>
                     </ul>
                 </div>
                 <div>

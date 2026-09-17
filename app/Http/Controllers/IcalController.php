@@ -49,6 +49,7 @@ class IcalController extends Controller
             'Content-Type' => 'text/calendar; charset=utf-8',
             'Content-Disposition' => 'inline; filename="'.Str::slug($name).'.ics"',
             'Cache-Control' => 'public, max-age=300',
+            'X-Robots-Tag' => 'noindex, nofollow',
         ]);
     }
 }

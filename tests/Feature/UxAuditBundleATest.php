@@ -19,12 +19,13 @@ beforeEach(function () {
 
 // ---- #1 Industry empty states + advertise gate --------------------
 
-it('suppliers index replaces "0 listed" with a claim CTA', function () {
+it('suppliers index links empty categories to the category page', function () {
     $html = $this->get(route('suppliers.index'))->assertOk()->getContent();
+    $category = ProviderCategory::cases()[0];
 
     expect($html)
-        ->toContain('Free to list — claim this category')
-        ->toContain(route('claim'))
+        ->toContain('Free to list — open this category')
+        ->toContain(route('suppliers.category', $category->urlSlug()))
         ->not->toContain('0 listed');
 });
 

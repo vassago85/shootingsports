@@ -3,13 +3,11 @@
 use App\Enums\DisciplineFamily;
 use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
-use App\Enums\ProviderCategory;
 use App\Livewire\CalendarFilter;
 use App\Livewire\MatchFinder;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
-use App\Models\Provider;
 use App\Models\Venue;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
@@ -166,25 +164,12 @@ it('Discover renders "No matches listed yet" copy on zero-upcoming tiles', funct
         ->assertSee('Show all', false);
 });
 
-// #12 Industry hidden below threshold
-it('layout hides the Industry footer link when fewer than 5 providers exist', function () {
-    // Under threshold — 3 published providers.
-    Provider::factory()->count(3)->create(['status' => ListingStatus::Published, 'category' => ProviderCategory::Dealer]);
-
+// #12 Industry always linked (SEO reconnect /suppliers into the graph)
+it('layout always shows the Industry footer and nav links', function () {
     $html = $this->get(route('home'))->getContent();
 
-    // The footer should not have the Industry link visible.
-    // We check that the specific route('suppliers.index') anchor with
-    // "Industry" label is absent — clubs/ranges links remain.
-    expect($html)->not->toContain('>Industry</a>');
-});
-
-it('layout shows the Industry footer link once 5+ providers exist', function () {
-    Provider::factory()->count(5)->create(['status' => ListingStatus::Published, 'category' => ProviderCategory::Dealer]);
-
-    $html = $this->get(route('home'))->getContent();
-
-    expect($html)->toContain('>Industry</a>');
+    expect(substr_count($html, '>Industry</a>'))->toBeGreaterThanOrEqual(2)
+        ->and($html)->toContain('href="'.route('suppliers.index').'"');
 });
 
 it('homepage hides the "Industry" hero stat when directory is not populated', function () {

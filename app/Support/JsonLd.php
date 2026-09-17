@@ -67,10 +67,10 @@ class JsonLd
 
         $payload = [
             '@context' => 'https://schema.org',
-            '@type' => 'Event',
+            '@type' => 'SportsEvent',
             'name' => $event->title,
             'url' => $event->publicUrl(),
-            'startDate' => $event->starts_at?->toIso8601String(),
+            'startDate' => self::iso($event->starts_at),
             'endDate' => self::endDateFor($event),
             'eventStatus' => self::eventStatus($event->status),
             'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
@@ -118,14 +118,28 @@ class JsonLd
         }
 
         if ($event->ends_at) {
-            return $event->ends_at->toIso8601String();
+            return self::iso($event->ends_at);
         }
 
         if ($event->all_day) {
-            return $event->starts_at->endOfDay()->toIso8601String();
+            return self::iso($event->starts_at->endOfDay());
         }
 
-        return $event->starts_at->copy()->addHours(4)->toIso8601String();
+        return self::iso($event->starts_at->addHours(4));
+    }
+
+    /**
+     * Always emit SAST (+02:00). Stored datetimes can serialise as UTC
+     * (+00:00) when the connection/session timezone drifts — Google then
+     * shows the wrong local start time on rich results.
+     */
+    private static function iso(mixed $dt): ?string
+    {
+        if ($dt === null) {
+            return null;
+        }
+
+        return $dt->timezone(config('app.timezone'))->toIso8601String();
     }
 
     /**
@@ -156,40 +170,34 @@ class JsonLd
     }
 
     /**
-     * Google requires `offers` on Event even for free entry. Emits a
-     * single Offer with the cheapest advertised price (member fee
-     * beats standard entry fee when both are present), the entry URL
-     * or event page as the buy link, and availability derived from
-     * capacity vs entries_taken.
-     *
-     * Cancelled / postponed events get availability that matches their
-     * schema.org eventStatus so the two signals never contradict each
-     * other in Search Console.
+     * Google requires `offers` on Event. Emit url + availability always;
+     * only include price when we actually know the fee. A fabricated
+     * "0.00" claims free entry in rich results and is usually wrong.
      *
      * @return array<string, mixed>
      */
     private static function offersFor(Event $event): array
     {
-        // Cheapest advertised price: prefer member fee (usually the
-        // lower one). Falls back to standard entry fee, then to 0.00
-        // for events with no fee on record — Google accepts free
-        // events but the field must still be present.
-        $priceCents = $event->member_fee_cents ?? $event->entry_fee_cents ?? 0;
-        $price = number_format($priceCents / 100, 2, '.', '');
+        $priceCents = $event->member_fee_cents ?? $event->entry_fee_cents;
 
         // validFrom must be in the past for Google to accept the
         // offer as "buyable now". Use the event's created_at when
         // available so historical offers make sense in the timeline.
-        $validFrom = ($event->created_at ?? now())->toIso8601String();
+        $validFrom = self::iso($event->created_at ?? now());
 
-        return [
+        $offer = [
             '@type' => 'Offer',
             'url' => $event->entry_url ?: $event->publicUrl(),
-            'price' => $price,
             'priceCurrency' => 'ZAR',
             'availability' => self::offerAvailability($event),
             'validFrom' => $validFrom,
         ];
+
+        if ($priceCents !== null) {
+            $offer['price'] = number_format(((int) $priceCents) / 100, 2, '.', '');
+        }
+
+        return $offer;
     }
 
     /**

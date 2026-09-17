@@ -26,7 +26,7 @@ class ProviderController extends Controller
             default => $total.' industry suppliers',
         };
 
-        $seoTitle = 'Industry';
+        $seoTitle = 'Gunsmiths, dealers & instructors';
         $seoDescription = $countPhrase.' on the South African register — gunsmiths, dealers, ammunition, optics, safes and more.';
 
         // ItemList by category since suppliers are grouped that way in
@@ -34,7 +34,6 @@ class ProviderController extends Controller
         // keeps the list a manageable size for Google.
         $itemList = JsonLd::itemList(
             collect(ProviderCategory::cases())
-                ->filter(fn (ProviderCategory $c): bool => $providers->has($c->value))
                 ->map(fn (ProviderCategory $c): array => [
                     'name' => $c->getLabel(),
                     'url' => route('suppliers.category', $c->urlSlug()),
@@ -89,7 +88,8 @@ class ProviderController extends Controller
             'province' => $provinceEnum,
             'providers' => $providers,
             'provinces' => Province::cases(),
-            'noindex' => $provinceEnum !== null && $providers->count() < 3,
+            'noindex' => $providers->isEmpty()
+                || ($provinceEnum !== null && $providers->count() < 3),
             'jsonLd' => [JsonLd::breadcrumbs($crumbs)],
         ]);
     }

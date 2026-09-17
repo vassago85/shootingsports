@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Route;
 it('renders the home page instead of the Laravel welcome screen', function () {
     $this->get(route('home'))
         ->assertOk()
-        ->assertSee('Find your next')
+        ->assertSee('Shooting matches in South Africa')
         ->assertSee('Match finder')
         ->assertDontSee('Let’s get started');
 });
@@ -208,10 +208,12 @@ it('serves split sitemaps and ical feeds', function () {
     $this->get(route('ical.organisation', $club->slug))
         ->assertOk()
         ->assertHeader('content-type', 'text/calendar; charset=utf-8')
+        ->assertHeader('x-robots-tag', 'noindex, nofollow')
         ->assertSee('BEGIN:VEVENT')
         ->assertSee('League Round');
     $this->get(route('ical.discipline', $discipline->slug))
         ->assertOk()
+        ->assertHeader('x-robots-tag', 'noindex, nofollow')
         ->assertSee('BEGIN:VCALENDAR');
 });
 

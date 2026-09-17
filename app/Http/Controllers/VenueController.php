@@ -31,7 +31,7 @@ class VenueController extends Controller
             default => $venues->count().' ranges',
         };
 
-        $seoTitle = $province ? 'Shooting ranges in '.$province->getLabel() : 'Ranges';
+        $seoTitle = $province ? 'Shooting ranges in '.$province->getLabel() : 'Shooting ranges in South Africa';
         $seoDescription = $province
             ? 'Shooting ranges and venues in '.$province->getLabel().' — '.$countPhrase.' on the South African register.'
             : $countPhrase.' across South Africa — the venues where matches actually happen.';

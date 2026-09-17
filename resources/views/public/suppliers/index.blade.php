@@ -12,21 +12,15 @@
                 <div class="disc-grid">
                     @foreach ($categories as $category)
                         @php $count = ($grouped[$category->value] ?? collect())->count(); @endphp
-                        @if ($count > 0)
-                            <a class="disc" href="{{ route('suppliers.category', $category->urlSlug()) }}">
-                                <span class="fam">Category</span>
-                                <span class="nm">{{ $category->getLabel() }}</span>
+                        <a class="disc {{ $count === 0 ? 'is-quiet' : '' }}" href="{{ route('suppliers.category', $category->urlSlug()) }}">
+                            <span class="fam">Category</span>
+                            <span class="nm">{{ $category->getLabel() }}</span>
+                            @if ($count > 0)
                                 <span class="ct">{{ $count }} listed</span>
-                            </a>
-                        @else
-                            {{-- Bundle A #1: empty categories sell the
-                                 claim flow, not a hollow "0 listed". --}}
-                            <a class="disc is-quiet" href="{{ route('claim') }}">
-                                <span class="fam">Category</span>
-                                <span class="nm">{{ $category->getLabel() }}</span>
-                                <span class="ct ct-quiet">Free to list — claim this category</span>
-                            </a>
-                        @endif
+                            @else
+                                <span class="ct ct-quiet">Free to list — open this category</span>
+                            @endif
+                        </a>
                     @endforeach
                 </div>
                 {{-- UX audit #13: ad-slot below the category grid + hide

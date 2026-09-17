@@ -10,6 +10,7 @@ use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\Venue;
+use App\Queries\PublicEventQuery;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -38,9 +39,13 @@ class SitemapController extends Controller
      */
     public function pages(): Response
     {
+        $now = now()->toAtomString();
+
         $urls = collect([
             'home',
             'calendar',
+            'calendar.month',
+            'map',
             'disciplines.index',
             'clubs.index',
             'ranges.index',
@@ -52,6 +57,7 @@ class SitemapController extends Controller
             'privacy',
         ])->map(fn (string $name): array => [
             'loc' => route($name),
+            'lastmod' => $now,
         ]);
 
         return $this->xml('public.sitemaps.urlset', ['urls' => $urls]);
@@ -127,8 +133,14 @@ class SitemapController extends Controller
             }
 
             foreach (Province::cases() as $province) {
+                // Same threshold as DisciplineController noindex guard.
+                if ($this->disciplineProvinceListingCount($discipline, $province) < 3) {
+                    continue;
+                }
+
                 $slice = $this->safeUrl('disciplines province sitemap', $discipline, fn (): array => [
                     'loc' => route('disciplines.province', [$discipline->slug, $province->urlSlug()]),
+                    'lastmod' => $discipline->updated_at?->toAtomString(),
                 ]);
 
                 if ($slice !== null) {
@@ -143,13 +155,39 @@ class SitemapController extends Controller
     public function providers(): Response
     {
         $urls = new Collection;
+        $now = now()->toAtomString();
 
         foreach (ProviderCategory::cases() as $category) {
-            $urls->push(['loc' => route('suppliers.category', $category->urlSlug())]);
+            $nationalCount = Provider::query()
+                ->published()
+                ->where('category', $category)
+                ->count();
+
+            // Empty category shells stay out of the sitemap (and are noindexed).
+            if ($nationalCount < 1) {
+                continue;
+            }
+
+            $urls->push([
+                'loc' => route('suppliers.category', $category->urlSlug()),
+                'lastmod' => $now,
+            ]);
 
             foreach (Province::cases() as $province) {
+                $provinceCount = Provider::query()
+                    ->published()
+                    ->where('category', $category)
+                    ->where('province', $province)
+                    ->count();
+
+                // Same threshold as ProviderController noindex guard.
+                if ($provinceCount < 3) {
+                    continue;
+                }
+
                 $urls->push([
                     'loc' => route('suppliers.province', [$category->urlSlug(), $province->urlSlug()]),
+                    'lastmod' => $now,
                 ]);
             }
         }
@@ -169,6 +207,35 @@ class SitemapController extends Controller
             });
 
         return $this->xml('public.sitemaps.urlset', ['urls' => $urls]);
+    }
+
+    /**
+     * Mirrors DisciplineController thin-slice counting (clubs + upcoming
+     * events + ranges) so sitemap membership matches the noindex guard.
+     */
+    private function disciplineProvinceListingCount(Discipline $discipline, Province $province): int
+    {
+        $treeIds = $discipline->treeIds();
+
+        $events = (new PublicEventQuery(
+            disciplineSlug: $discipline->slug,
+            provinceSlug: $province->urlSlug(),
+        ))->builder()->count();
+
+        $clubs = Organisation::query()
+            ->published()
+            ->clubs()
+            ->whereHas('disciplines', fn ($q) => $q->whereIn('disciplines.id', $treeIds))
+            ->where('province', $province)
+            ->count();
+
+        $ranges = Venue::query()
+            ->published()
+            ->whereHas('disciplines', fn ($q) => $q->whereIn('disciplines.id', $treeIds))
+            ->where('province', $province)
+            ->count();
+
+        return $events + $clubs + $ranges;
     }
 
     /**

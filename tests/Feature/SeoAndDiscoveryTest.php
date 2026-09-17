@@ -61,7 +61,7 @@ it('renders both site graph and per-event JSON-LD on a match page', function () 
 
     $response
         ->assertSee('"@type":"WebSite"', false)
-        ->assertSee('"@type":"Event"', false)
+        ->assertSee('"@type":"SportsEvent"', false)
         ->assertSee('SEO Check Match', false);
 });
 
@@ -92,7 +92,8 @@ it('event JSON-LD always includes endDate, offers and performer', function () {
 
     $payload = JsonLd::event($event);
 
-    expect($payload)->toHaveKey('endDate')
+    expect($payload['@type'])->toBe('SportsEvent')
+        ->and($payload)->toHaveKey('endDate')
         ->and($payload)->toHaveKey('performer')
         ->and($payload)->toHaveKey('offers')
         ->and($payload['performer']['@type'])->toBe('SportsOrganization')
@@ -114,8 +115,10 @@ it('event JSON-LD falls back to a 4h endDate when ends_at is null', function () 
     ]);
 
     $payload = JsonLd::event($event);
+    $expected = $starts->copy()->addHours(4)->timezone(config('app.timezone'))->toIso8601String();
 
-    expect($payload['endDate'])->toBe($starts->copy()->addHours(4)->toIso8601String());
+    expect($payload['endDate'])->toBe($expected)
+        ->and($payload['startDate'])->toContain('+02:00');
 });
 
 it('event JSON-LD falls back to end-of-day when the event is all_day', function () {
@@ -126,10 +129,12 @@ it('event JSON-LD falls back to end-of-day when the event is all_day', function 
         'all_day' => true,
     ]);
 
-    expect(JsonLd::event($event)['endDate'])->toBe($starts->copy()->endOfDay()->toIso8601String());
+    $expected = $starts->copy()->endOfDay()->timezone(config('app.timezone'))->toIso8601String();
+
+    expect(JsonLd::event($event)['endDate'])->toBe($expected);
 });
 
-it('event JSON-LD emits a free Offer (price 0.00) when no fee is on record', function () {
+it('event JSON-LD omits price when no fee is on record', function () {
     $event = Event::factory()->confirmed()->create([
         'entry_fee_cents' => null,
         'member_fee_cents' => null,
@@ -138,8 +143,9 @@ it('event JSON-LD emits a free Offer (price 0.00) when no fee is on record', fun
 
     $offers = JsonLd::event($event)['offers'];
 
-    expect($offers['price'])->toBe('0.00')
-        ->and($offers['url'])->toBe($event->publicUrl());
+    expect($offers)->not->toHaveKey('price')
+        ->and($offers['url'])->toBe($event->publicUrl())
+        ->and($offers['priceCurrency'])->toBe('ZAR');
 });
 
 it('event JSON-LD marks capacity events SoldOut when entries_taken >= capacity', function () {
@@ -229,8 +235,11 @@ it('serves the pages sitemap with static URLs and skips private surfaces', funct
         ->assertHeader('content-type', 'application/xml; charset=UTF-8')
         ->assertSee(route('home'), false)
         ->assertSee(route('calendar'), false)
+        ->assertSee(route('map'), false)
+        ->assertSee(route('calendar.month'), false)
         ->assertSee(route('privacy'), false)
         ->assertSee(route('embed.docs'), false)
+        ->assertSee('<lastmod>', false)
         ->assertDontSee('/desk', false)
         ->assertDontSee('/admin', false)
         ->assertDontSee('my-calendar', false);
@@ -390,7 +399,7 @@ it('the suppliers index emits an ItemList of categories', function () {
 it('/calendar defaults to the static match calendar title when no filter is set', function () {
     $this->get(route('calendar'))
         ->assertOk()
-        ->assertSee('<title>Match calendar', false)
+        ->assertSee('<title>Shooting competitions calendar', false)
         ->assertSee('"@type":"BreadcrumbList"', false);
 });
 

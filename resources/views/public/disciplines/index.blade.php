@@ -1,5 +1,5 @@
 <x-layouts.public
-    title="Discover"
+    title="Shooting sports disciplines"
     description="Every shooting discipline on the South African register — what it is, who shoots it, and where the next match is."
     :json-ld="$jsonLd"
 >

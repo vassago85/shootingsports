@@ -54,12 +54,7 @@ it('labels the disciplines nav link as Discover', function () {
     expect($html)->toContain('href="'.route('disciplines.index').'">Discover</a>');
 });
 
-it('labels the suppliers footer link as Industry (once the directory is populated)', function () {
-    // UX audit #12: footer Industry link only appears when
-    // Provider::isDirectoryPopulated() is true. Seed enough real
-    // providers so the gate opens.
-    seedPopulatedIndustry();
-
+it('labels the suppliers footer link as Industry', function () {
     $response = $this->get(route('home'))->assertOk();
     $html = $response->getContent();
 

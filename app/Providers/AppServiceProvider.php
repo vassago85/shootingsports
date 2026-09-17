@@ -50,11 +50,15 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Behind Nginx Proxy Manager the app container only ever sees plain http
-        // on port 80. If the public APP_URL is https, force every generated URL
-        // (asset(), route(), Vite manifest URLs, Livewire endpoints) to use
-        // https so browsers don't block them as mixed content.
-        if (Str::startsWith((string) config('app.url'), 'https://')) {
+        // Canonical public host from APP_URL so route()/url()/canonical
+        // tags never follow a www request host (duplicate-index risk).
+        $appUrl = rtrim((string) config('app.url'), '/');
+
+        if ($appUrl !== '') {
+            URL::forceRootUrl($appUrl);
+        }
+
+        if (Str::startsWith($appUrl, 'https://')) {
             URL::forceScheme('https');
         }
 

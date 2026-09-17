@@ -94,7 +94,7 @@ class CalendarController extends Controller
     {
         if ($discipline === null && $province === null) {
             return [
-                'Match calendar',
+                'Shooting competitions calendar',
                 'Every listed match in South African shooting sport, filterable by discipline, province, and how far you will drive.',
             ];
         }
