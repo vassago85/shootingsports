@@ -537,14 +537,17 @@ section.block { padding: 72px 0; }
     padding: 3px 7px; border: 1px solid var(--rule); color: var(--slate);
 }
 .dope-tag.is-novice { border-color: #c9b87a; color: #4a3a0e; background: #f0ede2; }
-.dope-rows { padding: 12px 17px; font-family: var(--f-mono); font-size: 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.dope-rows { padding: 12px 17px; font-family: var(--f-mono); font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
 .dope-rows .r { display: flex; justify-content: space-between; gap: 14px; }
 .dope-rows .r dt { color: var(--slate); letter-spacing: .1em; font-size: 11px; text-transform: uppercase; }
 .dope-rows .r dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
 
 /* Footer CTA — always "View match". Filled brass so the eye finds it
-   quickly. `z-index: 1` lifts it above the whole-card overlay. */
-.dope-foot { display: flex; border-top: 1px solid var(--rule); position: relative; z-index: 1; }
+   quickly. `z-index: 1` lifts it above the whole-card overlay.
+   `margin-top: auto` pins the CTA + save link to the bottom of the
+   stretched grid card so row bottoms line up even when middle content
+   (highlight / tags / spec rows) varies in height. */
+.dope-foot { display: flex; border-top: 1px solid var(--rule); position: relative; z-index: 1; margin-top: auto; }
 .dope-primary {
     flex: 1; padding: 12px 8px; text-align: center; font-family: var(--f-mono); font-size: 11px;
     letter-spacing: .16em; text-transform: uppercase; font-weight: 600;
