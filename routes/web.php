@@ -32,6 +32,12 @@ use Illuminate\Support\Facades\Route;
 $provincePattern = implode('|', array_map(fn (Province $province) => $province->urlSlug(), Province::cases()));
 $categoryPattern = implode('|', array_map(fn (ProviderCategory $category) => $category->urlSlug(), ProviderCategory::cases()));
 
+// Coming-soon landing shown while `config('coming-soon.enabled')` is
+// true. Path is allowlisted in EnsureComingSoonAccess so it renders
+// even when the gate is on; when the flag is off the page is still
+// reachable directly (harmless, and useful for previewing the design).
+Route::view('/coming-soon', 'public.coming-soon')->name('coming-soon');
+
 Route::get('/', HomeController::class)->name('home');
 Route::get('/calendar', CalendarController::class)->name('calendar');
 Route::get('/calendar/month', CalendarMonthController::class)->name('calendar.month');

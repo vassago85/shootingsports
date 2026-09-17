@@ -54,6 +54,20 @@ class Login extends Component
         $user = Auth::user();
         $default = $user instanceof User ? $user->defaultRedirectPath() : '/';
 
+        // While the public site is gated behind /coming-soon, plain
+        // shooters have nowhere useful to land — their /my-calendar
+        // page would just bounce back through EnsureComingSoonAccess.
+        // Send them straight to the landing page instead so the UX
+        // is one hop, not a redirect chain.
+        if (
+            config('coming-soon.enabled')
+            && $user instanceof User
+            && ! $user->is_staff
+            && ! $user->is_match_director
+        ) {
+            $default = route('coming-soon');
+        }
+
         $this->redirectIntended(default: $default, navigate: false);
     }
 

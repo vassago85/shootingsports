@@ -1185,3 +1185,252 @@ footer.site a:hover { color: #fff; }
     .rate-card-row { grid-template-columns: 1fr; }
     .rate-card-price { text-align: left; }
 }
+
+/* ============================================================
+   Coming Soon landing (config('coming-soon.enabled') gate).
+   Fully scoped under .coming-soon so it can never leak into
+   the main site. Reuses the app-wide gunmetal + brass palette
+   and the same Saira Condensed / IBM Plex type stack, but has
+   its own layout so the marketing nav/footer don't intrude on
+   what is meant to read as a single, focused pre-launch page.
+   ============================================================ */
+.coming-soon-body { margin: 0; background: #101416; }
+.coming-soon {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    color: #eef0ee;
+    background: radial-gradient(ellipse at 50% 40%, #26302f 0%, #171d1f 55%, #0d1112 100%);
+    overflow: hidden;
+    isolation: isolate;
+}
+
+/* Backdrop reticle. Sized to the shorter viewport axis so it stays
+   fully visible on portrait phones and doesn't dominate wide desktops.
+   Kept purely decorative with aria-hidden on the wrapper. */
+.cs-reticle {
+    position: absolute; z-index: 0;
+    top: 50%; left: 50%;
+    width: min(92vmin, 780px);
+    height: min(92vmin, 780px);
+    transform: translate(-50%, -50%);
+    opacity: .10;
+    pointer-events: none;
+}
+.cs-reticle svg { width: 100%; height: 100%; display: block; }
+.cs-reticle-dot {
+    transform-origin: 200px 200px;
+    animation: cs-reticle-pulse 3.6s ease-in-out infinite;
+}
+@keyframes cs-reticle-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: .35; transform: scale(1.6); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .cs-reticle-dot { animation: none; }
+}
+
+/* Subtle tactical grid overlay. Fixed-size squares scaled with the
+   viewport so the "console" feel holds on both phone and desktop. */
+.cs-grid {
+    position: absolute; inset: 0; z-index: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(217,174,82,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(217,174,82,.05) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, #000 40%, transparent 85%);
+    -webkit-mask-image: radial-gradient(ellipse at center, #000 40%, transparent 85%);
+}
+
+/* Top nav — brand mark on the left, one CTA on the right. */
+.cs-nav {
+    position: relative; z-index: 2;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px clamp(20px, 5vw, 56px);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.cs-brand {
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none; color: inherit;
+}
+.cs-brand-text { display: flex; flex-direction: column; line-height: 1; }
+.cs-wordmark {
+    font-family: var(--f-display);
+    font-weight: 700; font-size: 20px;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: #f2f3f0;
+}
+.cs-sub {
+    font-family: var(--f-mono);
+    font-size: 9px; letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--brass-lt);
+    margin-top: 4px;
+}
+.cs-nav-cta { display: flex; align-items: center; gap: 14px; }
+.cs-hello {
+    font-family: var(--f-mono); font-size: 11px;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: rgba(238, 240, 238, .55);
+}
+.cs-btn {
+    font-family: var(--f-display); font-weight: 600;
+    font-size: 14px; letter-spacing: .06em; text-transform: uppercase;
+    padding: 11px 22px;
+    background: var(--brass); color: #1a1405;
+    border: 1px solid var(--brass);
+    display: inline-flex; align-items: center; gap: 8px;
+    text-decoration: none; cursor: pointer;
+    transition: background-color 120ms ease, transform 120ms ease;
+}
+.cs-btn:hover { background: var(--brass-lt); transform: translateY(-1px); }
+.cs-btn.ghost {
+    background: transparent;
+    color: var(--brass-lt);
+    border-color: rgba(217,174,82,.55);
+}
+.cs-btn.ghost:hover {
+    background: rgba(217,174,82,.10);
+    color: #f5e5b6;
+    transform: none;
+}
+
+/* Hero content. Centred vertically inside the 1fr grid row so the
+   headline always sits over the reticle's centre dot. */
+.cs-main {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: clamp(48px, 8vh, 96px) clamp(20px, 6vw, 64px);
+    max-width: 900px;
+    margin: 0 auto;
+}
+.cs-label {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--f-mono);
+    font-size: 11px; letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--brass-lt);
+    margin: 0 0 24px;
+    padding: 6px 14px;
+    border: 1px solid rgba(217,174,82,.35);
+    border-radius: 999px;
+    background: rgba(217,174,82,.06);
+}
+.cs-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--brass-lt);
+    box-shadow: 0 0 0 0 rgba(217,174,82,.7);
+    animation: cs-dot-pulse 2.2s ease-out infinite;
+}
+@keyframes cs-dot-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(217,174,82,.55); }
+    70%  { box-shadow: 0 0 0 12px rgba(217,174,82,0); }
+    100% { box-shadow: 0 0 0 0 rgba(217,174,82,0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .cs-dot { animation: none; }
+}
+.cs-headline {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: clamp(2.4rem, 7vw, 5.25rem);
+    line-height: .98;
+    letter-spacing: -.02em;
+    text-transform: uppercase;
+    color: #f7f8f5;
+    margin: 0 0 22px;
+    text-wrap: balance;
+}
+.cs-headline em {
+    font-style: normal;
+    color: var(--brass-lt);
+    background: linear-gradient(180deg, #efd28b 0%, #d9ae52 60%, #b3892b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.cs-lede {
+    font-family: var(--f-body);
+    font-size: clamp(15px, 1.6vw, 18px);
+    color: #b9c0bd;
+    max-width: 54ch;
+    margin: 0 auto 34px;
+    line-height: 1.55;
+}
+
+/* Facts strip — three tight columns that read as instrument
+   readouts under the headline. Reinforces the console vibe. */
+.cs-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.08);
+    margin: 0 0 32px;
+    width: 100%;
+    max-width: 640px;
+}
+.cs-facts > div {
+    background: rgba(16, 20, 22, .7);
+    padding: 14px 18px;
+    display: flex; flex-direction: column; gap: 4px;
+}
+.cs-facts dt {
+    font-family: var(--f-mono);
+    font-size: 9.5px; letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--slate);
+}
+.cs-facts dd {
+    font-family: var(--f-display);
+    font-size: 14px; letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #edefed;
+    margin: 0;
+}
+@media (max-width: 560px) {
+    .cs-facts { grid-template-columns: 1fr; }
+}
+
+.cs-cta,
+.cs-note {
+    font-family: var(--f-mono);
+    font-size: 12px; letter-spacing: .08em;
+    color: rgba(185, 192, 189, .8);
+    margin: 6px 0 0;
+}
+.cs-cta a {
+    color: var(--brass-lt);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+}
+.cs-cta a:hover { color: #f5e5b6; }
+
+/* Slim footer. Runs edge-to-edge so the page reads as one continuous
+   surface rather than a card floating on nothing. */
+.cs-foot {
+    position: relative; z-index: 2;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px clamp(20px, 5vw, 56px);
+    border-top: 1px solid rgba(255,255,255,.06);
+    font-family: var(--f-mono);
+    font-size: 10.5px; letter-spacing: .14em;
+    text-transform: uppercase;
+    color: rgba(185, 192, 189, .5);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 560px) {
+    .cs-nav { padding: 18px 20px; }
+    .cs-sub { display: none; }
+    .cs-hello { display: none; }
+    .cs-foot { justify-content: center; text-align: center; }
+}

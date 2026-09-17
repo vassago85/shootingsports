@@ -36,12 +36,19 @@
                     </button>
                 </form>
 
-                <p style="margin-top:22px;color:var(--slate)">
-                    New here?
-                    <a href="{{ route('register') }}">Create a shooter account</a>
-                    or
-                    <a href="{{ route('directors.register') }}">register as a match director</a>.
-                </p>
+                @if (! config('coming-soon.enabled'))
+                    <p style="margin-top:22px;color:var(--slate)">
+                        New here?
+                        <a href="{{ route('register') }}">Create a shooter account</a>
+                        or
+                        <a href="{{ route('directors.register') }}">register as a match director</a>.
+                    </p>
+                @else
+                    <p style="margin-top:22px;color:var(--slate)">
+                        Public sign-up opens at launch — for now this login is
+                        for the build team only.
+                    </p>
+                @endif
             </div>
         </section>
     </main>
