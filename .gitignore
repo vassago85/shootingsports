@@ -7,6 +7,9 @@
 .phpunit.result.cache
 /.codex
 /.cursor/
+/.claude
+/.mcp.json
+/boost.json
 /.idea
 /.nova
 /.phpunit.cache
