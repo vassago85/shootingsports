@@ -383,6 +383,7 @@ section.block { padding: 72px 0; }
     background: var(--surface-2); border: 1px solid var(--rule);
     margin-bottom: 24px;
 }
+.map-province-filters { margin-bottom: 14px; }
 .ss-map .leaflet-container { background: #dfe4dc; }
 /* Mute bright OSM blues/reds into the cream-gunmetal palette when
    CARTO_API_KEY is unset. Markers live in .leaflet-overlay-pane and

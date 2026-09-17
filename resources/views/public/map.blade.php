@@ -31,18 +31,32 @@
                       href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
                       crossorigin="">
 
+                <div class="filters map-province-filters" role="group" aria-label="Zoom map to a province">
+                    <button type="button" data-province="" aria-pressed="{{ $selectedProvince ? 'false' : 'true' }}">All provinces</button>
+                    @foreach ($provinces as $province)
+                        <button
+                            type="button"
+                            data-province="{{ $province->urlSlug() }}"
+                            aria-pressed="{{ $selectedProvince === $province->urlSlug() ? 'true' : 'false' }}"
+                            title="{{ $province->getLabel() }}"
+                        >{{ $province->getLabel() }}</button>
+                    @endforeach
+                </div>
+
                 <div
                     id="ss-map"
                     class="ss-map {{ $cartoApiKey ? '' : 'is-osm-fallback' }}"
                     data-pins="{{ json_encode($pins, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}"
+                    data-centroids="{{ json_encode($centroids, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}"
+                    data-province="{{ $selectedProvince ?? '' }}"
                     @if ($cartoApiKey) data-carto-key="{{ $cartoApiKey }}" @endif
                     role="region"
                     aria-label="Map of shooting ranges with upcoming matches"
                 ></div>
 
-                <ul class="map-legend">
+                <ul class="map-legend" id="ss-map-legend">
                     @forelse ($pins as $pin)
-                        <li class="{{ $pin['count'] === 0 ? 'is-quiet' : '' }}">
+                        <li class="{{ $pin['count'] === 0 ? 'is-quiet' : '' }}" data-province="{{ $pin['province_slug'] ?? '' }}">
                             <a href="{{ $pin['url'] }}">
                                 <span class="prov">{{ $pin['label'] }}</span>
                                 <span class="ct">
@@ -90,6 +104,7 @@
                             if (! el || el.dataset.mapReady === '1') return;
                             el.dataset.mapReady = '1';
                             var pins = JSON.parse(el.dataset.pins || '[]');
+                            var centroids = JSON.parse(el.dataset.centroids || '{}');
 
                             var map = L.map(el, {
                                 zoomControl: true,
@@ -118,8 +133,6 @@
                             var cluster = L.markerClusterGroup({
                                 showCoverageOnHover: false,
                                 maxClusterRadius: 56,
-                                // Country / province zoom stays clustered;
-                                // city-level zoom shows individual range pins.
                                 disableClusteringAtZoom: 10,
                                 spiderfyOnMaxZoom: true,
                                 iconCreateFunction: function (c) {
@@ -141,7 +154,7 @@
                                 },
                             });
 
-                            var bounds = [];
+                            var markersByProvince = {};
                             pins.forEach(function (p) {
                                 var colour = p.count > 0 ? '#b3892b' : '#5a6360';
                                 var marker = L.circleMarker([p.lat, p.lng], {
@@ -151,6 +164,7 @@
                                     fillColor: colour,
                                     fillOpacity: p.count > 0 ? 0.65 : 0.35,
                                     matchCount: p.count || 0,
+                                    provinceSlug: p.province_slug || '',
                                 });
                                 var tip = p.label;
                                 if (p.count > 0) {
@@ -163,16 +177,69 @@
                                     window.location.href = p.url;
                                 });
                                 cluster.addLayer(marker);
-                                bounds.push([p.lat, p.lng]);
+                                var key = p.province_slug || '';
+                                if (! markersByProvince[key]) markersByProvince[key] = [];
+                                markersByProvince[key].push(marker);
                             });
 
                             map.addLayer(cluster);
 
-                            if (bounds.length > 1) {
-                                map.fitBounds(bounds, { padding: [36, 36], maxZoom: 9 });
-                            } else if (bounds.length === 1) {
-                                map.setView(bounds[0], 9);
-                            }
+                            var focusProvince = function (slug) {
+                                var buttons = document.querySelectorAll('.map-province-filters [data-province]');
+                                buttons.forEach(function (btn) {
+                                    btn.setAttribute('aria-pressed', btn.getAttribute('data-province') === slug ? 'true' : 'false');
+                                });
+
+                                var legend = document.getElementById('ss-map-legend');
+                                if (legend) {
+                                    legend.querySelectorAll('li[data-province]').forEach(function (li) {
+                                        var match = ! slug || li.getAttribute('data-province') === slug;
+                                        li.hidden = ! match;
+                                    });
+                                }
+
+                                var url = new URL(window.location.href);
+                                if (slug) {
+                                    url.searchParams.set('province', slug);
+                                } else {
+                                    url.searchParams.delete('province');
+                                }
+                                window.history.replaceState({}, '', url.pathname + url.search);
+
+                                if (! slug) {
+                                    var all = [];
+                                    pins.forEach(function (p) { all.push([p.lat, p.lng]); });
+                                    if (all.length > 1) {
+                                        map.fitBounds(all, { padding: [36, 36], maxZoom: 9 });
+                                    } else if (all.length === 1) {
+                                        map.setView(all[0], 9);
+                                    } else {
+                                        map.setView([-28.8, 25.0], 5);
+                                    }
+                                    return;
+                                }
+
+                                var group = markersByProvince[slug] || [];
+                                if (group.length > 0) {
+                                    var bounds = L.featureGroup(group).getBounds();
+                                    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 10 });
+                                    return;
+                                }
+
+                                var centre = centroids[slug];
+                                if (centre) {
+                                    map.setView([centre.lat, centre.lng], 8);
+                                }
+                            };
+
+                            document.querySelectorAll('.map-province-filters [data-province]').forEach(function (btn) {
+                                btn.addEventListener('click', function () {
+                                    focusProvince(btn.getAttribute('data-province') || '');
+                                });
+                            });
+
+                            var initial = el.dataset.province || '';
+                            focusProvince(initial);
                         };
 
                         if (document.readyState === 'loading') {

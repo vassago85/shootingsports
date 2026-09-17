@@ -178,6 +178,25 @@ it('/map serves a Leaflet-backed interactive map element', function () {
         ->toContain('disableClusteringAtZoom');
 });
 
+it('/map shows province zoom chips above the map', function () {
+    $html = $this->get(route('map'))->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('class="filters map-province-filters"')
+        ->toContain('data-province="gauteng"')
+        ->toContain('data-centroids=')
+        ->toContain('focusProvince');
+});
+
+it('/map accepts a province query for initial focus', function () {
+    $html = $this->get(route('map', ['province' => 'gauteng']))->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('data-province="gauteng"')
+        ->toContain('data-province="gauteng"')
+        ->toMatch('/data-province="gauteng"[^>]*aria-pressed="true"/');
+});
+
 it('/map view is set to noindex when there are zero upcoming matches (avoid an empty map in the SERP)', function () {
     $html = $this->get(route('map'))->assertOk()->getContent();
     expect($html)->toContain('0 matches');

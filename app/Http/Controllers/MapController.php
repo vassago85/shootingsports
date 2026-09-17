@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Province;
 use App\Models\Event;
 use App\Models\Venue;
+use App\Support\Geo;
 use App\Support\JsonLd;
 use App\Support\PublicCache;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
@@ -16,7 +19,7 @@ use Illuminate\View\View;
  */
 class MapController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(Request $request): View
     {
         $payload = Cache::remember(
             PublicCache::key('map.venue-pins'),
@@ -52,6 +55,7 @@ class MapController extends Controller
                             'label' => $venue->name,
                             'town' => $venue->town,
                             'province' => $venue->province?->code(),
+                            'province_slug' => $venue->province?->urlSlug(),
                             'lat' => (float) $venue->lat,
                             'lng' => (float) $venue->lng,
                             'count' => $count,
@@ -88,6 +92,22 @@ class MapController extends Controller
             }
         );
 
+        $centroids = [];
+
+        foreach (Province::cases() as $province) {
+            [$lat, $lng] = Geo::provinceCentroid($province);
+            $centroids[$province->urlSlug()] = [
+                'lat' => $lat,
+                'lng' => $lng,
+                'label' => $province->getLabel(),
+            ];
+        }
+
+        $selectedProvince = $request->string('province')->toString() ?: null;
+        if ($selectedProvince && Province::fromUrlSlug($selectedProvince) === null) {
+            $selectedProvince = null;
+        }
+
         $pinCount = count($payload['pins']);
         $seoDescription = $pinCount > 0
             ? $payload['totalMatches'].' upcoming matches across '.$pinCount.' pinned ranges on the South African map.'
@@ -97,6 +117,9 @@ class MapController extends Controller
             'pins' => $payload['pins'],
             'unpinned' => $payload['unpinned'],
             'totalMatches' => $payload['totalMatches'],
+            'provinces' => Province::cases(),
+            'centroids' => $centroids,
+            'selectedProvince' => $selectedProvince,
             'seoDescription' => $seoDescription,
             'cartoApiKey' => filled(config('services.carto.api_key'))
                 ? (string) config('services.carto.api_key')
