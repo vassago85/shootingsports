@@ -37,7 +37,7 @@
 
                 <div class="mb-toolbar-chips filters" role="group" aria-label="Primary match filters">
                     <button type="button" class="mb-chip" wire:click="toggleWeekend" aria-pressed="{{ $weekend ? 'true' : 'false' }}">This weekend</button>
-                    <button type="button" class="mb-chip" wire:click="setFamily('all')" aria-pressed="{{ $family === 'all' ? 'true' : 'false' }}">All disciplines</button>
+                    <button type="button" class="mb-chip is-default" wire:click="setFamily('all')" aria-pressed="{{ $family === 'all' ? 'true' : 'false' }}">All disciplines</button>
                     @foreach ($families as $item)
                         <button type="button" class="mb-chip" wire:click="setFamily('{{ $item->value }}')" aria-pressed="{{ $family === $item->value ? 'true' : 'false' }}">{{ $item->getLabel() }}</button>
                     @endforeach
@@ -180,7 +180,7 @@
             </div>
 
             <div class="mb-more-toggles filters" role="group" aria-label="Filter matches by province">
-                <button type="button" class="mb-chip" wire:click="clearProvinces" aria-pressed="{{ $selectedProvinces === [] ? 'true' : 'false' }}">All provinces</button>
+                <button type="button" class="mb-chip is-default" wire:click="clearProvinces" aria-pressed="{{ $selectedProvinces === [] ? 'true' : 'false' }}">All provinces</button>
                 @foreach ($provinces as $item)
                     <button
                         type="button"

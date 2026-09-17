@@ -371,8 +371,9 @@ section.block { padding: 72px 0; }
 .empty-actions { display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
 /* UX audit cool-factor: view toggle between /calendar (list) and
-   /map. Sits in the page hero on both surfaces, mirrors the family/
-   province chip visual language so the site reads consistent. */
+   /map. Default (light pages) keeps cream chrome; Matches page-hero
+   and the match-board toolbar force the dark treatment so List /
+   Month / Map never flash white pills on charcoal. */
 .view-toggle {
     display: inline-flex; gap: 0; margin-top: 18px;
     border: 1px solid var(--rule); background: var(--surface);
@@ -390,6 +391,33 @@ section.block { padding: 72px 0; }
 }
 .view-toggle a:not([aria-pressed="true"]):hover {
     background: var(--surface-2); color: var(--brass-dk);
+}
+.page-hero .view-toggle,
+.match-board .view-toggle {
+    background: transparent;
+    border-color: rgba(255, 255, 255, .18);
+    margin-top: 18px;
+}
+.page-hero .view-toggle a,
+.match-board .view-toggle a {
+    color: #9da4a0;
+    border-right-color: rgba(255, 255, 255, .18);
+}
+.page-hero .view-toggle a[aria-pressed="true"],
+.match-board .view-toggle a[aria-pressed="true"] {
+    background: rgba(217, 174, 82, .12); color: var(--brass-lt);
+}
+.page-hero .view-toggle a:not([aria-pressed="true"]):hover,
+.match-board .view-toggle a:not([aria-pressed="true"]):hover {
+    color: #eef0ee; background: rgba(255,255,255,.04);
+}
+
+/* Soften the default "All …" chip so an empty filter set does not
+   read as an applied filter (brass fill reserved for real selections). */
+.match-board .mb-chip.is-default[aria-pressed="true"] {
+    background: transparent;
+    border-color: rgba(255, 255, 255, .28);
+    color: #eef0ee;
 }
 
 /* Month calendar grid */

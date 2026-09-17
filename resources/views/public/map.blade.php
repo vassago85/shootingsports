@@ -14,16 +14,28 @@
                     on {{ count($pins) }} {{ count($pins) === 1 ? 'pinned range' : 'pinned ranges' }}.
                     Click a pin for the range page.
                 </p>
-                <div class="view-toggle" role="group" aria-label="Matches view">
-                    <a href="{{ route('calendar') }}" aria-pressed="false">List</a>
-                    <a href="{{ route('calendar.month') }}" aria-pressed="false">Month</a>
-                    <a href="{{ route('map') }}" aria-pressed="true">Map</a>
-                </div>
             </div>
         </section>
 
         <section class="match-board">
             <div class="wrap">
+                <div class="mb-toolbar">
+                    <div class="mb-toolbar-in">
+                        <h2 class="mb-toolbar-title">
+                            Matches
+                            <small>
+                                {{ $totalMatches }} {{ $totalMatches === 1 ? 'match' : 'matches' }}
+                                · {{ count($pins) }} {{ count($pins) === 1 ? 'range' : 'ranges' }}
+                            </small>
+                        </h2>
+                        <div class="view-toggle" role="group" aria-label="Matches view">
+                            <a href="{{ route('calendar') }}" aria-pressed="false">List</a>
+                            <a href="{{ route('calendar.month') }}" aria-pressed="false">Month</a>
+                            <a href="{{ route('map') }}" aria-pressed="true">Map</a>
+                        </div>
+                    </div>
+                </div>
+
                 <link rel="stylesheet"
                       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
                       crossorigin="">
@@ -31,11 +43,12 @@
                       href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
                       crossorigin="">
 
-                <div class="filters map-province-filters" role="group" aria-label="Zoom map to a province">
-                    <button type="button" data-province="" aria-pressed="{{ $selectedProvince ? 'false' : 'true' }}">All provinces</button>
+                <div class="filters map-province-filters mb-toolbar-chips" role="group" aria-label="Zoom map to a province">
+                    <button type="button" class="mb-chip is-default" data-province="" aria-pressed="{{ $selectedProvince ? 'false' : 'true' }}">All provinces</button>
                     @foreach ($provinces as $province)
                         <button
                             type="button"
+                            class="mb-chip"
                             data-province="{{ $province->urlSlug() }}"
                             aria-pressed="{{ $selectedProvince === $province->urlSlug() ? 'true' : 'false' }}"
                             title="{{ $province->getLabel() }}"

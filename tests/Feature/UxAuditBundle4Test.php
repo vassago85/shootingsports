@@ -182,7 +182,7 @@ it('/map shows province zoom chips above the map', function () {
     $html = $this->get(route('map'))->assertOk()->getContent();
 
     expect($html)
-        ->toContain('class="filters map-province-filters"')
+        ->toContain('map-province-filters')
         ->toContain('data-province="gauteng"')
         ->toContain('data-centroids=')
         ->toContain('focusProvince');

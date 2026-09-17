@@ -1,72 +1,152 @@
-<div>
-    <div class="filters" role="group" aria-label="Filter matches by discipline family">
-        <button type="button" wire:click="setFamily('all')" aria-pressed="{{ $family === 'all' ? 'true' : 'false' }}">All</button>
-        @foreach ($families as $item)
-            <button type="button" wire:click="setFamily('{{ $item->value }}')" aria-pressed="{{ $family === $item->value ? 'true' : 'false' }}">{{ $item->getLabel() }}</button>
-        @endforeach
-    </div>
-    <div class="filters" role="group" aria-label="Additional filters" style="margin-top:-14px">
-        <button type="button" wire:click="toggleNovice" aria-pressed="{{ $novice ? 'true' : 'false' }}">New shooter friendly</button>
-        <button type="button" wire:click="toggleConfirmed" aria-pressed="{{ $confirmed ? 'true' : 'false' }}">Confirmed dates only</button>
-    </div>
-    <div class="filters" role="group" aria-label="Filter matches by province" style="margin-top:-14px">
-        <button type="button" wire:click="clearProvinces" aria-pressed="{{ $selectedProvinces === [] ? 'true' : 'false' }}">All provinces</button>
-        @foreach ($provinces as $item)
-            <button
-                type="button"
-                wire:click="toggleProvince('{{ $item->urlSlug() }}')"
-                aria-pressed="{{ in_array($item->urlSlug(), $selectedProvinces, true) ? 'true' : 'false' }}"
-                title="{{ $item->getLabel() }}"
-            >{{ $item->getLabel() }}</button>
-        @endforeach
-    </div>
+@php
+    $moreFiltersOpen = filled($near ?? null) || filled($lat ?? null) || filled($radius ?? null) || filled($from ?? null) || filled($to ?? null) || filled($province ?? null) || $confirmed;
+@endphp
 
-    @if (filled($activeDisciplineLabel) || filled($from) || filled($to) || filled($near) || filled($lat) || filled($radius))
-        <div class="active-filters" role="group" aria-label="Active filters" style="margin-top:-14px">
-            <span class="active-filters-label">Filtered:</span>
-            @if (filled($activeDisciplineLabel))
-                <button type="button" class="chip-active" wire:click="clearDiscipline">
-                    <span>{{ $activeDisciplineLabel }}</span>
-                    <span aria-hidden="true">×</span>
-                </button>
-            @endif
-            @if (filled($from) || filled($to))
-                <button type="button" class="chip-active" wire:click="clearDates">
-                    <span>{{ $from ?: '…' }} → {{ $to ?: '…' }}</span>
-                    <span aria-hidden="true">×</span>
-                </button>
-            @endif
-            @if (filled($near) || filled($lat) || filled($radius))
-                <button type="button" class="chip-active" wire:click="clearDistance">
-                    <span>
-                        @if (filled($near))
-                            Within {{ $radius ?: '…' }} km of {{ $near }}
-                        @elseif (filled($lat))
-                            Within {{ $radius ?: '…' }} km of my location
-                        @else
-                            Within {{ $radius }} km
-                        @endif
-                    </span>
-                    <span aria-hidden="true">×</span>
-                </button>
-            @endif
+<div x-data="{ moreOpen: {{ $moreFiltersOpen ? 'true' : 'false' }} }">
+    <div class="mb-toolbar">
+        <div class="mb-toolbar-in">
+            <h2 class="mb-toolbar-title">
+                Matches
+                <small>
+                    {{ $resultCount }} upcoming {{ $resultCount === 1 ? 'match' : 'matches' }} this month
+                    @if ($hasActiveFilters)
+                        <span class="result-count-suffix">— filtered</span>
+                    @endif
+                </small>
+                @if ($hasActiveFilters)
+                    <button type="button" class="btn-clear-filters mb-toolbar-clear" wire:click="clearAll">Clear all</button>
+                @endif
+            </h2>
+            <div class="view-toggle" role="group" aria-label="Matches view">
+                <a href="{{ route('calendar', request()->except('month')) }}" aria-pressed="false">List</a>
+                <a href="{{ route('calendar.month', request()->query()) }}" aria-pressed="true">Month</a>
+                <a href="{{ route('map', request()->except(['month'])) }}" aria-pressed="false">Map</a>
+            </div>
+
+            <div class="mb-toolbar-chips filters" role="group" aria-label="Primary match filters">
+                <button type="button" class="mb-chip is-default" wire:click="setFamily('all')" aria-pressed="{{ $family === 'all' ? 'true' : 'false' }}">All disciplines</button>
+                @foreach ($families as $item)
+                    <button type="button" class="mb-chip" wire:click="setFamily('{{ $item->value }}')" aria-pressed="{{ $family === $item->value ? 'true' : 'false' }}">{{ $item->getLabel() }}</button>
+                @endforeach
+                <button type="button" class="mb-chip" wire:click="toggleNovice" aria-pressed="{{ $novice ? 'true' : 'false' }}">New shooter</button>
+                <button
+                    type="button"
+                    class="mb-chip"
+                    @click="moreOpen = ! moreOpen"
+                    :aria-expanded="moreOpen ? 'true' : 'false'"
+                    aria-controls="mb-month-more-panel"
+                >More filters</button>
+            </div>
         </div>
-    @endif
 
-    <div class="filters distance-filters" role="group" aria-label="Distance filter" style="margin-top:-14px" x-data="calendarNearGeo()">
-        <label class="distance-near">
-            <span class="sr-only">Near town</span>
-            <input type="text" wire:model.live.debounce.400ms="near" placeholder="Near town…" aria-label="Near town">
+        @if ($hasActiveFilters)
+            <div class="mb-active active-filters" role="group" aria-label="Active filters">
+                <span class="mb-active-label active-filters-label">Filtered:</span>
+                @if ($family !== 'all')
+                    <button type="button" class="chip-active" wire:click="clearFamily">
+                        <span>{{ \App\Enums\DisciplineFamily::tryFrom($family)?->getLabel() ?? ucfirst($family) }}</span>
+                        <span aria-hidden="true">×</span>
+                    </button>
+                @endif
+                @if ($novice)
+                    <button type="button" class="chip-active" wire:click="clearNovice">
+                        <span>New shooter</span>
+                        <span aria-hidden="true">×</span>
+                    </button>
+                @endif
+                @if ($confirmed)
+                    <button type="button" class="chip-active" wire:click="clearConfirmed">
+                        <span>Confirmed only</span>
+                        <span aria-hidden="true">×</span>
+                    </button>
+                @endif
+                @if (filled($activeDisciplineLabel))
+                    <button type="button" class="chip-active" wire:click="clearDiscipline">
+                        <span>{{ $activeDisciplineLabel }}</span>
+                        <span aria-hidden="true">×</span>
+                    </button>
+                @endif
+                @foreach ($selectedProvinces as $slug)
+                    @php $provinceLabel = \App\Enums\Province::fromUrlSlug($slug)?->getLabel() ?? $slug; @endphp
+                    <button type="button" class="chip-active" wire:click="toggleProvince('{{ $slug }}')">
+                        <span>{{ $provinceLabel }}</span>
+                        <span aria-hidden="true">×</span>
+                    </button>
+                @endforeach
+                @if (filled($from) || filled($to))
+                    <button type="button" class="chip-active" wire:click="clearDates">
+                        <span>{{ $from ?: '…' }} → {{ $to ?: '…' }}</span>
+                        <span aria-hidden="true">×</span>
+                    </button>
+                @endif
+                @if (filled($near) || filled($lat) || filled($radius))
+                    <button type="button" class="chip-active" wire:click="clearDistance">
+                        <span>
+                            @if (filled($near))
+                                Within {{ $radius ?: '…' }} km of {{ $near }}
+                            @elseif (filled($lat))
+                                Within {{ $radius ?: '…' }} km of my location
+                            @else
+                                Within {{ $radius }} km
+                            @endif
+                        </span>
+                        <span aria-hidden="true">×</span>
+                    </button>
+                @endif
+                <button type="button" class="btn-clear-filters" wire:click="clearAll">Clear all</button>
+            </div>
+        @endif
+    </div>
+
+    <div
+        id="mb-month-more-panel"
+        class="mb-more"
+        x-show="moreOpen"
+        x-cloak
+        role="group"
+        aria-label="Advanced filters"
+    >
+        <label class="field">
+            <span>Near town</span>
+            <input type="text" wire:model.live.debounce.400ms="near" placeholder="e.g. Centurion" autocomplete="address-level2">
         </label>
-        <select wire:model.live="radius" aria-label="Within distance">
-            <option value="">Any distance</option>
-            @foreach ($radii as $km)
-                <option value="{{ $km }}">{{ $km }} km</option>
+        <label class="field">
+            <span>Within</span>
+            <select wire:model.live="radius">
+                <option value="">Any distance</option>
+                @foreach ($radii as $km)
+                    <option value="{{ $km }}">{{ $km }} km</option>
+                @endforeach
+            </select>
+        </label>
+        <label class="field">
+            <span>From</span>
+            <input type="date" wire:model.live="from">
+        </label>
+        <label class="field">
+            <span>To</span>
+            <input type="date" wire:model.live="to">
+        </label>
+
+        <div class="mb-more-toggles" x-data="calendarNearGeo()">
+            <button type="button" @click="locate" :disabled="locating">
+                <span x-text="locating ? 'Locating…' : 'Use my location'"></span>
+            </button>
+            <button type="button" wire:click="toggleConfirmed" aria-pressed="{{ $confirmed ? 'true' : 'false' }}">Confirmed dates only</button>
+        </div>
+
+        <div class="mb-more-toggles filters" role="group" aria-label="Filter matches by province">
+            <button type="button" class="mb-chip is-default" wire:click="clearProvinces" aria-pressed="{{ $selectedProvinces === [] ? 'true' : 'false' }}">All provinces</button>
+            @foreach ($provinces as $item)
+                <button
+                    type="button"
+                    class="mb-chip"
+                    wire:click="toggleProvince('{{ $item->urlSlug() }}')"
+                    aria-pressed="{{ in_array($item->urlSlug(), $selectedProvinces, true) ? 'true' : 'false' }}"
+                    title="{{ $item->getLabel() }}"
+                >{{ $item->getLabel() }}</button>
             @endforeach
-        </select>
-        <button type="button" class="btn ghost" style="padding:8px 12px" @click="locate" :disabled="locating">
-            <span x-text="locating ? 'Locating…' : 'Use my location'"></span>
-        </button>
+        </div>
     </div>
 
     <div class="month-nav">
@@ -76,18 +156,6 @@
             <button type="button" class="btn ghost" wire:click="goToday">Today</button>
             <button type="button" class="btn ghost" wire:click="nextMonth" aria-label="Next month">→</button>
         </div>
-    </div>
-
-    <div class="result-bar">
-        <p class="result-count">
-            {{ $resultCount }} upcoming {{ $resultCount === 1 ? 'match' : 'matches' }} this month
-            @if ($hasActiveFilters)
-                <span class="result-count-suffix">— filtered</span>
-            @endif
-        </p>
-        @if ($hasActiveFilters)
-            <button type="button" class="btn-clear-filters" wire:click="clearAll">Clear filters</button>
-        @endif
     </div>
 
     <div class="month-cal" role="grid" aria-label="{{ $monthLabel }} match calendar">
