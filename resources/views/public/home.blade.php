@@ -47,9 +47,9 @@
                     @forelse ($rail as $event)
                         <a class="rail-item" href="{{ route('matches.show', $event->slug) }}">
                             <div class="rail-date">
-                                <span class="dow">{{ \App\Support\EventDate::weekday($event->starts_at) }}</span>
-                                <b>{{ \App\Support\EventDate::dayOfMonth($event->starts_at) }}</b>
-                                <span class="mo">{{ \App\Support\EventDate::monthWithYear($event->starts_at) }}</span>
+                                <span class="dow">{{ \App\Support\EventDate::weekday($event->starts_at, $event->ends_at) }}</span>
+                                <b>{{ \App\Support\EventDate::dayOfMonth($event->starts_at, $event->ends_at) }}</b>
+                                <span class="mo">{{ \App\Support\EventDate::monthWithYear($event->starts_at, $event->ends_at) }}</span>
                             </div>
                             <div class="rail-body">
                                 <div class="t">{{ $event->title }}</div>

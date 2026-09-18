@@ -61,10 +61,10 @@
             </h3>
             <span class="club">{{ $event->hostDisplayName() }}</span>
         </div>
-        <div class="dope-date">
-            <span class="dow">{{ \App\Support\EventDate::weekday($event->starts_at) }}</span>
-            <b>{{ \App\Support\EventDate::dayOfMonth($event->starts_at) }}</b>
-            <span class="mo">{{ \App\Support\EventDate::monthWithYear($event->starts_at) }}</span>
+        <div class="dope-date {{ \App\Support\EventDate::isMultiDay($event->starts_at, $event->ends_at) ? 'is-range' : '' }}">
+            <span class="dow">{{ \App\Support\EventDate::weekday($event->starts_at, $event->ends_at) }}</span>
+            <b>{{ \App\Support\EventDate::dayOfMonth($event->starts_at, $event->ends_at) }}</b>
+            <span class="mo">{{ \App\Support\EventDate::monthWithYear($event->starts_at, $event->ends_at) }}</span>
         </div>
     </div>
 

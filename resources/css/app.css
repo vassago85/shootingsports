@@ -817,6 +817,7 @@ section.block { padding: 72px 0; }
     font-variant-numeric: tabular-nums;
 }
 .mb-date .mo { display: block; color: var(--mb-accent-lt); letter-spacing: .18em; }
+.mb-date.is-range b { font-size: 18px; }
 .mb-row.is-planned .mb-date b { color: var(--mb-ink-muted); }
 .mb-row.is-planned .mb-date .mo { color: var(--mb-ink-quiet); }
 
@@ -1124,6 +1125,7 @@ section.block { padding: 72px 0; }
 .dope-date .dow { display: block; font-size: 11px; color: var(--slate); letter-spacing: .18em; text-transform: uppercase; }
 .dope-date b { display: block; font-size: 23px; font-weight: 600; color: var(--ink); }
 .dope-date .mo { display: block; text-transform: uppercase; }
+.dope-date.is-range b { font-size: 16px; letter-spacing: 0; }
 .dope.is-planned .dope-date b { color: var(--slate); }
 .dope-where { padding: 12px 17px 4px; font-family: var(--f-mono); }
 .dope-venue { font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: .02em; }

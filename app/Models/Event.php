@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
@@ -89,9 +90,9 @@ class Event extends Model
      * the dual-read that lets legacy single-venue events keep working
      * while multi-venue rolls out.
      *
-     * @return \Illuminate\Support\Collection<int, Venue>
+     * @return Collection<int, Venue>
      */
-    public function allVenues(): \Illuminate\Support\Collection
+    public function allVenues(): Collection
     {
         $this->loadMissing('venues');
 
@@ -203,7 +204,13 @@ class Event extends Model
     public function scopeUpcoming(Builder $query): Builder
     {
         return $query
-            ->where('starts_at', '>=', now())
+            ->where(function (Builder $window): void {
+                $window->where('starts_at', '>=', now())
+                    ->orWhere(function (Builder $stillRunning): void {
+                        $stillRunning->whereNotNull('ends_at')
+                            ->where('ends_at', '>=', now());
+                    });
+            })
             ->whereNotIn('status', [
                 EventStatus::Draft,
                 EventStatus::Cancelled,

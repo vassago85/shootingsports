@@ -138,7 +138,14 @@ class PublicEventQuery
         }
 
         if ($this->from) {
-            $query->where('starts_at', '>=', $this->from->startOfDay());
+            $from = $this->from->copy()->startOfDay();
+            $query->where(function (Builder $window) use ($from): void {
+                $window->where('starts_at', '>=', $from)
+                    ->orWhere(function (Builder $stillRunning) use ($from): void {
+                        $stillRunning->whereNotNull('ends_at')
+                            ->where('ends_at', '>=', $from);
+                    });
+            });
         }
 
         if ($this->to) {

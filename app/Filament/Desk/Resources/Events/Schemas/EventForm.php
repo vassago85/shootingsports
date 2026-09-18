@@ -96,7 +96,8 @@ class EventForm
                             ->required(),
                         DateTimePicker::make('ends_at')
                             ->label('Ends')
-                            ->seconds(false),
+                            ->seconds(false)
+                            ->helperText('Set this for a two-day or longer match. Leave blank for a single day.'),
                         Toggle::make('all_day')
                             ->label('All-day match')
                             ->inline(false)

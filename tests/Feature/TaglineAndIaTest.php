@@ -148,6 +148,26 @@ it('EventDate::short includes the year when the date rolls into a new calendar y
     Carbon::setTestNow();
 });
 
+it('EventDate formats a multi-day match as a range and ignores a same-day end', function () {
+    Carbon::setTestNow(Carbon::create(2026, 10, 1, 12, 0, 0, 'Africa/Johannesburg'));
+
+    $starts = Carbon::create(2026, 10, 24, 8, 0, 0, 'Africa/Johannesburg');
+    $ends = Carbon::create(2026, 10, 25, 17, 0, 0, 'Africa/Johannesburg');
+    $sameDay = Carbon::create(2026, 10, 24, 16, 0, 0, 'Africa/Johannesburg');
+
+    expect(EventDate::isMultiDay($starts, $ends))->toBeTrue()
+        ->and(EventDate::isMultiDay($starts, $sameDay))->toBeFalse()
+        ->and(EventDate::isMultiDay($starts, null))->toBeFalse()
+        ->and(EventDate::headline($starts, $ends))->toBe('Saturday 24 – Sunday 25 October 2026')
+        ->and(EventDate::fact($starts, $ends))->toBe('Sat 24 – Sun 25 Oct 2026')
+        ->and(EventDate::weekday($starts, $ends))->toBe('Sat–Sun')
+        ->and(EventDate::dayOfMonth($starts, $ends))->toBe('24–25')
+        ->and(EventDate::monthWithYear($starts, $ends))->toBe('Oct')
+        ->and(EventDate::headline($starts, null))->toBe('Saturday 24 October 2026');
+
+    Carbon::setTestNow();
+});
+
 it('verification badge renders nothing when the listing is unconfirmed', function () {
     $listing = Organisation::factory()->create([
         'status' => ListingStatus::Published,

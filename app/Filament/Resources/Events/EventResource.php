@@ -121,7 +121,8 @@ class EventResource extends Resource
                                         ->label('Starts')
                                         ->required(),
                                     self::dateTimePicker('ends_at')
-                                        ->label('Ends'),
+                                        ->label('Ends')
+                                        ->helperText('Set this for a two-day or longer match. Leave blank for a single day.'),
                                 ]),
                                 Toggle::make('all_day')
                                     ->label('All-day match')

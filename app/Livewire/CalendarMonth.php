@@ -274,8 +274,32 @@ class CalendarMonth extends Component
 
         $events = $query->get();
 
+        $tz = (string) config('app.timezone');
         /** @var Collection<string, Collection<int, Event>> $byDay */
-        $byDay = $events->groupBy(fn (Event $e): string => $e->starts_at->timezone(config('app.timezone'))->format('Y-m-d'));
+        $byDay = collect();
+
+        foreach ($events as $event) {
+            $startDay = $event->starts_at->timezone($tz)->startOfDay();
+            $endDay = $event->ends_at?->timezone($tz)->startOfDay() ?? $startDay->copy();
+
+            if ($endDay->lt($startDay)) {
+                $endDay = $startDay->copy();
+            }
+
+            // A bad ends_at years out must not paint the match on every cell.
+            if ($startDay->diffInDays($endDay) > 14) {
+                $endDay = $startDay->copy()->addDays(14);
+            }
+
+            $cursor = $startDay->copy();
+
+            while ($cursor->lte($endDay)) {
+                $key = $cursor->format('Y-m-d');
+                $bucket = $byDay->get($key, collect());
+                $byDay->put($key, $bucket->push($event));
+                $cursor = $cursor->addDay();
+            }
+        }
 
         $gridStart = $monthStart->copy()->startOfWeek(Carbon::MONDAY);
         $gridEnd = $monthEnd->copy()->endOfWeek(Carbon::SUNDAY);

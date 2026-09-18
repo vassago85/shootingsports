@@ -1,6 +1,6 @@
 <x-layouts.public
     :title="$event->title"
-    :description="$event->hostDisplayName().' · '.$event->locationLabel().' · '.$event->starts_at->timezone('Africa/Johannesburg')->format('j F Y')"
+    :description="$event->hostDisplayName().' · '.$event->locationLabel().' · '.\App\Support\EventDate::fact($event->starts_at, $event->ends_at)"
     :json-ld="$jsonLd"
 >
     @php
@@ -21,7 +21,7 @@
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
-                <p class="label">{{ $event->starts_at->timezone('Africa/Johannesburg')->format('l j F Y') }}</p>
+                <p class="label">{{ \App\Support\EventDate::headline($event->starts_at, $event->ends_at) }}</p>
                 <h1>{{ $event->title }}</h1>
                 <p>
                     @if ($hostUrl)
@@ -61,7 +61,7 @@
                         <dl class="dope-rows">
                             <div class="r">
                                 <dt>Date</dt>
-                                <dd>{{ $event->starts_at->timezone('Africa/Johannesburg')->format('D j M Y') }}</dd>
+                                <dd>{{ \App\Support\EventDate::fact($event->starts_at, $event->ends_at) }}</dd>
                             </div>
                             @foreach ($specs as [$label, $value])
                                 @if ($label === 'Venue' && $isMultiVenue)

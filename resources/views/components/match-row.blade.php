@@ -49,10 +49,10 @@
     the match detail page. No nested anchors, valid HTML.
 --}}
 <article class="mb-row {{ $planned ? 'is-planned' : '' }}" data-fam="{{ $family }}">
-    <div class="mb-date">
-        <span class="dow">{{ EventDate::weekday($event->starts_at) }}</span>
-        <b>{{ EventDate::dayOfMonth($event->starts_at) }}</b>
-        <span class="mo">{{ EventDate::monthWithYear($event->starts_at) }}</span>
+    <div class="mb-date {{ EventDate::isMultiDay($event->starts_at, $event->ends_at) ? 'is-range' : '' }}">
+        <span class="dow">{{ EventDate::weekday($event->starts_at, $event->ends_at) }}</span>
+        <b>{{ EventDate::dayOfMonth($event->starts_at, $event->ends_at) }}</b>
+        <span class="mo">{{ EventDate::monthWithYear($event->starts_at, $event->ends_at) }}</span>
     </div>
 
     <div class="mb-info">
