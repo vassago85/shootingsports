@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             NgGemeenteDelmasSeeder::class,
             SahuntersVaaldriehoekSeeder::class,
             DwarskloofNightShootSeeder::class,
+            PmpscCombinedShootSeeder::class,
         ]);
 
         if (! app()->environment('local')) {
