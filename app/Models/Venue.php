@@ -14,6 +14,7 @@ use App\Models\Concerns\HasDisciplines;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\HasVerification;
 use App\Support\Geo;
+use App\Support\Indexability;
 use Database\Factories\VenueFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -86,6 +87,11 @@ class Venue extends Model
         return $query->where('status', ListingStatus::Published);
     }
 
+    public function scopeIndexable($query)
+    {
+        return Indexability::venues($query);
+    }
+
     public function scopeOrderByTier($query)
     {
         return $query
@@ -110,5 +116,10 @@ class Venue extends Model
             ->implode(', ');
 
         return 'https://www.google.com/maps/search/?api=1&query='.urlencode($query);
+    }
+
+    public function schemaId(): string
+    {
+        return route('ranges.show', $this->slug).'#range';
     }
 }

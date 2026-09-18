@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ListingStatus;
 use App\Enums\Province;
 use App\Models\Venue;
 use App\Queries\PublicEventQuery;
 use App\Services\Discovery\DiscoveryStats;
 use App\Services\Venues\VenueResolver;
 use App\Support\JsonLd;
+use App\Support\Seo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -48,6 +48,7 @@ class VenueController extends Controller
             $venues->map(fn (Venue $v): array => [
                 'name' => $v->name,
                 'url' => route('ranges.show', $v->slug),
+                'id' => $v->schemaId(),
             ])->all(),
             $seoTitle,
         );
@@ -89,6 +90,7 @@ class VenueController extends Controller
         return view('public.ranges.show', [
             'venue' => $venue,
             'events' => $events,
+            'seo' => Seo::forVenue($venue),
             // Same derivation story as clubs: disciplines a range has
             // actually hosted, plus the clubs that have hosted here.
             'inferredDisciplines' => $this->stats->inferredDisciplinesForVenue($venue),

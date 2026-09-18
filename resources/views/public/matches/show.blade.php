@@ -1,6 +1,8 @@
 <x-layouts.public
-    :title="$event->title"
-    :description="$event->hostDisplayName().' · '.$event->locationLabel().' · '.\App\Support\EventDate::fact($event->starts_at, $event->ends_at)"
+    :title="$seo->title"
+    :description="$seo->description"
+    :canonical="$seo->canonical"
+    :robots="$seo->robots"
     :json-ld="$jsonLd"
 >
     @php

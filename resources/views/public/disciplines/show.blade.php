@@ -1,7 +1,8 @@
 <x-layouts.public
-    :title="$province ? $discipline->name.' in '.$province->getLabel() : $discipline->name"
-    :description="$seoDescription"
-    :robots="$noindex ? 'noindex,follow' : null"
+    :title="$seo->title"
+    :description="$seo->description"
+    :canonical="$seo->canonical"
+    :robots="$seo->robots"
     :json-ld="$jsonLd"
 >
     <main id="main">
@@ -22,7 +23,7 @@
                     @endif
                     &nbsp;/&nbsp; <b>{{ $discipline->name }}</b>
                 </p>
-                <h1>{{ $discipline->name }}@if ($province) <span style="color:#c4cdb6">in {{ $province->getLabel() }}</span>@endif</h1>
+                <h1>@if ($province){{ $discipline->name }} Clubs in {{ $province->getLabel() }}@else{{ $discipline->name }}@endif</h1>
                 <p class="lede">{{ $discipline->short_blurb }}</p>
                 <div class="gov">
                     @if ($discipline->children->isNotEmpty())
@@ -199,7 +200,7 @@
                         <ul>
                             @foreach (\App\Enums\Province::cases() as $item)
                                 <li>
-                                    <a href="{{ route('disciplines.province', [$discipline->slug, $item->urlSlug()]) }}">{{ $item->getLabel() }}</a>
+                                    <a href="{{ route('clubs.landing', [$item->urlSlug(), $discipline->slug]) }}">{{ $item->getLabel() }}</a>
                                     <span>{{ $item->code() }}</span>
                                 </li>
                             @endforeach

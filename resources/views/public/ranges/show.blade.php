@@ -1,6 +1,8 @@
 <x-layouts.public
-    :title="$venue->name"
-    :description="$venue->town.' · '.$venue->province?->getLabel().' shooting range.'"
+    :title="$seo->title"
+    :description="$seo->description"
+    :canonical="$seo->canonical"
+    :robots="$seo->robots"
     :json-ld="$jsonLd"
 >
     <main id="main">

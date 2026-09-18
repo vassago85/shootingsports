@@ -1,6 +1,8 @@
 <x-layouts.public
-    :title="$organisation->name"
-    :description="$organisation->description ?: $organisation->name.' — '.$organisation->province?->getLabel()"
+    :title="$seo->title"
+    :description="$seo->description"
+    :canonical="$seo->canonical"
+    :robots="$seo->robots"
     :json-ld="$jsonLd"
 >
     <main id="main">
@@ -40,7 +42,7 @@
                 </p>
                 <div class="club-tags" style="margin:16px 0 28px">
                     @foreach ($inferredDisciplines as $discipline)
-                        <a class="tag" href="{{ route('disciplines.show', $discipline->slug) }}">{{ $discipline->name }}</a>
+                        <a class="tag" href="{{ $organisation->province ? route('clubs.landing', [$organisation->province->urlSlug(), $discipline->slug]) : route('disciplines.show', $discipline->slug) }}">{{ $discipline->name }}</a>
                     @endforeach
                 </div>
 

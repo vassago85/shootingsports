@@ -10,6 +10,7 @@ use App\Enums\VerificationState;
 use App\Models\Concerns\HasDisciplines;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\HasVerification;
+use App\Support\Indexability;
 use Database\Factories\OrganisationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -89,6 +90,11 @@ class Organisation extends Model
         return $query->where('status', ListingStatus::Published);
     }
 
+    public function scopeIndexable($query)
+    {
+        return Indexability::organisations($query);
+    }
+
     public function scopeClubs($query)
     {
         return $query->whereIn('type', [
@@ -127,6 +133,15 @@ class Organisation extends Model
             $this->town,
             $this->province?->getLabel(),
         ])->filter()->implode(', ') ?: '—';
+    }
+
+    public function schemaId(): string
+    {
+        $url = $this->isFederationListing()
+            ? route('federations.show', $this->slug)
+            : route('clubs.show', $this->slug);
+
+        return $url.'#club';
     }
 
     public function initialsAvatarDataUri(): string

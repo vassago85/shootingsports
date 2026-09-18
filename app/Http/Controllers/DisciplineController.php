@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\Province;
 use App\Models\Discipline;
+use App\Models\Event;
+use App\Models\Organisation;
 use App\Queries\PublicEventQuery;
 use App\Services\Discovery\DiscoveryStats;
 use App\Support\JsonLd;
+use App\Support\Seo;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class DisciplineController extends Controller
@@ -76,6 +80,18 @@ class DisciplineController extends Controller
         return view('public.disciplines.show', $this->pageData($discipline, $provinceEnum));
     }
 
+    public function landing(string $province, Discipline $discipline): View
+    {
+        return $this->show($discipline, $province);
+    }
+
+    public function redirectLegacyProvince(Discipline $discipline, string $province): RedirectResponse
+    {
+        abort_unless(Province::fromUrlSlug($province) !== null, 404);
+
+        return redirect()->route('clubs.landing', [$province, $discipline->slug], 301);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -97,7 +113,7 @@ class DisciplineController extends Controller
         $ranges = $this->stats->rangesCountForDiscipline($discipline, $province);
 
         $listingCount = $clubs->count() + $events->count() + $ranges;
-        $noindex = $province !== null && $listingCount < 3;
+        $noindex = $province !== null && $listingCount < (int) config('seo.landing_min');
 
         $familySiblings = Discipline::query()
             ->where('is_published', true)
@@ -141,9 +157,23 @@ class DisciplineController extends Controller
         if ($province !== null) {
             $crumbs[] = [
                 'name' => $province->getLabel(),
-                'url' => route('disciplines.province', [$discipline->slug, $province->urlSlug()]),
+                'url' => route('clubs.landing', [$province->urlSlug(), $discipline->slug]),
             ];
         }
+
+        $members = $clubs->map(fn (Organisation $club): array => [
+            'name' => $club->name,
+            'url' => route('clubs.show', $club->slug),
+            'id' => $club->schemaId(),
+        ])->concat($events->map(fn (Event $event): array => [
+            'name' => $event->title,
+            'url' => $event->publicUrl(),
+            'id' => $event->schemaId(),
+        ]))->values()->all();
+
+        $seo = $province !== null
+            ? Seo::landing($discipline, $province, $seoDescription, $noindex)
+            : Seo::discipline($discipline, $seoDescription);
 
         return [
             'discipline' => $discipline,
@@ -159,8 +189,12 @@ class DisciplineController extends Controller
                 'distance' => $discipline->typical_distances,
                 'provinces' => $provincesActive,
             ],
-            'seoDescription' => $seoDescription,
-            'jsonLd' => [JsonLd::breadcrumbs($crumbs)],
+            'seo' => $seo,
+            'seoDescription' => $seo->description,
+            'jsonLd' => array_values(array_filter([
+                $members !== [] ? JsonLd::itemList($members, $seo->title) : null,
+                JsonLd::breadcrumbs($crumbs),
+            ])),
         ];
     }
 

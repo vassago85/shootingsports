@@ -7,6 +7,7 @@ use App\Enums\ProviderCategory;
 use App\Enums\Province;
 use App\Models\Provider;
 use App\Support\JsonLd;
+use App\Support\Seo;
 use Illuminate\View\View;
 
 class ProviderController extends Controller
@@ -102,6 +103,7 @@ class ProviderController extends Controller
 
         return view('public.suppliers.show', [
             'provider' => $provider,
+            'seo' => Seo::forProvider($provider),
             'jsonLd' => [
                 JsonLd::provider($provider),
                 JsonLd::breadcrumbs([

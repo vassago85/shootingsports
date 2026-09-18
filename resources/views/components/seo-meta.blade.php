@@ -29,8 +29,35 @@
     $umamiScriptUrl = config('services.umami.script_url');
     $umamiWebsiteId = config('services.umami.website_id');
     $siteGraph = JsonLd::site();
-    if ($robots === null && config('seo.noindex')) {
+    if ($robots === null && ! config('seo.indexable')) {
         $robots = 'noindex, nofollow';
+    }
+
+    if ($jsonLd) {
+        $isList = is_array($jsonLd)
+            && array_keys($jsonLd) === range(0, count($jsonLd) - 1)
+            && (empty($jsonLd) || is_array(reset($jsonLd)));
+        $blocks = $isList ? $jsonLd : [$jsonLd];
+
+        foreach ($blocks as $block) {
+            if (! is_array($block) || $block === []) {
+                continue;
+            }
+
+            unset($block['@context']);
+
+            if (isset($block['@graph']) && is_array($block['@graph'])) {
+                foreach ($block['@graph'] as $node) {
+                    if (is_array($node)) {
+                        $siteGraph['@graph'][] = $node;
+                    }
+                }
+
+                continue;
+            }
+
+            $siteGraph['@graph'][] = $block;
+        }
     }
 @endphp
 
@@ -60,25 +87,6 @@
 <meta name="twitter:image" content="{{ $image }}">
 
 <script type="application/ld+json">{!! json_encode($siteGraph, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
-
-{{--
-    The jsonLd prop accepts EITHER a single associative schema array
-    (single script block, backward-compatible) OR a list of associative
-    schema arrays (renders one <script> per entry). Google's own docs
-    prefer multiple separate blocks over cramming into @graph — easier
-    to debug in Rich Results Test and no per-block failures cascade.
---}}
-@if ($jsonLd)
-    @php
-        $isList = is_array($jsonLd)
-            && array_keys($jsonLd) === range(0, count($jsonLd) - 1)
-            && (empty($jsonLd) || is_array(reset($jsonLd)));
-        $blocks = $isList ? $jsonLd : [$jsonLd];
-    @endphp
-    @foreach ($blocks as $block)
-        <script type="application/ld+json">{!! json_encode($block, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
-    @endforeach
-@endif
 
 @if ($umamiScriptUrl && $umamiWebsiteId)
     <script defer src="{{ $umamiScriptUrl }}" data-website-id="{{ $umamiWebsiteId }}"></script>

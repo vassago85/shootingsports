@@ -16,6 +16,7 @@ use App\Http\Controllers\MapController;
 use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\PaystackController;
 use App\Http\Controllers\ProviderController;
+use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\ShooterCalendarController;
 use App\Http\Controllers\ShooterLogController;
 use App\Http\Controllers\SitemapController;
@@ -60,12 +61,15 @@ Route::get('/calendar/map', fn () => redirect()->route('map'));
 
 Route::get('/disciplines', [DisciplineController::class, 'index'])->name('disciplines.index');
 Route::get('/disciplines/{discipline:slug}/calendar.ics', [IcalController::class, 'discipline'])->name('ical.discipline');
-Route::get('/disciplines/{discipline:slug}/{province}', [DisciplineController::class, 'show'])
+Route::get('/disciplines/{discipline:slug}/{province}', [DisciplineController::class, 'redirectLegacyProvince'])
     ->where('province', $provincePattern)
     ->name('disciplines.province');
 Route::get('/disciplines/{discipline:slug}', [DisciplineController::class, 'show'])->name('disciplines.show');
 
 Route::get('/clubs', [OrganisationController::class, 'index'])->name('clubs.index');
+Route::get('/clubs/{province}/{discipline}', [DisciplineController::class, 'landing'])
+    ->where('province', $provincePattern)
+    ->name('clubs.landing');
 Route::get('/clubs/{organisation:slug}/calendar.ics', [IcalController::class, 'organisation'])->name('ical.organisation');
 
 // Legacy /clubs redirects for ranges that were seeded as clubs. Each of
@@ -122,6 +126,12 @@ Route::get('/privacy', [StaticPageController::class, 'privacy'])->name('privacy'
 Route::get('/terms', [StaticPageController::class, 'terms'])->name('terms');
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/sitemaps/{type}-{page}.xml', [SitemapController::class, 'chunk'])
+    ->where([
+        'type' => 'pages|events|organisations|venues|disciplines|providers',
+        'page' => '[1-9][0-9]*',
+    ])
+    ->name('sitemap.chunk');
 Route::get('/sitemaps/pages.xml', [SitemapController::class, 'pages'])->name('sitemap.pages');
 Route::get('/sitemaps/events.xml', [SitemapController::class, 'events'])->name('sitemap.events');
 Route::get('/sitemaps/organisations.xml', [SitemapController::class, 'organisations'])->name('sitemap.organisations');
@@ -130,6 +140,7 @@ Route::get('/sitemaps/disciplines.xml', [SitemapController::class, 'disciplines'
 Route::get('/sitemaps/providers.xml', [SitemapController::class, 'providers'])->name('sitemap.providers');
 
 Route::get('/llms.txt', LlmsTxtController::class)->name('llms');
+Route::get('/robots.txt', RobotsController::class)->name('robots');
 
 // Public auth. Filament still owns /admin/login and /desk/login as
 // internal panel infrastructure; these routes are the front-door

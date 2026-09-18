@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
+use App\Enums\EventStatus;
+use App\Enums\ListingStatus;
 use App\Http\Responses\LogoutResponse as PublicHomeLogoutResponse;
 use App\Models\Discipline;
 use App\Models\Enquiry;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Provider;
+use App\Models\SlugRedirect;
 use App\Models\User;
 use App\Models\Venue;
 use App\Policies\EventPolicy;
@@ -19,6 +22,7 @@ use App\Support\PublicCache;
 use App\Support\TurnstileSettings;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as FilamentLogoutResponse;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
@@ -73,18 +77,65 @@ class AppServiceProvider extends ServiceProvider
             ->where('slug', $value)
             ->where('is_published', true)
             ->firstOrFail());
-        Route::bind('event', fn (string $value): Event => Event::query()
-            ->where('slug', $value)
-            ->firstOrFail());
-        Route::bind('organisation', fn (string $value): Organisation => Organisation::query()
-            ->where('slug', $value)
-            ->firstOrFail());
+        Route::bind('event', function (string $value): Event {
+            $event = Event::query()->where('slug', $value)->first();
+
+            if ($event !== null) {
+                return $event;
+            }
+
+            $target = SlugRedirect::findTarget(Event::class, $value);
+
+            if ($target instanceof Event && $target->status !== EventStatus::Draft) {
+                $to = request()->route()?->getName() === 'api.v1.events.show'
+                    ? 'api.v1.events.show'
+                    : 'matches.show';
+
+                throw new HttpResponseException(redirect()->route($to, $target->slug, 301));
+            }
+
+            abort(404);
+        });
+        Route::bind('organisation', function (string $value): Organisation {
+            $organisation = Organisation::query()->where('slug', $value)->first();
+
+            if ($organisation !== null) {
+                return $organisation;
+            }
+
+            $target = SlugRedirect::findTarget(Organisation::class, $value);
+
+            if ($target instanceof Organisation && $target->status === ListingStatus::Published) {
+                $name = request()->route()?->getName() ?? '';
+                $to = match (true) {
+                    str_starts_with($name, 'federations.') => 'federations.show',
+                    str_starts_with($name, 'ical.') => 'ical.organisation',
+                    default => 'clubs.show',
+                };
+
+                throw new HttpResponseException(redirect()->route($to, $target->slug, 301));
+            }
+
+            abort(404);
+        });
         Route::bind('venue', fn (string $value): Venue => Venue::query()
             ->where('slug', $value)
             ->firstOrFail());
-        Route::bind('provider', fn (string $value): Provider => Provider::query()
-            ->where('slug', $value)
-            ->firstOrFail());
+        Route::bind('provider', function (string $value): Provider {
+            $provider = Provider::query()->where('slug', $value)->first();
+
+            if ($provider !== null) {
+                return $provider;
+            }
+
+            $target = SlugRedirect::findTarget(Provider::class, $value);
+
+            if ($target instanceof Provider && $target->status === ListingStatus::Published) {
+                throw new HttpResponseException(redirect()->route('suppliers.show', $target->slug, 301));
+            }
+
+            abort(404);
+        });
 
         Relation::enforceMorphMap([
             'organisation' => Organisation::class,

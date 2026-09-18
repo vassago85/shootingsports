@@ -57,7 +57,7 @@ it('renders both site graph and per-event JSON-LD on a match page', function () 
         ->skip(1)
         ->count();
 
-    expect($scripts)->toBeGreaterThanOrEqual(2);
+    expect($scripts)->toBe(1);
 
     $response
         ->assertSee('"@type":"WebSite"', false)
@@ -217,16 +217,15 @@ it('keeps the embed calendar tracker-free and noindexed', function () {
 });
 
 it('ships a robots.txt with the sitemap and no admin path advertisements', function () {
-    $path = public_path('robots.txt');
+    config()->set('seo.indexable', true);
 
-    expect(is_file($path))->toBeTrue();
-    $body = (string) file_get_contents($path);
-
-    expect($body)
-        ->toContain('Sitemap: https://shootingsports.co.za/sitemap.xml')
-        ->not->toContain('Disallow: /desk')
-        ->not->toContain('Disallow: /admin')
-        ->not->toContain('Disallow: /my-calendar');
+    $this->get('/robots.txt')
+        ->assertOk()
+        ->assertHeader('content-type', 'text/plain; charset=UTF-8')
+        ->assertSee('Sitemap: '.url('/sitemap.xml'), false)
+        ->assertDontSee('Disallow: /desk', false)
+        ->assertDontSee('Disallow: /admin', false)
+        ->assertDontSee('Disallow: /my-calendar', false);
 });
 
 it('serves the pages sitemap with static URLs and skips private surfaces', function () {

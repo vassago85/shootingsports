@@ -68,6 +68,7 @@ class JsonLd
         $payload = [
             '@context' => 'https://schema.org',
             '@type' => 'SportsEvent',
+            '@id' => $event->schemaId(),
             'name' => $event->title,
             'url' => $event->publicUrl(),
             'startDate' => self::iso($event->starts_at),
@@ -85,11 +86,15 @@ class JsonLd
         ];
 
         if ($event->hostOrganisation) {
-            $payload['organizer'] = self::organisation($event->hostOrganisation);
+            $organizer = self::organisation($event->hostOrganisation);
+            unset($organizer['@context']);
+            $payload['organizer'] = $organizer;
         }
 
         if ($event->venue) {
-            $payload['location'] = self::venue($event->venue);
+            $location = self::venue($event->venue);
+            unset($location['@context']);
+            $payload['location'] = $location;
         }
 
         if ($coverUrl = $event->coverImageUrl()) {
@@ -254,6 +259,7 @@ class JsonLd
                 'position' => $index + 1,
                 'url' => $item['url'],
                 'name' => $item['name'] ?? null,
+                'item' => filled($item['id'] ?? null) ? ['@id' => $item['id']] : null,
             ]),
             $items,
             array_keys($items),
@@ -299,24 +305,21 @@ class JsonLd
      */
     public static function organisation(Organisation $organisation): array
     {
+        $placed = filled($organisation->town) || $organisation->province !== null;
+
         return array_filter([
             '@context' => 'https://schema.org',
-            '@type' => 'SportsOrganization',
+            '@type' => $placed ? ['SportsOrganization', 'SportsActivityLocation'] : 'SportsOrganization',
+            '@id' => $organisation->schemaId(),
             'name' => $organisation->name,
-            'url' => $organisation->isFederationListing()
-                ? route('federations.show', $organisation->slug)
-                : route('clubs.show', $organisation->slug),
+            'url' => explode('#', $organisation->schemaId(), 2)[0],
+            'sport' => self::sportLabel($organisation),
             'logo' => $organisation->logoUrl(),
             'sameAs' => array_values(array_filter([
                 $organisation->website_url,
                 $organisation->facebook_url,
             ])),
-            'address' => array_filter([
-                '@type' => 'PostalAddress',
-                'addressLocality' => $organisation->town,
-                'addressRegion' => $organisation->province?->getLabel(),
-                'addressCountry' => 'ZA',
-            ]),
+            'address' => self::postalAddress(null, $organisation->town, $organisation->province?->getLabel()),
         ]);
     }
 
@@ -328,15 +331,11 @@ class JsonLd
         return array_filter([
             '@context' => 'https://schema.org',
             '@type' => 'SportsActivityLocation',
+            '@id' => $venue->schemaId(),
             'name' => $venue->name,
             'url' => route('ranges.show', $venue->slug),
-            'address' => array_filter([
-                '@type' => 'PostalAddress',
-                'streetAddress' => $venue->address,
-                'addressLocality' => $venue->town,
-                'addressRegion' => $venue->province?->getLabel(),
-                'addressCountry' => 'ZA',
-            ]),
+            'sport' => self::sportLabel($venue),
+            'address' => self::postalAddress($venue->address, $venue->town, $venue->province?->getLabel()),
             'geo' => ($venue->lat && $venue->lng) ? [
                 '@type' => 'GeoCoordinates',
                 'latitude' => (float) $venue->lat,
@@ -356,13 +355,37 @@ class JsonLd
             'name' => $provider->name,
             'url' => $provider->website_url ?: url()->current(),
             'description' => $provider->description,
-            'address' => array_filter([
-                '@type' => 'PostalAddress',
-                'addressLocality' => $provider->town,
-                'addressRegion' => $provider->province?->getLabel(),
-                'addressCountry' => 'ZA',
-            ]),
+            'address' => self::postalAddress(null, $provider->town, $provider->province?->getLabel()),
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private static function postalAddress(?string $street, ?string $locality, ?string $region): ?array
+    {
+        $address = array_filter([
+            'streetAddress' => $street,
+            'addressLocality' => $locality,
+            'addressRegion' => $region,
+        ], fn (mixed $value): bool => filled($value));
+
+        if ($address === []) {
+            return null;
+        }
+
+        return ['@type' => 'PostalAddress', 'addressCountry' => 'ZA', ...$address];
+    }
+
+    private static function sportLabel(object $record): ?string
+    {
+        if (! method_exists($record, 'relationLoaded') || ! $record->relationLoaded('disciplines')) {
+            return null;
+        }
+
+        $label = $record->disciplines->pluck('name')->filter()->implode(', ');
+
+        return $label !== '' ? $label : null;
     }
 
     private static function eventStatus(?EventStatus $status): string

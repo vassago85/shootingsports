@@ -33,16 +33,16 @@ it('serves the health endpoint from loopback', function () {
     $this->get('/up')->assertOk();
 });
 
-it('applies sitewide noindex when the seo flag is on', function () {
-    config()->set('seo.noindex', true);
+it('applies sitewide noindex when the site is not indexable', function () {
+    config()->set('seo.indexable', false);
 
     $this->get('/')
         ->assertOk()
         ->assertSee('<meta name="robots" content="noindex, nofollow">', false);
 });
 
-it('leaves public pages indexable when the seo flag is off', function () {
-    config()->set('seo.noindex', false);
+it('leaves public pages indexable when the seo flag is on', function () {
+    config()->set('seo.indexable', true);
 
     $this->get('/')
         ->assertOk()

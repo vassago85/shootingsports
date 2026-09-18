@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ListingStatus;
 use App\Enums\ProviderCategory;
 use App\Enums\Province;
 use App\Models\Discipline;
@@ -11,6 +10,7 @@ use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\Venue;
 use App\Queries\PublicEventQuery;
+use App\Support\PublicCache;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -20,28 +20,75 @@ class SitemapController extends Controller
 {
     public function index(): Response
     {
-        $sitemaps = [
-            url('/sitemaps/pages.xml'),
-            url('/sitemaps/events.xml'),
-            url('/sitemaps/organisations.xml'),
-            url('/sitemaps/venues.xml'),
-            url('/sitemaps/disciplines.xml'),
-            url('/sitemaps/providers.xml'),
-        ];
+        $sitemaps = array_merge(
+            $this->locs('pages', $this->pageUrls()->count()),
+            $this->locs('events', $this->eventUrls()->count()),
+            $this->locs('organisations', $this->organisationUrls()->count()),
+            $this->locs('venues', $this->venueUrls()->count()),
+            $this->locs('disciplines', $this->disciplineUrls()->count()),
+            $this->locs('providers', $this->providerUrls()->count()),
+        );
 
-        return $this->xml('public.sitemaps.index', ['sitemaps' => $sitemaps]);
+        return $this->cached('index', 'public.sitemaps.index', ['sitemaps' => $sitemaps]);
+    }
+
+    public function pages(): Response
+    {
+        return $this->urlset('pages', $this->pageUrls());
+    }
+
+    public function events(): Response
+    {
+        return $this->urlset('events', $this->eventUrls());
+    }
+
+    public function organisations(): Response
+    {
+        return $this->urlset('organisations', $this->organisationUrls());
+    }
+
+    public function venues(): Response
+    {
+        return $this->urlset('venues', $this->venueUrls());
+    }
+
+    public function disciplines(): Response
+    {
+        return $this->urlset('disciplines', $this->disciplineUrls());
+    }
+
+    public function providers(): Response
+    {
+        return $this->urlset('providers', $this->providerUrls());
+    }
+
+    public function chunk(string $type, int $page): Response
+    {
+        $urls = match ($type) {
+            'pages' => $this->pageUrls(),
+            'events' => $this->eventUrls(),
+            'organisations' => $this->organisationUrls(),
+            'venues' => $this->venueUrls(),
+            'disciplines' => $this->disciplineUrls(),
+            'providers' => $this->providerUrls(),
+            default => abort(404),
+        };
+
+        return $this->urlset($type, $urls, $page);
     }
 
     /**
-     * Static, evergreen public URLs that Google would otherwise never find
-     * from the entity-driven sitemaps. Intentionally excludes desk, admin,
-     * my-calendar, thank-you screens, iCal feeds and oembed.
+     * @return Collection<int, array{loc: string, lastmod: string|null}>
      */
-    public function pages(): Response
+    private function pageUrls(): Collection
     {
+        if (! config('seo.indexable')) {
+            return collect();
+        }
+
         $now = now()->toAtomString();
 
-        $urls = collect([
+        return collect([
             'home',
             'calendar',
             'calendar.month',
@@ -60,14 +107,19 @@ class SitemapController extends Controller
             'loc' => route($name),
             'lastmod' => $now,
         ]);
-
-        return $this->xml('public.sitemaps.urlset', ['urls' => $urls]);
     }
 
-    public function events(): Response
+    /**
+     * @return Collection<int, array{loc: string, lastmod: string|null}>
+     */
+    private function eventUrls(): Collection
     {
-        $urls = Event::query()
-            ->published()
+        if (! config('seo.indexable')) {
+            return collect();
+        }
+
+        return Event::query()
+            ->indexable()
             ->orderBy('starts_at')
             ->get()
             ->map(fn (Event $event) => $this->safeUrl('events sitemap', $event, fn (): array => [
@@ -76,14 +128,19 @@ class SitemapController extends Controller
             ]))
             ->filter()
             ->values();
-
-        return $this->xml('public.sitemaps.urlset', ['urls' => $urls]);
     }
 
-    public function organisations(): Response
+    /**
+     * @return Collection<int, array{loc: string, lastmod: string|null}>
+     */
+    private function organisationUrls(): Collection
     {
-        $urls = Organisation::query()
-            ->published()
+        if (! config('seo.indexable')) {
+            return collect();
+        }
+
+        return Organisation::query()
+            ->indexable()
             ->orderBy('name')
             ->get()
             ->map(fn (Organisation $org) => $this->safeUrl('organisations sitemap', $org, fn (): array => [
@@ -94,14 +151,19 @@ class SitemapController extends Controller
             ]))
             ->filter()
             ->values();
-
-        return $this->xml('public.sitemaps.urlset', ['urls' => $urls]);
     }
 
-    public function venues(): Response
+    /**
+     * @return Collection<int, array{loc: string, lastmod: string|null}>
+     */
+    private function venueUrls(): Collection
     {
-        $urls = Venue::query()
-            ->published()
+        if (! config('seo.indexable')) {
+            return collect();
+        }
+
+        return Venue::query()
+            ->indexable()
             ->orderBy('name')
             ->get()
             ->map(fn (Venue $venue) => $this->safeUrl('venues sitemap', $venue, fn (): array => [
@@ -110,18 +172,24 @@ class SitemapController extends Controller
             ]))
             ->filter()
             ->values();
-
-        return $this->xml('public.sitemaps.urlset', ['urls' => $urls]);
     }
 
-    public function disciplines(): Response
+    /**
+     * @return Collection<int, array{loc: string, lastmod: string|null}>
+     */
+    private function disciplineUrls(): Collection
     {
+        if (! config('seo.indexable')) {
+            return collect();
+        }
+
         $disciplines = Discipline::query()
             ->where('is_published', true)
             ->orderBy('sort_order')
             ->get();
 
         $urls = new Collection;
+        $minimum = (int) config('seo.landing_min');
 
         foreach ($disciplines as $discipline) {
             $root = $this->safeUrl('disciplines sitemap', $discipline, fn (): array => [
@@ -134,13 +202,12 @@ class SitemapController extends Controller
             }
 
             foreach (Province::cases() as $province) {
-                // Same threshold as DisciplineController noindex guard.
-                if ($this->disciplineProvinceListingCount($discipline, $province) < 3) {
+                if ($this->disciplineProvinceListingCount($discipline, $province) < $minimum) {
                     continue;
                 }
 
                 $slice = $this->safeUrl('disciplines province sitemap', $discipline, fn (): array => [
-                    'loc' => route('disciplines.province', [$discipline->slug, $province->urlSlug()]),
+                    'loc' => route('clubs.landing', [$province->urlSlug(), $discipline->slug]),
                     'lastmod' => $discipline->updated_at?->toAtomString(),
                 ]);
 
@@ -150,13 +217,21 @@ class SitemapController extends Controller
             }
         }
 
-        return $this->xml('public.sitemaps.urlset', ['urls' => $urls]);
+        return $urls;
     }
 
-    public function providers(): Response
+    /**
+     * @return Collection<int, array{loc: string, lastmod: string|null}>
+     */
+    private function providerUrls(): Collection
     {
+        if (! config('seo.indexable')) {
+            return collect();
+        }
+
         $urls = new Collection;
         $now = now()->toAtomString();
+        $minimum = (int) config('seo.landing_min');
 
         foreach (ProviderCategory::cases() as $category) {
             $nationalCount = Provider::query()
@@ -164,7 +239,6 @@ class SitemapController extends Controller
                 ->where('category', $category)
                 ->count();
 
-            // Empty category shells stay out of the sitemap (and are noindexed).
             if ($nationalCount < 1) {
                 continue;
             }
@@ -181,8 +255,7 @@ class SitemapController extends Controller
                     ->where('province', $province)
                     ->count();
 
-                // Same threshold as ProviderController noindex guard.
-                if ($provinceCount < 3) {
+                if ($provinceCount < $minimum) {
                     continue;
                 }
 
@@ -194,7 +267,8 @@ class SitemapController extends Controller
         }
 
         Provider::query()
-            ->where('status', ListingStatus::Published)
+            ->indexable()
+            ->orderBy('name')
             ->get()
             ->each(function (Provider $provider) use ($urls): void {
                 $url = $this->safeUrl('providers sitemap', $provider, fn (): array => [
@@ -207,13 +281,62 @@ class SitemapController extends Controller
                 }
             });
 
-        return $this->xml('public.sitemaps.urlset', ['urls' => $urls]);
+        return $urls;
     }
 
     /**
-     * Mirrors DisciplineController thin-slice counting (clubs + upcoming
-     * events + ranges) so sitemap membership matches the noindex guard.
+     * @return list<string>
      */
+    private function locs(string $name, int $count): array
+    {
+        $chunk = max(1, (int) config('seo.sitemap_chunk'));
+
+        if ($count <= $chunk) {
+            return [url('/sitemaps/'.$name.'.xml')];
+        }
+
+        $pages = (int) ceil($count / $chunk);
+
+        return array_map(
+            fn (int $page): string => url('/sitemaps/'.$name.'-'.$page.'.xml'),
+            range(1, $pages),
+        );
+    }
+
+    /**
+     * @param  Collection<int, array{loc: string, lastmod?: string|null}>  $urls
+     */
+    private function urlset(string $name, Collection $urls, ?int $page = null): Response
+    {
+        $chunk = max(1, (int) config('seo.sitemap_chunk'));
+        $count = $urls->count();
+        $pages = (int) ceil($count / $chunk);
+
+        if ($page !== null) {
+            abort_if($count <= $chunk || $page < 1 || $page > $pages, 404);
+        }
+
+        $slice = $count > $chunk
+            ? $urls->forPage($page ?? 1, $chunk)->values()
+            : $urls;
+
+        $key = $count > $chunk ? $name.'-'.($page ?? 1) : $name;
+
+        return $this->cached($key, 'public.sitemaps.urlset', ['urls' => $slice]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function cached(string $key, string $view, array $data): Response
+    {
+        $body = PublicCache::sitemap($key, fn (): string => view($view, $data)->render());
+
+        return response($body, 200, [
+            'Content-Type' => 'application/xml; charset=UTF-8',
+        ]);
+    }
+
     private function disciplineProvinceListingCount(Discipline $discipline, Province $province): int
     {
         $treeIds = $discipline->treeIds();
@@ -240,12 +363,6 @@ class SitemapController extends Controller
     }
 
     /**
-     * Build a single sitemap entry, logging + dropping the row on failure.
-     * Sitemap outages should never take down the whole file just because
-     * one bad row (missing slug, unroutable enum, whatever) trips
-     * route() generation — a partial sitemap is strictly better than a
-     * 500 for Search Console, which caches the last successful fetch.
-     *
      * @param  callable(): array<string, mixed>  $build
      * @return array<string, mixed>|null
      */
@@ -264,15 +381,5 @@ class SitemapController extends Controller
 
             return null;
         }
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    private function xml(string $view, array $data): Response
-    {
-        return response()
-            ->view($view, $data)
-            ->header('Content-Type', 'application/xml; charset=UTF-8');
     }
 }

@@ -1,6 +1,8 @@
 <x-layouts.public
-    :title="$organisation->name"
-    :description="$organisation->description ?: $organisation->name.' — national or provincial body.'"
+    :title="$seo->title"
+    :description="$seo->description"
+    :canonical="$seo->canonical"
+    :robots="$seo->robots"
     :json-ld="$jsonLd"
 >
     <main id="main">

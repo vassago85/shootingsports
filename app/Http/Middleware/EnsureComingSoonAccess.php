@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -29,6 +30,10 @@ class EnsureComingSoonAccess
             return $next($request);
         }
 
+        if (config('coming-soon.expose_public') && $this->isPublicRoute($request)) {
+            return $next($request);
+        }
+
         if ($this->userHasBuilderAccess()) {
             return $next($request);
         }
@@ -40,6 +45,23 @@ class EnsureComingSoonAccess
     {
         foreach ((array) config('coming-soon.allowlist', []) as $pattern) {
             if ($request->is($pattern)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function isPublicRoute(Request $request): bool
+    {
+        $name = $request->route()?->getName();
+
+        if (! is_string($name) || $name === '') {
+            return false;
+        }
+
+        foreach ((array) config('coming-soon.public_routes', []) as $pattern) {
+            if (Str::is($pattern, $name)) {
                 return true;
             }
         }

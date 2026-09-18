@@ -20,6 +20,56 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Expose the public directory
+    |--------------------------------------------------------------------------
+    |
+    | When the gate is on and this flag is true, directory routes (clubs,
+    | ranges, matches, disciplines, suppliers, static pages) render for
+    | guests. Member, auth and billing routes stay on the coming-soon
+    | page. /admin and /desk are not in this stack at all.
+    |
+    */
+
+    'expose_public' => (bool) env('COMING_SOON_EXPOSE_PUBLIC', false),
+
+    'public_routes' => [
+        'home',
+        'calendar',
+        'calendar.month',
+        'map',
+        'disciplines.index',
+        'disciplines.show',
+        'disciplines.province',
+        'clubs.index',
+        'clubs.show',
+        'clubs.landing',
+        'federations.show',
+        'ranges.index',
+        'ranges.show',
+        'matches.show',
+        'suppliers.index',
+        'suppliers.category',
+        'suppliers.province',
+        'suppliers.show',
+        'claim',
+        'advertise',
+        'contact',
+        'enquiries.listing',
+        'enquiries.store',
+        'enquiries.thanks',
+        'privacy',
+        'terms',
+        'embed.docs',
+        'sitemap',
+        'sitemap.*',
+        'robots',
+        'llms',
+        'ical.discipline',
+        'ical.organisation',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Allowlist
     |--------------------------------------------------------------------------
     |

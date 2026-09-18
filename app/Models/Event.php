@@ -8,6 +8,7 @@ use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
 use App\Models\Concerns\HasDisciplines;
 use App\Models\Concerns\HasSlug;
+use App\Support\Indexability;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -228,6 +229,11 @@ class Event extends Model
         return $query->where('status', '!=', EventStatus::Draft);
     }
 
+    public function scopeIndexable(Builder $query): Builder
+    {
+        return Indexability::events($query);
+    }
+
     public function scopeConfirmedOnly(Builder $query): Builder
     {
         return $query->whereIn('status', [
@@ -282,5 +288,10 @@ class Event extends Model
     public function publicUrl(): string
     {
         return route('matches.show', $this->slug);
+    }
+
+    public function schemaId(): string
+    {
+        return $this->publicUrl().'#event';
     }
 }

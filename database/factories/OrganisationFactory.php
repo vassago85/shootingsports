@@ -27,7 +27,7 @@ class OrganisationFactory extends Factory
             'type' => OrganisationType::Club,
             'province' => fake()->randomElement(Province::cases()),
             'town' => fake()->city(),
-            'email' => fake()->optional()->companyEmail(),
+            'email' => fake()->companyEmail(),
             'phone' => fake()->optional()->phoneNumber(),
             'website_url' => fake()->optional()->url(),
             'description' => fake()->optional()->paragraph(),

@@ -3,6 +3,7 @@
 namespace App\Services\Venues;
 
 use App\Enums\ListingStatus;
+use App\Models\SlugRedirect;
 use App\Models\Venue;
 use App\Models\VenueAlias;
 use Illuminate\Support\Str;
@@ -46,7 +47,7 @@ class VenueResolver
         $alias = VenueAlias::query()->where('slug', $slug)->first();
 
         if ($alias === null) {
-            return null;
+            return $this->redirectedVenue($slug);
         }
 
         $canonical = $alias->venue()->first();
@@ -56,6 +57,20 @@ class VenueResolver
         }
 
         return ['venue' => $canonical, 'canonical' => false];
+    }
+
+    /**
+     * @return array{venue: Venue, canonical: bool}|null
+     */
+    private function redirectedVenue(string $slug): ?array
+    {
+        $target = SlugRedirect::findTarget(Venue::class, $slug);
+
+        if (! $target instanceof Venue || $target->status !== ListingStatus::Published) {
+            return null;
+        }
+
+        return ['venue' => $target, 'canonical' => false];
     }
 
     /**

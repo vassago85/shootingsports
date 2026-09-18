@@ -1,6 +1,8 @@
 <x-layouts.public
-    :title="$provider->name"
-    :description="$provider->description ?: $provider->name.' — '.$provider->category->getLabel()"
+    :title="$seo->title"
+    :description="$seo->description"
+    :canonical="$seo->canonical"
+    :robots="$seo->robots"
     :json-ld="$jsonLd"
 >
     <main id="main">

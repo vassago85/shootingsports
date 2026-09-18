@@ -6,6 +6,7 @@ use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Support\EventSpecRows;
 use App\Support\JsonLd;
+use App\Support\Seo;
 use Illuminate\View\View;
 
 class EventController extends Controller
@@ -42,6 +43,7 @@ class EventController extends Controller
         return view('public.matches.show', [
             'event' => $event,
             'specs' => EventSpecRows::for($event),
+            'seo' => Seo::forEvent($event),
             'jsonLd' => [
                 JsonLd::event($event),
                 JsonLd::breadcrumbs($crumbs),

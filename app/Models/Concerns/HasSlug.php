@@ -2,6 +2,7 @@
 
 namespace App\Models\Concerns;
 
+use App\Models\SlugRedirect;
 use Illuminate\Support\Str;
 
 trait HasSlug
@@ -15,6 +16,28 @@ trait HasSlug
 
             $source = $model->slugSource();
             $model->slug = $model->uniqueSlug(Str::slug($source));
+        });
+
+        static::created(function (self $model): void {
+            SlugRedirect::release($model);
+        });
+
+        static::saving(function (self $model): void {
+            SlugRedirect::release($model);
+        });
+
+        static::updating(function (self $model): void {
+            if (! $model->isDirty('slug')) {
+                return;
+            }
+
+            $previous = $model->getOriginal('slug');
+
+            if (! is_string($previous) || $previous === '') {
+                return;
+            }
+
+            SlugRedirect::remember($model, $previous);
         });
     }
 

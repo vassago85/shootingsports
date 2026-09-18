@@ -8,6 +8,7 @@ use App\Models\Organisation;
 use App\Queries\PublicEventQuery;
 use App\Services\Discovery\DiscoveryStats;
 use App\Support\JsonLd;
+use App\Support\Seo;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -41,6 +42,7 @@ class OrganisationController extends Controller
                 'url' => $club->isFederationListing()
                     ? route('federations.show', $club->slug)
                     : route('clubs.show', $club->slug),
+                'id' => $club->schemaId(),
             ])->all(),
             $seoTitle,
         );
@@ -81,6 +83,7 @@ class OrganisationController extends Controller
         return view('public.clubs.show', [
             'organisation' => $organisation,
             'events' => $events,
+            'seo' => Seo::forOrganisation($organisation),
             // Disciplines derived from event history + explicit pivot,
             // so a club that has run three PRS matches shows the PRS
             // tag whether or not staff attached it manually.
@@ -109,6 +112,7 @@ class OrganisationController extends Controller
         return view('public.federations.show', [
             'organisation' => $organisation,
             'events' => $events,
+            'seo' => Seo::forOrganisation($organisation),
             'inferredDisciplines' => $this->stats->inferredDisciplinesForOrganisation($organisation),
             'commonRanges' => $this->stats->commonRangesForOrganisation($organisation),
             'jsonLd' => [

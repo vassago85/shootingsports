@@ -12,6 +12,7 @@ use App\Enums\VerificationState;
 use App\Models\Concerns\HasDisciplines;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\HasVerification;
+use App\Support\Indexability;
 use Database\Factories\ProviderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -61,6 +62,11 @@ class Provider extends Model
     public function scopePublished($query)
     {
         return $query->where('status', ListingStatus::Published);
+    }
+
+    public function scopeIndexable($query)
+    {
+        return Indexability::providers($query);
     }
 
     public function scopeOrderByTier($query)
