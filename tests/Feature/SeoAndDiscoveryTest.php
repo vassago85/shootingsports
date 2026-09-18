@@ -216,7 +216,7 @@ it('keeps the embed calendar tracker-free and noindexed', function () {
         ->assertDontSee('og:site_name', false);
 });
 
-it('ships a robots.txt with the sitemap and the desk disallow', function () {
+it('ships a robots.txt with the sitemap and no admin path advertisements', function () {
     $path = public_path('robots.txt');
 
     expect(is_file($path))->toBeTrue();
@@ -224,9 +224,9 @@ it('ships a robots.txt with the sitemap and the desk disallow', function () {
 
     expect($body)
         ->toContain('Sitemap: https://shootingsports.co.za/sitemap.xml')
-        ->toContain('Disallow: /desk')
-        ->toContain('Disallow: /admin')
-        ->toContain('Disallow: /my-calendar');
+        ->not->toContain('Disallow: /desk')
+        ->not->toContain('Disallow: /admin')
+        ->not->toContain('Disallow: /my-calendar');
 });
 
 it('serves the pages sitemap with static URLs and skips private surfaces', function () {

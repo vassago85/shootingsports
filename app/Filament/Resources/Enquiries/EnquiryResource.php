@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Enquiries;
 
 use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
+use App\Enums\PrelaunchContributorRole;
 use App\Filament\Resources\Enquiries\Pages\EditEnquiry;
 use App\Filament\Resources\Enquiries\Pages\ListEnquiries;
 use App\Models\Enquiry;
@@ -95,6 +96,19 @@ class EnquiryResource extends Resource
                 TextColumn::make('context_product')
                     ->label('Product')
                     ->getStateUsing(fn (Enquiry $record): ?string => data_get($record->context, 'product'))
+                    ->badge()
+                    ->toggleable(),
+                TextColumn::make('context_role')
+                    ->label('Role')
+                    ->getStateUsing(function (Enquiry $record): ?string {
+                        $role = data_get($record->context, 'role');
+
+                        if (! is_string($role) || $role === '') {
+                            return null;
+                        }
+
+                        return PrelaunchContributorRole::tryFrom($role)?->getLabel() ?? $role;
+                    })
                     ->badge()
                     ->toggleable(),
                 TextColumn::make('status')->badge(),

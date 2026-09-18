@@ -2041,6 +2041,104 @@ footer.site a:hover { color: #fff; }
 }
 .cs-cta a:hover { color: #f5e5b6; }
 
+.cs-interest {
+    margin-top: 36px;
+    padding-top: 28px;
+    border-top: 1px solid rgba(255,255,255,.08);
+    max-width: 420px;
+    text-align: left;
+}
+.cs-interest-title {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+    letter-spacing: .02em;
+    color: #f2efe8;
+    margin: 0 0 8px;
+}
+.cs-interest-lede {
+    font-family: var(--f-sans);
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(185, 192, 189, .85);
+    margin: 0 0 18px;
+}
+.cs-interest-success {
+    font-family: var(--f-sans);
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--brass-lt);
+    margin: 0;
+    padding: 14px 16px;
+    border: 1px solid rgba(217, 174, 82, .35);
+    background: rgba(217, 174, 82, .08);
+}
+.cs-interest-error {
+    font-family: var(--f-sans);
+    font-size: 13px;
+    color: #f0b4b4;
+    margin: 0 0 12px;
+}
+.cs-interest-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.cs-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: rgba(185, 192, 189, .7);
+}
+.cs-field input,
+.cs-field select,
+.cs-field textarea {
+    font-family: var(--f-sans);
+    font-size: 15px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: #f2efe8;
+    background: rgba(0,0,0,.35);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 2px;
+    padding: 10px 12px;
+    width: 100%;
+}
+.cs-field input:focus,
+.cs-field select:focus,
+.cs-field textarea:focus {
+    outline: none;
+    border-color: rgba(217, 174, 82, .65);
+}
+.cs-field select {
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #D9AE52 50%),
+        linear-gradient(135deg, #D9AE52 50%, transparent 50%);
+    background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 12px) calc(50% - 2px);
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 32px;
+}
+.cs-field textarea { resize: vertical; min-height: 84px; }
+.cs-interest-form .cs-btn {
+    align-self: flex-start;
+    margin-top: 4px;
+    border: 0;
+    cursor: pointer;
+}
+.cs-hp {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+.cs-interest-form .cf-turnstile { margin-top: 2px; }
+
 /* Slim footer. Runs edge-to-edge so the page reads as one continuous
    surface rather than a card floating on nothing. */
 .cs-foot {

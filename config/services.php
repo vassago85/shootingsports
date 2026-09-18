@@ -21,6 +21,13 @@ return [
         'scheme' => 'https',
     ],
 
+    // Cloudflare Turnstile (coming-soon contributor form). Leave both
+    // blank locally/testing to bypass verification; production must set both.
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

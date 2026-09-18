@@ -1,0 +1,5 @@
+Contact: mailto:hello@shootingsports.co.za
+Expires: 2027-09-18T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://shootingsports.co.za/.well-known/security.txt
+Policy: https://shootingsports.co.za/privacy

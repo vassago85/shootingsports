@@ -15,6 +15,8 @@ use App\Models\User;
 use App\Models\Venue;
 use App\Support\AdPlacements;
 use App\Support\MailSettings;
+use App\Support\Turnstile;
+use App\Support\TurnstileSettings;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 
@@ -47,6 +49,24 @@ it('stores mailgun settings encrypted and applies them to config', function () {
     ]);
 
     expect(config('services.mailgun.secret'))->toBe('key-secret-value');
+});
+
+it('stores turnstile settings encrypted and applies them to config', function () {
+    TurnstileSettings::save([
+        'site_key' => '0xsite-public',
+        'secret_key' => '0xsecret-private',
+    ]);
+
+    expect(config('services.turnstile.site_key'))->toBe('0xsite-public')
+        ->and(config('services.turnstile.secret_key'))->toBe('0xsecret-private')
+        ->and(Turnstile::isConfigured())->toBeTrue();
+
+    TurnstileSettings::save([
+        'site_key' => '0xsite-public',
+        'secret_key' => '',
+    ]);
+
+    expect(config('services.turnstile.secret_key'))->toBe('0xsecret-private');
 });
 
 it('accepts a contact enquiry and emails staff', function () {

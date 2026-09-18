@@ -86,6 +86,78 @@
                 </div>
             </dl>
 
+            <section class="cs-interest" aria-labelledby="cs-interest-heading">
+                <h2 id="cs-interest-heading" class="cs-interest-title">Help us load the register</h2>
+                <p class="cs-interest-lede">
+                    Have a range, run matches, belong to a club, or list a business?
+                    Tell us — we'll confirm your email, then follow up.
+                </p>
+
+                @if (session('interest_status') === 'check_email')
+                    <p class="cs-interest-success" role="status">
+                        Check your email and click the confirmation link within 48 hours.
+                        Until then your interest stays pending on our side.
+                    </p>
+                @else
+                    @if ($errors->any())
+                        <p class="cs-interest-error" role="alert">{{ $errors->first() }}</p>
+                    @endif
+
+                    <form
+                        method="post"
+                        action="{{ route('coming-soon.interest') }}"
+                        class="cs-interest-form"
+                        novalidate
+                    >
+                        @csrf
+                        <input type="hidden" name="form_loaded_at" value="{{ time() }}">
+
+                        <div class="cs-hp" aria-hidden="true">
+                            <label for="company_website">Company website</label>
+                            <input type="text" name="company_website" id="company_website" value="" tabindex="-1" autocomplete="off">
+                        </div>
+
+                        <label class="cs-field">
+                            <span>I am / we are</span>
+                            <select name="role" required>
+                                <option value="" disabled @selected(old('role') === null)>Choose one…</option>
+                                @foreach (\App\Enums\PrelaunchContributorRole::cases() as $role)
+                                    <option value="{{ $role->value }}" @selected(old('role') === $role->value)>
+                                        {{ $role->getLabel() }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </label>
+
+                        <label class="cs-field">
+                            <span>Your name</span>
+                            <input type="text" name="name" value="{{ old('name') }}" required maxlength="120" autocomplete="name">
+                        </label>
+
+                        <label class="cs-field">
+                            <span>Email</span>
+                            <input type="email" name="email" value="{{ old('email') }}" required maxlength="255" autocomplete="email">
+                        </label>
+
+                        <label class="cs-field">
+                            <span>Short note</span>
+                            <textarea name="body" rows="3" required minlength="10" maxlength="1000" placeholder="Club / range / business name and how you’d like to help">{{ old('body') }}</textarea>
+                        </label>
+
+                        @if ($turnstileSiteKey = \App\Support\Turnstile::siteKey())
+                            <div
+                                class="cf-turnstile"
+                                data-sitekey="{{ $turnstileSiteKey }}"
+                                data-theme="dark"
+                            ></div>
+                            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+                        @endif
+
+                        <button type="submit" class="cs-btn">Send interest</button>
+                    </form>
+                @endif
+            </section>
+
             @auth
                 @if (! auth()->user()->is_staff && ! auth()->user()->is_match_director)
                     <p class="cs-note">

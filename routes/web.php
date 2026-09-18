@@ -4,6 +4,7 @@ use App\Enums\ProviderCategory;
 use App\Enums\Province;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CalendarMonthController;
+use App\Http\Controllers\ComingSoonInterestController;
 use App\Http\Controllers\DisciplineController;
 use App\Http\Controllers\EmbedController;
 use App\Http\Controllers\EnquiryController;
@@ -37,6 +38,12 @@ $categoryPattern = implode('|', array_map(fn (ProviderCategory $category) => $ca
 // even when the gate is on; when the flag is off the page is still
 // reachable directly (harmless, and useful for previewing the design).
 Route::view('/coming-soon', 'public.coming-soon')->name('coming-soon');
+Route::post('/coming-soon/interest', [ComingSoonInterestController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('coming-soon.interest');
+Route::get('/coming-soon/confirm/{token}', [ComingSoonInterestController::class, 'confirm'])
+    ->where('token', '[A-Za-z0-9]{64}')
+    ->name('coming-soon.confirm');
 
 Route::get('/', HomeController::class)->name('home');
 Route::get('/calendar', CalendarController::class)->name('calendar');

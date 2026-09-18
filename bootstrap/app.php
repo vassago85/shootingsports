@@ -1,8 +1,9 @@
 <?php
 
+use App\Http\Middleware\ApplySecurityHeaders;
 use App\Http\Middleware\CanonicalHost;
 use App\Http\Middleware\EnsureComingSoonAccess;
-use App\Http\Middleware\PreventClickjacking;
+use App\Http\Middleware\RestrictHealthEndpoint;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -29,10 +30,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // for auth-middlewared app routes (like /my-calendar).
         $middleware->redirectGuestsTo(fn () => route('login'));
 
+        // /up is registered without the web stack, so this must be global.
+        $middleware->append(RestrictHealthEndpoint::class);
+
         $middleware->web(append: [
             CanonicalHost::class,
             EnsureComingSoonAccess::class,
-            PreventClickjacking::class,
+            ApplySecurityHeaders::class,
         ]);
 
         // Paystack posts webhooks from their own IPs — no CSRF token

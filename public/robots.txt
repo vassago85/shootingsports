@@ -1,6 +1,3 @@
 User-agent: *
-Disallow: /desk
-Disallow: /admin
-Disallow: /my-calendar
 
 Sitemap: https://shootingsports.co.za/sitemap.xml

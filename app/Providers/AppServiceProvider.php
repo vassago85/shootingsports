@@ -16,6 +16,7 @@ use App\Services\Geocoding\Geocoder;
 use App\Services\Geocoding\NominatimGeocoder;
 use App\Support\MailSettings;
 use App\Support\PublicCache;
+use App\Support\TurnstileSettings;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as FilamentLogoutResponse;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -63,6 +64,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         MailSettings::apply();
+        TurnstileSettings::apply();
 
         // Binders live here, not in routes/web.php: `route:cache` (used in
         // the Docker entrypoint) never loads web.php, so slug lookups would

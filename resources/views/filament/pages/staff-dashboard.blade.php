@@ -104,8 +104,8 @@
 
         <a class="desk-card" href="{{ $emailUrl }}">
             <p class="kicker">06 — Settings</p>
-            <h2>Email</h2>
-            <p>Mailgun domain, from address, and test send. Overrides .env at runtime.</p>
+            <h2>Email &amp; Turnstile</h2>
+            <p>Mailgun, from address, Turnstile keys, and test send. Overrides .env at runtime.</p>
         </a>
     </div>
 

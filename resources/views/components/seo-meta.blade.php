@@ -29,6 +29,9 @@
     $umamiScriptUrl = config('services.umami.script_url');
     $umamiWebsiteId = config('services.umami.website_id');
     $siteGraph = JsonLd::site();
+    if ($robots === null && config('seo.noindex')) {
+        $robots = 'noindex, nofollow';
+    }
 @endphp
 
 <title>{{ $fullTitle }}</title>

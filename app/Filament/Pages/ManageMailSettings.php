@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Support\MailSettings;
+use App\Support\TurnstileSettings;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -31,9 +32,9 @@ class ManageMailSettings extends Page implements HasForms
 
     protected static ?int $navigationSort = 5;
 
-    protected static ?string $navigationLabel = 'Email';
+    protected static ?string $navigationLabel = 'Email & Turnstile';
 
-    protected static ?string $title = 'Email settings';
+    protected static ?string $title = 'Email & Turnstile';
 
     /**
      * @var array<string, mixed>|null
@@ -47,8 +48,9 @@ class ManageMailSettings extends Page implements HasForms
 
     public function mount(): void
     {
-        $settings = MailSettings::details();
+        $settings = array_merge(MailSettings::details(), TurnstileSettings::details());
         $settings['mailgun_secret'] = '';
+        $settings['secret_key'] = '';
 
         $this->form->fill($settings);
     }
@@ -104,16 +106,37 @@ class ManageMailSettings extends Page implements HasForms
                             ->placeholder('Leave blank to keep the current key')
                             ->columnSpanFull(),
                     ]),
+
+                Section::make('Cloudflare Turnstile')
+                    ->description('Bot protection for the coming-soon interest form. Keys from the Cloudflare Turnstile dashboard. Secret is stored encrypted. Leave both blank locally to skip the widget.')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('site_key')
+                            ->label('Site key')
+                            ->helperText('Public key — shown in the widget on the coming-soon page.')
+                            ->maxLength(255)
+                            ->placeholder('0x…'),
+                        TextInput::make('secret_key')
+                            ->label('Secret key')
+                            ->password()
+                            ->revealable()
+                            ->autocomplete('new-password')
+                            ->placeholder('Leave blank to keep the current key')
+                            ->maxLength(255),
+                    ]),
             ])
             ->statePath('data');
     }
 
     public function save(): void
     {
-        MailSettings::save($this->form->getState());
+        $state = $this->form->getState();
+
+        MailSettings::save($state);
+        TurnstileSettings::save($state);
 
         Notification::make()
-            ->title('Email settings saved')
+            ->title('Settings saved')
             ->success()
             ->send();
     }

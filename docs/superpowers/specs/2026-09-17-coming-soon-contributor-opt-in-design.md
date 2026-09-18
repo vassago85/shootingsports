@@ -1,7 +1,7 @@
 # Coming-soon contributor opt-in — Design
 
 **Date:** 2026-09-17  
-**Status:** Approved for planning
+**Status:** Built (local)
 
 ## Goal
 
