@@ -38,6 +38,15 @@ final readonly class Seo
 
         $sentence = trim($organisation->name.' is a '.($disciplines !== null ? $disciplines.' ' : '').strtolower($kind).($place !== '' ? ' in '.$place : '').'.');
 
+        $qualifiers = collect([
+            $organisation->accredited ? 'Accredited' : null,
+            $organisation->visitors_welcome ? 'Visitors welcome' : null,
+        ])->filter()->implode('. ');
+
+        if ($qualifiers !== '') {
+            $sentence .= ' '.$qualifiers.'.';
+        }
+
         if (filled($organisation->description)) {
             $sentence .= ' '.$organisation->description;
         }
@@ -62,6 +71,7 @@ final readonly class Seo
         $distance = $venue->max_distance_m !== null
             ? number_format((int) $venue->max_distance_m).' m'
             : null;
+        $disciplines = self::disciplineLabel($venue->disciplines);
 
         $title = $venue->name.' — Shooting Range in '.$place;
 
@@ -71,8 +81,18 @@ final readonly class Seo
 
         $sentence = $venue->name.' is a shooting range'.($place !== '' ? ' in '.$place : '').'.';
 
-        if ($distance !== null) {
-            $sentence .= ' Distances to '.$distance.'.';
+        if ($disciplines !== null) {
+            $sentence .= ' Hosts '.$disciplines.'.';
+        }
+
+        $stats = collect([
+            $distance !== null ? 'distances to '.$distance : null,
+            $venue->bay_count ? $venue->bay_count.' '.str('bay')->plural($venue->bay_count)->toString() : null,
+            $venue->access?->getLabel(),
+        ])->filter()->implode(', ');
+
+        if ($stats !== '') {
+            $sentence .= ' '.ucfirst($stats).'.';
         }
 
         if (filled($venue->address)) {

@@ -99,6 +99,10 @@ Route::get('/suppliers/{category}', [ProviderController::class, 'category'])
     ->name('suppliers.category');
 Route::get('/supplier/{provider:slug}', [ProviderController::class, 'show'])->name('suppliers.show');
 
+// Bare /matches is not a listing surface — /calendar is. Keep it a
+// permanent redirect so any external link or crawler discovery of
+// the singular path still resolves.
+Route::redirect('/matches', '/calendar', 301);
 Route::get('/matches/{event:slug}', [EventController::class, 'show'])->name('matches.show');
 
 Route::get('/my-calendar', [ShooterCalendarController::class, 'mine'])

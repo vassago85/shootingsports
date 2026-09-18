@@ -2,11 +2,13 @@
 
 use App\Enums\ListingStatus;
 use App\Enums\Province;
+use App\Enums\VenueAccess;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\User;
 use App\Models\Venue;
+use App\Support\Seo;
 use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
@@ -240,6 +242,42 @@ it('does not add a query per club on a province landing', function () {
 
 it('warms the sitemap cache', function () {
     $this->artisan('sitemap:warm')->assertSuccessful();
+});
+
+it('permanently redirects /matches to the calendar so the URL never 404s', function () {
+    $this->get('/matches')
+        ->assertStatus(301)
+        ->assertRedirect('/calendar');
+});
+
+it('fills a sparse range description with disciplines, bays and access', function () {
+    config()->set('seo.indexable', true);
+
+    $discipline = Discipline::factory()->create([
+        'slug' => 'sparse-disc',
+        'name' => 'Practical Rifle',
+        'is_published' => true,
+    ]);
+
+    $venue = Venue::factory()->create([
+        'slug' => 'sparse-range',
+        'name' => 'Atlantis Test Range',
+        'town' => 'Atlantis',
+        'province' => Province::WesternCape,
+        'address' => null,
+        'notes' => null,
+        'bay_count' => 4,
+        'max_distance_m' => null,
+        'access' => VenueAccess::Public,
+    ]);
+    $venue->disciplines()->syncWithoutDetaching([$discipline->getKey()]);
+
+    $seo = Seo::forVenue($venue->fresh());
+
+    expect($seo->description)->toContain('Practical Rifle')
+        ->and($seo->description)->toContain('4 bays')
+        ->and($seo->description)->toContain('Public')
+        ->and(strlen($seo->description))->toBeGreaterThan(100);
 });
 
 function sitemapRoot(string $xml): string
