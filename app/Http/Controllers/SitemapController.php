@@ -97,10 +97,8 @@ class SitemapController extends Controller
             'clubs.index',
             'ranges.index',
             'suppliers.index',
-            'claim',
             'advertise',
             'contact',
-            'embed.docs',
             'privacy',
             'terms',
         ])->map(fn (string $name): array => [

@@ -173,6 +173,28 @@ it('serves robots and a schema-valid sitemap in both indexability states', funct
     $pages->assertSee(route('home'), false);
 });
 
+it('emits the clubs landing URL shape in the disciplines sitemap, not the legacy path', function () {
+    config()->set('seo.indexable', true);
+    config()->set('seo.landing_min', 1);
+
+    $discipline = Discipline::factory()->create([
+        'slug' => 'shape-check',
+        'name' => 'Shape Check',
+        'is_published' => true,
+    ]);
+
+    Organisation::factory()->create([
+        'slug' => 'shape-club',
+        'province' => Province::Gauteng,
+        'status' => ListingStatus::Published,
+    ])->attachDiscipline($discipline);
+
+    $this->get('/sitemaps/disciplines.xml')
+        ->assertOk()
+        ->assertSee('/clubs/gauteng/shape-check', false)
+        ->assertDontSee('/disciplines/shape-check/gauteng', false);
+});
+
 it('chunks a sitemap type once it passes the configured limit', function () {
     config()->set('seo.sitemap_chunk', 1);
 
