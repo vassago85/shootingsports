@@ -6,7 +6,6 @@ use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
 use App\Models\Enquiry;
 use App\Models\User;
-use App\Services\StartProTrial;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -70,8 +69,6 @@ class Register extends Component
      */
     public string $business_name = '';
 
-    public bool $start_trial = true;
-
     public function register(): void
     {
         $rules = [
@@ -123,11 +120,10 @@ class Register extends Component
             Session::put('supplier.pending_business_name', trim($this->business_name));
         }
 
-        if ($this->start_trial) {
-            // Idempotent + no-ops if ineligible. Every signup should
-            // land on Pro trial unless they explicitly opted out.
-            StartProTrial::for($user);
-        }
+        // The Pro trial is intentionally not auto-started at signup —
+        // users land on Free and can opt in from /upgrade whenever they
+        // like. Keeps the signup form short and stops us from burning a
+        // one-shot 30-day trial on someone who never comes back.
 
         event(new Registered($user));
 

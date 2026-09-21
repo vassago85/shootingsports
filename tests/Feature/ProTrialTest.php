@@ -87,33 +87,21 @@ it('degrades trial user to Free automatically once plan_expires_at passes', func
         ->and($user->effectivePlan())->toBe(Plan::Free);
 });
 
-// ---- Signup opt-in ------------------------------------------------
+// ---- Signup does not auto-start a trial ---------------------------
 
-it('signup with start_trial checked drops the new user straight onto Pro trial', function () {
+it('signup lands the new user on Free — the trial must be opted in from /upgrade', function () {
+    // The old form had a "start my 30-day trial" checkbox at signup.
+    // It was removed so a one-shot 30-day trial does not get burned on
+    // people who never come back after registering. The trial is now
+    // an explicit action on the /upgrade page.
     Livewire::test(Register::class)
-        ->set('name', 'Trialist Tim')
-        ->set('email', 'tim@example.com')
+        ->set('name', 'Freshie')
+        ->set('email', 'freshie@example.com')
         ->set('password', 'passw0rd!')
         ->set('password_confirmation', 'passw0rd!')
-        ->set('start_trial', true)
         ->call('register');
 
-    $user = User::where('email', 'tim@example.com')->firstOrFail();
-
-    expect($user->isOnTrial())->toBeTrue()
-        ->and($user->pro_trial_started_at)->not->toBeNull();
-});
-
-it('signup with start_trial unchecked leaves the user on Free', function () {
-    Livewire::test(Register::class)
-        ->set('name', 'Frugal Fred')
-        ->set('email', 'fred@example.com')
-        ->set('password', 'passw0rd!')
-        ->set('password_confirmation', 'passw0rd!')
-        ->set('start_trial', false)
-        ->call('register');
-
-    $user = User::where('email', 'fred@example.com')->firstOrFail();
+    $user = User::where('email', 'freshie@example.com')->firstOrFail();
 
     expect($user->isOnTrial())->toBeFalse()
         ->and($user->pro_trial_started_at)->toBeNull()

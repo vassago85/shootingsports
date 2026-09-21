@@ -4,7 +4,7 @@
             <div class="wrap">
                 <p class="label">Sign up</p>
                 <h1>Create your account</h1>
-                <p>One login for shooters, match directors, clubs, series and suppliers. Tick what applies — you can be any combination of them.</p>
+                <p>One login for shooters, match directors, clubs, series and suppliers. Tick what applies — you can be any combination of them. Every account is free.</p>
             </div>
         </section>
         <section class="block">
@@ -30,19 +30,21 @@
                         <input type="password" wire:model="password_confirmation" required autocomplete="new-password" maxlength="255">
                     </label>
 
-                    <div style="margin-top:6px;padding:14px 16px;border:1px solid var(--rule);background:var(--surface)">
-                        <p class="label" style="margin-bottom:10px">Also register me as a</p>
+                    <p class="label" style="margin:22px 0 6px">Also register me as a (optional)</p>
 
-                        <label class="prefs-row" style="margin-bottom:10px">
-                            <input type="checkbox" wire:model.live="wants_md">
-                            <div>
-                                <b>Match director, club or series admin</b>
-                                <p>Publish matches on the calendar for a club, range, series or federation. Staff review this request (usually within one working day).</p>
-                            </div>
-                        </label>
+                    <div class="prefs-form">
+                        <div class="prefs-row">
+                            <label>
+                                <input type="checkbox" wire:model.live="wants_md">
+                                <div>
+                                    <b>Match director, club or series admin</b>
+                                    <p>Publish matches on the calendar for a club, range, series or federation. Staff review this request — usually within one working day.</p>
+                                </div>
+                            </label>
+                        </div>
 
                         @if ($wants_md)
-                            <label class="field" style="margin:6px 0 14px 30px">
+                            <label class="field" style="margin:-4px 0 0 34px">
                                 <span>Which club, range, series or host will you publish for? *</span>
                                 <textarea wire:model="host_hint" rows="3" maxlength="500" placeholder="e.g. Pretoria Rifle &amp; Pistol Club — I run the Wednesday IPSC shoots."></textarea>
                                 <small style="color:var(--slate);font-size:12px;display:block;margin-top:4px">
@@ -52,16 +54,18 @@
                             </label>
                         @endif
 
-                        <label class="prefs-row" style="margin-bottom:0">
-                            <input type="checkbox" wire:model.live="wants_supplier">
-                            <div>
-                                <b>Supplier / industry business</b>
-                                <p>Gunsmith, dealer, ammunition, optics, safes, instructor — anything in the shooting industry. We email a confirmation link, then you fill in your listing.</p>
-                            </div>
-                        </label>
+                        <div class="prefs-row">
+                            <label>
+                                <input type="checkbox" wire:model.live="wants_supplier">
+                                <div>
+                                    <b>Supplier / industry business</b>
+                                    <p>Gunsmith, dealer, ammunition, optics, safes, instructor — anything in the shooting industry. We email a confirmation link, then you fill in your listing.</p>
+                                </div>
+                            </label>
+                        </div>
 
                         @if ($wants_supplier)
-                            <label class="field" style="margin:6px 0 0 30px">
+                            <label class="field" style="margin:-4px 0 0 34px">
                                 <span>Business name *</span>
                                 <input type="text" wire:model="business_name" maxlength="160" autocomplete="organization" placeholder="e.g. Delmas Gun Shop">
                                 @error('business_name') <span class="err">{{ $message }}</span> @enderror
@@ -69,22 +73,19 @@
                         @endif
                     </div>
 
-                    <label class="prefs-row" style="margin-top:14px">
-                        <input type="checkbox" wire:model="start_trial">
-                        <div>
-                            <b>Start my 30-day Pro trial — no card needed</b>
-                            <p>Unlimited follows, saved searches, full attendance log for 30 days. Auto-reverts to Free at the end, because we never asked for a card.</p>
-                        </div>
-                    </label>
-
-                    <p style="margin-top:14px;color:var(--slate);font-size:0.92rem">
+                    <p style="margin-top:18px;color:var(--slate);font-size:0.92rem">
                         By creating an account you agree to the
                         <a href="{{ route('terms') }}" style="text-decoration:underline">Terms of Use</a>
                         and
                         <a href="{{ route('privacy') }}" style="text-decoration:underline">Privacy &amp; POPIA</a> notice.
                     </p>
 
-                    <button type="submit" class="btn" wire:loading.attr="disabled" wire:target="register">
+                    <p style="margin-top:8px;color:var(--slate);font-size:0.88rem">
+                        You'll get a Free account. When you're ready, you can start a 30-day Pro trial (no card) from
+                        <a href="{{ route('upgrade') }}" style="text-decoration:underline">Upgrade</a>.
+                    </p>
+
+                    <button type="submit" class="btn" style="margin-top:6px" wire:loading.attr="disabled" wire:target="register">
                         <span wire:loading.remove wire:target="register">Create account</span>
                         <span wire:loading wire:target="register">Creating…</span>
                     </button>
