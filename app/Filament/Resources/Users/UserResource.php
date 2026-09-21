@@ -283,7 +283,7 @@ class UserResource extends Resource
 
                         Notification::make()
                             ->title('MD request rejected')
-                            ->body("{$record->name} has been emailed. They can re-apply from /directors/register.")
+                            ->body("{$record->name} has been emailed. They can re-apply from /register.")
                             ->warning()
                             ->send();
                     }),

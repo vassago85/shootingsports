@@ -5,7 +5,7 @@ use App\Enums\ListingStatus;
 use App\Enums\ProviderCategory;
 use App\Enums\Province;
 use App\Enums\VerificationState;
-use App\Livewire\Auth\SupplierRegister;
+use App\Livewire\Auth\Register;
 use App\Livewire\Suppliers\CreateListing;
 use App\Models\Provider;
 use App\Models\User;
@@ -23,32 +23,31 @@ beforeEach(function (): void {
 
 // ---- Page render ---------------------------------------------------
 
-it('renders the public supplier signup page for guests', function () {
-    $this->get('/suppliers/register')
+it('renders the unified signup page with a supplier tickbox for guests', function () {
+    $this->get('/register')
         ->assertOk()
-        ->assertSee('Register your business')
-        ->assertSee('Business name')
-        ->assertSee('Terms of Use')
-        ->assertSee(route('terms'), false);
+        ->assertSee('Supplier / industry business')
+        ->assertSee('Match director, club or series admin');
 });
 
-it('redirects authenticated users away from the supplier signup page (guest middleware)', function () {
-    $this->actingAs(User::factory()->create())
-        ->get('/suppliers/register')
-        ->assertRedirect();
+it('301s the old /suppliers/register bookmark to /register', function () {
+    $this->get('/suppliers/register')
+        ->assertStatus(301)
+        ->assertRedirect('/register');
 });
 
-// ---- Signup --------------------------------------------------------
+// ---- Signup with the supplier role ticked --------------------------
 
-it('creates an unverified supplier account, dispatches a verification notification, and sends them to /email/verify', function () {
+it('ticking supplier creates an unverified account, dispatches a verification notification, and sends them to /email/verify', function () {
     Notification::fake();
 
-    Livewire::test(SupplierRegister::class)
+    Livewire::test(Register::class)
         ->set('name', 'Sue Supplier')
-        ->set('business_name', 'Delmas Gun Shop')
         ->set('email', 'sue@example.test')
         ->set('password', 'longenoughpassword')
         ->set('password_confirmation', 'longenoughpassword')
+        ->set('wants_supplier', true)
+        ->set('business_name', 'Delmas Gun Shop')
         ->call('register')
         ->assertRedirect(route('verification.notice'));
 
@@ -66,28 +65,28 @@ it('creates an unverified supplier account, dispatches a verification notificati
     expect(session('supplier.pending_business_name'))->toBe('Delmas Gun Shop');
 });
 
-it('rejects duplicate emails on supplier signup', function () {
-    User::factory()->create(['email' => 'taken@example.test']);
-
-    Livewire::test(SupplierRegister::class)
-        ->set('name', 'Nope')
-        ->set('business_name', 'Nope Ltd')
-        ->set('email', 'taken@example.test')
-        ->set('password', 'longenoughpassword')
-        ->set('password_confirmation', 'longenoughpassword')
-        ->call('register')
-        ->assertHasErrors(['email' => 'unique']);
-});
-
-it('requires a business name on supplier signup', function () {
-    Livewire::test(SupplierRegister::class)
+it('ticking supplier requires a business_name', function () {
+    Livewire::test(Register::class)
         ->set('name', 'Sue Supplier')
-        ->set('business_name', '')
         ->set('email', 'sue@example.test')
         ->set('password', 'longenoughpassword')
         ->set('password_confirmation', 'longenoughpassword')
+        ->set('wants_supplier', true)
+        ->set('business_name', '')
         ->call('register')
         ->assertHasErrors('business_name');
+});
+
+it('does not require business_name when the supplier box is not ticked', function () {
+    Livewire::test(Register::class)
+        ->set('name', 'Sam Shooter')
+        ->set('email', 'sam@example.test')
+        ->set('password', 'longenoughpassword')
+        ->set('password_confirmation', 'longenoughpassword')
+        ->set('wants_supplier', false)
+        ->set('business_name', '')
+        ->call('register')
+        ->assertHasNoErrors();
 });
 
 // ---- Email verification gate --------------------------------------

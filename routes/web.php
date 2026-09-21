@@ -24,10 +24,8 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StaticPageController;
 use App\Http\Controllers\UnsubscribeController;
 use App\Http\Controllers\VenueController;
-use App\Livewire\Auth\DirectorRegister;
 use App\Livewire\Auth\Login;
-use App\Livewire\Auth\ShooterRegister;
-use App\Livewire\Auth\SupplierRegister;
+use App\Livewire\Auth\Register;
 use App\Livewire\Settings\NotificationPreferences;
 use App\Livewire\Suppliers\CreateListing as SupplierCreateListing;
 use App\Livewire\Upgrade;
@@ -156,15 +154,16 @@ Route::get('/robots.txt', RobotsController::class)->name('robots');
 // auth middleware's redirectTo() finds it without config changes.
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', Login::class)->name('login');
-    Route::get('/register', ShooterRegister::class)->name('register');
-    Route::get('/directors/register', DirectorRegister::class)->name('directors.register');
-    Route::get('/suppliers/register', SupplierRegister::class)->name('suppliers.register');
+    Route::get('/register', Register::class)->name('register');
 });
 
-// Legacy bookmark: /desk/register was Filament's built-in registration
-// page before the signup split. Point it at the new director flow so
-// old links still land somewhere sensible.
-Route::redirect('/desk/register', '/directors/register', 301);
+// Legacy signup bookmarks. The public site used to have three
+// separate registration surfaces (shooter / director / supplier);
+// they were folded into a single /register page with role tickboxes.
+// Old inbound links keep working via permanent redirect.
+Route::redirect('/directors/register', '/register', 301)->name('directors.register');
+Route::redirect('/suppliers/register', '/register', 301)->name('suppliers.register');
+Route::redirect('/desk/register', '/register', 301);
 
 // Email verification. Fires for any user (shooter, MD, supplier) whose
 // account was created via a Registered event — SendEmailVerificationNotification

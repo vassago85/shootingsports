@@ -39,9 +39,7 @@
                 @if (! config('coming-soon.enabled'))
                     <p style="margin-top:22px;color:var(--slate)">
                         New here?
-                        <a href="{{ route('register') }}">Create a shooter account</a>
-                        or
-                        <a href="{{ route('directors.register') }}">register as a match director</a>.
+                        <a href="{{ route('register') }}" style="text-decoration:underline">Create an account</a> — one login for shooters, match directors, clubs and suppliers.
                     </p>
                 @else
                     <p style="margin-top:22px;color:var(--slate)">

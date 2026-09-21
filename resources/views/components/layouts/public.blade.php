@@ -81,9 +81,7 @@
                 @endif
             @else
                 <a href="{{ route('login') }}">Sign in</a>
-                <a href="{{ route('register') }}">Create a shooter account</a>
-                <a href="{{ route('directors.register') }}">List your club</a>
-                <a href="{{ route('suppliers.register') }}">List your business</a>
+                <a href="{{ route('register') }}">Create an account</a>
             @endauth
             <a href="{{ route('advertise') }}">Advertise</a>
         </nav>
@@ -154,9 +152,7 @@
                             <li><a href="{{ route('settings.notifications') }}">Email preferences</a></li>
                         @else
                             <li><a href="{{ route('login') }}">Log in</a></li>
-                            <li><a href="{{ route('register') }}">Create a shooter account</a></li>
-                            <li><a href="{{ route('directors.register') }}">Register as a match director</a></li>
-                            <li><a href="{{ route('suppliers.register') }}">List your business</a></li>
+                            <li><a href="{{ route('register') }}">Create an account</a></li>
                         @endauth
                         <li><a href="{{ route('claim') }}">For clubs</a></li>
                         <li><a href="{{ route('embed.docs') }}">Embed the calendar</a></li>

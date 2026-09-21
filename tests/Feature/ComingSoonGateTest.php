@@ -42,12 +42,27 @@ it('redirects guests to /coming-soon when the gate is on', function () {
     $this->get('/calendar')->assertRedirect(route('coming-soon'));
 });
 
-it('redirects the register routes to /coming-soon when the gate is on', function () {
+it('redirects /register to /coming-soon when the gate is on', function () {
     config()->set('coming-soon.enabled', true);
 
     $this->get('/register')->assertRedirect(route('coming-soon'));
-    $this->get('/directors/register')->assertRedirect(route('coming-soon'));
-    $this->get('/suppliers/register')->assertRedirect(route('coming-soon'));
+});
+
+it('the legacy /directors/register and /suppliers/register bookmarks 301 to /register when the gate is off', function () {
+    // With the gate off (production baseline once we launch), the
+    // legacy URLs must permanently redirect to /register so old inbound
+    // links keep working. With the gate on, the coming-soon middleware
+    // still intercepts guests before the redirect handler runs — that
+    // is the intended behaviour and does not need its own assertion.
+    config()->set('coming-soon.enabled', false);
+
+    $this->get('/directors/register')
+        ->assertStatus(301)
+        ->assertRedirect('/register');
+
+    $this->get('/suppliers/register')
+        ->assertStatus(301)
+        ->assertRedirect('/register');
 });
 
 it('redirects authenticated shooters to /coming-soon when the gate is on', function () {

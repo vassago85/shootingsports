@@ -1,7 +1,7 @@
 <?php
 
 use App\Enums\Plan;
-use App\Livewire\Auth\ShooterRegister;
+use App\Livewire\Auth\Register;
 use App\Livewire\Upgrade;
 use App\Mail\ProTrialEnded;
 use App\Mail\ProTrialEndingSoon;
@@ -89,8 +89,8 @@ it('degrades trial user to Free automatically once plan_expires_at passes', func
 
 // ---- Signup opt-in ------------------------------------------------
 
-it('shooter signup with start_trial checked drops the new user straight onto Pro trial', function () {
-    Livewire::test(ShooterRegister::class)
+it('signup with start_trial checked drops the new user straight onto Pro trial', function () {
+    Livewire::test(Register::class)
         ->set('name', 'Trialist Tim')
         ->set('email', 'tim@example.com')
         ->set('password', 'passw0rd!')
@@ -104,8 +104,8 @@ it('shooter signup with start_trial checked drops the new user straight onto Pro
         ->and($user->pro_trial_started_at)->not->toBeNull();
 });
 
-it('shooter signup with start_trial unchecked leaves the user on Free', function () {
-    Livewire::test(ShooterRegister::class)
+it('signup with start_trial unchecked leaves the user on Free', function () {
+    Livewire::test(Register::class)
         ->set('name', 'Frugal Fred')
         ->set('email', 'fred@example.com')
         ->set('password', 'passw0rd!')

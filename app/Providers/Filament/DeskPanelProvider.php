@@ -29,9 +29,9 @@ class DeskPanelProvider extends PanelProvider
             ->path('desk')
             ->login()
             // Registration is no longer served from the desk panel — the
-            // public /directors/register flow owns MD signup so we can
-            // set is_match_director on create. /desk/register 301s to
-            // the new route in routes/web.php.
+            // public /register flow owns all signups (shooter, MD,
+            // supplier — one form, role tickboxes). /desk/register
+            // 301s to /register in routes/web.php.
             ->passwordReset()
             ->profile(EditProfile::class)
             ->brandName('Shooting Sports Desk')

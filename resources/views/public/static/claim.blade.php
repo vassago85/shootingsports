@@ -7,7 +7,7 @@
                 <p>Create or claim a club or series, upload a logo, and manage your own matches. New listings stay private until staff publish them.</p>
                 <p style="margin-top:22px;display:flex;flex-wrap:wrap;gap:12px">
                     <a class="btn" href="{{ route('login') }}">Director login</a>
-                    <a class="btn ghost on-dark" href="{{ route('directors.register') }}">Register as a match director</a>
+                    <a class="btn ghost on-dark" href="{{ route('register') }}">Create an account</a>
                 </p>
             </div>
         </section>

@@ -2,9 +2,8 @@
 
 use App\Enums\EnquiryType;
 use App\Enums\OrganisationUserRole;
-use App\Livewire\Auth\DirectorRegister;
 use App\Livewire\Auth\Login;
-use App\Livewire\Auth\ShooterRegister;
+use App\Livewire\Auth\Register;
 use App\Models\Enquiry;
 use App\Models\Organisation;
 use App\Models\OrganisationUser;
@@ -25,25 +24,29 @@ it('renders the public login page for guests', function () {
     $this->get('/login')
         ->assertOk()
         ->assertSee('Log in')
-        ->assertSee('Create a shooter account')
-        ->assertSee('register as a match director');
+        ->assertSee('Create an account');
 });
 
-it('renders the shooter signup page for guests', function () {
+it('renders the unified signup page for guests', function () {
     $this->get('/register')
         ->assertOk()
-        ->assertSee('Create your shooter account')
+        ->assertSee('Create your account')
+        ->assertSee('Match director, club or series admin')
+        ->assertSee('Supplier / industry business')
         ->assertSee('Terms of Use')
         ->assertSee(route('terms'), false);
 });
 
-it('renders the director signup page for guests', function () {
+it('301s the legacy /directors/register bookmark to /register', function () {
     $this->get('/directors/register')
-        ->assertOk()
-        ->assertSee('Register as a match director')
-        ->assertSee('Which club, range, series or host')
-        ->assertSee('Terms of Use')
-        ->assertSee(route('terms'), false);
+        ->assertStatus(301)
+        ->assertRedirect('/register');
+});
+
+it('301s the legacy /suppliers/register bookmark to /register', function () {
+    $this->get('/suppliers/register')
+        ->assertStatus(301)
+        ->assertRedirect('/register');
 });
 
 it('redirects authenticated users away from guest-only auth pages', function () {
@@ -52,12 +55,12 @@ it('redirects authenticated users away from guest-only auth pages', function () 
         ->assertRedirect();
 });
 
-// ---- Shooter signup ------------------------------------------------
+// ---- Shooter-only signup (no roles ticked) ------------------------
 
-it('creates a shooter account with is_match_director=false and logs the user in', function () {
+it('creates a shooter-only account and lands them on /my-calendar', function () {
     Event::fake([Registered::class]);
 
-    Livewire::test(ShooterRegister::class)
+    Livewire::test(Register::class)
         ->set('name', 'Sam Shooter')
         ->set('email', 'sam@example.test')
         ->set('password', 'longenoughpassword')
@@ -69,16 +72,17 @@ it('creates a shooter account with is_match_director=false and logs the user in'
 
     expect($user->is_match_director)->toBeFalse()
         ->and($user->is_staff)->toBeFalse()
+        ->and($user->md_requested_at)->toBeNull()
         ->and($user->name)->toBe('Sam Shooter');
 
     Event::assertDispatched(Registered::class);
     $this->assertAuthenticatedAs($user);
 });
 
-it('shooter signup rejects duplicate emails', function () {
+it('rejects duplicate emails on signup', function () {
     User::factory()->create(['email' => 'taken@example.test']);
 
-    Livewire::test(ShooterRegister::class)
+    Livewire::test(Register::class)
         ->set('name', 'Nope')
         ->set('email', 'taken@example.test')
         ->set('password', 'longenoughpassword')
@@ -87,8 +91,8 @@ it('shooter signup rejects duplicate emails', function () {
         ->assertHasErrors(['email' => 'unique']);
 });
 
-it('shooter signup rejects a mismatched password confirmation', function () {
-    Livewire::test(ShooterRegister::class)
+it('rejects a mismatched password confirmation on signup', function () {
+    Livewire::test(Register::class)
         ->set('name', 'Sam')
         ->set('email', 'sam@example.test')
         ->set('password', 'longenoughpassword')
@@ -97,8 +101,8 @@ it('shooter signup rejects a mismatched password confirmation', function () {
         ->assertHasErrors(['password' => 'confirmed']);
 });
 
-it('shooter signup rejects passwords shorter than 8 characters', function () {
-    Livewire::test(ShooterRegister::class)
+it('rejects passwords shorter than 8 characters', function () {
+    Livewire::test(Register::class)
         ->set('name', 'Sam')
         ->set('email', 'sam@example.test')
         ->set('password', 'short')
@@ -107,16 +111,17 @@ it('shooter signup rejects passwords shorter than 8 characters', function () {
         ->assertHasErrors(['password' => 'min']);
 });
 
-// ---- Director signup (review-gated) --------------------------------
+// ---- Match-director role (review-gated) ---------------------------
 
-it('creates a PENDING match director account, lands on /my-calendar, and flashes a review message', function () {
+it('ticking the match director role creates a PENDING MD, flashes review status, and lands on /my-calendar', function () {
     Event::fake([Registered::class]);
 
-    Livewire::test(DirectorRegister::class)
+    Livewire::test(Register::class)
         ->set('name', 'Dana Director')
         ->set('email', 'dana@example.test')
         ->set('password', 'longenoughpassword')
         ->set('password_confirmation', 'longenoughpassword')
+        ->set('wants_md', true)
         ->set('host_hint', 'Pretoria Rifle & Pistol Club — I run the Wednesday IPSC shoots.')
         ->call('register')
         ->assertRedirect('/my-calendar');
@@ -124,7 +129,6 @@ it('creates a PENDING match director account, lands on /my-calendar, and flashes
     $user = User::query()->where('email', 'dana@example.test')->firstOrFail();
 
     expect($user->is_match_director)->toBeFalse()
-        ->and($user->is_staff)->toBeFalse()
         ->and($user->md_requested_at)->not->toBeNull()
         ->and($user->md_approved_at)->toBeNull()
         ->and($user->md_rejected_at)->toBeNull()
@@ -135,12 +139,13 @@ it('creates a PENDING match director account, lands on /my-calendar, and flashes
     $this->assertAuthenticatedAs($user);
 });
 
-it('director signup ALWAYS records an md_signup enquiry with the host hint', function () {
-    Livewire::test(DirectorRegister::class)
+it('ticking match director ALWAYS records an md_signup enquiry with the host hint', function () {
+    Livewire::test(Register::class)
         ->set('name', 'Dana Director')
         ->set('email', 'dana@example.test')
         ->set('password', 'longenoughpassword')
         ->set('password_confirmation', 'longenoughpassword')
+        ->set('wants_md', true)
         ->set('host_hint', 'Pretoria Rifle & Pistol Club')
         ->call('register');
 
@@ -154,17 +159,30 @@ it('director signup ALWAYS records an md_signup enquiry with the host hint', fun
         ->and($enquiry->context['host_hint'] ?? null)->toBe('Pretoria Rifle & Pistol Club');
 });
 
-it('director signup rejects an empty host_hint (required in review-gated flow)', function () {
-    Livewire::test(DirectorRegister::class)
+it('ticking match director requires host_hint', function () {
+    Livewire::test(Register::class)
         ->set('name', 'Dana Director')
         ->set('email', 'dana@example.test')
         ->set('password', 'longenoughpassword')
         ->set('password_confirmation', 'longenoughpassword')
+        ->set('wants_md', true)
         ->set('host_hint', '')
         ->call('register')
         ->assertHasErrors('host_hint');
 
     expect(User::query()->where('email', 'dana@example.test')->exists())->toBeFalse();
+});
+
+it('does not require host_hint when the match director box is not ticked', function () {
+    Livewire::test(Register::class)
+        ->set('name', 'Sam Shooter')
+        ->set('email', 'sam@example.test')
+        ->set('password', 'longenoughpassword')
+        ->set('password_confirmation', 'longenoughpassword')
+        ->set('wants_md', false)
+        ->set('host_hint', '')
+        ->call('register')
+        ->assertHasNoErrors();
 });
 
 it('a PENDING match director cannot access /desk yet', function () {
@@ -176,6 +194,35 @@ it('a PENDING match director cannot access /desk yet', function () {
     $this->actingAs($pending)
         ->get('/desk')
         ->assertStatus(403);
+});
+
+// ---- Multi-role: MD + supplier on the same signup ------------------
+
+it('ticking both MD and supplier stores both intents and routes the user through email verification first', function () {
+    Livewire::test(Register::class)
+        ->set('name', 'Multi Roles')
+        ->set('email', 'multi@example.test')
+        ->set('password', 'longenoughpassword')
+        ->set('password_confirmation', 'longenoughpassword')
+        ->set('wants_md', true)
+        ->set('host_hint', 'Some Club — I run the monthly shoots.')
+        ->set('wants_supplier', true)
+        ->set('business_name', 'Multi Roles Trading')
+        ->call('register')
+        ->assertRedirect(route('verification.notice'));
+
+    $user = User::query()->where('email', 'multi@example.test')->firstOrFail();
+
+    // MD request lodged.
+    expect($user->md_requested_at)->not->toBeNull()
+        ->and($user->isMdPending())->toBeTrue();
+
+    // Supplier business name stashed for /suppliers/onboard.
+    expect(session('supplier.pending_business_name'))->toBe('Multi Roles Trading');
+
+    // MD signup enquiry is written even when supplier is also picked.
+    expect(Enquiry::query()->where('type', EnquiryType::MdSignup->value)->where('user_id', $user->id)->exists())
+        ->toBeTrue();
 });
 
 // ---- Login redirects follow role ----------------------------------
@@ -257,10 +304,10 @@ it('staff can access both /desk and /admin', function () {
 
 // ---- Legacy /desk/register redirect --------------------------------
 
-it('301s the legacy /desk/register bookmark to /directors/register', function () {
+it('301s the legacy /desk/register bookmark to /register', function () {
     $this->get('/desk/register')
         ->assertStatus(301)
-        ->assertRedirect('/directors/register');
+        ->assertRedirect('/register');
 });
 
 // ---- Logout redirect (Filament panels) -----------------------------
