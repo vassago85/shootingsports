@@ -59,6 +59,9 @@
                     @if (auth()->user()?->is_staff || auth()->user()?->is_match_director)
                         <a class="btn" href="{{ url('/desk') }}">Desk</a>
                     @endif
+                    @if (auth()->user()?->isSupplier())
+                        <a class="btn ghost on-dark" href="{{ route('suppliers.onboard') }}">My business</a>
+                    @endif
                 @else
                     <a class="btn ghost on-dark" href="{{ route('login') }}">Sign in</a>
                 @endauth
@@ -78,6 +81,9 @@
                 <a href="{{ route('settings.notifications') }}">Notifications</a>
                 @if (auth()->user()?->is_staff || auth()->user()?->is_match_director)
                     <a href="{{ url('/desk') }}">Desk</a>
+                @endif
+                @if (auth()->user()?->isSupplier())
+                    <a href="{{ route('suppliers.onboard') }}">My business</a>
                 @endif
             @else
                 <a href="{{ route('login') }}">Sign in</a>

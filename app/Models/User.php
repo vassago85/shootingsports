@@ -345,13 +345,31 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     }
 
     /**
+     * Per-request cache for isSupplier(). Cleared automatically when
+     * the model is refreshed (which is rare on the same request), and
+     * short-circuited to null in the public setter so a fresh listing
+     * mid-request re-runs the exists() check.
+     */
+    private ?bool $isSupplierCache = null;
+
+    /**
      * True when the user has at least one supplier (industry) listing
-     * they own. Cheap enough to inline in Livewire mounts; do not
-     * cache — a fresh signup creates their first listing mid-request
-     * and expects this flag to flip on the next call.
+     * they own. The public site's layout calls this on every request
+     * (twice — desktop nav + mobile menu), so the result is memoised
+     * per-instance to keep it to a single EXISTS query per page.
+     *
+     * If a caller creates a new provider under this user in the same
+     * request they must call refreshSupplierState() (or reload the
+     * model) — otherwise the cached false would hide the fresh listing
+     * from the nav until the next request.
      */
     public function isSupplier(): bool
     {
-        return $this->providers()->exists();
+        return $this->isSupplierCache ??= $this->providers()->exists();
+    }
+
+    public function refreshSupplierState(): void
+    {
+        $this->isSupplierCache = null;
     }
 }

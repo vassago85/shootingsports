@@ -209,6 +209,32 @@ it('shows the thanks page to the owner and 403s everyone else', function () {
         ->assertStatus(403);
 });
 
+// ---- Nav visibility ------------------------------------------------
+
+it('does not show the My business nav entry to guests', function () {
+    $this->get('/')
+        ->assertOk()
+        ->assertDontSee('My business');
+});
+
+it('does not show the My business nav entry to a signed-in user without a listing', function () {
+    $this->actingAs(User::factory()->create())
+        ->get('/')
+        ->assertOk()
+        ->assertDontSee('My business');
+});
+
+it('shows the My business nav entry to a user who owns a supplier listing', function () {
+    $user = User::factory()->create();
+    Provider::factory()->create(['claimed_by' => $user->id]);
+
+    $this->actingAs($user)
+        ->get('/')
+        ->assertOk()
+        ->assertSee('My business')
+        ->assertSee(route('suppliers.onboard'), false);
+});
+
 // ---- Public serviceCategories helper ------------------------------
 
 it('provider serviceCategories() drops the primary and unknown values', function () {
