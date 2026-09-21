@@ -19,6 +19,9 @@
                 <dl class="dope-rows" style="max-width:420px;padding:0">
                     <div class="r"><dt>Town</dt><dd>{{ $provider->town }}</dd></div>
                     <div class="r"><dt>Province</dt><dd>{{ $provider->province?->getLabel() }}</dd></div>
+                    @if ($provider->serviceCategories()->isNotEmpty())
+                        <div class="r"><dt>Also offers</dt><dd>{{ $provider->serviceCategories()->map(fn ($c) => $c->getLabel())->implode(', ') }}</dd></div>
+                    @endif
                     @if ($provider->tier && $provider->tier->value !== 'free')
                         <div class="r"><dt>Listing</dt><dd>{{ $provider->tier->getLabel() }}</dd></div>
                     @endif

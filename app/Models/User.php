@@ -10,6 +10,7 @@ use App\Models\Concerns\HasPlan;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,7 +35,7 @@ use Laravel\Sanctum\HasApiTokens;
     'pro_trial_started_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasPlan, Notifiable;
@@ -330,5 +331,27 @@ class User extends Authenticatable implements FilamentUser
     public function claims(): HasMany
     {
         return $this->hasMany(Claim::class);
+    }
+
+    /**
+     * Every Provider (industry listing) this user owns. Ownership is
+     * established at supplier signup (see SupplierListing) and never
+     * shared — a single Provider row belongs to exactly one user via
+     * `claimed_by`. Staff can still edit anyone's listing from /admin.
+     */
+    public function providers(): HasMany
+    {
+        return $this->hasMany(Provider::class, 'claimed_by');
+    }
+
+    /**
+     * True when the user has at least one supplier (industry) listing
+     * they own. Cheap enough to inline in Livewire mounts; do not
+     * cache — a fresh signup creates their first listing mid-request
+     * and expects this flag to flip on the next call.
+     */
+    public function isSupplier(): bool
+    {
+        return $this->providers()->exists();
     }
 }

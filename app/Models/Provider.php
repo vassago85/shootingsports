@@ -20,10 +20,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 #[Fillable([
-    'slug', 'name', 'category', 'province', 'town', 'metro', 'lat', 'lng',
+    'slug', 'name', 'category', 'services', 'province', 'town', 'metro', 'lat', 'lng',
     'email', 'phone', 'website_url', 'description', 'tier', 'status',
     'verification_state', 'last_verified_at', 'verification_token',
     'claimed_by', 'source',
@@ -37,6 +38,7 @@ class Provider extends Model
     {
         return [
             'category' => ProviderCategory::class,
+            'services' => 'array',
             'province' => Province::class,
             'metro' => GautengMetro::class,
             'lat' => 'decimal:7',
@@ -47,6 +49,30 @@ class Provider extends Model
             'last_verified_at' => 'immutable_datetime',
             'source' => ListingSource::class,
         ];
+    }
+
+    /**
+     * Extra services this supplier offers beyond the primary `category`.
+     *
+     * Returns a de-duplicated collection of ProviderCategory enums,
+     * excluding the primary category so callers can render the primary
+     * separately (as a headline) without repeating it in the services
+     * list. Unknown / stale enum values in the DB are silently dropped.
+     *
+     * @return Collection<int, ProviderCategory>
+     */
+    public function serviceCategories(): Collection
+    {
+        $values = collect((array) $this->services)
+            ->map(fn ($value): ?ProviderCategory => is_string($value) ? ProviderCategory::tryFrom($value) : null)
+            ->filter()
+            ->unique();
+
+        if ($this->category !== null) {
+            $values = $values->reject(fn (ProviderCategory $c): bool => $c === $this->category);
+        }
+
+        return $values->values();
     }
 
     public function claimedBy(): BelongsTo

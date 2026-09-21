@@ -47,6 +47,7 @@ it('redirects the register routes to /coming-soon when the gate is on', function
 
     $this->get('/register')->assertRedirect(route('coming-soon'));
     $this->get('/directors/register')->assertRedirect(route('coming-soon'));
+    $this->get('/suppliers/register')->assertRedirect(route('coming-soon'));
 });
 
 it('redirects authenticated shooters to /coming-soon when the gate is on', function () {

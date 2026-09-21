@@ -6,6 +6,7 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CalendarMonthController;
 use App\Http\Controllers\ComingSoonInterestController;
 use App\Http\Controllers\DisciplineController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\EmbedController;
 use App\Http\Controllers\EnquiryController;
 use App\Http\Controllers\EventController;
@@ -26,8 +27,11 @@ use App\Http\Controllers\VenueController;
 use App\Livewire\Auth\DirectorRegister;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\ShooterRegister;
+use App\Livewire\Auth\SupplierRegister;
 use App\Livewire\Settings\NotificationPreferences;
+use App\Livewire\Suppliers\CreateListing as SupplierCreateListing;
 use App\Livewire\Upgrade;
+use App\Models\Provider;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -154,12 +158,43 @@ Route::middleware('guest')->group(function (): void {
     Route::get('/login', Login::class)->name('login');
     Route::get('/register', ShooterRegister::class)->name('register');
     Route::get('/directors/register', DirectorRegister::class)->name('directors.register');
+    Route::get('/suppliers/register', SupplierRegister::class)->name('suppliers.register');
 });
 
 // Legacy bookmark: /desk/register was Filament's built-in registration
 // page before the signup split. Point it at the new director flow so
 // old links still land somewhere sensible.
 Route::redirect('/desk/register', '/directors/register', 301);
+
+// Email verification. Fires for any user (shooter, MD, supplier) whose
+// account was created via a Registered event — SendEmailVerificationNotification
+// listener is bound in AppServiceProvider. Only the supplier onboarding
+// route currently enforces `verified`; the notice page is the landing
+// after signup and after the middleware rejects an unverified user.
+Route::middleware('auth')->group(function (): void {
+    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])
+        ->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+});
+
+// Supplier onboarding — the listing form itself. Requires a verified
+// email so unclicked-inbox signups can't push "dealer" rows into the
+// pending queue. Listings arrive with status=Pending; staff publish
+// them from /admin. The thanks page renders the pending listing so
+// the user has confirmation the submission landed.
+Route::middleware(['auth', 'verified'])->group(function (): void {
+    Route::get('/suppliers/onboard', SupplierCreateListing::class)->name('suppliers.onboard');
+    Route::get('/suppliers/onboard/{provider:slug}/thanks', function (Provider $provider) {
+        abort_unless($provider->claimed_by === auth()->id() || auth()->user()?->is_staff, 403);
+
+        return view('public.suppliers.onboarded', ['provider' => $provider]);
+    })->name('suppliers.onboard.thanks');
+});
 
 Route::post('/logout', function () {
     Auth::logout();

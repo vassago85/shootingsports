@@ -21,8 +21,11 @@ use App\Support\MailSettings;
 use App\Support\PublicCache;
 use App\Support\TurnstileSettings;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as FilamentLogoutResponse;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\Event as EventDispatcher;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
@@ -69,6 +72,14 @@ class AppServiceProvider extends ServiceProvider
 
         MailSettings::apply();
         TurnstileSettings::apply();
+
+        // User implements MustVerifyEmail, so every Registered event
+        // (shooter, match director, supplier) fires this listener and
+        // the framework sends the signed verification link. Only the
+        // supplier flow currently gates behaviour on `verified` — the
+        // shooter / MD flows keep working unverified for now so we do
+        // not regress existing accounts, but the email still lands.
+        EventDispatcher::listen(Registered::class, SendEmailVerificationNotification::class);
 
         // Binders live here, not in routes/web.php: `route:cache` (used in
         // the Docker entrypoint) never loads web.php, so slug lookups would

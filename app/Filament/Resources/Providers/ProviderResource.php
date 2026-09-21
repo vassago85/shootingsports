@@ -21,6 +21,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -59,6 +60,14 @@ class ProviderResource extends Resource
                 Select::make('category')
                     ->options(ProviderCategory::class)
                     ->required(),
+                CheckboxList::make('services')
+                    ->label('Additional services')
+                    ->helperText('Other categories this supplier offers beyond the primary one.')
+                    ->options(collect(ProviderCategory::cases())
+                        ->mapWithKeys(fn (ProviderCategory $c): array => [$c->value => $c->getLabel()])
+                        ->all())
+                    ->columns(2)
+                    ->columnSpanFull(),
                 Select::make('province')
                     ->options(Province::class)
                     ->required(),
