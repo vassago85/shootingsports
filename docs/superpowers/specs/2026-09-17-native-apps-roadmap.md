@@ -143,3 +143,12 @@ one-page Expo fetch) proves list + show + login + save round-trip.
   push service vs a direct FCM integration.
 - Deep-link universal-links / associated domains setup (comes with
   Phase 2 device builds).
+
+## Appendix — App Store readiness
+
+App Store / Play submission mechanics stay out of the phased build
+above, but the **preparation** for submission is no longer unowned.
+See [2026-09-21-app-store-readiness-audit.md](2026-09-21-app-store-readiness-audit.md)
+for the requirement matrix and the prioritised backlog (in-app
+account deletion, expanded POPIA notice, public password reset,
+reviewer demo account, review notes, universal links, store metadata).
