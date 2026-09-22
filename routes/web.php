@@ -243,3 +243,5 @@ Route::post('/email/unsubscribe/{token}', [UnsubscribeController::class, 'resubs
 Route::get('/settings/notifications', NotificationPreferences::class)
     ->middleware('auth')
     ->name('settings.notifications');
+
+require __DIR__.'/mockups.php';
