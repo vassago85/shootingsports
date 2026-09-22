@@ -176,7 +176,7 @@
                         <div class="sec-head">
                             <p class="label">Where it is shot</p>
                             <h2>Clubs &amp; series running {{ strtolower($discipline->name) }}</h2>
-                            <p>Membership clubs, associations, and branded match series, listed by home province. A club is not bound to a venue — the range lives on the match.</p>
+                            <p>Membership clubs, associations, and branded match series, listed by home province. A club is not bound to a venue. The range lives on the match.</p>
                         </div>
                         <div class="clubs">
                             @forelse ($clubs as $club)

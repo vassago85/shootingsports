@@ -115,7 +115,7 @@ class PaystackController extends Controller
         } catch (\Throwable $e) {
             report($e);
 
-            return redirect('/upgrade')->with('status', 'Could not cancel automatically. Email us and we will do it manually — no further charges will happen.');
+            return redirect('/upgrade')->with('status', 'Could not cancel automatically. Email us and we will do it manually. No further charges will happen.');
         }
 
         $this->applier->applyCancellation($user);

@@ -36,8 +36,8 @@ class OrganisationController extends Controller
         $countPhrase = $this->countPhrase($clubs->count(), 'club', 'clubs');
         $seoTitle = $province ? 'Shooting clubs in '.$province->getLabel() : 'Shooting clubs & series in South Africa';
         $seoDescription = $province
-            ? 'Shooting clubs, ranges and series in '.$province->getLabel().' — '.$countPhrase.' on the South African register.'
-            : $countPhrase.' — membership clubs, associations and branded match series across South Africa.';
+            ? 'Shooting clubs, ranges and series in '.$province->getLabel().'. '.$countPhrase.' on the South African register.'
+            : $countPhrase.'. Membership clubs, associations and branded match series across South Africa.';
 
         $itemList = JsonLd::itemList(
             $clubs->map(fn (Organisation $club): array => [

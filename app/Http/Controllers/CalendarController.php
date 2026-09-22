@@ -82,9 +82,9 @@ class CalendarController extends Controller
     /**
      * Filter-aware SEO copy. Rules:
      *   - No filters: static site-wide message.
-     *   - Discipline only: "{Discipline} matches in South Africa — {N} upcoming."
-     *   - Province only: "Shooting matches in {Province} — {N} upcoming."
-     *   - Both: "{Discipline} matches in {Province} — {N} upcoming."
+     *   - Discipline only: "{Discipline} matches in South Africa. {N} upcoming."
+     *   - Province only: "Shooting matches in {Province}. {N} upcoming."
+     *   - Both: "{Discipline} matches in {Province}. {N} upcoming."
      *
      * Match count is embedded in the description (not the title) —
      * counts change often and Google penalises volatile title tags.
@@ -109,20 +109,20 @@ class CalendarController extends Controller
         if ($discipline !== null && $province !== null) {
             return [
                 $discipline->name.' in '.$province->getLabel(),
-                $discipline->name.' matches in '.$province->getLabel().' — '.$countPhrase.' on the South African calendar.',
+                $discipline->name.' matches in '.$province->getLabel().'. '.$countPhrase.' on the South African calendar.',
             ];
         }
 
         if ($discipline !== null) {
             return [
                 $discipline->name.' matches',
-                $discipline->name.' matches across South Africa — '.$countPhrase.' from every listed club.',
+                $discipline->name.' matches across South Africa. '.$countPhrase.' from every listed club.',
             ];
         }
 
         return [
             'Shooting matches in '.$province->getLabel(),
-            'Every shooting match in '.$province->getLabel().' — '.$countPhrase.' across all disciplines.',
+            'Every shooting match in '.$province->getLabel().'. '.$countPhrase.' across all disciplines.',
         ];
     }
 

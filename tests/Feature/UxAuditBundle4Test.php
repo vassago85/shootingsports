@@ -133,7 +133,7 @@ it('/map lists unpinned venues that still have upcoming matches', function () {
     ]);
 
     $this->get(route('map'))->assertOk()
-        ->assertSee('pin still needed', false)
+        ->assertSee('Pin still needed', false)
         ->assertSee('No Pin Range');
 });
 

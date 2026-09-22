@@ -24,7 +24,7 @@
                 @elseif ($user->isMdPending())
                     <div class="pending-banner" role="status">
                         <b>Match director access pending.</b>
-                        Your request is with staff for review — usually approved within one working day. We will email you as soon as it is done. Your shooter calendar (below) works as normal.
+                        Your request is with staff for review. It is usually approved within one working day. We will email you as soon as it is done. Your shooter calendar (below) works as normal.
                     </div>
                 @elseif ($user->isMdRejected())
                     <div class="pending-banner" role="status" style="border-color:#f0776b">
@@ -42,8 +42,8 @@
                     <div class="trial-progress" role="status">
                         <p class="pricing-label">Pro trial · {{ $user->trialDaysRemaining() }} {{ $user->trialDaysRemaining() === 1 ? 'day' : 'days' }} left</p>
                         <p>
-                            You're on Pro until {{ $user->plan_expires_at->format('j M Y') }} — unlimited follows, saved searches and attendance-log entries.
-                            <a href="{{ route('upgrade') }}"><b>Add a card</b></a> to keep Pro after that. No auto-billing — we never took a card in the first place.
+                            You're on Pro until {{ $user->plan_expires_at->format('j M Y') }}. Unlimited follows, saved searches and attendance-log entries.
+                            <a href="{{ route('upgrade') }}"><b>Add a card</b></a> to keep Pro after that. No auto-billing. We never took a card in the first place.
                         </p>
                     </div>
                 @endif

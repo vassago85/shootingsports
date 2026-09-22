@@ -33,8 +33,8 @@ class ProviderTierPricing
         $key = $tier instanceof ProviderTier ? $tier->value : (string) $tier;
 
         return match ($key) {
-            'free' => 'Default free listing — appears in the industry directory alphabetically.',
-            'verified' => 'Staff-confirmed listing — no charge. Sits above free listings.',
+            'free' => 'Default free listing. Appears in the industry directory alphabetically.',
+            'verified' => 'Staff-confirmed listing. No charge. Sits above free listings.',
             'featured' => self::featuredHelper(),
             default => null,
         };
@@ -51,6 +51,6 @@ class ProviderTierPricing
 
         $suffix = $price ? " · {$price}" : '';
 
-        return 'Paid enhanced listing — top of the industry directory, photos, contact form'.$suffix.'.';
+        return 'Paid enhanced listing. Top of the industry directory, photos, contact form'.$suffix.'.';
     }
 }

@@ -71,7 +71,7 @@
             <p class="ss-partner-label">Advertising</p>
             <p class="ss-partner-kicker">This space is available</p>
             <h3>Advertise here</h3>
-            <p>A quiet place on the register — seen by clubs, match directors and shooters looking for the next match.</p>
+            <p>A quiet place on the register. Seen by clubs, match directors and shooters looking for the next match.</p>
             <span class="ss-partner-cta">Enquire about this space →</span>
         </a>
     @endif

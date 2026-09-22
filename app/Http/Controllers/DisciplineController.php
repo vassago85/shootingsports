@@ -219,6 +219,6 @@ class DisciplineController extends Controller
             ? ' '.rtrim($discipline->short_blurb, '.').'.'
             : '';
 
-        return $discipline->name.$where.' — '.$matches.$clubs.'.'.$blurb;
+        return $discipline->name.$where.'. '.$matches.$clubs.'.'.$blurb;
     }
 }

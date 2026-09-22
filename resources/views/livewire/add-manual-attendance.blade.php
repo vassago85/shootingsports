@@ -12,7 +12,7 @@
                 <p class="label">Add to your log</p>
                 <h2 id="add-manual-title">Log a match manually</h2>
                 <p style="color:var(--slate);font-size:14px;margin:0 0 12px">
-                    For matches not in our calendar — historical events, out-of-country matches, informal club shoots.
+                    For matches not in our calendar. Historical events, out-of-country matches, informal club shoots.
                 </p>
 
                 <form wire:submit.prevent="save" class="log-attendance-form">
@@ -30,7 +30,7 @@
                         <label class="field">
                             <span>Discipline</span>
                             <select wire:model.defer="discipline_id">
-                                <option value="">— pick one —</option>
+                                <option value="">Pick one</option>
                                 @foreach ($disciplines as $d)
                                     <option value="{{ $d->id }}">{{ $d->name }}</option>
                                 @endforeach

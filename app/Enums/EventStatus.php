@@ -20,7 +20,7 @@ enum EventStatus: string implements HasColor, HasLabel
     {
         return match ($this) {
             self::Draft => 'Draft',
-            self::Planned => 'Planned — date provisional',
+            self::Planned => 'Planned, date provisional',
             self::Confirmed => 'Confirmed',
             self::EntriesOpen => 'Entries open',
             self::Full => 'Full',

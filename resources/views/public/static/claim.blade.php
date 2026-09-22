@@ -18,7 +18,7 @@
                     <h2>Three steps</h2>
                 </div>
                 <ol style="margin:0;padding-left:1.2rem;color:var(--slate);line-height:1.7">
-                    <li style="margin-bottom:12px"><b style="color:var(--ink)">Register</b> at the desk — free, no staff approval needed to sign up.</li>
+                    <li style="margin-bottom:12px"><b style="color:var(--ink)">Register</b> at the desk. Free, no staff approval needed to sign up.</li>
                     <li style="margin-bottom:12px"><b style="color:var(--ink)">Create</b> a club or series, or <b style="color:var(--ink)">claim</b> one already on the register (claim needs staff approval).</li>
                     <li><b style="color:var(--ink)">Add matches</b> under your listings. You can be a director on several clubs and federations at once.</li>
                 </ol>

@@ -24,7 +24,7 @@
                         </a>
                     </p>
                     <p style="margin-top:14px">
-                        Or <a href="{{ route('contact') }}">email us</a> and we'll unsubscribe you manually — same day.
+                        Or <a href="{{ route('contact') }}">email us</a> and we'll unsubscribe you manually. Same day.
                     </p>
                 </div>
             </div>

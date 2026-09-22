@@ -1,6 +1,6 @@
 <x-layouts.public
     title="Shooting sports disciplines"
-    description="Every shooting discipline on the South African register — what it is, who shoots it, and where the next match is."
+    description="Every shooting discipline on the South African register. What it is, who shoots it, and where the next match is."
     :json-ld="$jsonLd"
 >
     <main id="main">
@@ -8,7 +8,7 @@
             <div class="wrap">
                 <p class="label">Find your sport</p>
                 <h1>Sports</h1>
-                <p>Precision rifle, IPSC, clays, benchrest, gong, PR22 — every discipline shot in South Africa, what it is, who governs it, and where the next match is.</p>
+                <p>Precision rifle, IPSC, clays, benchrest, gong, PR22. Every discipline shot in South Africa, what it is, who governs it, and where the next match is.</p>
             </div>
         </section>
         <section class="block">

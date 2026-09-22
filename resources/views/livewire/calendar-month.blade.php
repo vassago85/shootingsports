@@ -10,7 +10,7 @@
                 <small>
                     {{ $resultCount }} upcoming {{ $resultCount === 1 ? 'match' : 'matches' }} this month
                     @if ($hasActiveFilters)
-                        <span class="result-count-suffix">— filtered</span>
+                        <span class="result-count-suffix">· filtered</span>
                     @endif
                 </small>
                 @if ($hasActiveFilters)

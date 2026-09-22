@@ -24,7 +24,7 @@ it('suppliers index links empty categories to the category page', function () {
     $category = ProviderCategory::cases()[0];
 
     expect($html)
-        ->toContain('Free to list — open this category')
+        ->toContain('Free to list. Open this category')
         ->toContain(route('suppliers.category', $category->urlSlug()))
         ->not->toContain('0 listed');
 });

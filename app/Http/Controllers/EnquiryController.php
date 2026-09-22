@@ -82,7 +82,7 @@ class EnquiryController extends Controller
             'about' => $about,
             'aboutType' => $type,
             'heading' => 'Enquire about '.$about->name,
-            'intro' => 'Your message is delivered to Shooting Sports staff. We will relay it appropriately — listing emails are not shown publicly.',
+            'intro' => 'Your message is delivered to Shooting Sports staff. We will relay it appropriately. Listing emails are not shown publicly.',
         ]);
     }
 

@@ -33,7 +33,7 @@ class ProviderController extends Controller
         };
 
         $seoTitle = 'Gunsmiths, dealers & instructors';
-        $seoDescription = $countPhrase.' on the South African register — gunsmiths, dealers, ammunition, optics, safes and more.';
+        $seoDescription = $countPhrase.' on the South African register. Gunsmiths, dealers, ammunition, optics, safes and more.';
 
         // ItemList by category since suppliers are grouped that way in
         // the UI. Passing category landing pages (not per-supplier)

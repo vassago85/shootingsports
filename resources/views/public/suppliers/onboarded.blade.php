@@ -3,7 +3,7 @@
         <section class="page-hero">
             <div class="wrap">
                 <p class="label">Listing submitted</p>
-                <h1>Thanks — your listing is in for review</h1>
+                <h1>Thanks. Your listing is in for review</h1>
                 <p>Staff usually publish within one working day, and you will get an email as soon as your listing goes live in the Industry directory.</p>
             </div>
         </section>

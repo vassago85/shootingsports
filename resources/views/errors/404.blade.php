@@ -8,17 +8,17 @@
             <div class="wrap">
                 <div class="error-mark">
                     <svg viewBox="0 0 40 40" aria-hidden="true">
-                        <circle cx="20" cy="20" r="17" fill="none" stroke="#D9AE52" stroke-width="1.6"/>
-                        <circle cx="20" cy="20" r="7.5" fill="none" stroke="#D9AE52" stroke-width="1"/>
-                        <circle cx="20" cy="20" r="3" fill="none" stroke="#D9AE52" stroke-width=".9"/>
-                        <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="#D9AE52" stroke-width="1.6"/>
+                        <circle cx="20" cy="20" r="17" fill="none" stroke="#879A4A" stroke-width="1.6"/>
+                        <circle cx="20" cy="20" r="7.5" fill="none" stroke="#879A4A" stroke-width="1"/>
+                        <circle cx="20" cy="20" r="3" fill="none" stroke="#879A4A" stroke-width=".9"/>
+                        <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="#879A4A" stroke-width="1.6"/>
                     </svg>
                     <span class="error-mark-code">404</span>
                 </div>
                 <p class="label">Off the plate</p>
                 <h1>This page is not in the register.</h1>
                 <p class="lede">
-                    Listings on Shooting Sports never move and never 404 — so this is probably a mistyped URL or an old link.
+                    Listings on Shooting Sports never move and never 404. This is probably a mistyped URL or an old link.
                     Try one of the routes below, or start from the calendar.
                 </p>
 

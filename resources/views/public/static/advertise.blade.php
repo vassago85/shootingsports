@@ -4,7 +4,7 @@
             <div class="wrap">
                 <p class="label">Advertising</p>
                 <h1>The register stays free because of ads</h1>
-                <p>Listing a club, range, match or supplier is free forever. We do not take a cut of entries. The rate card and booked slots ship with the advertising product — this page is the placeholder so the offer is already in the vocabulary.</p>
+                <p>Listing a club, range, match or supplier is free forever. We do not take a cut of entries. The rate card and booked slots ship with the advertising product. This page is the placeholder so the offer is already in the vocabulary.</p>
             </div>
         </section>
     </main>

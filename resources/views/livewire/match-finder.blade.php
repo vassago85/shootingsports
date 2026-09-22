@@ -142,7 +142,7 @@
                     },
                     () => {
                         this.locating = false;
-                        this.error = 'Could not get your location — try a town name instead.';
+                        this.error = 'Could not get your location. Try a town name instead.';
                     },
                     { enableHighAccuracy: false, timeout: 10000 }
                 );

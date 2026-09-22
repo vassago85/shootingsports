@@ -22,7 +22,7 @@
                     <small>
                         {{ $resultCount }} {{ $resultCount === 1 ? 'match' : 'matches' }}
                         @if ($hasActiveFilters)
-                            <span class="result-count-suffix">— filtered</span>
+                            <span class="result-count-suffix">· filtered</span>
                         @endif
                     </small>
                     @if ($hasActiveFilters)
@@ -64,35 +64,35 @@
                         <button type="button" class="chip-active" wire:click="clearWeekend">
                             <span>This weekend</span>
                             <span aria-hidden="true">×</span>
-                            <span class="sr-only">— clear this weekend filter</span>
+                            <span class="sr-only">. Clear this weekend filter</span>
                         </button>
                     @endif
                     @if ($family !== 'all')
                         <button type="button" class="chip-active" wire:click="clearFamily">
                             <span>{{ \App\Enums\Division::tryFrom($family)?->getLabel() ?? \App\Enums\DisciplineFamily::tryFrom($family)?->getLabel() ?? ucfirst($family) }}</span>
                             <span aria-hidden="true">×</span>
-                            <span class="sr-only">— clear discipline family filter</span>
+                            <span class="sr-only">. Clear discipline family filter</span>
                         </button>
                     @endif
                     @if ($novice)
                         <button type="button" class="chip-active" wire:click="clearNovice">
                             <span>New shooter</span>
                             <span aria-hidden="true">×</span>
-                            <span class="sr-only">— clear new shooter filter</span>
+                            <span class="sr-only">. Clear new shooter filter</span>
                         </button>
                     @endif
                     @if ($confirmed)
                         <button type="button" class="chip-active" wire:click="clearConfirmed">
                             <span>Confirmed only</span>
                             <span aria-hidden="true">×</span>
-                            <span class="sr-only">— clear confirmed dates filter</span>
+                            <span class="sr-only">. Clear confirmed dates filter</span>
                         </button>
                     @endif
                     @if (filled($activeDisciplineLabel))
                         <button type="button" class="chip-active" wire:click="clearDiscipline">
                             <span>{{ $activeDisciplineLabel }}</span>
                             <span aria-hidden="true">×</span>
-                            <span class="sr-only">— clear discipline filter</span>
+                            <span class="sr-only">. Clear discipline filter</span>
                         </button>
                     @endif
                     @foreach ($selectedProvinces as $slug)
@@ -100,14 +100,14 @@
                         <button type="button" class="chip-active" wire:click="toggleProvince('{{ $slug }}')">
                             <span>{{ $provinceLabel }}</span>
                             <span aria-hidden="true">×</span>
-                            <span class="sr-only">— clear {{ $provinceLabel }} filter</span>
+                            <span class="sr-only">. Clear {{ $provinceLabel }} filter</span>
                         </button>
                     @endforeach
                     @if ((! $weekend) && (filled($from) || filled($to)))
                         <button type="button" class="chip-active" wire:click="clearDates">
                             <span>{{ $from ?: '…' }} → {{ $to ?: '…' }}</span>
                             <span aria-hidden="true">×</span>
-                            <span class="sr-only">— clear date range filter</span>
+                            <span class="sr-only">. Clear date range filter</span>
                         </button>
                     @endif
                     @if (filled($near) || filled($lat) || filled($radius))
@@ -122,7 +122,7 @@
                                 @endif
                             </span>
                             <span aria-hidden="true">×</span>
-                            <span class="sr-only">— clear distance filter</span>
+                            <span class="sr-only">. Clear distance filter</span>
                         </button>
                     @endif
                     <button type="button" class="btn-clear-filters" wire:click="clearAll">Clear all</button>
@@ -212,9 +212,9 @@
         <div class="mb-empty">
             <h3>No matches found</h3>
             @if ($weekend)
-                <p class="empty">Nothing listed for this weekend ({{ $weekendLabel }}). Planned dates still appear when clubs publish them — try next month or clear the filter.</p>
+                <p class="empty">Nothing listed for this weekend ({{ $weekendLabel }}). Planned dates still appear when clubs publish them. Try next month or clear the filter.</p>
             @else
-                <p class="empty">No matches in this window. Planned dates still appear on the calendar — they render as provisional.</p>
+                <p class="empty">No matches in this window. Planned dates still appear on the calendar. They render as provisional.</p>
             @endif
             @if ($hasActiveFilters)
                 <div class="mb-empty-actions empty-actions">

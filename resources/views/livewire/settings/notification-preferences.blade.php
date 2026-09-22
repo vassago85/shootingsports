@@ -6,7 +6,7 @@
                 <h1>Email preferences</h1>
                 <p class="lede">
                     Choose which emails you'd like to receive. Account &amp; operational messages (password resets, receipts,
-                    MD application updates, enquiry replies) always go out — everything else is opt-out.
+                    MD application updates, enquiry replies) always go out. Everything else is opt-out.
                 </p>
             </div>
         </section>

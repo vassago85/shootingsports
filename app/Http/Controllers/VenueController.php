@@ -44,8 +44,8 @@ class VenueController extends Controller
 
         $seoTitle = $province ? 'Shooting ranges in '.$province->getLabel() : 'Shooting ranges in South Africa';
         $seoDescription = $province
-            ? 'Shooting ranges and venues in '.$province->getLabel().' — '.$countPhrase.' on the South African register.'
-            : $countPhrase.' across South Africa — the venues where matches actually happen.';
+            ? 'Shooting ranges and venues in '.$province->getLabel().'. '.$countPhrase.' on the South African register.'
+            : $countPhrase.' across South Africa. The venues where matches actually happen.';
 
         $itemList = JsonLd::itemList(
             $venues->map(fn (Venue $v): array => [

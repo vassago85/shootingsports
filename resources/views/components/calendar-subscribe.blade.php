@@ -9,7 +9,7 @@
 
 <div class="embed-box">
     <p class="label">Subscribe on your phone</p>
-    <p class="embed-help">Add this feed once. When you add or remove matches here, they appear on Google, Apple or Outlook the next time that calendar refreshes — usually within an hour.</p>
+    <p class="embed-help">Add this feed once. When you add or remove matches here, they appear on Google, Apple or Outlook the next time that calendar refreshes, usually within an hour.</p>
     <div class="embed-field" x-data="{ copied: false }">
         <span class="embed-field-label">Subscription URL</span>
         <div class="embed-field-row">

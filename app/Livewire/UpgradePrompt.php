@@ -133,7 +133,7 @@ class UpgradePrompt extends Component
             ],
             'saved_search_limit' => [
                 'headline' => 'You already have your one saved search.',
-                'detail' => 'Pro lets you save as many filter sets as you want — one for each discipline, province and driving distance you actually chase.',
+                'detail' => 'Pro lets you save as many filter sets as you want. One for each discipline, province and driving distance you actually chase.',
             ],
             'history_window' => [
                 'headline' => 'Your Free calendar remembers the last 12 months.',
@@ -149,7 +149,7 @@ class UpgradePrompt extends Component
             ],
             'attendance_log_limit' => [
                 'headline' => 'Your Free shooting log is full.',
-                'detail' => 'Pro lifts the 3-match cap so every event you shoot goes on your record — and you can export it as a signed annual attendance PDF for your SAPSA / PISA / KKSA dedicated status renewal.',
+                'detail' => 'Pro lifts the 3-match cap so every event you shoot goes on your record, and you can export it as a signed annual attendance PDF for your SAPSA / PISA / KKSA dedicated status renewal.',
             ],
             'export_attendance_log' => [
                 'headline' => 'Annual attendance PDFs are a Pro feature.',

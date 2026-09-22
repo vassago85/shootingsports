@@ -4,7 +4,7 @@
             <div class="wrap">
                 <p class="label">Sign in</p>
                 <h1>Log in</h1>
-                <p>One login for shooters and match directors — we'll take you to the right place.</p>
+                <p>One login for shooters and match directors. We'll take you to the right place.</p>
             </div>
         </section>
         <section class="block">
@@ -39,11 +39,11 @@
                 @if (! config('coming-soon.enabled'))
                     <p style="margin-top:22px;color:var(--slate)">
                         New here?
-                        <a href="{{ route('register') }}" style="text-decoration:underline">Create an account</a> — one login for shooters, match directors, clubs and suppliers.
+                        <a href="{{ route('register') }}" style="text-decoration:underline">Create an account</a>. One login for shooters, match directors, clubs and suppliers.
                     </p>
                 @else
                     <p style="margin-top:22px;color:var(--slate)">
-                        Public sign-up opens at launch — for now this login is
+                        Public sign-up opens at launch. For now this login is
                         for the build team only.
                     </p>
                 @endif

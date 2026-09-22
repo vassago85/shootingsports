@@ -1,4 +1,4 @@
-<x-layouts.public title="My log" description="Your personal attendance record — every match you've shot, exportable for dedicated-status renewals.">
+<x-layouts.public title="My log" description="Your personal attendance record. Every match you've shot, exportable for dedicated-status renewals.">
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
@@ -82,7 +82,7 @@
                 @if ($entries->isEmpty())
                     <div class="empty">
                         <p><b>No matches logged for {{ $filters['year'] }}{{ $filters['discipline'] ? ' in this discipline' : '' }}.</b></p>
-                        <p style="margin-top:8px">Click <b>I shot this</b> on any match page to add it — or use <b>+ Add a match</b> above for events that are not in our calendar.</p>
+                        <p style="margin-top:8px">Click <b>I shot this</b> on any match page to add it, or use <b>+ Add a match</b> above for events that are not in our calendar.</p>
                     </div>
                 @else
                     <table class="my-log-table">

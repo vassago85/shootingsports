@@ -140,7 +140,7 @@ class Register extends Component
         }
 
         if ($this->wants_md) {
-            session()->flash('status', 'Thanks — your match director request is in. We usually review within one working day, and you will get an email as soon as it is approved. In the meantime, your shooter account works exactly as normal.');
+            session()->flash('status', 'Thanks. Your match director request is in. We usually review within one working day, and you will get an email as soon as it is approved. In the meantime, your shooter account works exactly as normal.');
         }
 
         $this->redirect('/my-calendar', navigate: false);

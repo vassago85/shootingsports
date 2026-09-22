@@ -50,8 +50,8 @@ class CalendarMonthController extends Controller
             'novice' => $request->boolean('novice'),
             'confirmed' => $request->boolean('confirmed'),
             'month' => $month,
-            'seoTitle' => 'Shooting competitions calendar — month',
-            'seoDescription' => 'Upcoming South African shooting matches on a month grid — filter by discipline, province, and distance.',
+            'seoTitle' => 'Shooting competitions calendar, month view',
+            'seoDescription' => 'Upcoming South African shooting matches on a month grid. Filter by discipline, province, and distance.',
             'canonical' => route('calendar.month', array_filter([
                 'discipline' => $discipline?->slug,
                 'province' => $province?->urlSlug(),

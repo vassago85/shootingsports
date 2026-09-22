@@ -4,7 +4,7 @@
             <div class="wrap">
                 <p class="label">Supplier onboarding · Step 2 of 2</p>
                 <h1>Register your services</h1>
-                <p>Tell us about your business and the services you offer. Staff will review your listing — usually within one working day — before it goes live in the Industry directory.</p>
+                <p>Tell us about your business and the services you offer. Staff will review your listing, usually within one working day, before it goes live in the Industry directory.</p>
             </div>
         </section>
         <section class="block">
@@ -19,13 +19,13 @@
                     <label class="field">
                         <span>Primary category *</span>
                         <select wire:model.live="category" required>
-                            <option value="">— pick one —</option>
+                            <option value="">Pick one</option>
                             @foreach ($categoryOptions as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
                         <small style="color:var(--slate);font-size:12px;display:block;margin-top:4px">
-                            The main thing you do — this drives which directory landing your listing headlines.
+                            The main thing you do. This drives which directory landing your listing headlines.
                         </small>
                         @error('category') <span class="err">{{ $message }}</span> @enderror
                     </label>
@@ -48,7 +48,7 @@
                     <label class="field">
                         <span>Province *</span>
                         <select wire:model="province" required>
-                            <option value="">— pick one —</option>
+                            <option value="">Pick one</option>
                             @foreach ($provinceOptions as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
@@ -66,7 +66,7 @@
                         <span>Public email (optional)</span>
                         <input type="email" wire:model="email" autocomplete="email" maxlength="255">
                         <small style="color:var(--slate);font-size:12px;display:block;margin-top:4px">
-                            Shown behind an "Enquire" button on your public page — never displayed in the clear.
+                            Shown behind an "Enquire" button on your public page. Never displayed in the clear.
                         </small>
                         @error('email') <span class="err">{{ $message }}</span> @enderror
                     </label>

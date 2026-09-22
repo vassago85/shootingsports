@@ -120,7 +120,7 @@
                                 >Enter here →</a>
                                 <p class="match-entry-note">
                                     Opens {{ parse_url($event->entry_url, PHP_URL_HOST) ?: 'the host\'s entry page' }} in a new tab.
-                                    We list third-party events — we are not the organiser.
+                                    We list third-party events. We are not the organiser.
                                     See <a href="{{ route('terms') }}">Terms of Use</a>.
                                 </p>
                             @else
@@ -131,7 +131,7 @@
                                     @else
                                         Ask at the range on the day.
                                     @endif
-                                    We list third-party events — we are not the organiser.
+                                    We list third-party events. We are not the organiser.
                                     See <a href="{{ route('terms') }}">Terms of Use</a>.
                                 </p>
                             @endif

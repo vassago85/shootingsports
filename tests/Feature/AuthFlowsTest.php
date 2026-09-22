@@ -134,7 +134,7 @@ it('ticking the match director role creates a PENDING MD, flashes review status,
         ->and($user->md_rejected_at)->toBeNull()
         ->and($user->isMdPending())->toBeTrue();
 
-    expect(session('status'))->toContain('your match director request is in');
+    expect(session('status'))->toContain('Your match director request is in');
     Event::assertDispatched(Registered::class);
     $this->assertAuthenticatedAs($user);
 });

@@ -1,6 +1,6 @@
 <x-layouts.public
     title="Advertise on the register"
-    description="Ask about advertising on shootingsports.co.za — the independent national register of South African shooting sport."
+    description="Ask about advertising on shootingsports.co.za, the independent national register of South African shooting sport."
     :json-ld="$jsonLd"
 >
     <main id="main">
@@ -22,7 +22,7 @@
                 @unless ($industryOpen)
                     <p class="empty" style="margin-bottom:22px">
                         The Industry directory is still filling up.
-                        Paid directory upgrades open once we have real free listings to sit above —
+                        Paid directory upgrades open once we have real free listings to sit above.
                         <a href="{{ route('claim') }}">claim a free listing</a> now to get in early.
                     </p>
                 @endunless
@@ -83,7 +83,7 @@
                     <label class="field">
                         <span>Product</span>
                         <select name="product" id="advertise-product">
-                            <option value="">Not sure — send me the options</option>
+                            <option value="">Not sure. Send me the options</option>
                             @foreach ($products as $product)
                                 <option value="{{ $product['key'] }}">{{ $product['name'] }}</option>
                             @endforeach

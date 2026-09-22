@@ -111,7 +111,7 @@ class MapController extends Controller
         $pinCount = count($payload['pins']);
         $seoDescription = $pinCount > 0
             ? $payload['totalMatches'].' upcoming matches across '.$pinCount.' pinned ranges on the South African map.'
-            : 'Upcoming shooting matches across South Africa — range pins appear as venues get geocoded.';
+            : 'Upcoming shooting matches across South Africa. Range pins appear as venues get geocoded.';
 
         return view('public.map', [
             'pins' => $payload['pins'],

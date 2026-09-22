@@ -1,4 +1,4 @@
-<x-layouts.public title="Embed the calendar" description="Embed a club, range or nationwide Shooting Sports calendar on your website — including WordPress.">
+<x-layouts.public title="Embed the calendar" description="Embed a club, range or nationwide Shooting Sports calendar on your website, including WordPress.">
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
@@ -10,7 +10,7 @@
         <section class="block">
             <div class="wrap">
                 <p class="label">For WordPress</p>
-                <p style="max-width:40rem">Paste this URL on its own line in a post or page. WordPress turns it into the calendar. In Elementor or the Custom HTML block, paste the iframe instead — WordPress often strips <code>&lt;script&gt;</code> tags.</p>
+                <p style="max-width:40rem">Paste this URL on its own line in a post or page. WordPress turns it into the calendar. In Elementor or the Custom HTML block, paste the iframe instead. WordPress often strips <code>&lt;script&gt;</code> tags.</p>
                 <pre class="mono embed-code">{{ url('/embed/calendar') }}?club=your-club-slug</pre>
                 <pre class="mono embed-code" style="margin-top:12px">&lt;iframe
   src="{{ url('/embed/calendar') }}?club=your-club-slug"

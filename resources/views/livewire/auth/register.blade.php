@@ -4,7 +4,7 @@
             <div class="wrap">
                 <p class="label">Sign up</p>
                 <h1>Create your account</h1>
-                <p>One login for shooters, match directors, clubs, series and suppliers. Tick what applies — you can be any combination of them. Every account is free.</p>
+                <p>One login for shooters, match directors, clubs, series and suppliers. Tick what applies. You can be any combination of them. Every account is free.</p>
             </div>
         </section>
         <section class="block">
@@ -38,7 +38,7 @@
                                 <input type="checkbox" wire:model.live="wants_md">
                                 <div>
                                     <b>Match director, club or series admin</b>
-                                    <p>Publish matches on the calendar for a club, range, series or federation. Staff review this request — usually within one working day.</p>
+                                    <p>Publish matches on the calendar for a club, range, series or federation. Staff review this request, usually within one working day.</p>
                                 </div>
                             </label>
                         </div>
@@ -46,9 +46,9 @@
                         @if ($wants_md)
                             <label class="field" style="margin:-4px 0 0 34px">
                                 <span>Which club, range, series or host will you publish for? *</span>
-                                <textarea wire:model="host_hint" rows="3" maxlength="500" placeholder="e.g. Pretoria Rifle &amp; Pistol Club — I run the Wednesday IPSC shoots."></textarea>
+                                <textarea wire:model="host_hint" rows="3" maxlength="500" placeholder="e.g. Pretoria Rifle &amp; Pistol Club. I run the Wednesday IPSC shoots."></textarea>
                                 <small style="color:var(--slate);font-size:12px;display:block;margin-top:4px">
-                                    Staff use this to approve your request — the more specific, the faster it goes through.
+                                    Staff use this to approve your request. The more specific, the faster it goes through.
                                 </small>
                                 @error('host_hint') <span class="err">{{ $message }}</span> @enderror
                             </label>
@@ -59,7 +59,7 @@
                                 <input type="checkbox" wire:model.live="wants_supplier">
                                 <div>
                                     <b>Supplier / industry business</b>
-                                    <p>Gunsmith, dealer, ammunition, optics, safes, instructor — anything in the shooting industry. We email a confirmation link, then you fill in your listing.</p>
+                                    <p>Gunsmith, dealer, ammunition, optics, safes, instructor. Anything in the shooting industry. We email a confirmation link, then you fill in your listing.</p>
                                 </div>
                             </label>
                         </div>

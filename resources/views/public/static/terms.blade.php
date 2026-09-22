@@ -1,10 +1,10 @@
-<x-layouts.public title="Terms of Use" description="Terms of use for shootingsports.co.za — the independent South African shooting sports register and match calendar.">
+<x-layouts.public title="Terms of Use" description="Terms of use for shootingsports.co.za, the independent South African shooting sports register and match calendar.">
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
                 <p class="label">Legal</p>
                 <h1>Terms of Use</h1>
-                <p>Last updated: 17 September 2026. Draft for public use — intended for attorney review. Questions: <a href="mailto:hello@shootingsports.co.za">hello@shootingsports.co.za</a>.</p>
+                <p>Last updated: 17 September 2026. Draft for public use. Intended for attorney review. Questions: <a href="mailto:hello@shootingsports.co.za">hello@shootingsports.co.za</a>.</p>
             </div>
         </section>
 
@@ -36,7 +36,7 @@
                     <li>Event, club, range, and supplier information may come from staff curation, automated imports from public calendars, claimed organisations, or other contributors.</li>
                     <li>We aim for useful, current information but <b>do not warrant</b> that any listing is complete, accurate, or up to date. Always confirm details with the organiser before travelling or entering.</li>
                     <li>Past events may be retained for history; status (including cancelled or postponed) may change without notice to every visitor.</li>
-                    <li>“Last verified” or similar timestamps, where shown, are operational indicators only — not a guarantee.</li>
+                    <li>“Last verified” or similar timestamps, where shown, are operational indicators only. They are not a guarantee.</li>
                 </ul>
 
                 <h2>5. Third-party events, venues, and links</h2>
@@ -103,7 +103,7 @@
                 <p>Nothing in these Terms excludes liability that cannot be limited under applicable law (including for gross negligence or wilful misconduct where such exclusion is not allowed).</p>
 
                 <h2>14. Indemnity</h2>
-                <p>You agree to indemnify us against claims arising from your content, your claim of an organisation, your breach of these Terms, or your misuse of the service — except to the extent caused by our gross negligence or wilful misconduct.</p>
+                <p>You agree to indemnify us against claims arising from your content, your claim of an organisation, your breach of these Terms, or your misuse of the service, except to the extent caused by our gross negligence or wilful misconduct.</p>
 
                 <h2>15. Privacy</h2>
                 <p>Personal information is handled as described in our <a href="{{ route('privacy') }}">Privacy &amp; POPIA</a> notice. Do not submit firearm licence numbers, competency certificate numbers, or ID numbers unless a specific feature expressly and lawfully requires them (we do not ask for those for ordinary shooter or director accounts).</p>

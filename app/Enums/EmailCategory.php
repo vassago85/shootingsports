@@ -41,7 +41,7 @@ enum EmailCategory: string
     public function description(): string
     {
         return match ($this) {
-            self::Transactional => 'Password resets, receipts, MD application updates, enquiry confirmations. You cannot opt out of these — they are legally required for the service to work.',
+            self::Transactional => 'Password resets, receipts, MD application updates, enquiry confirmations. You cannot opt out of these. They are legally required for the service to work.',
             self::MatchAlerts => 'Emails when a match matching one of your saved searches is posted, or when a club / discipline you follow adds a new fixture.',
             self::WeeklyDigest => 'A Monday summary of matches coming up in the disciplines and provinces you follow. Off by default.',
             self::ProductUpdates => 'Occasional emails when we launch a new feature or make a big change to the site. Never more than one a month.',

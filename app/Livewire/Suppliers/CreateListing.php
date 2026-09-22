@@ -152,7 +152,7 @@ class CreateListing extends Component
             'claimed_by' => $user->id,
         ]);
 
-        Session::flash('status', 'Thanks — your listing is in for review. Staff usually publish within one working day, and you will get an email as soon as it goes live.');
+        Session::flash('status', 'Thanks. Your listing is in for review. Staff usually publish within one working day, and you will get an email as soon as it goes live.');
 
         $this->redirect(route('suppliers.onboard.thanks', ['provider' => $provider->slug]), navigate: false);
     }

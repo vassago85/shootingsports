@@ -152,9 +152,9 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function subscriptionStatusLabel(): string
     {
         return match (true) {
-            $this->hasActiveSubscription() => 'Active — renews automatically',
-            $this->isCancelling() => 'Cancelled — Pro until '.$this->plan_expires_at?->format('j M Y'),
-            $this->isOnTrial() => 'Trial — Pro until '.$this->plan_expires_at?->format('j M Y'),
+            $this->hasActiveSubscription() => 'Active. Renews automatically',
+            $this->isCancelling() => 'Cancelled. Pro until '.$this->plan_expires_at?->format('j M Y'),
+            $this->isOnTrial() => 'Trial. Pro until '.$this->plan_expires_at?->format('j M Y'),
             $this->isPro() => 'Active (comp / manual)',
             default => 'Free',
         };

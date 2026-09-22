@@ -21,7 +21,7 @@
                             @if ($count > 0)
                                 <span class="ct">{{ $count }} listed</span>
                             @else
-                                <span class="ct ct-quiet">Free to list — open this category</span>
+                                <span class="ct ct-quiet">Free to list. Open this category</span>
                             @endif
                         </a>
                     @endforeach

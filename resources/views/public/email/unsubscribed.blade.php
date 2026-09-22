@@ -10,8 +10,8 @@
                 <h1>You're unsubscribed.</h1>
                 <p class="lede">
                     We won't send you any more marketing emails at <b>{{ $user->email }}</b>.
-                    You'll still get account emails (password resets, receipts, MD application updates, enquiry replies) —
-                    those are how the service works.
+                    You'll still get account emails (password resets, receipts, MD application updates, enquiry replies).
+                    Those are how the service works.
                 </p>
             </div>
         </section>

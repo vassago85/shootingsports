@@ -4,7 +4,7 @@
             <div class="wrap">
                 <p class="label">Find your club or series</p>
                 <h1>Clubs &amp; series</h1>
-                <p>Membership clubs, associations, and branded match series — the people who put on matches. Filter by home province. Ranges live on the match; a host can shoot at any of them.</p>
+                <p>Membership clubs, associations, and branded match series. The people who put on matches. Filter by home province. Ranges live on the match; a host can shoot at any of them.</p>
             </div>
         </section>
         <section class="block">

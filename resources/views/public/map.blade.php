@@ -91,7 +91,7 @@
 
                 @if (count($unpinned) > 0)
                     <div class="map-unpinned" style="margin-top:28px">
-                        <p class="label">Upcoming matches — pin still needed</p>
+                        <p class="label">Upcoming matches. Pin still needed</p>
                         <ul class="map-legend">
                             @foreach ($unpinned as $row)
                                 <li class="is-quiet">
@@ -169,10 +169,10 @@
 
                             var markersByProvince = {};
                             pins.forEach(function (p) {
-                                var colour = p.count > 0 ? '#b3892b' : '#5a6360';
+                                var colour = p.count > 0 ? '#6B7D3A' : '#5a6360';
                                 var marker = L.circleMarker([p.lat, p.lng], {
                                     radius: p.radius,
-                                    color: p.count > 0 ? '#8a6516' : '#5a6360',
+                                    color: p.count > 0 ? '#4a5828' : '#5a6360',
                                     weight: 2,
                                     fillColor: colour,
                                     fillOpacity: p.count > 0 ? 0.65 : 0.35,
@@ -181,9 +181,9 @@
                                 });
                                 var tip = p.label;
                                 if (p.count > 0) {
-                                    tip += ' — ' + p.count + (p.count === 1 ? ' match' : ' matches');
+                                    tip += '. ' + p.count + (p.count === 1 ? ' match' : ' matches');
                                 } else if (p.town) {
-                                    tip += ' — ' + p.town;
+                                    tip += '. ' + p.town;
                                 }
                                 marker.bindTooltip(tip, { direction: 'top' });
                                 marker.on('click', function () {

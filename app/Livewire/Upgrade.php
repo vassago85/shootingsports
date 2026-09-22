@@ -62,7 +62,7 @@ class Upgrade extends Component
         }
 
         if (! StartProTrial::for($user)) {
-            session()->flash('status', 'Your trial is not available — either you have already used it or Pro is already active on this account.');
+            session()->flash('status', 'Your trial is not available. Either you have already used it or Pro is already active on this account.');
 
             return;
         }

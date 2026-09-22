@@ -1,6 +1,6 @@
 <x-layouts.public
     :title="$province ? $category->getLabel().' in '.$province->getLabel() : $category->getLabel()"
-    :description="'Suppliers in '.$category->getLabel().($province ? ' — '.$province->getLabel() : '').'.'"
+    :description="'Suppliers in '.$category->getLabel().($province ? ', '.$province->getLabel() : '').'.'"
     :robots="$noindex ? 'noindex,follow' : null"
     :json-ld="$jsonLd"
 >
@@ -27,7 +27,7 @@
                     </a>
                 @empty
                     <p class="empty">
-                        Free to list — <a href="{{ route('claim') }}">claim this category</a>
+                        Free to list. <a href="{{ route('claim') }}">Claim this category</a>
                         and your business appears here.
                     </p>
                 @endforelse

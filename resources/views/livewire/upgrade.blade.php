@@ -4,7 +4,7 @@
             <div class="wrap">
                 <p class="label">Pro · Upgrade</p>
                 <h1>Go Pro</h1>
-                <p>Unlimited follows, unlimited saved searches, full history, season exports. Cancel any time from your account — no lock-in.</p>
+                <p>Unlimited follows, unlimited saved searches, full history, season exports. Cancel any time from your account. No lock-in.</p>
             </div>
         </section>
 
@@ -33,7 +33,7 @@
                     </form>
 
                     <p style="margin-top:12px;color:var(--slate);font-size:13px">
-                        Cancelling here stops all future charges immediately. You'll keep Pro until the end of the period you've already paid for — no proration, no surprises.
+                        Cancelling here stops all future charges immediately. You'll keep Pro until the end of the period you've already paid for. No proration, no surprises.
                     </p>
 
                 @elseif ($user->isCancelling())
@@ -52,8 +52,8 @@
                     {{-- === On the 30-day free trial, no card yet === --}}
                     <div class="trial-progress">
                         <p class="pricing-label">Your trial</p>
-                        <p class="pricing-amount"><b>You're on Pro</b> — {{ $user->trialDaysRemaining() }} {{ $user->trialDaysRemaining() === 1 ? 'day' : 'days' }} left</p>
-                        <p>Trial ends {{ $user->plan_expires_at->format('j M Y') }}. Add a card below to keep Pro after that — nothing charges until the trial ends.</p>
+                        <p class="pricing-amount"><b>You're on Pro</b>. {{ $user->trialDaysRemaining() }} {{ $user->trialDaysRemaining() === 1 ? 'day' : 'days' }} left</p>
+                        <p>Trial ends {{ $user->plan_expires_at->format('j M Y') }}. Add a card below to keep Pro after that. Nothing charges until the trial ends.</p>
                     </div>
                 @endif
 
@@ -69,7 +69,7 @@
                             <p>
                                 Get every Pro feature for {{ $trialDays }} days. Unlimited follows, unlimited saved searches,
                                 full attendance log, printable season records, CSV exports. When the trial ends you're
-                                automatically back on Free — no auto-billing, ever, because we never asked for a card.
+                                automatically back on Free. No auto-billing, ever, because we never asked for a card.
                             </p>
                             <p>
                                 <button
@@ -90,9 +90,9 @@
                         <div class="empty" style="margin-top:22px">
                             <p><b>Pro is not open for paid subscriptions yet.</b> We are still finalising the payment gateway.</p>
                             @if ($trialEligible)
-                                <p style="margin-top:8px">You can still start the 30-day trial above — nothing to pay, no card required.</p>
+                                <p style="margin-top:8px">You can still start the 30-day trial above. Nothing to pay, no card required.</p>
                             @else
-                                <p style="margin-top:8px">Meanwhile — sign up for the waitlist and we will email you the moment it opens.</p>
+                                <p style="margin-top:8px">Meanwhile, sign up for the waitlist and we will email you the moment it opens.</p>
                             @endif
                             <p style="margin-top:14px">
                                 <a class="btn" href="{{ route('my-calendar') }}">Back to my calendar</a>
@@ -124,8 +124,8 @@
                         </div>
 
                         <ul class="pro-features">
-                            <li><b>Attendance log</b> — track every match you shoot, no cap on entries</li>
-                            <li><b>Annual attendance record</b> — printable PDF + CSV for your SAPSA / PISA / KKSA dedicated-status renewals</li>
+                            <li><b>Attendance log.</b> Track every match you shoot, no cap on entries</li>
+                            <li><b>Annual attendance record.</b> Printable PDF + CSV for your SAPSA / PISA / KKSA dedicated-status renewals</li>
                             <li>Unlimited club, discipline and venue follows</li>
                             <li>Unlimited saved calendar searches</li>
                             <li>Full match history back to when we started tracking</li>
@@ -149,7 +149,7 @@
                                 <span wire:loading wire:target="checkout">Contacting Paystack…</span>
                             </button>
                             <p class="pro-fineprint">
-                                You'll be handed off to Paystack Checkout. Your card is stored by Paystack (PCI-DSS compliant) — never on our servers.
+                                You'll be handed off to Paystack Checkout. Your card is stored by Paystack (PCI-DSS compliant). Never on our servers.
                                 Cancel any time from this page. Pro stays active until the end of the current billing period.
                                 Subscriptions are subject to our <a href="{{ route('terms') }}">Terms of Use</a>.
                             </p>
