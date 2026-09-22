@@ -9,34 +9,34 @@
     --font-sans: "IBM Plex Sans", system-ui, sans-serif;
     --font-display: "Saira Condensed", "Arial Narrow", sans-serif;
     --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
-    --color-gunmetal: #232a2c;
-    --color-gunmetal-2: #2e3739;
-    --color-brass: #b3892b;
-    --color-brass-dk: #8a6516;
-    --color-brass-lt: #d9ae52;
+    --color-gunmetal: #0B0D0E;
+    --color-gunmetal-2: #15191B;
+    --color-brass: #6B7D3A;
+    --color-brass-dk: #879A4A;
+    --color-brass-lt: #879A4A;
     /* Darkened from #76807d (4.07:1) to hit WCAG AA (≈6:1 on white).
        Slate is the meta/label workhorse — this one change lifts every
        card, footer, pill and helper line above the AA threshold. */
-    --color-slate: #5a6360;
-    --color-base: #f0f0ec;
-    --color-surface: #ffffff;
-    --color-surface-2: #e5e6e1;
-    --color-ink: #16191a;
-    --color-rule: #d3d6d0;
+    --color-slate: #9CA3A5;
+    --color-base: #0B0D0E;
+    --color-surface: #15191B;
+    --color-surface-2: #252B2E;
+    --color-ink: #F1F2EE;
+    --color-rule: #252B2E;
 }
 
 :root {
-    --gunmetal: #232a2c;
-    --gunmetal-2: #2e3739;
-    --brass: #b3892b;
-    --brass-dk: #8a6516;
-    --brass-lt: #d9ae52;
-    --slate: #5a6360;
-    --base: #f0f0ec;
-    --surface: #ffffff;
-    --surface-2: #e5e6e1;
-    --ink: #16191a;
-    --rule: #d3d6d0;
+    --gunmetal: #0B0D0E;
+    --gunmetal-2: #15191B;
+    --brass: #6B7D3A;
+    --brass-dk: #879A4A;
+    --brass-lt: #879A4A;
+    --slate: #9CA3A5;
+    --base: #0B0D0E;
+    --surface: #15191B;
+    --surface-2: #252B2E;
+    --ink: #F1F2EE;
+    --rule: #252B2E;
     --sponsor: #9aa3a0;
     --disc-band: #26301f;
     --disc-band-2: #37432b;
@@ -54,18 +54,18 @@
 
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-        --gunmetal: #101516; --gunmetal-2: #1b2224;
-        --brass: #d9ae52; --brass-dk: #e4c079; --brass-lt: #f0d89c;
-        --slate: #8d9793; --base: #131718; --surface: #1b2123; --surface-2: #242c2e;
-        --ink: #e8eae6; --rule: #303839; --sponsor: #7e8886;
+        --gunmetal: #0B0D0E; --gunmetal-2: #15191B;
+        --brass: #6B7D3A; --brass-dk: #879A4A; --brass-lt: #879A4A;
+        --slate: #9CA3A5; --base: #0B0D0E; --surface: #15191B; --surface-2: #252B2E;
+        --ink: #F1F2EE; --rule: #252B2E; --sponsor: #9CA3A5;
         --disc-band: #1a2216; --disc-band-2: #26301f; --disc-tint: #8fa871;
     }
 }
 :root[data-theme="dark"] {
-    --gunmetal: #101516; --gunmetal-2: #1b2224;
-    --brass: #d9ae52; --brass-dk: #e4c079; --brass-lt: #f0d89c;
-    --slate: #8d9793; --base: #131718; --surface: #1b2123; --surface-2: #242c2e;
-    --ink: #e8eae6; --rule: #303839; --sponsor: #7e8886;
+    --gunmetal: #0B0D0E; --gunmetal-2: #15191B;
+    --brass: #6B7D3A; --brass-dk: #879A4A; --brass-lt: #879A4A;
+    --slate: #9CA3A5; --base: #0B0D0E; --surface: #15191B; --surface-2: #252B2E;
+    --ink: #F1F2EE; --rule: #252B2E; --sponsor: #9CA3A5;
 }
 
 * { box-sizing: border-box; }
@@ -99,7 +99,23 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 .btn:hover { background: var(--brass-lt); }
 .btn.ghost { background: transparent; color: var(--brass); }
 .btn.ghost:hover { background: rgba(179,137,43,.12); }
-.btn.on-dark.ghost { color: var(--brass-lt); border-color: var(--brass-lt); }
+.btn.on-dark.ghost { color: #F1F2EE; border-color: #252B2E; }
+.btn.light { background: #FFFFFF; color: #0B0D0E; border-color: #FFFFFF; }
+.btn.light:hover { background: #F1F2EE; }
+.division-choices, .division-sports { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.division-choice, .division-sport {
+    display: flex; flex-direction: column; justify-content: flex-end; min-height: 148px;
+    padding: 22px; text-decoration: none; background: #15191B; border: 1px solid #252B2E; color: #F1F2EE;
+}
+.division-choice .nm, .division-sport .nm { font-family: var(--f-display); font-size: 36px; line-height: .95; text-transform: uppercase; }
+.division-choice .go, .division-sport .org { margin-top: 10px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #879A4A; }
+.division-sport .blurb { color: #9CA3A5; font-size: 14px; margin-top: 8px; }
+.division-sport .moreline { margin-top: 12px; font-size: 14px; }
+.sport-videos { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.sport-video { display: block; text-decoration: none; color: #F1F2EE; background: #15191B; border: 1px solid #252B2E; }
+.sport-video img { display: block; width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+.sport-video span { display: block; padding: 10px 12px; font-family: var(--f-display); text-transform: uppercase; letter-spacing: .03em; }
+@media (max-width: 720px) { .division-choices, .division-sports { grid-template-columns: 1fr; } }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -171,7 +187,7 @@ header.nav {
 .hero-in { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 74px 24px 66px; display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,.85fr); gap: 56px; }
 @media (max-width: 940px) { .hero-in { grid-template-columns: 1fr; gap: 40px; padding: 52px 24px 48px; } .hero-reticle-wrap { display: none; } }
 .hero h1 { font-size: clamp(2.6rem, 6.4vw, 4.5rem); line-height: .96; letter-spacing: -.02em; font-weight: 700; text-transform: uppercase; color: #f5f6f4; margin: 14px 0 18px; max-width: 15ch; }
-.hero h1 em { font-style: normal; color: var(--brass-lt); }
+.hero h1 em { font-style: normal; color: #F1F2EE; }
 .hero .lede { font-size: 17px; color: #b9c0bd; max-width: 46ch; margin: 0 0 26px; }
 .hero .label { color: var(--brass-lt); }
 .hero-weekend { margin: 0 0 18px; }
@@ -280,7 +296,7 @@ header.nav {
     margin-top: 4px; letter-spacing: .04em;
 }
 
-.strip { background: var(--brass); color: #1a1405; }
+.strip { background: #15191B; color: #F1F2EE; border-top: 1px solid #252B2E; border-bottom: 1px solid #252B2E; }
 .strip-in { max-width: 1200px; margin: 0 auto; padding: 15px 24px; display: flex; flex-wrap: wrap; gap: 10px 34px; justify-content: space-between; font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .11em; text-transform: uppercase; }
 .strip-in div { display: flex; gap: 8px; align-items: baseline; }
 .strip-in b { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -1092,7 +1108,7 @@ section.block { padding: 72px 0; }
    wall of cards and pick out their sport at a glance. Kept quiet
    — accent lives only on the top-border + a small tick in the
    corner. No chrome bloat, no per-card icons. */
-.dope[data-fam="rifle"]   { --fam-accent: #b3892b; /* brass — canonical */ }
+.dope[data-fam="rifle"]   { --fam-accent: #6B7D3A; /* olive — canonical */ }
 .dope[data-fam="handgun"] { --fam-accent: #3b5a66; /* cool slate-blue */ }
 .dope[data-fam="shotgun"] { --fam-accent: #a26a2f; /* warm copper */ }
 .dope[data-fam="airgun"]  { --fam-accent: #4a7a4a; /* muted green */ }

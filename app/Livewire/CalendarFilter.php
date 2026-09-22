@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Enums\DisciplineFamily;
+use App\Enums\Division;
 use App\Enums\Province;
 use App\Exceptions\PlanLimitExceeded;
 use App\Models\Discipline;
@@ -294,7 +294,7 @@ class CalendarFilter extends Component
         return view('livewire.calendar-filter', [
             'events' => $events,
             'grouped' => $this->groupByTime($events),
-            'families' => DisciplineFamily::cases(),
+            'families' => Division::publicCases(),
             'provinces' => Province::cases(),
             'selectedProvinces' => $this->selectedProvinceSlugs(),
             'activeDisciplineLabel' => $this->activeDisciplineLabel(),

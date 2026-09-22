@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Division;
 use App\Enums\ListingStatus;
 use App\Enums\Province;
 use App\Models\Organisation;
@@ -21,12 +22,14 @@ class OrganisationController extends Controller
         $province = $request->string('province')->toString()
             ? Province::fromUrlSlug($request->string('province')->toString())
             : null;
+        $division = Division::fromPublicQuery($request->string('division')->toString());
 
         $clubs = Organisation::query()
             ->published()
             ->clubs()
             ->with('disciplines')
             ->when($province, fn ($q) => $q->where('province', $province))
+            ->when($division, fn ($q) => $q->inDivision($division))
             ->orderBy('name')
             ->get();
 
@@ -55,6 +58,7 @@ class OrganisationController extends Controller
         return view('public.clubs.index', [
             'clubs' => $clubs,
             'province' => $province,
+            'division' => $division,
             'provinces' => Province::cases(),
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,

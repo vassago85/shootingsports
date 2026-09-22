@@ -10,9 +10,9 @@
         <section class="block">
             <div class="wrap">
                 <div class="filters" role="navigation" aria-label="Filter by province">
-                    <a href="{{ route('clubs.index') }}" class="{{ $province === null ? 'on' : '' }}">All</a>
+                    <a href="{{ route('clubs.index', array_filter(['division' => $division?->value])) }}" class="{{ $province === null ? 'on' : '' }}">All</a>
                     @foreach ($provinces as $item)
-                        <a href="{{ route('clubs.index', ['province' => $item->urlSlug()]) }}" class="{{ $province === $item ? 'on' : '' }}">{{ $item->getLabel() }}</a>
+                        <a href="{{ route('clubs.index', array_filter(['province' => $item->urlSlug(), 'division' => $division?->value])) }}" class="{{ $province === $item ? 'on' : '' }}">{{ $item->getLabel() }}</a>
                     @endforeach
                 </div>
                 @forelse ($clubs as $club)

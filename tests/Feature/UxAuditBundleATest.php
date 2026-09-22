@@ -71,7 +71,7 @@ it('homepage stat bar shows Matches Ranges Disciplines Clubs & series', function
 
 // ---- #2 Discover collapse -----------------------------------------
 
-it('home Discover collapses empty disciplines behind Show all', function () {
+it('home asks for a division instead of listing every sport', function () {
     Discipline::factory()->create([
         'name' => 'Lonely Field Target',
         'is_published' => true,
@@ -81,9 +81,9 @@ it('home Discover collapses empty disciplines behind Show all', function () {
     $html = $this->get(route('home'))->assertOk()->getContent();
 
     expect($html)
-        ->toContain('Show all')
-        ->toContain('disciplines →')
-        ->toContain('Lonely Field Target');
+        ->toContain('What are you interested in?')
+        ->not->toContain('Show all')
+        ->not->toContain('No matches listed yet');
 });
 
 it('empty discipline match list prompts follow', function () {

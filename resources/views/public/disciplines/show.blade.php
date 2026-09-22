@@ -30,7 +30,17 @@
                         <div>Formats <b>{{ $discipline->children->pluck('name')->implode(' · ') }}</b></div>
                     @endif
                     @if ($discipline->federation)
-                        <div>Governed by <b><a href="{{ route('federations.show', $discipline->federation->slug) }}">{{ $discipline->federation->name }}</a></b></div>
+                        @php
+                            $organisationName = $discipline->federation->short_name ?: $discipline->federation->name;
+                            $organisationUrl = $discipline->federation->website_url;
+                        @endphp
+                        <div>
+                            @if (filled($organisationUrl))
+                                <a href="{{ $organisationUrl }}" target="_blank" rel="noopener noreferrer">{{ $organisationName }}</a>
+                            @else
+                                <a href="{{ route('federations.show', $discipline->federation->slug) }}">{{ $organisationName }}</a>
+                            @endif
+                        </div>
                     @endif
                     @if ($discipline->typical_distances)
                         <div>Typical distance <b>{{ $discipline->typical_distances }}</b></div>
@@ -80,6 +90,27 @@
                             @empty
                                 <p>{{ $discipline->short_blurb }}</p>
                             @endforelse
+                        </div>
+
+                        @if ($discipline->videos->isNotEmpty())
+                            <div class="sport-videos" style="margin-top:22px">
+                                @foreach ($discipline->videos as $video)
+                                    <a class="sport-video" href="{{ $video->watchUrl() }}" target="_blank" rel="noopener noreferrer">
+                                        <img src="{{ $video->thumbnailUrl() }}" alt="">
+                                        <span>{{ $video->title }} · YouTube</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        @foreach ($sponsorDivisions as $sponsorDivision)
+                            <div style="margin-top:18px">
+                                <x-ad-slot page="disciplines" placement-slot="category_sponsor" :division="$sponsorDivision" :limit="1" hide-when-vacant />
+                            </div>
+                        @endforeach
+
+                        <div style="margin-top:18px">
+                            <x-ad-slot page="disciplines" placement-slot="category_sponsor" :disciplines="[$discipline]" :limit="1" hide-when-vacant />
                         </div>
 
                         @if ($discipline->children->isNotEmpty())

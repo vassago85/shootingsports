@@ -15,14 +15,14 @@
     <div class="coming-soon">
         <div class="cs-reticle" aria-hidden="true">
             <svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
-                <circle cx="200" cy="200" r="196" fill="none" stroke="#D9AE52" stroke-width="1"/>
-                <circle cx="200" cy="200" r="150" fill="none" stroke="#D9AE52" stroke-width="1"/>
-                <circle cx="200" cy="200" r="90" fill="none" stroke="#D9AE52" stroke-width="1"/>
-                <circle cx="200" cy="200" r="40" fill="none" stroke="#D9AE52" stroke-width="1"/>
-                <path d="M200 0v160M200 240v160M0 200h160M240 200h160" stroke="#D9AE52" stroke-width="1"/>
-                <path d="M180 240h40M170 260h60M160 280h80M180 160h40M170 140h60M160 120h80" stroke="#D9AE52" stroke-width="0.8"/>
-                <path d="M160 180v40M140 170v60M120 160v80M240 180v40M260 170v60M280 160v80" stroke="#D9AE52" stroke-width="0.8"/>
-                <circle class="cs-reticle-dot" cx="200" cy="200" r="3.5" fill="#D9AE52"/>
+                <circle cx="200" cy="200" r="196" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+                <circle cx="200" cy="200" r="150" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+                <circle cx="200" cy="200" r="90" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+                <circle cx="200" cy="200" r="40" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+                <path d="M200 0v160M200 240v160M0 200h160M240 200h160" stroke="#FFFFFF" stroke-width="1"/>
+                <path d="M180 240h40M170 260h60M160 280h80M180 160h40M170 140h60M160 120h80" stroke="#FFFFFF" stroke-width="0.8"/>
+                <path d="M160 180v40M140 170v60M120 160v80M240 180v40M260 170v60M280 160v80" stroke="#FFFFFF" stroke-width="0.8"/>
+                <circle class="cs-reticle-dot" cx="200" cy="200" r="3.5" fill="#6B7D3A"/>
             </svg>
         </div>
 
@@ -31,10 +31,10 @@
         <header class="cs-nav">
             <a class="cs-brand" href="{{ route('coming-soon') }}">
                 <svg class="cs-mark" width="30" height="30" viewBox="0 0 40 40" role="img" aria-label="Reticle mark">
-                    <circle cx="20" cy="20" r="17" fill="none" stroke="#D9AE52" stroke-width="1.6"/>
-                    <circle cx="20" cy="20" r="7.5" fill="none" stroke="#D9AE52" stroke-width="1"/>
-                    <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="#D9AE52" stroke-width="1.6"/>
-                    <circle cx="20" cy="20" r="2" fill="#D9AE52"/>
+                    <circle cx="20" cy="20" r="17" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+                    <circle cx="20" cy="20" r="7.5" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+                    <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="#FFFFFF" stroke-width="1.6"/>
+                    <circle cx="20" cy="20" r="2" fill="#6B7D3A"/>
                 </svg>
                 <span class="cs-brand-text">
                     <span class="cs-wordmark">ShootingSports</span>

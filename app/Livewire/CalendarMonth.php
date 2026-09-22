@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Enums\DisciplineFamily;
+use App\Enums\Division;
 use App\Enums\Province;
 use App\Exceptions\PlanLimitExceeded;
 use App\Models\Discipline;
@@ -324,7 +324,7 @@ class CalendarMonth extends Component
             'days' => $days,
             'monthLabel' => $monthStart->format('F Y'),
             'events' => $events,
-            'families' => DisciplineFamily::cases(),
+            'families' => Division::publicCases(),
             'provinces' => Province::cases(),
             'selectedProvinces' => $this->selectedProvinceSlugs(),
             'activeDisciplineLabel' => $this->activeDisciplineLabel(),

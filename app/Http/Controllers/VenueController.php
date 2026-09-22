@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Division;
 use App\Enums\Province;
 use App\Models\Venue;
 use App\Queries\PublicEventQuery;
@@ -25,11 +26,13 @@ class VenueController extends Controller
         $province = $request->string('province')->toString()
             ? Province::fromUrlSlug($request->string('province')->toString())
             : null;
+        $division = Division::fromPublicQuery($request->string('division')->toString());
 
         $venues = Venue::query()
             ->published()
             ->with('disciplines')
             ->when($province, fn ($q) => $q->where('province', $province))
+            ->when($division, fn ($q) => $q->inDivision($division))
             ->orderByTier()
             ->get();
 
@@ -61,6 +64,7 @@ class VenueController extends Controller
         return view('public.ranges.index', [
             'venues' => $venues,
             'province' => $province,
+            'division' => $division,
             'provinces' => Province::cases(),
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,

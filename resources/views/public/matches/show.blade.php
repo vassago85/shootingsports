@@ -42,6 +42,12 @@
                 </div>
             </div>
         </section>
+        <div class="wrap" style="padding-top:28px">
+            @foreach ($event->disciplines->flatMap(fn ($sport) => $sport->divisions())->unique(fn ($division) => $division->value)->take(3) as $sponsorDivision)
+                <x-ad-slot page="disciplines" placement-slot="category_sponsor" :division="$sponsorDivision" :limit="1" hide-when-vacant />
+            @endforeach
+            <x-ad-slot page="disciplines" placement-slot="category_sponsor" :disciplines="$event->disciplines" :limit="1" hide-when-vacant />
+        </div>
         <section class="block">
             <div class="wrap">
                 {{-- Bundle A #6: facts-first two-column layout.

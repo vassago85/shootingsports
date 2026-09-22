@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\DisciplineFamily;
+use App\Enums\Division;
+use App\Support\DivisionCatalog;
 use Database\Factories\DisciplineFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Collection;
 
 #[Fillable([
     'slug', 'name', 'family', 'parent_id', 'federation_organisation_id',
@@ -43,6 +46,49 @@ class Discipline extends Model
     public function federation(): BelongsTo
     {
         return $this->belongsTo(Organisation::class, 'federation_organisation_id');
+    }
+
+    public function divisionLinks(): HasMany
+    {
+        return $this->hasMany(DisciplineDivision::class);
+    }
+
+    public function videos(): HasMany
+    {
+        return $this->hasMany(DisciplineVideo::class)->orderBy('sort_order');
+    }
+
+    /**
+     * @return Collection<int, Division>
+     */
+    public function divisions(): Collection
+    {
+        $this->loadMissing('divisionLinks');
+
+        return $this->divisionLinks
+            ->map(fn (DisciplineDivision $link): ?Division => $link->division)
+            ->filter()
+            ->values();
+    }
+
+    /**
+     * @param  list<Division>  $divisions
+     */
+    public function syncDivisions(array $divisions): void
+    {
+        $values = array_map(fn (Division $division): string => $division->value, $divisions);
+
+        $this->divisionLinks()->whereNotIn('division', $values === [] ? [''] : $values)->delete();
+
+        foreach ($values as $value) {
+            $this->divisionLinks()->firstOrCreate(['division' => $value]);
+        }
+
+        if ($divisions !== []) {
+            $this->forceFill([
+                'family' => DivisionCatalog::familyFor($divisions),
+            ])->saveQuietly();
+        }
     }
 
     public function organisations(): MorphToMany

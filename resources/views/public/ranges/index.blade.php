@@ -10,9 +10,9 @@
         <section class="block">
             <div class="wrap">
                 <div class="filters">
-                    <a href="{{ route('ranges.index') }}" class="{{ $province === null ? 'on' : '' }}">All</a>
+                    <a href="{{ route('ranges.index', array_filter(['division' => $division?->value])) }}" class="{{ $province === null ? 'on' : '' }}">All</a>
                     @foreach ($provinces as $item)
-                        <a href="{{ route('ranges.index', ['province' => $item->urlSlug()]) }}" class="{{ $province === $item ? 'on' : '' }}">{{ $item->getLabel() }}</a>
+                        <a href="{{ route('ranges.index', array_filter(['province' => $item->urlSlug(), 'division' => $division?->value])) }}" class="{{ $province === $item ? 'on' : '' }}">{{ $item->getLabel() }}</a>
                     @endforeach
                 </div>
                 {{-- UX audit #13: ad-slot below the filters + the first

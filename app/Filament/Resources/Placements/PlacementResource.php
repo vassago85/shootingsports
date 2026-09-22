@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Placements;
 
+use App\Enums\Division;
 use App\Enums\PlacementSlot;
 use App\Filament\Resources\Placements\Pages\CreatePlacement;
 use App\Filament\Resources\Placements\Pages\EditPlacement;
@@ -63,6 +64,17 @@ class PlacementResource extends Resource
                         Select::make('slot')
                             ->options(PlacementSlot::class)
                             ->required(),
+                        Select::make('division')
+                            ->options(Division::class)
+                            ->placeholder('Not a division advert')
+                            ->helperText('With no sports selected, this is the advert for the whole division. A Handgun advert stays off Shotgun.'),
+                        Select::make('disciplines')
+                            ->relationship('disciplines', 'name')
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->helperText('Sports for this advert. One booking can cover several: Precision Rifle, PRS, PR22, and NRL Hunter share a PRS advert; Gong Shooting is its own; F-Class and Benchrest share one. It shows on those sports and their matches, under the division advert.')
+                            ->columnSpanFull(),
                         DatePicker::make('starts_on')->required(),
                         DatePicker::make('ends_on')->required(),
                         TextInput::make('rate_cents')

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\DisciplineFamily;
 use App\Models\Discipline;
+use App\Support\DivisionCatalog;
 use Illuminate\Database\Seeder;
 
 class DisciplineSeeder extends Seeder
@@ -146,6 +147,8 @@ class DisciplineSeeder extends Seeder
                 'sort_order' => $sort += 10,
             ]);
         }
+
+        DivisionCatalog::apply();
     }
 
     /**

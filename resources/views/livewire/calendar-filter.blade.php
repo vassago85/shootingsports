@@ -69,7 +69,7 @@
                     @endif
                     @if ($family !== 'all')
                         <button type="button" class="chip-active" wire:click="clearFamily">
-                            <span>{{ \App\Enums\DisciplineFamily::tryFrom($family)?->getLabel() ?? ucfirst($family) }}</span>
+                            <span>{{ \App\Enums\Division::tryFrom($family)?->getLabel() ?? \App\Enums\DisciplineFamily::tryFrom($family)?->getLabel() ?? ucfirst($family) }}</span>
                             <span aria-hidden="true">×</span>
                             <span class="sr-only">— clear discipline family filter</span>
                         </button>

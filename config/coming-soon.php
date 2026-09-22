@@ -38,6 +38,7 @@ return [
         'calendar.month',
         'map',
         'disciplines.index',
+        'divisions.show',
         'disciplines.show',
         'disciplines.province',
         'clubs.index',

@@ -52,57 +52,10 @@ class HomeController extends Controller
                 ->limit(10)
                 ->get();
 
-        $upcomingCounts = Discipline::upcomingCounts();
-        /*
-         * UX audit #11: sort by upcoming-match count (desc) first,
-         * then name. Zero-count tiles still render — the Discover
-         * grid view shows a "follow this discipline" fallback so
-         * they still do something — but they sink below tiles that
-         * have live matches so the second homepage section leads
-         * with actionable disciplines, not dead ends.
-         */
-        $disciplines = Discipline::query()
-            ->where('is_published', true)
-            ->whereNull('parent_id')
-            ->get()
-            ->map(function (Discipline $discipline) use ($upcomingCounts): Discipline {
-                $discipline->setAttribute('events_count', $upcomingCounts[$discipline->id] ?? 0);
-
-                return $discipline;
-            })
-            ->sort(function (Discipline $a, Discipline $b): int {
-                return [$b->getAttribute('events_count'), $a->name]
-                    <=> [$a->getAttribute('events_count'), $b->name];
-            })
-            ->values();
-
-        $clubs = Organisation::query()
-            ->published()
-            ->clubs()
-            ->orderBy('name')
-            ->limit(6)
-            ->get();
-
-        $ranges = Venue::query()
-            ->published()
-            ->orderBy('name')
-            ->limit(6)
-            ->get();
-
-        $suppliers = Provider::query()
-            ->published()
-            ->orderBy('name')
-            ->limit(6)
-            ->get();
-
         return view('public.home', [
             'stats' => $stats,
             'rail' => $rail,
             'railLabel' => $monthAhead->isNotEmpty() ? 'Next 30 days' : 'Next up',
-            'disciplines' => $disciplines,
-            'clubs' => $clubs,
-            'ranges' => $ranges,
-            'suppliers' => $suppliers,
         ]);
     }
 }

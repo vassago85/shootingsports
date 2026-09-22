@@ -3,14 +3,18 @@
 namespace App\Filament\Resources\Disciplines;
 
 use App\Enums\DisciplineFamily;
+use App\Enums\Division;
 use App\Filament\Resources\Disciplines\Pages\CreateDiscipline;
 use App\Filament\Resources\Disciplines\Pages\EditDiscipline;
 use App\Filament\Resources\Disciplines\Pages\ListDisciplines;
 use App\Models\Discipline;
+use App\Support\YouTube;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -46,6 +50,29 @@ class DisciplineResource extends Resource
                 Select::make('family')
                     ->options(DisciplineFamily::class)
                     ->required(),
+                CheckboxList::make('division_values')
+                    ->label('Divisions')
+                    ->options(Division::class)
+                    ->dehydrated(false)
+                    ->columns(2),
+                Repeater::make('videos')
+                    ->dehydrated(false)
+                    ->maxItems(4)
+                    ->schema([
+                        TextInput::make('title')
+                            ->required(),
+                        TextInput::make('url')
+                            ->label('YouTube URL')
+                            ->required()
+                            ->rules([
+                                function (string $attribute, mixed $value, \Closure $fail): void {
+                                    if (! is_string($value) || YouTube::idFromUrl($value) === null) {
+                                        $fail('Enter a YouTube link.');
+                                    }
+                                },
+                            ]),
+                    ])
+                    ->columnSpanFull(),
                 Select::make('parent_id')
                     ->relationship('parent', 'name'),
                 TextInput::make('federation_organisation_id')

@@ -97,7 +97,7 @@ class DisciplineController extends Controller
      */
     private function pageData(Discipline $discipline, ?Province $province): array
     {
-        $discipline->load(['children', 'federation', 'parent']);
+        $discipline->load(['children', 'federation', 'parent', 'videos', 'divisionLinks']);
 
         $events = (new PublicEventQuery(
             disciplineSlug: $discipline->slug,
@@ -182,6 +182,7 @@ class DisciplineController extends Controller
             'clubs' => $clubs,
             'familySiblings' => $familySiblings,
             'related' => $related,
+            'sponsorDivisions' => $discipline->divisions()->take(3)->values(),
             'noindex' => $noindex,
             'figures' => [
                 'matches' => $events->count(),

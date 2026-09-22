@@ -3,6 +3,7 @@
 namespace App\Queries;
 
 use App\Enums\DisciplineFamily;
+use App\Enums\Division;
 use App\Enums\Province;
 use App\Models\Discipline;
 use App\Models\Event;
@@ -118,10 +119,16 @@ class PublicEventQuery
         }
 
         if ($this->family && $this->family !== 'all') {
-            $family = DisciplineFamily::tryFrom($this->family);
+            $division = Division::tryFrom($this->family);
 
-            if ($family) {
-                $query->whereHas('disciplines', fn (Builder $q) => $q->where('family', $family));
+            if ($division) {
+                $query->whereHas('disciplines.divisionLinks', fn (Builder $q) => $q->where('division', $division));
+            } else {
+                $family = DisciplineFamily::tryFrom($this->family);
+
+                if ($family) {
+                    $query->whereHas('disciplines', fn (Builder $q) => $q->where('family', $family));
+                }
             }
         }
 

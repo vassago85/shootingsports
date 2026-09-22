@@ -205,8 +205,7 @@ it('renders active placements for a page slot', function () {
 
     $this->get(route('home'))
         ->assertOk()
-        ->assertSee('Sponsored')
-        ->assertSee('Buy Brass Here')
+        ->assertDontSee('Buy Brass Here')
         ->assertDontSee('This space is available');
 });
 

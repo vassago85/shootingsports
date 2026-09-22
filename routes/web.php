@@ -6,6 +6,7 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CalendarMonthController;
 use App\Http\Controllers\ComingSoonInterestController;
 use App\Http\Controllers\DisciplineController;
+use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\EmbedController;
 use App\Http\Controllers\EnquiryController;
@@ -62,6 +63,9 @@ Route::get('/map', MapController::class)->name('map');
 Route::get('/calendar/map', fn () => redirect()->route('map'));
 
 Route::get('/disciplines', [DisciplineController::class, 'index'])->name('disciplines.index');
+Route::get('/divisions/{division}', [DivisionController::class, 'show'])
+    ->where('division', 'handgun|bolt-action-rifle|self-loading-rifle|shotgun|air-rifle')
+    ->name('divisions.show');
 Route::get('/disciplines/{discipline:slug}/calendar.ics', [IcalController::class, 'discipline'])->name('ical.discipline');
 Route::get('/disciplines/{discipline:slug}/{province}', [DisciplineController::class, 'redirectLegacyProvince'])
     ->where('province', $provincePattern)

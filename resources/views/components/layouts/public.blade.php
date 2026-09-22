@@ -35,10 +35,10 @@
         <div class="nav-in">
             <a class="brand" href="{{ route('home') }}">
                 <svg class="mark" width="28" height="28" viewBox="0 0 40 40" role="img" aria-label="Reticle mark">
-                    <circle cx="20" cy="20" r="17" fill="none" stroke="#D9AE52" stroke-width="1.6"/>
-                    <circle cx="20" cy="20" r="7.5" fill="none" stroke="#D9AE52" stroke-width="1"/>
-                    <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="#D9AE52" stroke-width="1.6"/>
-                    <circle cx="20" cy="20" r="2" fill="#D9AE52"/>
+                    <circle cx="20" cy="20" r="17" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+                    <circle cx="20" cy="20" r="7.5" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+                    <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="#FFFFFF" stroke-width="1.6"/>
+                    <circle cx="20" cy="20" r="2" fill="#6B7D3A"/>
                 </svg>
                 <span class="brand-text">
                     <span class="wordmark">ShootingSports</span>
@@ -46,7 +46,8 @@
                 </span>
             </a>
             <nav class="nav-links" aria-label="Primary">
-                <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') || request()->routeIs('calendar.month') || request()->routeIs('map') ? 'on' : '' }}">Matches</a>
+                <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') && ! request()->routeIs('calendar.month') ? 'on' : '' }}">Matches</a>
+                <a href="{{ route('calendar.month') }}" class="{{ request()->routeIs('calendar.month') ? 'on' : '' }}">Calendar</a>
                 <a href="{{ route('disciplines.index') }}" class="{{ request()->routeIs('disciplines.*') ? 'on' : '' }}">Sports</a>
                 <a href="{{ route('clubs.index') }}" class="{{ request()->routeIs('clubs.*') || request()->routeIs('federations.*') ? 'on' : '' }}">Clubs</a>
                 <a href="{{ route('ranges.index') }}" class="{{ request()->routeIs('ranges.*') ? 'on' : '' }}">Ranges</a>
@@ -63,13 +64,14 @@
                         <a class="btn ghost on-dark" href="{{ route('suppliers.onboard') }}">My business</a>
                     @endif
                 @else
-                    <a class="btn ghost on-dark" href="{{ route('login') }}">Sign in</a>
+                    <a class="btn light" href="{{ route('login') }}">Sign in</a>
                 @endauth
             </div>
             <button class="hamburger" id="burger" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">Menu</button>
         </div>
         <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
             <a href="{{ route('calendar') }}">Matches</a>
+            <a href="{{ route('calendar.month') }}">Calendar</a>
             <a href="{{ route('disciplines.index') }}">Sports</a>
             <a href="{{ route('clubs.index') }}">Clubs</a>
             <a href="{{ route('ranges.index') }}">Ranges</a>
@@ -126,10 +128,10 @@
                 <div class="foot-about">
                     <a class="brand" href="{{ route('home') }}" style="margin-right:0">
                         <svg class="mark" width="28" height="28" viewBox="0 0 40 40" role="img" aria-label="Reticle mark">
-                            <circle cx="20" cy="20" r="17" fill="none" stroke="#D9AE52" stroke-width="1.6"/>
-                            <circle cx="20" cy="20" r="7.5" fill="none" stroke="#D9AE52" stroke-width="1"/>
-                            <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="#D9AE52" stroke-width="1.6"/>
-                            <circle cx="20" cy="20" r="2" fill="#D9AE52"/>
+                            <circle cx="20" cy="20" r="17" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
+                            <circle cx="20" cy="20" r="7.5" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+                            <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="#FFFFFF" stroke-width="1.6"/>
+                            <circle cx="20" cy="20" r="2" fill="#6B7D3A"/>
                         </svg>
                         <span class="brand-text">
                             <span class="wordmark">ShootingSports</span>

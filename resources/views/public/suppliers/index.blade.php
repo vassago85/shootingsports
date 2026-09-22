@@ -5,6 +5,9 @@
                 <p class="label">Directory</p>
                 <h1>Industry</h1>
                 <p>Every shooting-related business, listed free. We do not sell firearms or take a cut of a transfer.</p>
+                @if ($division)
+                    <p>Showing suppliers linked to {{ $division->getLabel() }} sports.</p>
+                @endif
             </div>
         </section>
         <section class="block">

@@ -8,10 +8,14 @@
     // as thin. Keep it false on /advertise and /calendar where the
     // vacant slot is doing genuine sales work.
     'hideWhenVacant' => false,
+    'division' => null,
+    'disciplines' => null,
 ])
 
 @php
-    $placements = \App\Support\AdPlacements::for($page, $placementSlot, (int) $limit);
+    $placements = $disciplines !== null
+        ? \App\Support\AdPlacements::forDisciplines($disciplines, (int) $limit)
+        : \App\Support\AdPlacements::for($page, $placementSlot, (int) $limit, $division);
 @endphp
 
 @if ($placements->isEmpty() && $hideWhenVacant)

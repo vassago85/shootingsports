@@ -2,7 +2,9 @@
 
 namespace App\Models\Concerns;
 
+use App\Enums\Division;
 use App\Models\Discipline;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 trait HasDisciplines
@@ -37,6 +39,18 @@ trait HasDisciplines
         }
 
         $this->disciplines()->sync($payload);
+    }
+
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeInDivision(Builder $query, Division $division): Builder
+    {
+        return $query->whereHas(
+            'disciplines.divisionLinks',
+            fn (Builder $links) => $links->where('division', $division),
+        );
     }
 
     public function primaryDiscipline(): ?Discipline

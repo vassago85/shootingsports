@@ -2,20 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Division;
 use App\Enums\ListingStatus;
 use App\Enums\ProviderCategory;
 use App\Enums\Province;
 use App\Models\Provider;
 use App\Support\JsonLd;
 use App\Support\Seo;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ProviderController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $division = Division::fromPublicQuery($request->string('division')->toString());
+
         $providers = Provider::query()
             ->published()
+            ->when($division, fn ($query) => $query->inDivision($division))
             ->orderByTier()
             ->get()
             ->groupBy(fn (Provider $provider) => $provider->category->value);
@@ -49,6 +54,7 @@ class ProviderController extends Controller
 
         return view('public.suppliers.index', [
             'grouped' => $providers,
+            'division' => $division,
             'categories' => ProviderCategory::cases(),
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,

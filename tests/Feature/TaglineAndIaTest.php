@@ -79,14 +79,14 @@ it('labels the suppliers footer link as Industry', function () {
     expect($html)->toContain('href="'.route('suppliers.index').'">Industry</a>');
 });
 
-it('renames the home directory column to Industry with the new blurb (once populated)', function () {
+it('keeps the industry directory off the home page', function () {
     seedPopulatedIndustry();
 
     $this->get(route('home'))
         ->assertOk()
-        ->assertSee('<h3>Industry</h3>', false)
-        ->assertSee('See the industry →', false)
-        ->assertDontSee('<h3>Suppliers</h3>', false);
+        ->assertDontSee('<h3>Industry</h3>', false)
+        ->assertDontSee('See the industry →', false)
+        ->assertSee('What are you interested in?', false);
 });
 
 it('keeps Industry out of the home stats bar even when the directory is populated', function () {

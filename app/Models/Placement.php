@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Enums\Division;
 use App\Enums\PlacementSlot;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
-    'provider_id', 'ad_slot_id', 'slot', 'headline', 'body', 'image_path', 'click_url',
+    'provider_id', 'ad_slot_id', 'slot', 'division', 'headline', 'body', 'image_path', 'click_url',
     'targeting', 'starts_on', 'ends_on', 'rate_cents', 'impressions', 'clicks', 'is_active',
 ])]
 class Placement extends Model
@@ -19,6 +21,7 @@ class Placement extends Model
     {
         return [
             'slot' => PlacementSlot::class,
+            'division' => Division::class,
             'targeting' => 'array',
             'starts_on' => 'date',
             'ends_on' => 'date',
@@ -37,6 +40,11 @@ class Placement extends Model
     public function adSlot(): BelongsTo
     {
         return $this->belongsTo(AdSlot::class);
+    }
+
+    public function disciplines(): BelongsToMany
+    {
+        return $this->belongsToMany(Discipline::class);
     }
 
     public function imageUrl(): ?string

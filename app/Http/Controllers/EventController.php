@@ -15,7 +15,7 @@ class EventController extends Controller
     {
         abort_if($event->status === EventStatus::Draft, 404);
 
-        $event->load(['hostOrganisation.parent', 'venue', 'venues', 'disciplines', 'flags', 'banner']);
+        $event->load(['hostOrganisation.parent', 'venue', 'venues', 'disciplines.divisionLinks', 'flags', 'banner']);
 
         // Breadcrumb: Home › Calendar › (Province)? › Match title. The
         // province rung uses the venue's province so a match in a
