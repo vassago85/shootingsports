@@ -45,22 +45,6 @@ class EnquiryController extends Controller
             );
         }
 
-        // Product/Offer JSON-LD, one Offer per product. Search engines
-        // can surface pricing snippets and treat each product as a
-        // distinct service. Runs through the site() base graph so the
-        // WebSite + Organization identity ships too.
-        $offers = array_values(array_map(static function (array $product): array {
-            return [
-                '@type' => 'Offer',
-                'name' => $product['name'],
-                'description' => $product['summary'],
-                'price' => number_format(($product['price_per_month_cents'] ?? 0) / 100, 2, '.', ''),
-                'priceCurrency' => 'ZAR',
-                'availability' => 'https://schema.org/InStock',
-                'url' => route('advertise').'#prod-'.$product['key'],
-            ];
-        }, $products));
-
         $jsonLd = [
             '@context' => 'https://schema.org',
             '@type' => 'Service',
@@ -74,7 +58,6 @@ class EnquiryController extends Controller
                 '@type' => 'Country',
                 'name' => 'South Africa',
             ],
-            'offers' => $offers,
         ];
 
         return view('public.advertise', [

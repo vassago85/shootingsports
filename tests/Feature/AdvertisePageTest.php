@@ -24,7 +24,7 @@ it('renders every advertising product on the rate card', function () {
 
     foreach (config('advertising.products') as $product) {
         $response->assertSee($product['name'])
-            ->assertSee($product['price_display']);
+            ->assertDontSee($product['price_display']);
     }
 });
 
@@ -48,23 +48,17 @@ it('renders the public commitments block', function () {
     }
 });
 
-it('renders a Service JSON-LD block with one Offer per product', function () {
-    // Match the public rate card: featured is omitted until Industry
-    // is populated.
-    $expectedProducts = array_filter(
-        config('advertising.products'),
-        static fn (array $p): bool => ($p['key'] ?? '') !== 'featured',
-    );
-
-    $response = $this->get(route('advertise'))->assertOk();
-    $html = $response->getContent();
+it('does not publish advertising prices', function () {
+    $html = $this->get(route('advertise'))->assertOk()->getContent();
 
     expect($html)->toContain('"@type":"Service"')
-        ->and($html)->toContain('"@type":"Offer"')
-        ->and($html)->toContain('"priceCurrency":"ZAR"');
+        ->and($html)->not->toContain('"@type":"Offer"')
+        ->and($html)->not->toContain('"priceCurrency"')
+        ->and($html)->not->toContain('Rate card');
 
-    $offerCount = substr_count($html, '"@type":"Offer"');
-    expect($offerCount)->toBe(count($expectedProducts));
+    foreach (config('advertising.products') as $product) {
+        expect($html)->not->toContain($product['price_display']);
+    }
 });
 
 it('persists the selected product key into enquiries.context', function () {

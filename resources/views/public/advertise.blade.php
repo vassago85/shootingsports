@@ -1,6 +1,6 @@
 <x-layouts.public
     title="Advertise on the register"
-    description="Rate card and slot inventory for shootingsports.co.za — the independent national register of South African shooting sport."
+    description="Ask about advertising on shootingsports.co.za — the independent national register of South African shooting sport."
     :json-ld="$jsonLd"
 >
     <main id="main">
@@ -15,8 +15,8 @@
         <section class="block">
             <div class="wrap">
                 <div class="sec-head">
-                    <p class="label">Rate card</p>
-                    <h2>Ad products</h2>
+                    <p class="label">Spaces</p>
+                    <h2>Where an advert can sit</h2>
                 </div>
 
                 @unless ($industryOpen)
@@ -34,10 +34,6 @@
                                 <h3>{{ $product['name'] }}</h3>
                                 <p>{{ $product['summary'] }}</p>
                                 <p class="rate-card-audience">{{ $product['audience'] }}</p>
-                            </div>
-                            <div class="rate-card-price">
-                                <p class="label">From</p>
-                                <p class="rate-card-figure">{{ $product['price_display'] }}</p>
                                 <a class="btn ghost" href="#enquire?product={{ $product['key'] }}" onclick="document.getElementById('advertise-product').value='{{ $product['key'] }}'; document.getElementById('advertise-product').dispatchEvent(new Event('change'));">Enquire</a>
                             </div>
                         </article>
@@ -89,7 +85,7 @@
                         <select name="product" id="advertise-product">
                             <option value="">Not sure — send me the options</option>
                             @foreach ($products as $product)
-                                <option value="{{ $product['key'] }}">{{ $product['name'] }} ({{ $product['price_display'] }})</option>
+                                <option value="{{ $product['key'] }}">{{ $product['name'] }}</option>
                             @endforeach
                         </select>
                     </label>

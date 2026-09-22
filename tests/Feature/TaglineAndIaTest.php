@@ -212,7 +212,7 @@ it('hides the vacant ad-slot pitch on the calendar, ranges and suppliers pages',
     // UX audit #13: the vacant "Advertise here" pitch above the
     // filters read as thin. Calendar, ranges and suppliers all now
     // pass hide-when-vacant so an unsold slot renders nothing —
-    // the actual /advertise sales page still carries the rate card.
+    // prices stay off the public advertise page.
     foreach ([route('calendar'), route('ranges.index'), route('suppliers.index')] as $url) {
         $response = $this->get($url)->assertOk();
 

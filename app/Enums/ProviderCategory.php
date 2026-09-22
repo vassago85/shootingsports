@@ -8,6 +8,7 @@ enum ProviderCategory: string implements HasLabel
 {
     case Gunsmith = 'gunsmith';
     case Dealer = 'dealer';
+    case Distributor = 'distributor';
     case Instructor = 'instructor';
     case ReloadingComponents = 'reloading_components';
     case Ammunition = 'ammunition';
@@ -34,6 +35,7 @@ enum ProviderCategory: string implements HasLabel
         return match ($this) {
             self::Gunsmith => 'Gunsmith',
             self::Dealer => 'Dealer',
+            self::Distributor => 'Distributor',
             self::Instructor => 'Instructor / academy',
             self::ReloadingComponents => 'Reloading components',
             self::Ammunition => 'Ammunition',

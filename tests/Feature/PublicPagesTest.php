@@ -132,6 +132,17 @@ it('shows club, range, supplier and match pages by slug', function () {
     $this->get(route('suppliers.show', $provider->slug))->assertOk()->assertSee('Ridgeline Rifleworks');
 });
 
+it('lists Whylo under distributors', function () {
+    $this->get(route('suppliers.category', 'distributor'))
+        ->assertOk()
+        ->assertSee('Distributor')
+        ->assertSee('Whylo');
+
+    $this->get(route('suppliers.show', 'whylo'))
+        ->assertOk()
+        ->assertSee('https://whylo.co.za', false);
+});
+
 it('binds public listing routes to the slug column', function () {
     $routes = Route::getRoutes();
 

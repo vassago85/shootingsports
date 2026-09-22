@@ -173,6 +173,8 @@ it('omits thin discipline province slices from the disciplines sitemap', functio
 });
 
 it('omits empty provider categories from the providers sitemap', function () {
+    Provider::query()->delete();
+
     $response = $this->get('/sitemaps/providers.xml');
 
     $response->assertOk();

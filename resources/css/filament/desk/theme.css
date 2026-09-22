@@ -1,1 +1,14 @@
 @import '../admin/theme.css';
+
+html.fi,
+html.fi.dark {
+    --ss-brass: #6B7D3A;
+    --ss-brass-dk: #879A4A;
+    --ss-brass-ink: #0B0D0E;
+    --ss-rule: rgba(107, 125, 58, 0.28);
+    --ss-border: rgba(107, 125, 58, 0.18);
+}
+
+.waitlist-triggers li {
+    background: rgba(107, 125, 58, 0.08);
+}
