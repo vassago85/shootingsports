@@ -90,10 +90,6 @@
         </div>
     </div>
 
-    <div class="wrap" style="padding-top:28px">
-        @include('mockups.partials.ad-space', ['sponsors' => $sponsors, 'limit' => 2])
-    </div>
-
     <section class="block" id="divisions" style="padding-top:28px">
         <div class="wrap">
             <div class="sec-head">

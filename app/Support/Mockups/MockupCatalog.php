@@ -988,7 +988,7 @@ class MockupCatalog
     /**
      * Active supplier adverts. Read-only: this does not record impressions.
      *
-     * @return Collection<int, array{headline: string, body: string, name: string, slug: string, category: ?string, place: string, discipline_slugs: list<string>}>
+     * @return Collection<int, array{headline: string, body: string, name: string, slug: string, category: ?string, place: string, image: ?string, discipline_slugs: list<string>}>
      */
     public function sponsors(): Collection
     {
@@ -1016,6 +1016,7 @@ class MockupCatalog
                         'place' => $row['place'],
                         'website' => $row['website'],
                         'public' => $row['public'],
+                        'image' => $placement->imageUrl(),
                         'discipline_slugs' => $provider->disciplines->pluck('slug')->all(),
                     ];
                 })

@@ -43,7 +43,6 @@ class MockupController extends Controller
             'stats' => $this->catalog->stats(),
             'matches' => $this->catalog->publicMatches()->take(6),
             'divisions' => Division::publicCases(),
-            'sponsors' => $this->catalog->sponsors(),
             'weekendFrom' => $weekendStart->toDateString(),
             'weekendTo' => $weekendEnd->toDateString(),
             'weekendMonth' => $weekendStart->format('Y-m'),

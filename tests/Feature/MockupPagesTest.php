@@ -73,7 +73,8 @@ it('keeps the live hero and opens a division onto its disciplines', function () 
         ->assertSee('What are you interested in?')
         ->assertSee('Handgun')
         ->assertSee(route('mockups.sports', ['division' => 'handgun']), false)
-        ->assertSee('Advertise here');
+        ->assertDontSee('Sponsored')
+        ->assertDontSee('Advertise here');
 
     $this->get(route('mockups.sports', ['division' => 'bolt-action-rifle']))
         ->assertOk()
@@ -96,8 +97,10 @@ it('keeps the live hero and opens a division onto its disciplines', function () 
         ->assertSee(route('mockups.matches.calendar', ['sport' => 'pr22-rimfire']), false);
 
     $matches = $this->get(route('mockups.matches', ['division' => 'handgun']));
-    $matches->assertOk()->assertSee('Advertise here');
-    expect(substr_count($matches->getContent(), 'aria-label="Partner"'))->toBe(1);
+    $matches->assertOk()
+        ->assertDontSee('Advertise here')
+        ->assertDontSee('Sponsored');
+    expect(substr_count($matches->getContent(), 'aria-label="Partner"'))->toBe(0);
 
     $this->get(route('mockups.sports', ['division' => 'handgun']))
         ->assertOk()
