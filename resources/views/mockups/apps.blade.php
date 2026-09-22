@@ -139,38 +139,66 @@
 
             return $mk('mockups.apps', $params);
         };
+
+        // Find the label of the current screen for the canvas header.
+        $currentLabel = 'Screen';
+        $groupLabel = '';
+        foreach ($journey as $group) {
+            foreach ($group['screens'] as $item) {
+                if ($item['key'] === $screen) {
+                    $currentLabel = $item['label'];
+                    $groupLabel = $group['group'];
+                }
+            }
+        }
     @endphp
 
     <div class="wrap app-page">
         <header class="mk-pagehead">
-            <p class="label">Native apps</p>
-            <h1>iPhone and Android</h1>
-            <p class="mk-lede">Four tabs: Matches, Find, Suppliers and You. The phones open in dark mode. Supplier ads stay labelled and follow the match list. Cancel, price and your data stay on You.</p>
+            <p class="label">Native app concept</p>
+            <h1>ShootingSports on iPhone &amp; Android</h1>
+            <p class="mk-lede">Review the app in user-journey order — from splash to daily use. The sidebar walks left-to-right through what a real user experiences. Screens open in both iPhone and Android chrome. Dark mode is default; toggle Light to see the warm off-white surface.</p>
         </header>
 
-        <div class="app-appearance" role="group" aria-label="Appearance">
-            <a href="{{ $app($screen, ['theme' => 'dark']) }}" @class(['on' => $theme === 'dark'])>Dark</a>
-            <a href="{{ $app($screen, ['theme' => 'light']) }}" @class(['on' => $theme === 'light'])>Light</a>
-            <a href="{{ $app($screen, ['type' => $large ? 'default' : 'large']) }}">{{ $large ? 'Default text' : 'Larger text' }}</a>
-        </div>
+        <div class="app-shell">
+            <aside class="app-sidebar" aria-label="App journey">
+                @php $counter = 0; @endphp
+                @foreach ($journey as $group)
+                    <h3>{{ $group['group'] }}</h3>
+                    @foreach ($group['screens'] as $item)
+                        @php $counter++; @endphp
+                        <a href="{{ $app($item['key']) }}" @class(['on' => $screen === $item['key']])>
+                            <span class="app-side-n">{{ str_pad((string) $counter, 2, '0', STR_PAD_LEFT) }}</span>
+                            <span>{{ $item['label'] }}</span>
+                        </a>
+                    @endforeach
+                @endforeach
+            </aside>
 
-        <nav class="app-screens" aria-label="App screens">
-            @foreach ($screens as $key => $label)
-                <a href="{{ $app($key) }}" @class(['on' => $screen === $key])>{{ $label }}</a>
-            @endforeach
-        </nav>
+            <div class="app-canvas">
+                <div class="app-canvas-controls">
+                    <div class="app-canvas-title">
+                        <span>{{ $groupLabel }}</span>
+                        {{ $currentLabel }}
+                    </div>
+                    <div class="app-appearance" role="group" aria-label="Appearance">
+                        <a href="{{ $app($screen, ['theme' => 'dark']) }}" @class(['on' => $theme === 'dark'])>Dark</a>
+                        <a href="{{ $app($screen, ['theme' => 'light']) }}" @class(['on' => $theme === 'light'])>Light</a>
+                        <a href="{{ $app($screen, ['type' => $large ? 'default' : 'large']) }}">{{ $large ? 'Default text' : 'Larger text' }}</a>
+                    </div>
+                </div>
 
-        <div class="app-stage">
-            @foreach (['ios', 'android'] as $platform)
-                <x-mockups.phone :platform="$platform" :screen="$screen">
-                    @include('mockups.partials.app-screens')
-                </x-mockups.phone>
-            @endforeach
+                @foreach (['ios', 'android'] as $platform)
+                    <x-mockups.phone :platform="$platform" :screen="$screen">
+                        @include('mockups.partials.app-screens')
+                    </x-mockups.phone>
+                @endforeach
+            </div>
         </div>
 
         <section class="mk-section app-store-notes">
             <h2>What a store review looks for</h2>
-            <p class="mk-support">Both phones include these. Open the screen to see the wording.</p>
+            <p class="mk-support">Both stores need these in place. Each link jumps to the screen that carries the compliance surface.</p>
             <div class="app-notes">
                 <article>
                     <h3>App Store</h3>

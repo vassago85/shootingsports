@@ -5,7 +5,11 @@
         <b>{{ $match['day'] }}</b>
         <span class="mo">{{ $match['month'] }}</span>
     </div>
-    <div>
+    <div class="mk-match-copy">
+        @if ($match['organiser_logo'] ?? null)
+            <img class="mk-logo" src="{{ $match['organiser_logo'] }}" alt="">
+        @endif
+        <div>
         <h3 class="mk-title"><a href="{{ $mk('mockups.match', ['slug' => $match['slug']]) }}">{{ $match['title'] }}</a></h3>
         <div class="mk-sub">
             {{ collect([$match['discipline'], $match['organiser']])->filter()->implode(' · ') }}
@@ -29,6 +33,7 @@
                 @endforeach
             </div>
         @endif
+        </div>
     </div>
     <a class="btn ghost mk-go" href="{{ $mk('mockups.match', ['slug' => $match['slug']]) }}">View match</a>
 </article>

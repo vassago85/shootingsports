@@ -43,9 +43,14 @@
         @endif
         @forelse ($clubs as $club)
             <a class="mk-row" href="{{ $mk('mockups.club', ['slug' => $club['slug']]) }}">
-                <span>
-                    <span class="mk-row-title">{{ $club['name'] }}</span>
-                    <span class="mk-sub">{{ $club['place'] ?: 'Location not listed' }}</span>
+                <span class="mk-row-id">
+                    @if ($club['logo'])
+                        <img class="mk-logo" src="{{ $club['logo'] }}" alt="">
+                    @endif
+                    <span>
+                        <span class="mk-row-title">{{ $club['name'] }}</span>
+                        <span class="mk-sub">{{ $club['place'] ?: 'Location not listed' }}</span>
+                    </span>
                 </span>
                 <span class="mk-row-meta">
                     {{ $club['disciplines'] !== [] ? implode(' · ', array_slice($club['disciplines'], 0, 4)) : 'Sports not listed' }}

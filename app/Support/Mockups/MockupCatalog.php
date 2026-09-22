@@ -76,7 +76,7 @@ class MockupCatalog
     {
         return $this->memo('publicMatches', function (): Collection {
             return Event::query()
-                ->with(['disciplines', 'hostOrganisation', 'venue', 'flags'])
+                ->with(['disciplines', 'hostOrganisation.parent', 'venue', 'flags'])
                 ->published()
                 ->upcoming()
                 ->where('slug', 'not like', 'verify-%')
@@ -259,6 +259,7 @@ class MockupCatalog
                 ->where('slug', 'not like', 'verify-%')
                 ->with([
                     'disciplines',
+                    'parent',
                     'hostedEvents' => fn ($query) => $query->upcoming()->with('venue')->orderBy('starts_at'),
                 ])
                 ->orderBy('name')
@@ -384,7 +385,7 @@ class MockupCatalog
         $end = $start->copy()->endOfMonth();
 
         $events = Event::query()
-            ->with(['disciplines', 'hostOrganisation', 'venue', 'flags'])
+            ->with(['disciplines', 'hostOrganisation.parent', 'venue', 'flags'])
             ->where('slug', 'not like', 'verify-%')
             ->where('status', '!=', EventStatus::Draft)
             ->where('status', '!=', EventStatus::Cancelled)
@@ -703,7 +704,7 @@ class MockupCatalog
     {
         return $this->memo('adminMatches', function (): Collection {
             return Event::query()
-                ->with(['disciplines', 'hostOrganisation', 'venue', 'flags'])
+                ->with(['disciplines', 'hostOrganisation.parent', 'venue', 'flags'])
                 ->where('slug', 'not like', 'verify-%')
                 ->orderByDesc('starts_at')
                 ->limit(80)
@@ -1193,6 +1194,8 @@ class MockupCatalog
             'status_value' => $event->status?->value,
             'organiser' => $event->hostOrganisation?->name,
             'organiser_slug' => $event->hostOrganisation?->slug,
+            'organiser_logo' => $event->hostOrganisation?->logoUrl()
+                ?? $event->hostOrganisation?->parent?->logoUrl(),
             'range' => $venue?->name,
             'range_slug' => $venue?->slug,
             'town' => $venue?->town,
@@ -1278,6 +1281,7 @@ class MockupCatalog
             'range_slug' => $venue?->slug,
             'visitors_welcome' => (bool) $club->visitors_welcome,
             'website' => $club->website_url,
+            'logo' => $club->logoUrl() ?? $club->parent?->logoUrl(),
             'email' => $club->email,
             'phone' => $club->phone,
             'facebook' => $club->facebook_url,

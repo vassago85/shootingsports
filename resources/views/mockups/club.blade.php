@@ -4,6 +4,9 @@
             <div class="mk-empty"><strong>No clubs in the register yet.</strong></div>
         @else
             <header class="mk-pagehead">
+                @if ($club['logo'])
+                    <img class="mk-logo mk-logo-lg" src="{{ $club['logo'] }}" alt="{{ $club['name'] }} logo">
+                @endif
                 <p class="label">{{ $club['type'] }} · {{ $club['place'] ?: 'Location not listed' }}</p>
                 <h1>{{ $club['name'] }}</h1>
                 <p class="mk-lede">{{ $club['disciplines'] !== [] ? implode(' · ', $club['disciplines']) : 'Sports not listed yet.' }}</p>

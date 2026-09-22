@@ -281,7 +281,11 @@
             @endphp
             <a class="app-row" href="{{ $app('club', ['club' => $row['slug']]) }}">
                 <span class="app-row-main">
-                    <span class="app-mark"><x-mockups.icon :name="$clubIcon" /></span>
+                    @if ($row['logo'])
+                        <img class="app-logo" src="{{ $row['logo'] }}" alt="">
+                    @else
+                        <span class="app-mark"><x-mockups.icon :name="$clubIcon" /></span>
+                    @endif
                     <span>
                         <strong>{{ $row['name'] }}</strong>
                         <em>{{ collect([$row['type'], $row['place'], $kmAway($row)])->filter()->implode(' · ') }}</em>
@@ -296,6 +300,9 @@
 @elseif ($screen === 'club')
     <div class="app-pad">
         @if ($club)
+            @if ($club['logo'])
+                <img class="app-logo app-logo-lg" src="{{ $club['logo'] }}" alt="{{ $club['name'] }} logo">
+            @endif
             <h1 class="app-hero">{{ $club['name'] }}</h1>
             <p class="app-lead">{{ $club['place'] ?: 'Place not listed.' }}</p>
             <dl class="app-facts">

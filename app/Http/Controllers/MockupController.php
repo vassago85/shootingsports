@@ -356,14 +356,34 @@ class MockupController extends Controller
     public function apps(Request $request): View
     {
         $allowed = [
-            'today', 'calendar', 'search', 'match', 'pack', 'find', 'clubs', 'club', 'ranges', 'range', 'sports', 'sport',
-            'suppliers', 'supplier', 'you', 'alerts', 'subscription', 'cancel', 'cancelled',
-            'plans', 'data', 'delete', 'deleted', 'permissions', 'signin',
+            // First run
+            'splash', 'welcome', 'location', 'sports-choose', 'follow-onboard', 'alerts-onboard', 'ready',
+            // Home & discovery
+            'home', 'today', 'matches', 'calendar', 'search',
+            // Match journey + packing
+            'match', 'pack', 'packing',
+            // Explore
+            'find', 'clubs', 'club', 'ranges', 'range', 'sports', 'sport',
+            // Suppliers
+            'suppliers', 'supplier',
+            // Account
+            'you', 'following', 'appearance', 'alerts',
+            // Subscription
+            'subscription', 'cancel', 'cancelled', 'plans',
+            // Privacy
+            'data', 'delete', 'deleted',
+            // States
+            'permissions', 'signin',
         ];
         $screen = $request->string('screen')->toString();
 
         if (! in_array($screen, $allowed, true)) {
-            $screen = 'today';
+            $screen = 'home';
+        }
+
+        // Legacy alias: `today` was the match list.
+        if ($screen === 'today') {
+            $screen = 'matches';
         }
 
         $upcoming = $this->catalog->publicMatches();
@@ -391,26 +411,42 @@ class MockupController extends Controller
 
         return view('mockups.apps', [
             'screen' => $screen,
+            'journey' => $this->appJourney(),
             'screens' => [
-                'today' => 'Matches',
+                'splash' => 'Splash',
+                'welcome' => 'Welcome',
+                'location' => 'Location',
+                'sports-choose' => 'Sports',
+                'follow-onboard' => 'Follow',
+                'alerts-onboard' => 'Alerts',
+                'ready' => 'Ready',
+                'home' => 'Home',
+                'matches' => 'Matches',
                 'calendar' => 'Calendar',
                 'search' => 'Search',
-                'find' => 'Find',
-                'suppliers' => 'Suppliers',
-                'you' => 'You',
                 'match' => 'Match',
                 'pack' => 'Pack',
-                'clubs' => 'Clubs & series',
+                'packing' => 'Packing',
+                'find' => 'Find',
+                'clubs' => 'Clubs',
+                'club' => 'Club',
                 'ranges' => 'Ranges',
+                'range' => 'Range',
                 'sports' => 'Sports',
+                'sport' => 'Sport',
+                'suppliers' => 'Suppliers',
+                'supplier' => 'Supplier',
+                'you' => 'You',
+                'following' => 'Following',
+                'appearance' => 'Appearance',
                 'alerts' => 'Alerts',
-                'subscription' => 'Subscription',
+                'subscription' => 'Pro',
                 'cancel' => 'Cancel',
                 'cancelled' => 'Cancelled',
                 'plans' => 'Before you pay',
                 'data' => 'Your data',
                 'delete' => 'Delete account',
-                'permissions' => 'Near me',
+                'permissions' => 'Permissions',
                 'signin' => 'Sign in',
             ],
             'cycle' => $request->string('cycle')->toString() === 'monthly' ? 'monthly' : 'annual',
@@ -459,7 +495,195 @@ class MockupController extends Controller
             'renews' => now()->timezone('Africa/Johannesburg')->addMonth()->format('j M Y'),
             'trialDays' => StartProTrial::TRIAL_DAYS,
             'phoneCalendar' => $screen === 'calendar' ? $this->appCalendar($request, $close) : null,
+            'home' => in_array($screen, ['home', 'welcome'], true) ? $this->appHome($matches, $clubs, $close) : null,
+            'onboarding' => in_array($screen, ['sports-choose', 'follow-onboard', 'ready'], true)
+                ? $this->appOnboarding($request, $sports, $clubs)
+                : null,
+            'appearanceTheme' => $request->query('theme') === 'light' ? 'light' : 'dark',
+            'appearanceLarge' => $request->query('type') === 'large',
         ]);
+    }
+
+    /**
+     * Ordered journey groups for the review sidebar.
+     *
+     * @return list<array{group: string, screens: list<array{key: string, label: string, params?: array<string, string>}>}>
+     */
+    private function appJourney(): array
+    {
+        return [
+            [
+                'group' => '01 · First run',
+                'screens' => [
+                    ['key' => 'splash', 'label' => 'Splash'],
+                    ['key' => 'welcome', 'label' => 'Welcome'],
+                    ['key' => 'location', 'label' => 'Location'],
+                    ['key' => 'sports-choose', 'label' => 'Choose sports'],
+                    ['key' => 'follow-onboard', 'label' => 'Follow'],
+                    ['key' => 'alerts-onboard', 'label' => 'Alerts'],
+                    ['key' => 'ready', 'label' => 'Ready'],
+                ],
+            ],
+            [
+                'group' => '02 · Home & discovery',
+                'screens' => [
+                    ['key' => 'home', 'label' => 'Home'],
+                    ['key' => 'matches', 'label' => 'Matches'],
+                    ['key' => 'calendar', 'label' => 'Calendar'],
+                    ['key' => 'search', 'label' => 'Search'],
+                ],
+            ],
+            [
+                'group' => '03 · Match journey',
+                'screens' => [
+                    ['key' => 'match', 'label' => 'Match detail'],
+                    ['key' => 'pack', 'label' => 'Pack for match'],
+                ],
+            ],
+            [
+                'group' => '04 · Packing',
+                'screens' => [
+                    ['key' => 'packing', 'label' => 'Packing library'],
+                ],
+            ],
+            [
+                'group' => '05 · Explore',
+                'screens' => [
+                    ['key' => 'find', 'label' => 'Find'],
+                    ['key' => 'clubs', 'label' => 'Clubs'],
+                    ['key' => 'club', 'label' => 'Club detail'],
+                    ['key' => 'ranges', 'label' => 'Ranges'],
+                    ['key' => 'range', 'label' => 'Range detail'],
+                    ['key' => 'sports', 'label' => 'Sports'],
+                    ['key' => 'sport', 'label' => 'Sport detail'],
+                ],
+            ],
+            [
+                'group' => '06 · Suppliers',
+                'screens' => [
+                    ['key' => 'suppliers', 'label' => 'Suppliers'],
+                    ['key' => 'supplier', 'label' => 'Supplier detail'],
+                ],
+            ],
+            [
+                'group' => '07 · Account',
+                'screens' => [
+                    ['key' => 'you', 'label' => 'You'],
+                    ['key' => 'following', 'label' => 'Following'],
+                    ['key' => 'alerts', 'label' => 'Alerts settings'],
+                    ['key' => 'appearance', 'label' => 'Appearance'],
+                ],
+            ],
+            [
+                'group' => '08 · Subscription',
+                'screens' => [
+                    ['key' => 'subscription', 'label' => 'Pro'],
+                    ['key' => 'plans', 'label' => 'Before purchase'],
+                    ['key' => 'cancel', 'label' => 'Cancel'],
+                    ['key' => 'cancelled', 'label' => 'Cancelled'],
+                ],
+            ],
+            [
+                'group' => '09 · Privacy & states',
+                'screens' => [
+                    ['key' => 'data', 'label' => 'Your data'],
+                    ['key' => 'delete', 'label' => 'Delete account'],
+                    ['key' => 'deleted', 'label' => 'Account deleted'],
+                    ['key' => 'permissions', 'label' => 'Permissions'],
+                    ['key' => 'signin', 'label' => 'Signed out'],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @param  Collection<int, array<string, mixed>>  $matches
+     * @param  Collection<int, array<string, mixed>>  $clubs
+     * @param  array<string, mixed>  $close
+     * @return array<string, mixed>
+     */
+    private function appHome(Collection $matches, Collection $clubs, array $close): array
+    {
+        $featured = $matches->first();
+        $coming = $matches->slice(1, 4)->values();
+        $nearby = $matches->slice(1, 3)->values();
+        $activityClubs = $clubs
+            ->sortByDesc('upcoming_count')
+            ->take(4)
+            ->map(fn (array $club): array => [
+                'name' => $club['name'],
+                'slug' => $club['slug'],
+                'text' => (int) $club['upcoming_count'] > 0
+                    ? sprintf('%s added a new match', $club['name'])
+                    : sprintf('%s updated the club profile', $club['name']),
+                'when' => 'today',
+            ])
+            ->values()
+            ->all();
+
+        return [
+            'greeting' => 'Your shooting',
+            'place' => $close['place'] ?? $close['home_place'] ?? 'South Africa',
+            'featured' => $featured,
+            'coming' => $coming,
+            'nearby' => $nearby,
+            'activity' => $activityClubs,
+            'initials' => 'P',
+        ];
+    }
+
+    /**
+     * @param  Collection<int, array<string, mixed>>  $sports
+     * @param  Collection<int, array<string, mixed>>  $clubs
+     * @return array<string, mixed>
+     */
+    private function appOnboarding(Request $request, Collection $sports, Collection $clubs): array
+    {
+        $selectedSports = collect($request->query('choose', []))
+            ->filter(fn (mixed $value): bool => is_string($value))
+            ->values();
+        $selectedClubs = collect($request->query('follow', []))
+            ->filter(fn (mixed $value): bool => is_string($value))
+            ->values();
+        $province = Province::tryFrom($request->string('home')->toString());
+
+        $families = [
+            'rifle' => 'Rifle',
+            'handgun' => 'Handgun',
+            'shotgun' => 'Shotgun',
+            'airgun' => 'Airgun',
+            'multi' => 'Multi-gun',
+        ];
+        $sportsByFamily = collect($families)
+            ->map(fn (string $label, string $key) => [
+                'key' => $key,
+                'label' => $label,
+                'items' => $sports->filter(fn (array $sport): bool => $sport['family'] === $key)->values(),
+            ])
+            ->filter(fn (array $group): bool => $group['items']->isNotEmpty())
+            ->values();
+
+        $suggestedClubs = $clubs
+            ->when($selectedSports->isNotEmpty(), fn ($collection) => $collection->filter(
+                fn (array $club): bool => array_intersect($club['discipline_slugs'] ?? [], $selectedSports->all()) !== []
+            ))
+            ->when($province instanceof Province, fn ($collection) => $collection->filter(
+                fn (array $club): bool => ($club['province_value'] ?? null) === $province->value
+            ))
+            ->take(6)
+            ->values();
+
+        if ($suggestedClubs->isEmpty()) {
+            $suggestedClubs = $clubs->take(6)->values();
+        }
+
+        return [
+            'sports' => $selectedSports,
+            'clubs' => $selectedClubs,
+            'province' => $province,
+            'sports_by_family' => $sportsByFamily,
+            'suggested_clubs' => $suggestedClubs,
+        ];
     }
 
     public function manage(Request $request): View
