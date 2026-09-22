@@ -74,6 +74,13 @@
             </div>
         </div>
 
+        <div class="wrap ss-partner-wrap">
+            @foreach ($sponsorDivisions as $sponsorDivision)
+                <x-ad-slot page="disciplines" placement-slot="category_sponsor" :division="$sponsorDivision" :limit="1" hide-when-vacant />
+            @endforeach
+            <x-ad-slot page="disciplines" placement-slot="category_sponsor" :disciplines="[$discipline]" :limit="1" hide-when-vacant />
+        </div>
+
         <div class="wrap">
             <div class="cols">
                 <div class="body">
@@ -102,16 +109,6 @@
                                 @endforeach
                             </div>
                         @endif
-
-                        @foreach ($sponsorDivisions as $sponsorDivision)
-                            <div style="margin-top:18px">
-                                <x-ad-slot page="disciplines" placement-slot="category_sponsor" :division="$sponsorDivision" :limit="1" hide-when-vacant />
-                            </div>
-                        @endforeach
-
-                        <div style="margin-top:18px">
-                            <x-ad-slot page="disciplines" placement-slot="category_sponsor" :disciplines="[$discipline]" :limit="1" hide-when-vacant />
-                        </div>
 
                         @if ($discipline->children->isNotEmpty())
                             <div class="formats">

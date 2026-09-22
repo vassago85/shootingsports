@@ -205,7 +205,7 @@ it('hide-when-vacant silences the ad slot when no placements exist', function ()
 
     expect($response->getContent())
         ->not->toContain('This space is available')
-        ->not->toContain('ad-vacant');
+        ->not->toContain('ss-partner-open');
 });
 
 it('hides the vacant ad-slot pitch on the calendar, ranges and suppliers pages', function () {
@@ -218,6 +218,6 @@ it('hides the vacant ad-slot pitch on the calendar, ranges and suppliers pages',
 
         expect($response->getContent())
             ->not->toContain('This space is available')
-            ->not->toContain('ad-vacant');
+            ->not->toContain('ss-partner-open');
     }
 });

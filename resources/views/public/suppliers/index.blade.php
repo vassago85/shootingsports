@@ -30,7 +30,7 @@
                      when vacant. The old placement above the grid was
                      the first thing a visitor saw on the Industry page,
                      and it was a house ad for empty inventory. --}}
-                <x-ad-slot page="suppliers" placement-slot="in_feed_native" :limit="2" class="ad-rail--tight" hide-when-vacant />
+                <x-ad-slot page="suppliers" placement-slot="in_feed_native" :limit="2" class="ss-partner--tight" hide-when-vacant />
             </div>
         </section>
     </main>

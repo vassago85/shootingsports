@@ -220,7 +220,7 @@ it('suppresses the vacant "Advertise here" pitch on every public browsing surfac
 
         expect($response->getContent())
             ->not->toContain('This space is available')
-            ->not->toContain('ad-vacant');
+            ->not->toContain('ss-partner-open');
     }
 });
 

@@ -31,7 +31,7 @@
                         <x-verification-badge :listing="$venue" />
                     </a>
                     @if ($index === 2)
-                        <x-ad-slot page="ranges" placement-slot="in_feed_native" :limit="2" class="ad-rail--tight" hide-when-vacant />
+                        <x-ad-slot page="ranges" placement-slot="in_feed_native" :limit="2" class="ss-partner--tight" hide-when-vacant />
                     @endif
                 @empty
                     <p class="empty">No ranges listed in this province yet.</p>

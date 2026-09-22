@@ -38,7 +38,7 @@
                     :from="$from"
                     :to="$to"
                 />
-                <x-ad-slot page="calendar" placement-slot="leaderboard" :limit="2" class="ad-rail--tight" hide-when-vacant />
+                <x-ad-slot page="calendar" placement-slot="leaderboard" :limit="2" class="ss-partner--tight" hide-when-vacant />
             </div>
         </section>
     </main>

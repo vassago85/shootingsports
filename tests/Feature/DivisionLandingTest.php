@@ -261,6 +261,7 @@ it('shows a sport advert under the division advert and keeps it off other sports
         'ad_slot_id' => $slot->id,
         'slot' => PlacementSlot::CategorySponsor,
         'headline' => 'Rest and flags',
+        'image_path' => 'placements/k1050.png',
         'starts_on' => now()->subDay()->toDateString(),
         'ends_on' => now()->addMonth()->toDateString(),
         'rate_cents' => 80000,
@@ -284,7 +285,11 @@ it('shows a sport advert under the division advert and keeps it off other sports
         ->assertOk()
         ->assertSee('Bolt scope')
         ->assertSee('Rest and flags')
-        ->assertDontSee('PRS timer');
+        ->assertDontSee('PRS timer')
+        ->assertSee('ss-partner-banner', false)
+        ->assertSee('placements/k1050.png', false)
+        ->assertSee('ss-partner-card', false)
+        ->assertDontSee('ad-card', false);
 
     $this->get(route('divisions.show', 'bolt-action-rifle'))
         ->assertOk()
