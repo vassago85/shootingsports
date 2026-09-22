@@ -54,6 +54,7 @@ return [
         'suppliers.show',
         'claim',
         'advertise',
+        'placements.click',
         'contact',
         'enquiries.listing',
         'enquiries.store',

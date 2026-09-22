@@ -63,6 +63,42 @@ class Placement extends Model
             ?: ($this->provider ? route('suppliers.show', $this->provider->slug) : null);
     }
 
+    /**
+     * Count one view of this advert. A placement rendered twice on the
+     * same page counts once. Automated clients are skipped so a crawler
+     * does not fill the counter.
+     */
+    public function recordImpression(): void
+    {
+        $seen = request()->attributes->get('placement_impressions', []);
+
+        if (isset($seen[$this->id])) {
+            return;
+        }
+
+        $seen[$this->id] = true;
+        request()->attributes->set('placement_impressions', $seen);
+
+        if ($this->requestIsAutomated()) {
+            return;
+        }
+
+        $this->increment('impressions');
+    }
+
+    private function requestIsAutomated(): bool
+    {
+        $agent = strtolower((string) request()->userAgent());
+
+        foreach (['bot', 'crawler', 'spider', 'slurp', 'preview'] as $marker) {
+            if (str_contains($agent, $marker)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function scopeActiveOn(Builder $query, ?string $date = null): Builder
     {
         $date ??= now('Africa/Johannesburg')->toDateString();

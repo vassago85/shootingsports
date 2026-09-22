@@ -27,7 +27,10 @@
         <div class="ss-partner-stack">
             @foreach ($placements as $placement)
                 @php
-                    $href = $placement->destinationUrl();
+                    $placement->recordImpression();
+                    $href = $placement->destinationUrl()
+                        ? route('placements.click', $placement)
+                        : null;
                     $img = $placement->imageUrl();
                     $alt = $placement->headline ?: ($placement->provider->name ?? '');
                 @endphp
@@ -52,7 +55,7 @@
                                 </h3>
                             @elseif ($placement->provider)
                                 <h3>
-                                    <a href="{{ route('suppliers.show', $placement->provider->slug) }}">{{ $placement->provider->name }}</a>
+                                    <a href="{{ $href ?? route('suppliers.show', $placement->provider->slug) }}">{{ $placement->provider->name }}</a>
                                 </h3>
                             @endif
                             @if ($placement->body)

@@ -17,6 +17,7 @@ use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\PaystackController;
+use App\Http\Controllers\PlacementClickController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\ShooterCalendarController;
@@ -121,6 +122,10 @@ Route::get('/embed/calendar', [EmbedController::class, 'calendar'])->name('embed
 Route::get('/embed/calendar.js', [EmbedController::class, 'script'])->name('embed.script');
 Route::get('/embed', [StaticPageController::class, 'embedDocs'])->name('embed.docs');
 Route::get('/oembed', [EmbedController::class, 'oembed'])->name('oembed');
+
+Route::get('/go/{placement}', PlacementClickController::class)
+    ->middleware('throttle:60,1')
+    ->name('placements.click');
 
 Route::get('/advertise', [EnquiryController::class, 'advertise'])->name('advertise');
 Route::get('/contact', [EnquiryController::class, 'create'])->name('contact');

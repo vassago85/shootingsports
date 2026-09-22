@@ -104,8 +104,18 @@ class PlacementResource extends Resource
                     ->columns(2)
                     ->collapsed()
                     ->schema([
-                        TextInput::make('impressions')->numeric()->default(0)->required(),
-                        TextInput::make('clicks')->numeric()->default(0)->required(),
+                        TextInput::make('impressions')
+                            ->numeric()
+                            ->default(0)
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->helperText('Counted when the advert is shown. Saving this form does not change it.'),
+                        TextInput::make('clicks')
+                            ->numeric()
+                            ->default(0)
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->helperText('Counted when someone follows the advert.'),
                     ]),
             ]);
     }
@@ -121,6 +131,8 @@ class PlacementResource extends Resource
                 TextColumn::make('headline')->limit(30)->toggleable(),
                 TextColumn::make('starts_on')->date()->sortable(),
                 TextColumn::make('ends_on')->date()->sortable(),
+                TextColumn::make('impressions')->numeric()->sortable(),
+                TextColumn::make('clicks')->numeric()->sortable(),
                 TextColumn::make('rate_cents')
                     ->label('Rate')
                     ->formatStateUsing(fn (?int $state): string => 'R '.number_format(($state ?? 0) / 100, 0, '.', ' '))
