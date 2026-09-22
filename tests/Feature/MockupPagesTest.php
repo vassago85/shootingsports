@@ -134,12 +134,28 @@ it('shows labelled supplier ads and the matches find suppliers you tabs', functi
         ->assertSee('Larger text');
 
     $directory = $this->get(route('mockups.apps', ['screen' => 'suppliers']))
-        ->assertOk();
+        ->assertOk()
+        ->assertSee('Search suppliers');
 
-    if ($sponsors->isNotEmpty()) {
-        $directory->assertSee('Featured')
+    $supplierBanners = $sponsors->filter(fn (array $sponsor): bool => filled($sponsor['image'] ?? null) && ($sponsor['page'] ?? null) === 'suppliers');
+    $sportBanners = $sponsors->filter(fn (array $sponsor): bool => filled($sponsor['image'] ?? null)
+        && ($sponsor['page'] ?? null) === 'disciplines'
+        && ($sponsor['discipline_slugs'] ?? []) !== []);
+
+    if ($supplierBanners->isNotEmpty()) {
+        $directory->assertSee('Sponsored')
+            ->assertSee($supplierBanners->first()['image'], false);
+    }
+
+    if ($sportBanners->isNotEmpty()) {
+        $banner = $sportBanners->first();
+        $directory->assertDontSee($banner['image'], false);
+
+        $this->get(route('mockups.apps', ['screen' => 'sport', 'sport' => $banner['discipline_slugs'][0]]))
+            ->assertOk()
             ->assertSee('Sponsored')
-            ->assertSee($sponsors->first()['headline']);
+            ->assertSee($banner['image'], false)
+            ->assertSee('Find a match');
     }
 
     if ($businesses->isNotEmpty()) {

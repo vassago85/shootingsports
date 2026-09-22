@@ -15,9 +15,6 @@
     $place = $match
         ? collect([$match['range'], $match['town'], $match['province']])->filter()->implode(' · ')
         : '';
-    $matchSponsor = $sponsors->first(function (array $sponsor) use ($match): bool {
-        return $match !== null && array_intersect($sponsor['discipline_slugs'], $match['discipline_slugs']) !== [];
-    }) ?? $sponsors->first();
     $kmAway = function (array $row): ?string {
         if (! is_numeric($row['distance_km'] ?? null)) {
             return null;

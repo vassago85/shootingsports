@@ -12,7 +12,7 @@
             <input type="hidden" name="screen" value="suppliers">
             <label class="app-search-field">
                 <x-mockups.icon name="search" />
-                <input type="search" name="q" placeholder="Search products, brands and businesses" aria-label="Search suppliers">
+                <input type="search" name="q" placeholder="Search suppliers" aria-label="Search suppliers">
             </label>
         </form>
         @if ($categories->isNotEmpty())
@@ -24,12 +24,7 @@
             </div>
         @endif
 
-        @if ($category === '' && $sponsors->isNotEmpty())
-            <p class="app-sub">Featured</p>
-            @foreach ($sponsors->take(3) as $sponsor)
-                @include('mockups.partials.app-sponsor')
-            @endforeach
-        @endif
+        @include('mockups.partials.app-banners', ['banners' => ($category === '' ? $bannersFor('suppliers') : collect())->take(1)])
 
         <p class="app-sub">{{ $category !== '' ? $category : 'Near you' }}</p>
         @forelse ($shown->take(20) as $row)

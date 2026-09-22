@@ -1088,6 +1088,38 @@ class MockupCatalog
     }
 
     /**
+     * One screen's image banners.
+     *
+     * A banner stays on the page it was booked for. A sport-targeted
+     * banner also stays on a match in that sport. Mailers stay out of the app.
+     *
+     * @param  list<string>  $sportSlugs
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function bannersFor(string $page, array $sportSlugs = []): Collection
+    {
+        $sportSlugs = array_values(array_filter($sportSlugs));
+
+        return $this->sponsors()->filter(function (array $sponsor) use ($page, $sportSlugs): bool {
+            if (! filled($sponsor['image'] ?? null) || ($sponsor['page'] ?? null) !== $page) {
+                return false;
+            }
+
+            if (($sponsor['slot'] ?? null) === PlacementSlot::Mailer->value) {
+                return false;
+            }
+
+            $targeted = $sponsor['discipline_slugs'] ?? [];
+
+            if ($targeted === []) {
+                return $page !== AdPage::Disciplines->value || $sportSlugs === [];
+            }
+
+            return $sportSlugs !== [] && array_intersect($targeted, $sportSlugs) !== [];
+        })->unique('slug')->values();
+    }
+
+    /**
      * @return Collection<int, array<string, mixed>>
      */
     public function placements(): Collection

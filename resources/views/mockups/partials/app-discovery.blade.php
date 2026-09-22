@@ -48,7 +48,7 @@
             </div>
         @endif
 
-        @php $lastGroup = null; @endphp
+        @php $lastGroup = null; $matchBannerShown = false; @endphp
         @forelse ($matches as $row)
             @php $group = $groupLabel($row['date'] ?? null); @endphp
             @if ($group !== $lastGroup)
@@ -62,9 +62,16 @@
                     <em>{{ collect([$row['discipline'], $row['town'] ?: $row['province'], $kmAway($row)])->filter()->implode(' · ') }}</em>
                 </span>
             </a>
+            @if ($loop->iteration === 3)
+                @include('mockups.partials.app-banners', ['banners' => $bannersFor('calendar')->take(1)])
+                @php $matchBannerShown = true; @endphp
+            @endif
         @empty
             <p class="app-empty"><strong>Nothing coming up</strong>No matches are listed here yet. When an organiser publishes a date, it shows up.</p>
         @endforelse
+        @if (! $matchBannerShown)
+            @include('mockups.partials.app-banners', ['banners' => $bannersFor('calendar')->take(1)])
+        @endif
     </div>
 
 @elseif ($screen === 'calendar')
@@ -98,6 +105,7 @@
                 @endforeach
             @endforeach
         </div>
+        @include('mockups.partials.app-banners', ['banners' => $bannersFor('calendar')->take(1)])
         <p class="app-sub">{{ $phoneCalendar['day_label'] }}</p>
         @forelse ($phoneCalendar['events'] as $row)
             <a class="app-match" href="{{ $app('match', ['match' => $row['slug']]) }}">

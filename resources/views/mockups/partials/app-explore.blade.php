@@ -148,6 +148,7 @@
         @if ($rangeView === 'map')
             <p class="app-empty"><strong>Map view</strong>Ranges are plotted from their coordinates. List view shows the detail.</p>
         @endif
+        @php $rangeBannerShown = false; @endphp
         @forelse ($ranges->take(20) as $row)
             <a class="app-row" href="{{ $app('range', ['range' => $row['slug']]) }}">
                 <span class="app-row-main">
@@ -159,9 +160,16 @@
                 </span>
                 <x-mockups.icon name="chevron" class="app-chev" />
             </a>
+            @if ($loop->iteration === 3)
+                @include('mockups.partials.app-banners', ['banners' => $bannersFor('ranges')->take(1)])
+                @php $rangeBannerShown = true; @endphp
+            @endif
         @empty
             <p class="app-empty"><strong>No ranges here</strong>None are listed for this area yet.</p>
         @endforelse
+        @if (! $rangeBannerShown)
+            @include('mockups.partials.app-banners', ['banners' => $bannersFor('ranges')->take(1)])
+        @endif
     </div>
 
 @elseif ($screen === 'range')
@@ -303,6 +311,14 @@
             </div>
 
             <a class="app-btn" href="{{ $app('matches') }}">Find a match</a>
+
+            @php
+                $sportBanners = $bannersFor('disciplines', array_values(array_filter([
+                    $sport['slug'],
+                    ...array_column($sport['children'] ?? [], 'slug'),
+                ])))->take(1);
+            @endphp
+            @include('mockups.partials.app-banners', ['banners' => $sportBanners])
 
             @if ($sportMatches->isNotEmpty())
                 <p class="app-sub">Upcoming</p>

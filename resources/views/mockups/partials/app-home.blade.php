@@ -42,6 +42,8 @@
         <a class="app-see-all" href="{{ $app('matches') }}">See all matches <x-mockups.icon name="chevron" /></a>
     @endif
 
+    @include('mockups.partials.app-banners', ['banners' => $bannersFor('home')->take(1)])
+
     @if (($home['nearby'] ?? collect())->isNotEmpty())
         <p class="app-sub">Near you</p>
         @foreach ($home['nearby'] as $row)

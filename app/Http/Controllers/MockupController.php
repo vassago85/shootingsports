@@ -490,6 +490,7 @@ class MockupController extends Controller
             ),
             'businesses' => $this->withinPlace($businesses, $close),
             'sponsors' => $this->catalog->sponsors(),
+            'bannersFor' => fn (string $page, array $sportSlugs = []): Collection => $this->catalog->bannersFor($page, $sportSlugs),
             'supplier' => $screen === 'supplier'
                 ? $this->catalog->businessDetail($request->string('supplier')->toString() ?: null)
                 : null,

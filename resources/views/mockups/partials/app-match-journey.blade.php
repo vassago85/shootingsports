@@ -56,6 +56,15 @@
                 </a>
             </div>
 
+            @php
+                $matchSports = $match['discipline_slugs'] ?? [];
+                $matchBanners = $bannersFor('matches', $matchSports)->take(1);
+                if ($matchBanners->isEmpty()) {
+                    $matchBanners = $bannersFor('disciplines', $matchSports)->take(1);
+                }
+            @endphp
+            @include('mockups.partials.app-banners', ['banners' => $matchBanners])
+
             @if (filled($match['description']))
                 <p class="app-sub">About</p>
                 <p class="app-lead">{{ \Illuminate\Support\Str::limit($match['description'], 280) }}</p>

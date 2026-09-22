@@ -1681,31 +1681,14 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
 }
 .app-search-form input[type="search"]::placeholder { color: var(--app-fine); }
 
-/* Sponsor block (labelled) */
-.app-sponsor {
-    display: block;
-    margin-bottom: 8px;
-    padding: 14px 16px 14px 20px;
-    background: var(--app-surface);
-    border-radius: 14px;
-    text-decoration: none;
-    color: var(--app-ink);
-    box-shadow: var(--app-shadow);
-    position: relative;
+/* Booked image banner. One per screen, never a text card. */
+.app-ad {
+    margin: 16px 0 8px;
 }
-.app-sponsor::before {
-    content: "";
-    position: absolute;
-    top: 14px; bottom: 14px; left: 8px;
-    width: 3px; border-radius: 3px;
-    background: var(--app-fine);
-    opacity: .6;
-}
-.app-sponsor strong { display: block; font-size: 15px; font-weight: 650; line-height: 1.25; color: var(--app-ink); }
-.app-sponsor em { display: block; margin-top: 3px; font-style: normal; color: var(--app-muted); font-size: 13px; }
+.app-ad-label,
 .app-sponsor-label {
     display: inline-block;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
     font-family: var(--f-mono);
     font-size: 10px;
     font-weight: 700;
@@ -1713,7 +1696,24 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
     text-transform: uppercase;
     color: var(--app-fine);
 }
-.app-sponsor-body { display: block; margin-top: 6px; color: var(--app-muted); font-size: 13px; line-height: 1.4; }
+.app-ad a,
+.app-ad img {
+    display: block;
+    width: 100%;
+}
+.app-ad a {
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--app-surface);
+    line-height: 0;
+}
+.app-ad img {
+    height: auto;
+    max-height: 132px;
+    object-fit: contain;
+    object-position: center;
+    background: var(--app-surface);
+}
 
 /* Calendar ------------------------------------- */
 .app-cal-nav {
