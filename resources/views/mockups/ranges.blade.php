@@ -62,7 +62,12 @@
             <script>
                 const ranges = @json($pins);
                 const map = L.map('range-map');
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd' }).addTo(map);
+                const cartoKey = @json($cartoApiKey);
+                if (cartoKey) {
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=' + encodeURIComponent(cartoKey), { attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+                } else {
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 }).addTo(map);
+                }
                 const layer = L.featureGroup();
                 ranges.forEach((range) => {
                     L.circleMarker([range.lat, range.lng], { radius: 6, color: '#6B7D3A', fillColor: '#0B0D0E', fillOpacity: 1, weight: 2 })

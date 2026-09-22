@@ -1,9 +1,15 @@
 <?php
 
+use App\Enums\AdPage;
+use App\Enums\Division;
+use App\Enums\PlacementSlot;
 use App\Enums\Province;
+use App\Models\AdSlot;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
+use App\Models\Placement;
+use App\Models\Provider;
 use App\Models\Venue;
 use App\Support\Mockups\MockupCatalog;
 use Database\Seeders\DisciplineSeeder;
@@ -127,15 +133,14 @@ it('shows labelled supplier ads and the matches find suppliers you tabs', functi
         ->assertSee('Dark')
         ->assertSee('Larger text');
 
-    if ($sponsors->isNotEmpty()) {
-        $home->assertSee('Sponsored')
-            ->assertSee($sponsors->first()['headline'])
-            ->assertSee('They do not change the match order.');
-    }
-
     $directory = $this->get(route('mockups.apps', ['screen' => 'suppliers']))
-        ->assertOk()
-        ->assertSee('All suppliers');
+        ->assertOk();
+
+    if ($sponsors->isNotEmpty()) {
+        $directory->assertSee('Featured')
+            ->assertSee('Sponsored')
+            ->assertSee($sponsors->first()['headline']);
+    }
 
     if ($businesses->isNotEmpty()) {
         $directory->assertSee($businesses->first()['name']);
@@ -156,7 +161,7 @@ it('filters the app sports list by category and search', function () {
     $this->get(route('mockups.apps', ['screen' => 'sports']))
         ->assertOk()
         ->assertSee('Search sports')
-        ->assertSee('All');
+        ->assertSee('Your sports');
 
     if ($rifle !== null && $other !== null) {
         $this->get(route('mockups.apps', ['screen' => 'sports', 'family' => 'rifle']))
@@ -167,7 +172,7 @@ it('filters the app sports list by category and search', function () {
 
     $this->get(route('mockups.apps', ['screen' => 'sports', 'q' => 'zzzz-no-sport']))
         ->assertOk()
-        ->assertSee('No sports match that filter.');
+        ->assertSee('No sports match that.');
 });
 
 it('hides other provinces when the app location is gauteng', function () {
@@ -175,14 +180,8 @@ it('hides other provinces when the app location is gauteng', function () {
     $gauteng = $matches->firstWhere('province_value', 'gauteng');
     $cape = $matches->first(fn (array $match): bool => $match['province_value'] === 'western_cape');
 
-    $page = $this->get(route('mockups.apps'))
-        ->assertOk()
-        ->assertSee('from your account');
-
-    $page = $this->get(route('mockups.apps', ['province' => 'gauteng']))
-        ->assertOk()
-        ->assertSee('Anywhere')
-        ->assertSee('from your account');
+    $page = $this->get(route('mockups.apps', ['screen' => 'matches', 'province' => 'gauteng']))
+        ->assertOk();
 
     if ($gauteng !== null) {
         $page->assertSee($gauteng['title']);
@@ -192,14 +191,13 @@ it('hides other provinces when the app location is gauteng', function () {
         $page->assertDontSee($cape['title']);
     }
 
-    $this->get(route('mockups.apps', ['province' => 'gauteng', 'km' => 50]))
+    $this->get(route('mockups.apps', ['screen' => 'matches', 'sheet' => 'province']))
         ->assertOk()
-        ->assertSee('Within 50 km of Gauteng');
+        ->assertSee('Anywhere');
 
     if ($cape !== null) {
-        $this->get(route('mockups.apps', ['province' => 'all']))
+        $this->get(route('mockups.apps', ['screen' => 'matches', 'province' => 'all']))
             ->assertOk()
-            ->assertSee('All of South Africa')
             ->assertSee($cape['title']);
     }
 });
@@ -216,8 +214,7 @@ it('shows a month calendar in the app', function () {
         ->assertOk()
         ->assertSee('Calendar')
         ->assertSee($month->format('F Y'))
-        ->assertSee('Previous month')
-        ->assertSee('List');
+        ->assertSee('Previous month');
 
     if ($home !== null) {
         $page->assertSee($home['title']);
@@ -244,12 +241,10 @@ it('opens clubs and series on the account province', function () {
     $away = $clubs->first(fn (array $club): bool => $club['province_value'] === Province::WesternCape->value);
 
     $page = $this->get(route('mockups.apps', ['screen' => 'clubs']))
-        ->assertOk()
-        ->assertSee('Clubs & series')
-        ->assertSee('Membership clubs and match series in Gauteng.');
+        ->assertOk();
 
     if ($home !== null) {
-        $page->assertSee($home['name'])->assertSee($home['type']);
+        $page->assertSee($home['name']);
     }
 
     if ($away !== null && ($home === null || $away['name'] !== $home['name'])) {
@@ -259,8 +254,7 @@ it('opens clubs and series on the account province', function () {
     if ($away !== null) {
         $this->get(route('mockups.apps', ['screen' => 'clubs', 'province' => Province::WesternCape->value]))
             ->assertOk()
-            ->assertSee($away['name'])
-            ->assertSee('Your account is still Gauteng');
+            ->assertSee($away['name']);
     }
 });
 
@@ -277,9 +271,8 @@ it('shows store cancel, privacy and account deletion on the app mockups', functi
 
     $this->get(route('mockups.apps', ['screen' => 'you']))
         ->assertOk()
-        ->assertSee('Cancel subscription')
-        ->assertSee('Where you shoot')
-        ->assertSee('Your data')
+        ->assertSee('Subscription')
+        ->assertSee('Privacy')
         ->assertSee('Delete account');
 
     $this->get(route('mockups.apps', ['screen' => 'data']))
@@ -301,11 +294,11 @@ it('shows store cancel, privacy and account deletion on the app mockups', functi
 
     $this->get(route('mockups.apps', ['screen' => 'alerts', 'emails' => 'off']))
         ->assertOk()
-        ->assertSee('You are unsubscribed from optional emails');
+        ->assertSee('Optional emails are off');
 
     $this->get(route('mockups.apps', ['screen' => 'not-a-screen']))
         ->assertOk()
-        ->assertSee('Coming up')
+        ->assertSee('Your shooting')
         ->assertDontSee('Cancel Pro?');
 });
 
@@ -318,14 +311,14 @@ it('starts a match packing list from the sport basics and keeps an added item', 
 
     $this->get(route('mockups.apps', ['screen' => 'pack']))
         ->assertOk()
-        ->assertSee('Precision Rifle')
-        ->assertSee('basics');
+        ->assertSee('Packing')
+        ->assertSee('Precision Rifle');
 
     $this->get(route('mockups.apps', ['screen' => 'pack', 'sport' => 'precision-rifle']))
         ->assertOk()
-        ->assertSee('These basics come with Precision Rifle')
+        ->assertSee('Default checklist')
         ->assertSee('Bipod')
-        ->assertSee('Pack for Kalahari Steel');
+        ->assertSee('Kalahari Steel');
 
     $this->get(route('mockups.apps', [
         'screen' => 'pack',
@@ -335,7 +328,7 @@ it('starts a match packing list from the sport basics and keeps an added item', 
     ]))
         ->assertOk()
         ->assertSee('Dope card')
-        ->assertSee('Added for this match')
+        ->assertSee('Added')
         ->assertSee('app-check on');
 });
 
@@ -356,15 +349,13 @@ it('searches upcoming matches and keeps the account follows on the screen', func
 
     $this->get(route('mockups.apps', ['screen' => 'search']))
         ->assertOk()
-        ->assertSee('Following')
         ->assertSee('Precision Rifle')
         ->assertSee('Kalahari Rifle Club')
         ->assertSee('Kalahari Steel');
 
     $this->get(route('mockups.apps', ['screen' => 'search', 'q' => 'no-such-match']))
         ->assertOk()
-        ->assertSee('Following')
-        ->assertSee('No upcoming matches in Gauteng match this search')
+        ->assertSee('No matches')
         ->assertDontSee('Kalahari Steel');
 });
 
@@ -425,8 +416,6 @@ it('filters upcoming matches to those close to you', function () {
     $this->get(route('mockups.apps', $filtered))
         ->assertOk()
         ->assertSee('Steel Saturday')
-        ->assertSee('Close to me')
-        ->assertSee('Within 100 km')
         ->assertDontSee('Steel Cape');
 
     $this->get(route('mockups.apps', [
@@ -438,7 +427,6 @@ it('filters upcoming matches to those close to you', function () {
     ]))
         ->assertOk()
         ->assertSee('Steel Saturday')
-        ->assertSee('Within 50 km')
         ->assertDontSee('Steel Cape');
 });
 
@@ -521,6 +509,266 @@ it('shows the club desk with the sample club and its upcoming matches', function
         ->assertOk()
         ->assertSee('Completeness')
         ->assertSee('% complete');
+});
+
+it('uses the configured CARTO key on the mockup match map', function () {
+    config(['services.carto.api_key' => 'test-carto-key']);
+
+    $html = $this->get(route('mockups.matches.map'))->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('const cartoKey = "test-carto-key"')
+        ->toContain('basemaps.cartocdn.com/dark_all')
+        ->toContain('?key=');
+});
+
+it('falls back to OpenStreetMap tiles on the mockup map when no CARTO key is set', function () {
+    config(['services.carto.api_key' => null]);
+
+    $html = $this->get(route('mockups.matches.map'))->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('const cartoKey = null')
+        ->toContain('tile.openstreetmap.org');
+});
+
+it('keeps booked banners together in the slot they were given', function () {
+    $slot = AdSlot::query()->create([
+        'page' => AdPage::Calendar,
+        'slot' => PlacementSlot::Leaderboard,
+        'name' => 'Calendar leaderboard',
+        'price_cents' => 200000,
+        'is_active' => true,
+    ]);
+    $sportSlot = AdSlot::query()->create([
+        'page' => AdPage::Disciplines,
+        'slot' => PlacementSlot::CategorySponsor,
+        'name' => 'Discipline sponsor',
+        'price_cents' => 180000,
+        'is_active' => true,
+    ]);
+    $otherSlot = AdSlot::query()->create([
+        'page' => AdPage::Suppliers,
+        'slot' => PlacementSlot::InFeedNative,
+        'name' => 'Suppliers in-feed',
+        'price_cents' => 150000,
+        'is_active' => true,
+    ]);
+
+    $book = function (AdSlot $adSlot, string $headline, ?string $division = null) {
+        $provider = Provider::factory()->create(['description' => 'Booked advertiser']);
+
+        return Placement::query()->create([
+            'provider_id' => $provider->id,
+            'ad_slot_id' => $adSlot->id,
+            'slot' => $adSlot->slot,
+            'division' => $division,
+            'headline' => $headline,
+            'image_path' => 'placements/'.str($headline)->slug().'.png',
+            'starts_on' => now()->subDay()->toDateString(),
+            'ends_on' => now()->addYear()->toDateString(),
+            'rate_cents' => 100000,
+            'is_active' => true,
+        ]);
+    };
+
+    $book($slot, 'October range banner');
+    $book($slot, 'November range banner');
+    $book($otherSlot, 'Suppliers only banner');
+    $book($sportSlot, 'Benchrest optic banner');
+
+    Event::factory()->create([
+        'title' => 'October Club Shoot',
+        'starts_at' => '2026-10-04 08:00:00',
+    ]);
+    Event::factory()->create([
+        'title' => 'November Club Shoot',
+        'starts_at' => '2026-11-08 08:00:00',
+    ]);
+
+    $html = $this->get(route('mockups.matches'))->assertOk()->getContent();
+    $firstAd = strpos($html, 'October range banner');
+    $secondAd = strpos($html, 'November range banner');
+    $firstMatch = strpos($html, 'October Club Shoot');
+
+    expect($firstAd)->toBeInt()->toBeLessThan($secondAd)
+        ->and($secondAd)->toBeLessThan($firstMatch)
+        ->and(substr_count($html, 'aria-label="Partner"'))->toBe(1)
+        ->and($html)->not->toContain('Suppliers only banner')
+        ->and($html)->not->toContain('Benchrest optic banner');
+});
+
+it('stacks a division advert above the sport advert on that sport’s matches', function () {
+    $slot = AdSlot::query()->create([
+        'page' => AdPage::Disciplines,
+        'slot' => PlacementSlot::CategorySponsor,
+        'name' => 'Discipline sponsor',
+        'price_cents' => 180000,
+        'is_active' => true,
+    ]);
+    $sport = Discipline::factory()->create([
+        'name' => 'Long Range Steel',
+        'slug' => 'long-range-steel',
+    ]);
+    $sport->syncDivisions([Division::BoltActionRifle]);
+    $other = Discipline::factory()->create([
+        'name' => 'Benchrest',
+        'slug' => 'benchrest-test',
+    ]);
+
+    $book = function (string $headline, ?string $division = null) use ($slot) {
+        $provider = Provider::factory()->create(['description' => 'Booked advertiser']);
+
+        return Placement::query()->create([
+            'provider_id' => $provider->id,
+            'ad_slot_id' => $slot->id,
+            'slot' => PlacementSlot::CategorySponsor,
+            'division' => $division,
+            'headline' => $headline,
+            'image_path' => 'placements/'.str($headline)->slug().'.png',
+            'starts_on' => now()->subDay()->toDateString(),
+            'ends_on' => now()->addYear()->toDateString(),
+            'rate_cents' => 100000,
+            'is_active' => true,
+        ]);
+    };
+
+    $book('Rifle division banner', Division::BoltActionRifle->value);
+    $steel = $book('Steel optic banner');
+    $steel->disciplines()->attach($sport);
+    $benchrest = $book('Benchrest optic banner');
+    $benchrest->disciplines()->attach($other);
+
+    $event = Event::factory()->create([
+        'title' => 'Steel League',
+        'starts_at' => '2026-10-04 08:00:00',
+    ]);
+    $event->attachDiscipline($sport, primary: true);
+
+    $open = $this->get(route('mockups.matches'))->assertOk()->getContent();
+
+    expect($open)->not->toContain('Rifle division banner')
+        ->and($open)->not->toContain('Steel optic banner');
+
+    $html = $this->get(route('mockups.matches', ['sport' => 'long-range-steel']))->assertOk()->getContent();
+    $divisionAd = strpos($html, 'Rifle division banner');
+    $sportAd = strpos($html, 'Steel optic banner');
+    $match = strpos($html, 'Steel League');
+
+    expect($divisionAd)->toBeInt()->toBeLessThan($sportAd)
+        ->and($sportAd)->toBeLessThan($match)
+        ->and(substr_count($html, 'aria-label="Partner"'))->toBe(1)
+        ->and($html)->not->toContain('Benchrest optic banner');
+});
+    $slot = AdSlot::query()->create([
+        'page' => AdPage::Calendar,
+        'slot' => PlacementSlot::Leaderboard,
+        'name' => 'Calendar leaderboard',
+        'price_cents' => 200000,
+        'is_active' => true,
+    ]);
+    $otherSlot = AdSlot::query()->create([
+        'page' => AdPage::Suppliers,
+        'slot' => PlacementSlot::InFeedNative,
+        'name' => 'Suppliers in-feed',
+        'price_cents' => 150000,
+        'is_active' => true,
+    ]);
+
+    $book = function (AdSlot $adSlot, string $headline): void {
+        $provider = Provider::factory()->create(['description' => 'Booked advertiser']);
+
+        Placement::query()->create([
+            'provider_id' => $provider->id,
+            'ad_slot_id' => $adSlot->id,
+            'slot' => $adSlot->slot,
+            'headline' => $headline,
+            'image_path' => 'placements/'.str($headline)->slug().'.png',
+            'starts_on' => now()->subDay()->toDateString(),
+            'ends_on' => now()->addYear()->toDateString(),
+            'rate_cents' => 100000,
+            'is_active' => true,
+        ]);
+    };
+
+    $book($slot, 'October range banner');
+    $book($slot, 'November range banner');
+    $book($otherSlot, 'Suppliers only banner');
+
+    Event::factory()->create([
+        'title' => 'October Club Shoot',
+        'starts_at' => '2026-10-04 08:00:00',
+    ]);
+    Event::factory()->create([
+        'title' => 'November Club Shoot',
+        'starts_at' => '2026-11-08 08:00:00',
+    ]);
+
+    $html = $this->get(route('mockups.matches'))->assertOk()->getContent();
+    $octoberAd = strpos($html, 'October range banner');
+    $octoberMatch = strpos($html, 'October Club Shoot');
+    $novemberAd = strpos($html, 'November range banner');
+    $novemberMatch = strpos($html, 'November Club Shoot');
+
+    expect($octoberAd)->toBeInt()->toBeLessThan($octoberMatch)
+        ->and($octoberMatch)->toBeLessThan($novemberAd)
+        ->and($novemberAd)->toBeLessThan($novemberMatch)
+        ->and(substr_count($html, 'aria-label="Partner"'))->toBe(2)
+        ->and($html)->not->toContain('Suppliers only banner');
+
+    Event::factory()->create([
+        'title' => 'October Midweek',
+        'starts_at' => '2026-10-18 08:00:00',
+    ]);
+
+    $sameMonth = $this->get(route('mockups.matches', ['from' => '2026-10-01', 'to' => '2026-10-31']))
+        ->assertOk()
+        ->getContent();
+
+    expect(substr_count($sameMonth, 'aria-label="Partner"'))->toBe(1)
+        ->and($sameMonth)->toContain('October range banner')
+        ->and($sameMonth)->not->toContain('November range banner');
+});
+
+it('shows a sport banner only on the sport it was booked for', function () {
+    $slot = AdSlot::query()->create([
+        'page' => AdPage::Calendar,
+        'slot' => PlacementSlot::Leaderboard,
+        'name' => 'Calendar leaderboard',
+        'price_cents' => 200000,
+        'is_active' => true,
+    ]);
+    $sport = Discipline::factory()->create([
+        'name' => 'Long Range Steel',
+        'slug' => 'long-range-steel',
+    ]);
+    $provider = Provider::factory()->create(['description' => 'Booked advertiser']);
+    $placement = Placement::query()->create([
+        'provider_id' => $provider->id,
+        'ad_slot_id' => $slot->id,
+        'slot' => PlacementSlot::Leaderboard,
+        'headline' => 'Steel optic banner',
+        'image_path' => 'placements/steel-optic.png',
+        'starts_on' => now()->subDay()->toDateString(),
+        'ends_on' => now()->addYear()->toDateString(),
+        'rate_cents' => 100000,
+        'is_active' => true,
+    ]);
+    $placement->disciplines()->attach($sport);
+    $event = Event::factory()->create([
+        'title' => 'Steel League',
+        'starts_at' => '2026-10-04 08:00:00',
+    ]);
+    $event->attachDiscipline($sport, primary: true);
+
+    $this->get(route('mockups.matches'))
+        ->assertOk()
+        ->assertDontSee('Steel optic banner');
+
+    $this->get(route('mockups.matches', ['sport' => 'long-range-steel']))
+        ->assertOk()
+        ->assertSee('Steel optic banner')
+        ->assertSee('Steel League');
 });
 
 it('points the public list-an-event action at the club desk', function () {

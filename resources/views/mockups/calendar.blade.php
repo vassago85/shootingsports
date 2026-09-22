@@ -15,21 +15,7 @@
         </header>
         <x-mockups.match-views />
         <x-mockups.match-filters :sports="$sports" :provinces="$provinces" />
-        @php
-            $available = collect($sponsors)->unique('slug')->values();
-            $sponsorSlugs = $sportSlugs !== [] ? $sportSlugs : $divisionSports;
-            $scopedSponsors = $sponsorSlugs === []
-                ? collect()
-                : $available->filter(
-                    fn (array $sponsor): bool => array_intersect($sponsor['discipline_slugs'] ?? [], $sponsorSlugs) !== []
-                )->values();
-            $leaderboard = $scopedSponsors->isNotEmpty() ? $scopedSponsors : $available;
-            $shown = $leaderboard->take(1)->pluck('slug')->filter()->all();
-            $inFeed = $available->reject(
-                fn (array $sponsor): bool => in_array($sponsor['slug'], $shown, true)
-            )->values();
-        @endphp
-        @include('mockups.partials.ad-space', ['sponsors' => $leaderboard, 'limit' => 1])
+        @include('mockups.partials.ad-space', ['sponsors' => $sponsors, 'limit' => $sponsors->count()])
         <div class="mk-cal-nav">
             <h2>{{ $calendar['label'] }}</h2>
             <a class="btn ghost" href="{{ $mk('mockups.matches.calendar', array_merge(request()->except('page'), ['month' => $calendar['today']])) }}">Today</a>
@@ -65,15 +51,9 @@
         <div class="mk-agenda">
             @forelse ($calendar['agenda'] as $match)
                 <x-mockups.match-row :match="$match" />
-                @if ($loop->iteration === 2 && $inFeed->isNotEmpty())
-                    @include('mockups.partials.ad-space', ['sponsors' => $inFeed, 'limit' => 1])
-                @endif
             @empty
                 <p class="mk-empty"><strong>Nothing listed in {{ $calendar['label'] }}.</strong> Try the next month.</p>
             @endforelse
-            @if (count($calendar['agenda']) < 2 && $inFeed->isNotEmpty())
-                @include('mockups.partials.ad-space', ['sponsors' => $inFeed, 'limit' => 1])
-            @endif
         </div>
     </div>
 </x-mockups.layout>

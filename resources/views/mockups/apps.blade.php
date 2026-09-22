@@ -190,7 +190,7 @@
 
                 @foreach (['ios', 'android'] as $platform)
                     <x-mockups.phone :platform="$platform" :screen="$screen">
-                        @include('mockups.partials.app-screens')
+                        @include('mockups.partials.app-router')
                     </x-mockups.phone>
                 @endforeach
             </div>

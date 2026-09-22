@@ -13,21 +13,7 @@
         </header>
         <x-mockups.match-views />
         <x-mockups.match-filters :sports="$sports" :provinces="$provinces" />
-        @php
-            $available = collect($sponsors)->unique('slug')->values();
-            $sponsorSlugs = $sportSlugs !== [] ? $sportSlugs : $divisionSports;
-            $scopedSponsors = $sponsorSlugs === []
-                ? collect()
-                : $available->filter(
-                    fn (array $sponsor): bool => array_intersect($sponsor['discipline_slugs'] ?? [], $sponsorSlugs) !== []
-                )->values();
-            $leaderboard = $scopedSponsors->isNotEmpty() ? $scopedSponsors : $available;
-            $shown = $leaderboard->take(1)->pluck('slug')->filter()->all();
-            $inFeed = $available->reject(
-                fn (array $sponsor): bool => in_array($sponsor['slug'], $shown, true)
-            )->values();
-        @endphp
-        @include('mockups.partials.ad-space', ['sponsors' => $leaderboard, 'limit' => 1])
+        @include('mockups.partials.ad-space', ['sponsors' => $sponsors, 'limit' => $sponsors->count()])
         @if (request('radius') && ! request('lat'))
             <p class="mk-support">Choose Near me in the province list to measure distance. A radius on its own does not guess a location.</p>
         @endif
@@ -40,9 +26,6 @@
         <p class="mk-support" style="margin-top:14px">{{ $total }} {{ $total === 1 ? 'match' : 'matches' }}</p>
         @forelse ($matches as $match)
             <x-mockups.match-row :match="$match" />
-            @if ($loop->iteration === 2 && $inFeed->isNotEmpty())
-                @include('mockups.partials.ad-space', ['sponsors' => $inFeed, 'limit' => 1])
-            @endif
         @empty
             <div class="mk-empty">
                 <strong>{{ request()->except(['device', 'page', 'sort']) ? 'No matches match these filters.' : 'No upcoming matches are listed yet.' }}</strong>
@@ -53,9 +36,6 @@
                 @endif
             </div>
         @endforelse
-        @if ($matches->count() < 2 && $inFeed->isNotEmpty())
-            @include('mockups.partials.ad-space', ['sponsors' => $inFeed, 'limit' => 1])
-        @endif
         @if ($lastPage > 1)
             <nav class="mk-pages" aria-label="Pagination">
                 @if ($page > 1)

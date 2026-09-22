@@ -8,7 +8,7 @@
         </header>
         <x-mockups.match-views />
         <x-mockups.match-filters :sports="$sports" :provinces="$provinces" />
-        @include('mockups.partials.ad-space', ['sponsors' => $sponsors, 'limit' => 2])
+        @include('mockups.partials.ad-space', ['sponsors' => $sponsors, 'limit' => $sponsors->count()])
     </div>
     @if ($unlocated !== [])
         <div class="wrap">
@@ -43,11 +43,19 @@
         <script>
             const markers = @json($markers);
             const map = L.map('mk-map');
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap &copy; CARTO',
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(map);
+            const cartoKey = @json($cartoApiKey);
+            if (cartoKey) {
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=' + encodeURIComponent(cartoKey), {
+                    attribution: '&copy; OpenStreetMap &copy; CARTO',
+                    subdomains: 'abcd',
+                    maxZoom: 19
+                }).addTo(map);
+            } else {
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap',
+                    maxZoom: 19
+                }).addTo(map);
+            }
             const layer = L.featureGroup();
             markers.forEach((marker) => {
                 const pin = L.circleMarker([marker.lat, marker.lng], {

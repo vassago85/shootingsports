@@ -2,9 +2,11 @@
 
 namespace App\Support\Mockups;
 
+use App\Enums\AdPage;
 use App\Enums\Division;
 use App\Enums\EventStatus;
 use App\Enums\OrganisationType;
+use App\Enums\PlacementSlot;
 use App\Enums\VerificationState;
 use App\Models\Discipline;
 use App\Models\Event;
@@ -989,13 +991,13 @@ class MockupCatalog
     /**
      * Active supplier adverts. Read-only: this does not record impressions.
      *
-     * @return Collection<int, array{headline: string, body: string, name: string, slug: string, category: ?string, place: string, image: ?string, discipline_slugs: list<string>}>
+     * @return Collection<int, array{headline: string, body: string, name: string, slug: string, category: ?string, place: string, image: ?string, discipline_slugs: list<string>, page: ?string, slot: ?string, division: ?string}>
      */
     public function sponsors(): Collection
     {
         return $this->memo('sponsors', function (): Collection {
             return Placement::query()
-                ->with('provider.disciplines')
+                ->with(['provider.disciplines', 'adSlot', 'disciplines'])
                 ->activeOn()
                 ->orderBy('id')
                 ->get()
@@ -1018,12 +1020,71 @@ class MockupCatalog
                         'website' => $row['website'],
                         'public' => $row['public'],
                         'image' => $placement->imageUrl(),
-                        'discipline_slugs' => $provider->disciplines->pluck('slug')->all(),
+                        'discipline_slugs' => $placement->disciplines->pluck('slug')->all(),
+                        'page' => $placement->adSlot?->page?->value,
+                        'slot' => $placement->adSlot?->slot?->value,
+                        'division' => $placement->division?->value,
                     ];
                 })
                 ->filter()
                 ->values();
         });
+    }
+
+    /**
+     * Banners in the slot they were booked into.
+     *
+     * A division advert stays above that division's sport advert.
+     * A calendar leaderboard stays on the unfiltered match list.
+     * Sport adverts stay on that sport and its matches.
+     *
+     * @param  list<string>  $sportSlugs
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function sponsorStack(?Division $division = null, array $sportSlugs = []): Collection
+    {
+        $sportSlugs = array_values(array_filter($sportSlugs));
+        $category = $this->sponsors()->filter(function (array $sponsor): bool {
+            return ($sponsor['page'] ?? null) === AdPage::Disciplines->value
+                && ($sponsor['slot'] ?? null) === PlacementSlot::CategorySponsor->value
+                && filled($sponsor['image'] ?? null);
+        })->values();
+
+        if ($sportSlugs !== []) {
+            $divisionValues = Discipline::query()
+                ->whereIn('slug', $sportSlugs)
+                ->with('divisionLinks')
+                ->get()
+                ->flatMap(fn (Discipline $sport): Collection => $sport->divisions())
+                ->map(fn (Division $linked): string => $linked->value)
+                ->unique()
+                ->all();
+
+            $divisionAds = $category->filter(function (array $sponsor) use ($divisionValues): bool {
+                return ($sponsor['discipline_slugs'] ?? []) === []
+                    && in_array($sponsor['division'] ?? null, $divisionValues, true);
+            });
+            $sportAds = $category->filter(function (array $sponsor) use ($sportSlugs): bool {
+                return array_intersect($sponsor['discipline_slugs'] ?? [], $sportSlugs) !== [];
+            });
+
+            return $divisionAds->concat($sportAds)->unique('slug')->values();
+        }
+
+        if ($division instanceof Division) {
+            return $category->filter(function (array $sponsor) use ($division): bool {
+                return ($sponsor['discipline_slugs'] ?? []) === []
+                    && ($sponsor['division'] ?? null) === $division->value;
+            })->unique('slug')->values();
+        }
+
+        return $this->sponsors()->filter(function (array $sponsor): bool {
+            return ($sponsor['page'] ?? null) === AdPage::Calendar->value
+                && ($sponsor['slot'] ?? null) === PlacementSlot::Leaderboard->value
+                && filled($sponsor['image'] ?? null)
+                && ($sponsor['discipline_slugs'] ?? []) === []
+                && ! filled($sponsor['division'] ?? null);
+        })->unique('slug')->values();
     }
 
     /**

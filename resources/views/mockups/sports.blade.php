@@ -12,12 +12,7 @@
             </p>
         </header>
         @if ($division)
-            @php
-                $categorySponsors = collect($sponsors)->filter(
-                    fn (array $sponsor): bool => array_intersect($sponsor['discipline_slugs'] ?? [], $divisionSports) !== []
-                )->values();
-            @endphp
-            @include('mockups.partials.ad-space', ['sponsors' => $categorySponsors, 'limit' => 1])
+            @include('mockups.partials.ad-space', ['sponsors' => $sponsors, 'limit' => $sponsors->count()])
         @endif
         <form class="mk-filters" method="get" action="{{ $mk('mockups.sports') }}">
             @if (request('device') === 'mobile')

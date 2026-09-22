@@ -31,16 +31,7 @@
                 </div>
             </header>
 
-            @php
-                $sportSlugs = array_values(array_unique(array_filter([
-                    $sport['slug'],
-                    ...array_column($sport['children'] ?? [], 'slug'),
-                ])));
-                $categorySponsors = collect($sponsors ?? [])->filter(
-                    fn (array $sponsor): bool => array_intersect($sponsor['discipline_slugs'] ?? [], $sportSlugs) !== []
-                )->values();
-            @endphp
-            @include('mockups.partials.ad-space', ['sponsors' => $categorySponsors, 'limit' => 1])
+            @include('mockups.partials.ad-space', ['sponsors' => $sponsors, 'limit' => $sponsors->count()])
 
             @if (($sport['children'] ?? []) !== [])
                 <section class="mk-section">

@@ -38,7 +38,7 @@
                 @endif
             </header>
 
-            @include('mockups.partials.ad-space', ['sponsors' => $sponsors, 'limit' => 1])
+            @include('mockups.partials.ad-space', ['sponsors' => $sponsors, 'limit' => $sponsors->count()])
 
             <section class="mk-section">
                 <h2>Match information</h2>

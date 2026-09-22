@@ -1127,7 +1127,7 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
 /* Match card (signature pattern) --------------- */
 .app-match {
     display: grid;
-    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-columns: 78px minmax(0, 1fr);
     gap: 14px;
     align-items: center;
     min-height: 78px;
@@ -1167,11 +1167,12 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
 }
 .app-when b {
     display: block;
-    font-size: 22px;
-    line-height: 1;
+    font-size: 17px;
+    line-height: 1.05;
     font-weight: 700;
     letter-spacing: -.02em;
     color: var(--app-ink);
+    white-space: nowrap;
 }
 .app-when span {
     display: block;

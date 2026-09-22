@@ -68,7 +68,12 @@
                     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
                     <script>
                         const map = L.map('one-range').setView([{{ $range['lat'] }}, {{ $range['lng'] }}], 12);
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd' }).addTo(map);
+                        const cartoKey = @json($cartoApiKey);
+                        if (cartoKey) {
+                            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=' + encodeURIComponent(cartoKey), { attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+                        } else {
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 }).addTo(map);
+                        }
                         L.circleMarker([{{ $range['lat'] }}, {{ $range['lng'] }}], { radius: 8, color: '#6B7D3A', fillColor: '#0B0D0E', fillOpacity: 1, weight: 2 }).addTo(map);
                     </script>
                 @else

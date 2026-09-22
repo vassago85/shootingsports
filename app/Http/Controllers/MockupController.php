@@ -25,6 +25,10 @@ class MockupController extends Controller
     {
         view()->composer(['mockups.*', 'components.mockups.*'], function ($view): void {
             $view->with('mk', fn (string $name, array $parameters = [], bool $preserveDevice = true): string => MockupUrl::to($name, $parameters, $preserveDevice));
+            $view->with(
+                'cartoApiKey',
+                filled(config('services.carto.api_key')) ? (string) config('services.carto.api_key') : null,
+            );
         });
     }
 
@@ -59,16 +63,17 @@ class MockupController extends Controller
         $matches = $result['matches'];
         $division = Division::fromPublicQuery($request->string('division')->toString());
         $sportFilter = $this->selectedSport($request);
+        $pageMatches = $matches->forPage($page, $perPage)->values();
 
         return view('mockups.matches', [
-            'matches' => $matches->forPage($page, $perPage)->values(),
+            'matches' => $pageMatches,
             'total' => $matches->count(),
             'page' => $page,
             'lastPage' => max(1, (int) ceil($matches->count() / $perPage)),
             'unlocated' => $result['unlocated'],
             'sports' => $this->catalog->sports(),
             'provinces' => Province::cases(),
-            'sponsors' => $this->catalog->sponsors(),
+            'sponsors' => $this->catalog->sponsorStack($division, $this->sportSlugs($sportFilter)),
             'division' => $division,
             'divisionSports' => $division instanceof Division ? $this->catalog->sportSlugsForDivision($division) : [],
             'sportFilter' => $sportFilter,
@@ -87,11 +92,13 @@ class MockupController extends Controller
         $division = Division::fromPublicQuery($request->string('division')->toString());
         $sportFilter = $this->selectedSport($request);
 
+        $calendar = $this->catalog->calendar($month, $request->query());
+
         return view('mockups.calendar', [
-            'calendar' => $this->catalog->calendar($month, $request->query()),
+            'calendar' => $calendar,
             'sports' => $this->catalog->sports(),
             'provinces' => Province::cases(),
-            'sponsors' => $this->catalog->sponsors(),
+            'sponsors' => $this->catalog->sponsorStack($division, $this->sportSlugs($sportFilter)),
             'division' => $division,
             'divisionSports' => $division instanceof Division ? $this->catalog->sportSlugsForDivision($division) : [],
             'sportFilter' => $sportFilter,
@@ -103,6 +110,8 @@ class MockupController extends Controller
     {
         $result = $this->catalog->filterMatches($this->catalog->publicMatches(), $request->query());
         $mapped = $this->catalog->mapMarkers($result['matches']);
+        $division = Division::fromPublicQuery($request->string('division')->toString());
+        $sportFilter = $this->selectedSport($request);
 
         return view('mockups.map', [
             'markers' => $mapped['markers'],
@@ -110,7 +119,7 @@ class MockupController extends Controller
             'total' => $result['matches']->count(),
             'sports' => $this->catalog->sports(),
             'provinces' => Province::cases(),
-            'sponsors' => $this->catalog->sponsors(),
+            'sponsors' => $this->catalog->sponsorStack($division, $this->sportSlugs($sportFilter)),
         ]);
     }
 
@@ -123,7 +132,9 @@ class MockupController extends Controller
         return view('mockups.match', [
             'match' => $match,
             'choices' => $this->catalog->publicMatches()->take(12),
-            'sponsors' => $this->catalog->sponsors(),
+            'sponsors' => $match
+                ? $this->catalog->sponsorStack(null, $match['discipline_slugs'] ?? [])
+                : collect(),
         ]);
     }
 
@@ -156,7 +167,9 @@ class MockupController extends Controller
         return view('mockups.sports', [
             'sports' => $sports,
             'division' => $division,
-            'sponsors' => $this->catalog->sponsors(),
+            'sponsors' => $division instanceof Division
+                ? $this->catalog->sponsorStack($division)
+                : collect(),
             'divisionSports' => $divisionSlugs ?? [],
         ]);
     }
@@ -167,10 +180,15 @@ class MockupController extends Controller
 
         abort_if($slug !== null && $sport === null, 404);
 
+        $sportSlugs = $sport === null ? [] : array_values(array_unique(array_filter([
+            $sport['slug'],
+            ...array_column($sport['children'] ?? [], 'slug'),
+        ])));
+
         return view('mockups.sport', [
             'sport' => $sport,
             'choices' => $this->catalog->sports(),
-            'sponsors' => $this->catalog->sponsors(),
+            'sponsors' => $this->catalog->sponsorStack(null, $sportSlugs),
             'follows' => $this->readFollows($request),
         ]);
     }
@@ -495,7 +513,7 @@ class MockupController extends Controller
             'renews' => now()->timezone('Africa/Johannesburg')->addMonth()->format('j M Y'),
             'trialDays' => StartProTrial::TRIAL_DAYS,
             'phoneCalendar' => $screen === 'calendar' ? $this->appCalendar($request, $close) : null,
-            'home' => in_array($screen, ['home', 'welcome'], true) ? $this->appHome($matches, $clubs, $close) : null,
+            'home' => in_array($screen, ['home', 'welcome'], true) ? $this->appHome($matches, $this->withinPlace($clubs, $close), $close) : null,
             'onboarding' => in_array($screen, ['sports-choose', 'follow-onboard', 'ready'], true)
                 ? $this->appOnboarding($request, $sports, $clubs)
                 : null,
