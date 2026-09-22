@@ -231,7 +231,7 @@ class SitemapController extends Controller
         $now = now()->toAtomString();
         $minimum = (int) config('seo.landing_min');
 
-        foreach (ProviderCategory::cases() as $category) {
+        foreach (ProviderCategory::publicCases() as $category) {
             $nationalCount = Provider::query()
                 ->published()
                 ->where('category', $category)

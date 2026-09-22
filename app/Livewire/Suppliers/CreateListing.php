@@ -100,7 +100,7 @@ class CreateListing extends Component
     {
         $options = [];
 
-        foreach (ProviderCategory::cases() as $case) {
+        foreach (ProviderCategory::publicCases() as $case) {
             if ($this->category !== '' && $case->value === $this->category) {
                 continue;
             }
@@ -115,9 +115,9 @@ class CreateListing extends Component
     {
         $this->validate([
             'name' => 'required|string|max:160',
-            'category' => ['required', 'string', 'in:'.implode(',', array_map(fn ($c) => $c->value, ProviderCategory::cases()))],
+            'category' => ['required', 'string', 'in:'.implode(',', array_map(fn ($c) => $c->value, ProviderCategory::publicCases()))],
             'services' => 'array',
-            'services.*' => ['string', 'in:'.implode(',', array_map(fn ($c) => $c->value, ProviderCategory::cases()))],
+            'services.*' => ['string', 'in:'.implode(',', array_map(fn ($c) => $c->value, ProviderCategory::publicCases()))],
             'province' => ['required', 'string', 'in:'.implode(',', array_map(fn ($p) => $p->value, Province::cases()))],
             'town' => 'required|string|max:120',
             'email' => 'nullable|email|max:255',
@@ -160,7 +160,7 @@ class CreateListing extends Component
     public function render()
     {
         return view('livewire.suppliers.create-listing', [
-            'categoryOptions' => collect(ProviderCategory::cases())
+            'categoryOptions' => collect(ProviderCategory::publicCases())
                 ->mapWithKeys(fn (ProviderCategory $c): array => [$c->value => $c->getLabel()])
                 ->all(),
             'provinceOptions' => collect(Province::cases())

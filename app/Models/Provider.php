@@ -90,6 +90,18 @@ class Provider extends Model
         return $query->where('status', ListingStatus::Published);
     }
 
+    /**
+     * Public directory. A distributor account exists so the business can
+     * advertise. It is not a listing visitors can open.
+     */
+    public function scopeListed($query)
+    {
+        return $query->where(function ($query): void {
+            $query->whereNull('category')
+                ->orWhereNot('category', ProviderCategory::Distributor);
+        });
+    }
+
     public function scopeIndexable($query)
     {
         return Indexability::providers($query);
@@ -120,7 +132,7 @@ class Provider extends Model
         return Cache::remember(
             'provider.directory-populated.'.$threshold,
             300,
-            fn (): bool => static::query()->published()->count() >= $threshold,
+            fn (): bool => static::query()->published()->listed()->count() >= $threshold,
         );
     }
 }

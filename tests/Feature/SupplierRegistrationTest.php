@@ -177,6 +177,22 @@ it('requires primary category, province, town and a 20-character description', f
         ->assertHasErrors(['category', 'province', 'town', 'description']);
 });
 
+it('rejects a distributor category because that account is for advertising only', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(CreateListing::class)
+        ->set('name', 'Wholesale Optics')
+        ->set('category', ProviderCategory::Distributor->value)
+        ->set('province', Province::Gauteng->value)
+        ->set('town', 'Johannesburg')
+        ->set('description', 'A long-enough description of a wholesale optics business.')
+        ->call('submit')
+        ->assertHasErrors('category');
+
+    expect(Provider::query()->where('name', 'Wholesale Optics')->exists())->toBeFalse();
+});
+
 it('redirects a supplier who already has a listing away from the create form to their thanks page', function () {
     $user = User::factory()->create();
     $existing = Provider::factory()->create([

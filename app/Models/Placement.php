@@ -60,7 +60,9 @@ class Placement extends Model
     {
         return $this->click_url
             ?: $this->provider?->website_url
-            ?: ($this->provider ? route('suppliers.show', $this->provider->slug) : null);
+            ?: ($this->provider?->category?->isPublic()
+                ? route('suppliers.show', $this->provider->slug)
+                : null);
     }
 
     /**

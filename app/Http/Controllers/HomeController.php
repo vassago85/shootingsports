@@ -31,7 +31,7 @@ class HomeController extends Controller
                 'matches' => Event::query()->upcoming()->count(),
                 'disciplines' => Discipline::query()->where('is_published', true)->count(),
                 'provinces' => 9,
-                'suppliers' => Provider::query()->published()->count(),
+                'suppliers' => Provider::query()->published()->listed()->count(),
             ];
         });
 

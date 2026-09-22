@@ -96,6 +96,7 @@ class Indexability
     public static function providers(Builder $query): Builder
     {
         return $query->published()
+            ->listed()
             ->whereNotNull('province')
             ->whereNotNull('town')
             ->where('town', '!=', '')

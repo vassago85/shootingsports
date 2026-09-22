@@ -147,6 +147,7 @@ it('hides supplier emails and shows enquire CTA', function () {
         'email' => 'secret@shop.test',
         'phone' => '0820000000',
         'status' => ListingStatus::Published,
+        'category' => ProviderCategory::Gunsmith,
     ]);
 
     $this->get(route('suppliers.show', $provider->slug))

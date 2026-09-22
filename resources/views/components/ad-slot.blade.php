@@ -53,10 +53,12 @@
                                         {{ $placement->headline }}
                                     @endif
                                 </h3>
-                            @elseif ($placement->provider)
+                            @elseif ($placement->provider && ($placement->provider->category === null || $placement->provider->category->isPublic()))
                                 <h3>
                                     <a href="{{ $href ?? route('suppliers.show', $placement->provider->slug) }}">{{ $placement->provider->name }}</a>
                                 </h3>
+                            @elseif ($placement->provider)
+                                <h3>{{ $placement->provider->name }}</h3>
                             @endif
                             @if ($placement->body)
                                 <p>{{ $placement->body }}</p>

@@ -20,6 +20,7 @@ class ProviderController extends Controller
 
         $providers = Provider::query()
             ->published()
+            ->listed()
             ->when($division, fn ($query) => $query->inDivision($division))
             ->orderByTier()
             ->get()
@@ -39,7 +40,7 @@ class ProviderController extends Controller
         // the UI. Passing category landing pages (not per-supplier)
         // keeps the list a manageable size for Google.
         $itemList = JsonLd::itemList(
-            collect(ProviderCategory::cases())
+            collect(ProviderCategory::publicCases())
                 ->map(fn (ProviderCategory $c): array => [
                     'name' => $c->getLabel(),
                     'url' => route('suppliers.category', $c->urlSlug()),
@@ -55,7 +56,7 @@ class ProviderController extends Controller
         return view('public.suppliers.index', [
             'grouped' => $providers,
             'division' => $division,
-            'categories' => ProviderCategory::cases(),
+            'categories' => ProviderCategory::publicCases(),
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,
             'jsonLd' => [$itemList, $breadcrumbs],
@@ -65,7 +66,7 @@ class ProviderController extends Controller
     public function category(string $category, ?string $province = null): View
     {
         $categoryEnum = ProviderCategory::fromUrlSlug($category);
-        abort_unless($categoryEnum instanceof ProviderCategory, 404);
+        abort_unless($categoryEnum instanceof ProviderCategory && $categoryEnum->isPublic(), 404);
 
         $provinceEnum = $province ? Province::fromUrlSlug($province) : null;
         abort_if($province !== null && $provinceEnum === null, 404);
@@ -104,6 +105,7 @@ class ProviderController extends Controller
     public function show(Provider $provider): View
     {
         abort_unless($provider->status === ListingStatus::Published, 404);
+        abort_unless($provider->category === null || $provider->category->isPublic(), 404);
 
         $provider->load('disciplines');
 

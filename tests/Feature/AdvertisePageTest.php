@@ -2,6 +2,7 @@
 
 use App\Enums\EnquiryType;
 use App\Enums\ListingStatus;
+use App\Enums\ProviderCategory;
 use App\Models\Enquiry;
 use App\Models\Provider;
 use App\Models\User;
@@ -17,6 +18,7 @@ it('renders every advertising product on the rate card', function () {
     // still renders for this assertion.
     Provider::factory()->count(5)->create([
         'status' => ListingStatus::Published,
+        'category' => ProviderCategory::Dealer,
     ]);
     Cache::flush();
 

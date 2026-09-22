@@ -48,4 +48,22 @@ enum ProviderCategory: string implements HasLabel
             self::Insurance => 'Insurance',
         };
     }
+
+    public function isPublic(): bool
+    {
+        return $this !== self::Distributor;
+    }
+
+    /**
+     * Categories a visitor can browse. Distributors are advertising accounts.
+     *
+     * @return list<self>
+     */
+    public static function publicCases(): array
+    {
+        return array_values(array_filter(
+            self::cases(),
+            fn (self $category): bool => $category->isPublic(),
+        ));
+    }
 }
