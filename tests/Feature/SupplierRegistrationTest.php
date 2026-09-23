@@ -105,7 +105,9 @@ it('lets verified users through to the supplier onboarding form', function () {
     $this->actingAs($user)
         ->get('/suppliers/onboard')
         ->assertOk()
-        ->assertSee('Register your services');
+        ->assertSee('Register your services')
+        ->assertSeeHtml('id="supplier-province"')
+        ->assertSeeHtml('wire:model.live="province"');
 });
 
 it('the signed verification link marks the user verified and redirects them onwards', function () {

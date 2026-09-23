@@ -1283,9 +1283,16 @@ section.block { padding: 72px 0; }
 
 .enquiry-form .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .enquiry-form .field span { font-family: var(--f-mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--slate); }
-.enquiry-form input, .enquiry-form textarea {
+.enquiry-form input, .enquiry-form textarea,
+.enquiry-form .field select {
     font-family: var(--f-sans); font-size: 15px; padding: 10px 12px;
     border: 1px solid var(--rule); background: var(--surface); color: var(--ink);
+    color-scheme: light;
+}
+.enquiry-form .field select { width: 100%; }
+.enquiry-form .field select option {
+    background: #fff;
+    color: #10251f;
 }
 .enquiry-form .hp {
     position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden;

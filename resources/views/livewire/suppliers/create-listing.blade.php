@@ -16,9 +16,9 @@
                         @error('name') <span class="err">{{ $message }}</span> @enderror
                     </label>
 
-                    <label class="field">
-                        <span>Primary category *</span>
-                        <select wire:model.live="category" required>
+                    <div class="field">
+                        <label for="supplier-category"><span>Primary category *</span></label>
+                        <select id="supplier-category" wire:model.live="category" wire:key="supplier-category" required>
                             <option value="">Pick one</option>
                             @foreach ($categoryOptions as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
@@ -28,7 +28,7 @@
                             The main thing you do. This drives which directory landing your listing headlines.
                         </small>
                         @error('category') <span class="err">{{ $message }}</span> @enderror
-                    </label>
+                    </div>
 
                     @if (! empty($serviceOptions))
                         <fieldset class="field" style="border:none;padding:0;margin:0">
@@ -45,16 +45,16 @@
                         </fieldset>
                     @endif
 
-                    <label class="field">
-                        <span>Province *</span>
-                        <select wire:model="province" required>
+                    <div class="field">
+                        <label for="supplier-province"><span>Province *</span></label>
+                        <select id="supplier-province" wire:model.live="province" wire:key="supplier-province" required>
                             <option value="">Pick one</option>
                             @foreach ($provinceOptions as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
                         @error('province') <span class="err">{{ $message }}</span> @enderror
-                    </label>
+                    </div>
 
                     <label class="field">
                         <span>Town</span>

@@ -70,6 +70,7 @@ class ProviderResource extends Resource
                     ->columnSpanFull(),
                 Select::make('province')
                     ->options(Province::class)
+                    ->searchable()
                     ->required(),
                 TextInput::make('town')
                     ->required(),

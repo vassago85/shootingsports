@@ -32,16 +32,16 @@
                         @error('host_name') <span class="err">{{ $message }}</span> @enderror
                     </label>
 
-                    <label class="field">
-                        <span>Province</span>
-                        <select wire:model="province" required>
+                    <div class="field">
+                        <label for="match-province"><span>Province</span></label>
+                        <select id="match-province" wire:model.live="province" wire:key="match-province" required>
                             <option value="">Pick one</option>
                             @foreach ($provinceOptions as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
                         @error('province') <span class="err">{{ $message }}</span> @enderror
-                    </label>
+                    </div>
 
                     <label class="field">
                         <span>Town (optional)</span>
