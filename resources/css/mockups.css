@@ -793,22 +793,22 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
     box-shadow: 0 30px 70px rgba(0, 0, 0, .45);
 }
 .phone-glass {
-    /* Light mode tokens */
-    --app-canvas: #F4F5F2;
-    --app-surface: #FFFFFF;
-    --app-raised: #ECEFEB;
-    --app-ink: #151815;
-    --app-muted: #68716B;
-    --app-fine: #9AA19C;
-    --app-line: #DDE2DD;
-    --app-hair: rgba(0, 0, 0, .06);
-    --app-accent: #6B7D3A;
-    --app-accent-strong: #566A2A;
-    --app-accent-soft: rgba(107, 125, 58, .10);
-    --app-accent-ink: #F5F7F0;
+    /* Same tokens as the website mockup */
+    --app-canvas: #f3f0e8;
+    --app-surface: #ffffff;
+    --app-raised: #f7f4ee;
+    --app-ink: #1b1e19;
+    --app-muted: #5c6560;
+    --app-fine: #5c6560;
+    --app-line: #e4dfd4;
+    --app-hair: #e4dfd4;
+    --app-accent: #4e6b32;
+    --app-accent-strong: #3d5526;
+    --app-accent-soft: rgba(78, 107, 50, .10);
+    --app-accent-ink: #f7f4ee;
     --app-danger: #B23C2E;
     --app-danger-soft: rgba(178, 60, 46, .10);
-    --app-shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 4px 10px rgba(0, 0, 0, .04);
+    --app-shadow: none;
 
     position: relative;
     display: flex;
@@ -818,26 +818,49 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
     border-radius: 36px;
     background: var(--app-canvas);
     color: var(--app-ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+    font-family: var(--f-body);
     font-size: 15px;
     line-height: 1.4;
     -webkit-font-smoothing: antialiased;
 }
 .phone-android .phone-glass {
-    font-family: "Roboto", "Segoe UI", sans-serif;
+    font-family: var(--f-body);
     border-radius: 28px;
 }
 .phone-android .phone-bezel { border-radius: 36px; }
-.phone-glass h1, .phone-glass h2, .phone-glass h3, .phone-glass p,
-.phone-glass li, .phone-glass dt, .phone-glass dd, .phone-glass strong,
-.phone-glass em, .phone-glass small, .phone-glass b, .phone-glass a {
+.phone-glass p, .phone-glass li, .phone-glass dt, .phone-glass dd,
+.phone-glass em, .phone-glass small, .phone-glass a {
     font-family: inherit;
     letter-spacing: 0;
     text-transform: none;
     color: inherit;
 }
+.phone-glass .app-btn,
+.phone-glass .app-featured-btn {
+    font-family: var(--f-display);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+.phone-glass .app-chip,
+.phone-glass .app-badge,
+.phone-glass .app-strip,
+.phone-glass .app-eyebrow,
+.phone-glass .app-when span,
+.phone-glass .app-home-title span {
+    text-transform: uppercase;
+}
 .phone-glass p { margin: 0; }
-.phone-glass h1, .phone-glass h2, .phone-glass h3 { color: var(--app-ink); }
+.phone-glass h1, .phone-glass h2, .phone-glass h3, .phone-glass .app-hero,
+.phone-glass .app-featured-title, .phone-glass .app-home-title strong,
+.phone-glass .app-match strong, .phone-glass .app-row strong,
+.phone-glass .app-date-block-body strong, .phone-glass .app-daygroup h3,
+.phone-glass .app-sub:not(.plain) {
+    font-family: var(--f-display);
+    font-weight: 600;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: var(--app-ink);
+}
 
 .phone-island {
     position: absolute; top: 10px; left: 50%; z-index: 3;
@@ -986,13 +1009,13 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
     max-width: 40ch;
 }
 .app-sub {
-    font-family: var(--f-mono);
+    font-family: var(--f-display);
     text-transform: uppercase;
-    letter-spacing: .12em;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--app-fine);
-    margin: 24px 0 10px;
+    letter-spacing: .04em;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--app-ink);
+    margin: 22px 0 8px;
 }
 .app-sub.plain {
     font-family: inherit;
@@ -1028,19 +1051,21 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 50px;
-    padding: 12px 18px;
-    border-radius: 14px;
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: 2px;
     background: var(--app-accent);
     color: var(--app-accent-ink);
     text-decoration: none;
+    font-family: var(--f-display);
     font-size: 16px;
-    font-weight: 650;
+    font-weight: 600;
     text-align: center;
-    letter-spacing: -.005em;
-    box-shadow: var(--app-shadow);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    box-shadow: none;
 }
-.phone-android .app-btn { border-radius: 28px; text-transform: uppercase; letter-spacing: .05em; font-size: 14px; }
+.phone-android .app-btn { border-radius: 2px; text-transform: uppercase; letter-spacing: .04em; font-size: 16px; }
 .app-btn.secondary {
     background: var(--app-surface);
     color: var(--app-accent);
@@ -1126,9 +1151,13 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 8px;
-    padding: 14px 16px;
+    margin: 0;
+    padding: 14px 0;
     min-height: 64px;
+    background: transparent;
+    border-radius: 0;
+    border-bottom: 1px solid var(--app-line);
+    box-shadow: none;
 }
 .app-row-main {
     display: flex;
@@ -1172,23 +1201,27 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
 /* Match card (signature pattern) --------------- */
 .app-match {
     display: grid;
-    grid-template-columns: 78px minmax(0, 1fr);
+    grid-template-columns: 64px minmax(0, 1fr);
     gap: 14px;
     align-items: center;
-    min-height: 78px;
-    margin-bottom: 8px;
-    padding: 14px 16px;
-    background: var(--app-surface);
-    border-radius: 14px;
+    min-height: 72px;
+    margin: 0 -4px;
+    padding: 10px 4px;
+    background: transparent;
+    border-radius: 0;
+    border-bottom: 1px solid var(--app-line);
     text-decoration: none;
     color: var(--app-ink);
-    box-shadow: var(--app-shadow);
+    box-shadow: none;
 }
 .app-match strong {
     display: block;
-    font-size: 16px;
-    font-weight: 650;
-    line-height: 1.2;
+    font-family: var(--f-display);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: .02em;
+    text-transform: uppercase;
     color: var(--app-ink);
 }
 .app-match em {
@@ -1202,9 +1235,10 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
 .app-when {
     text-align: center;
     color: var(--app-ink);
-    background: var(--app-raised);
-    border-radius: 10px;
-    padding: 6px 6px 8px;
+    background: var(--app-surface);
+    border: 1px solid var(--app-line);
+    border-radius: 0;
+    padding: 6px 4px 8px;
     min-height: 58px;
     display: flex;
     flex-direction: column;
@@ -1212,9 +1246,10 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
 }
 .app-when b {
     display: block;
-    font-size: 17px;
-    line-height: 1.05;
-    font-weight: 700;
+    font-family: var(--f-display);
+    font-size: 22px;
+    line-height: .9;
+    font-weight: 600;
     letter-spacing: -.02em;
     color: var(--app-ink);
     white-space: nowrap;
@@ -1227,7 +1262,7 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
     font-weight: 600;
     letter-spacing: .14em;
     text-transform: uppercase;
-    color: var(--app-muted);
+    color: var(--app-accent);
 }
 .app-when small {
     display: block;
@@ -1241,31 +1276,28 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
 /* Featured card (Next up) --------------- */
 .app-featured {
     display: block;
-    padding: 20px;
-    margin-bottom: 20px;
-    background: var(--app-surface);
-    border-radius: 20px;
+    padding: 16px 0 18px;
+    margin-bottom: 8px;
+    background: transparent;
+    border-radius: 0;
+    border-bottom: 1px solid var(--app-line);
     text-decoration: none;
     color: var(--app-ink);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 12px 30px rgba(0, 0, 0, .06);
+    box-shadow: none;
     position: relative;
     overflow: hidden;
 }
-.phone-dark .app-featured { box-shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 20px 40px rgba(0, 0, 0, .35); }
-.app-featured::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; bottom: 0;
-    width: 4px;
-    background: var(--app-accent);
-}
+.phone-dark .app-featured { box-shadow: none; }
+.app-featured::before { content: none; }
 .app-featured .app-eyebrow { color: var(--app-accent); margin-bottom: 8px; }
 .app-featured .app-featured-title {
-    font-size: 22px;
-    line-height: 1.15;
-    font-weight: 700;
-    letter-spacing: -.015em;
-    margin: 0 0 4px;
+    font-family: var(--f-display);
+    font-size: 28px;
+    line-height: .95;
+    font-weight: 600;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    margin: 0 0 6px;
     color: var(--app-ink);
 }
 .app-featured .app-featured-meta {
@@ -1291,16 +1323,18 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
     align-items: center;
     justify-content: center;
     gap: 6px;
-    min-height: 44px;
-    padding: 8px 20px;
+    min-height: 40px;
+    padding: 8px 16px;
     background: var(--app-accent);
     color: var(--app-accent-ink);
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 650;
-    letter-spacing: .02em;
+    border-radius: 2px;
+    font-family: var(--f-display);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
 }
-.phone-android .app-featured .app-featured-btn { border-radius: 24px; text-transform: uppercase; }
+.phone-android .app-featured .app-featured-btn { border-radius: 2px; text-transform: uppercase; }
 
 /* Date-group header (WEEKEND / NEXT WEEK) */
 .app-daygroup {
@@ -1310,12 +1344,12 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
     margin: 20px 0 8px;
 }
 .app-daygroup h3 {
-    font-family: var(--f-mono);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--f-display);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: .04em;
     text-transform: uppercase;
-    color: var(--app-fine);
+    color: var(--app-ink);
     margin: 0;
 }
 .app-daygroup span {
@@ -1342,14 +1376,16 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
     gap: 6px;
     min-height: 34px;
     padding: 6px 14px;
-    border-radius: 999px;
+    border-radius: 2px;
     background: var(--app-surface);
     color: var(--app-ink);
     text-decoration: none;
-    font-size: 13px;
+    font-family: var(--f-mono);
+    font-size: 11px;
     font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
     box-shadow: inset 0 0 0 1px var(--app-line);
-    letter-spacing: -.003em;
 }
 .app-chip.on {
     background: var(--app-accent);
@@ -1578,18 +1614,22 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
 .app-home-head .app-home-title { flex: 1; min-width: 0; }
 .app-home-head .app-home-title span {
     display: block;
-    font-size: 12px;
+    font-family: var(--f-mono);
+    font-size: 11px;
     color: var(--app-muted);
     font-weight: 600;
-    letter-spacing: -.005em;
+    letter-spacing: .12em;
+    text-transform: uppercase;
     margin-bottom: 2px;
 }
 .app-home-head .app-home-title strong {
     display: block;
-    font-size: 24px;
-    line-height: 1;
-    font-weight: 700;
-    letter-spacing: -.02em;
+    font-family: var(--f-display);
+    font-size: 32px;
+    line-height: .95;
+    font-weight: 600;
+    letter-spacing: .02em;
+    text-transform: uppercase;
     color: var(--app-ink);
 }
 .app-home-head a.app-iconbtn {
@@ -1933,14 +1973,17 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
     align-items: center;
     justify-content: center;
     min-width: 74px;
-    padding: 10px 12px;
-    background: var(--app-raised);
-    border-radius: 14px;
+    min-height: 72px;
+    padding: 8px 10px;
+    background: var(--app-surface);
+    border: 1px solid var(--app-line);
+    border-radius: 0;
 }
 .app-date-block .app-date-block-num b {
-    font-size: 22px;
-    line-height: 1;
-    font-weight: 700;
+    font-family: var(--f-display);
+    font-size: 26px;
+    line-height: .9;
+    font-weight: 600;
     letter-spacing: -.02em;
     color: var(--app-ink);
     white-space: nowrap;
@@ -1952,7 +1995,7 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
     font-size: 10px;
     letter-spacing: .12em;
     text-transform: uppercase;
-    color: var(--app-muted);
+    color: var(--app-accent);
     font-weight: 700;
 }
 .app-date-block .app-date-block-body { min-width: 0; }
@@ -2314,18 +2357,18 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
 .app-dock .app-btn { margin: 0; }
 
 .phone-dark .phone-glass {
-    --app-canvas: #1A1F1C;
-    --app-surface: #222824;
-    --app-raised: #2A312C;
-    --app-ink: #F5F7F5;
-    --app-muted: #9DA8A2;
-    --app-fine: #6B7570;
-    --app-line: rgba(255, 255, 255, .08);
-    --app-hair: rgba(255, 255, 255, .06);
-    --app-accent: #C9DC7E;
-    --app-accent-strong: #DAEB90;
-    --app-accent-soft: rgba(201, 220, 126, .12);
-    --app-accent-ink: #14180F;
+    --app-canvas: #0B0D0E;
+    --app-surface: #15191B;
+    --app-raised: #252B2E;
+    --app-ink: #F1F2EE;
+    --app-muted: #9CA3A5;
+    --app-fine: #9CA3A5;
+    --app-line: #252B2E;
+    --app-hair: #252B2E;
+    --app-accent: #6B7D3A;
+    --app-accent-strong: #879A4A;
+    --app-accent-soft: rgba(107, 125, 58, .18);
+    --app-accent-ink: #F1F2EE;
     --app-danger: #E7857A;
     --app-danger-soft: rgba(231, 133, 122, .12);
     --app-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 20px rgba(0, 0, 0, .18);
@@ -2337,7 +2380,7 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
 .phone-dark .app-btn.quiet.danger { background: transparent; color: var(--app-danger); }
 .phone-dark .app-btn.apple { background: #F5F7F5; color: #0F1211; }
 .phone-dark .app-btn.google { background: var(--app-raised); color: var(--app-ink); box-shadow: inset 0 0 0 1px var(--app-line); }
-.phone-dark .app-featured { box-shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 20px 40px rgba(0, 0, 0, .35); }
+.phone-dark .app-featured { box-shadow: none; }
 
 .phone-dark .phone-tabs { background: var(--app-canvas); border-top-color: var(--app-line); }
 .phone-dark .phone-tabs a { color: var(--app-fine); }
@@ -2348,13 +2391,13 @@ html.mk-device-mobile .mk-tabbar { max-width: 420px; margin: 0 auto; }
 .phone-ios .phone-bar,
 .phone-ios .phone-tabs,
 .phone-ios .phone-home {
-    background: rgba(255, 255, 255, .78);
-    backdrop-filter: saturate(1.4) blur(18px);
+    background: var(--app-canvas);
+    backdrop-filter: none;
 }
 .phone-ios.phone-dark .phone-bar,
 .phone-ios.phone-dark .phone-tabs,
 .phone-ios.phone-dark .phone-home {
-    background: rgba(13, 17, 16, .8);
+    background: var(--app-canvas);
 }
 .phone-android .phone-tabs,
 .phone-android .phone-home,
