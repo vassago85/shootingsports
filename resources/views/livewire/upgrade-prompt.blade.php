@@ -5,11 +5,13 @@
              stable. --}}
         <div class="history-cutoff" role="note">
             <p>Earlier matches are in your Pro history.</p>
-            <button
-                type="button"
-                class="btn ghost"
-                wire:click="$dispatch('open-upgrade-prompt', { trigger: 'history_window' })"
-            >See Pro</button>
+            @if ($proEnabled)
+                <button
+                    type="button"
+                    class="btn ghost"
+                    wire:click="$dispatch('open-upgrade-prompt', { trigger: 'history_window' })"
+                >See Pro</button>
+            @endif
         </div>
     @endif
 
@@ -39,11 +41,19 @@
                         <button type="button" class="btn" wire:click="close">Close</button>
                     </div>
                 @else
-                    <p class="label">Pro · {{ $pricing['monthly']['display'] ?? '' }} · {{ $pricing['annual']['display'] ?? '' }}</p>
+                    @if ($proEnabled)
+                        <p class="label">Pro · {{ $pricing['monthly']['display'] ?? '' }} · {{ $pricing['annual']['display'] ?? '' }}</p>
+                    @else
+                        <p class="label">Free limit</p>
+                    @endif
                     <h2 id="upgrade-prompt-title">{{ $copy['headline'] }}</h2>
                     <p>{{ $copy['detail'] }}</p>
 
-                    @if (! $paystackReady)
+                    @if (! $proEnabled)
+                        <div class="upgrade-prompt-actions" style="margin-top:18px">
+                            <button type="button" class="btn" wire:click="close">Close</button>
+                        </div>
+                    @elseif (! $paystackReady)
                         {{-- Waitlist mode. Pro is not yet purchasable, we
                              are gathering demand signal via the enquiries
                              inbox. --}}

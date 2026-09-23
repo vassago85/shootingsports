@@ -12,7 +12,7 @@
                 @else
                     <p style="margin-top:8px;color:var(--slate)">
                         Free tier: {{ $currentCount }}/{{ $currentCount + ($remainingSlots ?? 0) }} slots used.
-                        @if ($remainingSlots === 0)
+                        @if ($remainingSlots === 0 && config('plans.pro_enabled'))
                             <a href="{{ route('upgrade') }}" style="color:var(--brass)">Go Pro for unlimited history →</a>
                         @endif
                     </p>

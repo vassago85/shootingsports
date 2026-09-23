@@ -65,6 +65,10 @@ final class StartProTrial
      */
     public static function isEligible(User $user): bool
     {
+        if (! config('plans.pro_enabled')) {
+            return false;
+        }
+
         // Once used, never again — regardless of whether the trial ran
         // to completion or converted mid-way.
         if ($user->hasHadTrial()) {

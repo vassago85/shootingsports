@@ -2,9 +2,15 @@
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
-                <p class="label">Pro · Upgrade</p>
-                <h1>Go Pro</h1>
-                <p>Unlimited follows, unlimited saved searches, full history, season exports. Cancel any time from your account. No lock-in.</p>
+                @if ($proEnabled)
+                    <p class="label">Pro · Upgrade</p>
+                    <h1>Go Pro</h1>
+                    <p>Unlimited follows, unlimited saved searches, full history, season exports. Cancel any time from your account. No lock-in.</p>
+                @else
+                    <p class="label">Account</p>
+                    <h1>Pro is on hold</h1>
+                    <p>Free accounts stay as they are. We will open Pro when it is ready.</p>
+                @endif
             </div>
         </section>
 
@@ -16,6 +22,15 @@
                     </div>
                 @endif
 
+                @if (! $proEnabled)
+                    <div class="empty">
+                        <p><b>Pro is on hold.</b></p>
+                        <p style="margin-top:8px">Free accounts still work. Follows, saved searches and the attendance log keep their free limits. We will open Pro when it is ready.</p>
+                        <p style="margin-top:14px">
+                            <a class="btn" href="{{ route('my-calendar') }}">Back to my calendar</a>
+                        </p>
+                    </div>
+                @else
                 @if ($user->hasActiveSubscription())
                     {{-- === Paid Pro subscriber: cancel + status only, no pricing === --}}
                     <div class="pro-status">
@@ -155,6 +170,7 @@
                             </p>
                         </div>
                     @endif
+                @endif
                 @endif
             </div>
         </section>

@@ -61,6 +61,12 @@ class Upgrade extends Component
             return;
         }
 
+        if (! config('plans.pro_enabled')) {
+            session()->flash('status', 'Pro is on hold.');
+
+            return;
+        }
+
         if (! StartProTrial::for($user)) {
             session()->flash('status', 'Your trial is not available. Either you have already used it or Pro is already active on this account.');
 
@@ -81,6 +87,12 @@ class Upgrade extends Component
 
         if (! $user instanceof User) {
             $this->redirectRoute('login', navigate: false);
+
+            return;
+        }
+
+        if (! config('plans.pro_enabled')) {
+            session()->flash('status', 'Pro is on hold.');
 
             return;
         }
@@ -139,6 +151,7 @@ class Upgrade extends Component
             'user' => $user,
             'pricing' => config('plans.pricing'),
             'ready' => $this->paystackReady(),
+            'proEnabled' => (bool) config('plans.pro_enabled'),
             'trialEligible' => StartProTrial::isEligible($user),
             'trialDays' => StartProTrial::TRIAL_DAYS,
         ])->layout('components.layouts.public', ['title' => 'Upgrade to Pro']);

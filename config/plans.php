@@ -22,6 +22,18 @@ use App\Enums\Plan;
 */
 
 return [
+    /*
+    |--------------------------------------------------------------------------
+    | Pro sales
+    |--------------------------------------------------------------------------
+    |
+    | Off until we are ready to sell. Trials, checkout, prices and the
+    | upgrade prompts stay hidden. Existing plan caps still apply.
+    | Tests opt back in via PRO_FEATURES=true in phpunit.xml.
+    |
+    */
+    'pro_enabled' => (bool) env('PRO_FEATURES', false),
+
     Plan::Free->value => [
         'follows' => 3,
         'saved_searches' => 1,

@@ -43,7 +43,9 @@
                         <p class="pricing-label">Pro trial · {{ $user->trialDaysRemaining() }} {{ $user->trialDaysRemaining() === 1 ? 'day' : 'days' }} left</p>
                         <p>
                             You're on Pro until {{ $user->plan_expires_at->format('j M Y') }}. Unlimited follows, saved searches and attendance-log entries.
-                            <a href="{{ route('upgrade') }}"><b>Add a card</b></a> to keep Pro after that. No auto-billing. We never took a card in the first place.
+                            @if (config('plans.pro_enabled'))
+                                <a href="{{ route('upgrade') }}"><b>Add a card</b></a> to keep Pro after that. No auto-billing. We never took a card in the first place.
+                            @endif
                         </p>
                     </div>
                 @endif

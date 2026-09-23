@@ -33,6 +33,7 @@
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="COMING_SOON" value="false"/>
+        <env name="PRO_FEATURES" value="true"/>
         <env name="SEO_INDEXABLE" value="true"/>
     </php>
 </phpunit>

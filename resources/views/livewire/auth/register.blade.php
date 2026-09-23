@@ -80,10 +80,12 @@
                         <a href="{{ route('privacy') }}" style="text-decoration:underline">Privacy &amp; POPIA</a> notice.
                     </p>
 
-                    <p style="margin-top:8px;color:var(--slate);font-size:0.88rem">
-                        You'll get a Free account. When you're ready, you can start a 30-day Pro trial (no card) from
-                        <a href="{{ route('upgrade') }}" style="text-decoration:underline">Upgrade</a>.
-                    </p>
+                    @if (config('plans.pro_enabled'))
+                        <p style="margin-top:8px;color:var(--slate);font-size:0.88rem">
+                            You'll get a Free account. When you're ready, you can start a 30-day Pro trial (no card) from
+                            <a href="{{ route('upgrade') }}" style="text-decoration:underline">Upgrade</a>.
+                        </p>
+                    @endif
 
                     <button type="submit" class="btn" style="margin-top:6px" wire:loading.attr="disabled" wire:target="register">
                         <span wire:loading.remove wire:target="register">Create account</span>

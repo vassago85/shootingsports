@@ -126,7 +126,7 @@ class UpgradePrompt extends Component
      */
     public function copyForTrigger(): array
     {
-        return match ($this->trigger) {
+        $copy = match ($this->trigger) {
             'follow_limit' => [
                 'headline' => 'You are following as many clubs and disciplines as Free allows.',
                 'detail' => 'Pro removes the 3-follow cap. Follow every club, every discipline, every venue you shoot at and keep them all in one feed.',
@@ -160,6 +160,12 @@ class UpgradePrompt extends Component
                 'detail' => 'Get on the waitlist and tell us what you want it to do.',
             ],
         };
+
+        if (! config('plans.pro_enabled')) {
+            $copy['detail'] = 'That is the free limit for now. Pro is on hold.';
+        }
+
+        return $copy;
     }
 
     public function render()
@@ -171,7 +177,9 @@ class UpgradePrompt extends Component
             // codes are configured. When true, signed-in Free users
             // get a "Go Pro now" button that jumps to /upgrade rather
             // than just the waitlist CTA.
-            'paystackReady' => filled(config('services.paystack.secret_key'))
+            'proEnabled' => (bool) config('plans.pro_enabled'),
+            'paystackReady' => (bool) config('plans.pro_enabled')
+                && filled(config('services.paystack.secret_key'))
                 && filled(config('services.paystack.plan_codes.annual'))
                 && filled(config('services.paystack.plan_codes.monthly')),
         ]);
