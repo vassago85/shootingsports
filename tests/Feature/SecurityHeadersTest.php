@@ -5,13 +5,19 @@ beforeEach(function (): void {
 });
 
 it('sends clickjacking and report-only csp headers on public pages', function () {
-    $this->get('/')
+    $response = $this->get('/')
         ->assertOk()
         ->assertHeader('x-frame-options', 'SAMEORIGIN')
         ->assertHeader('x-content-type-options', 'nosniff')
         ->assertHeader('referrer-policy', 'strict-origin-when-cross-origin')
         ->assertHeader('permissions-policy', 'geolocation=(), camera=(), microphone=(), payment=()')
         ->assertHeader('content-security-policy-report-only');
+
+    $csp = (string) $response->headers->get('content-security-policy-report-only');
+
+    expect($csp)
+        ->toContain("frame-src 'self'")
+        ->toContain('https://unpkg.com');
 });
 
 it('does not send hsts over http', function () {

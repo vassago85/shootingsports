@@ -37,6 +37,13 @@ it('the reticle animation is disabled for prefers-reduced-motion visitors', func
         ->and($css)->toContain('.hero-reticle-dot { animation: none; }');
 });
 
+it('the home hero stacks into one column on a narrow screen', function () {
+    $css = file_get_contents(resource_path('css/app.css'));
+
+    expect($css)->toContain('html[lang] body.ss-public .home-hero .hero-in {
+        grid-template-columns: 1fr;');
+});
+
 it('the homepage no longer puts a pulsing bullseye over the photo', function () {
     $html = $this->get(route('home'))->assertOk()->getContent();
 
@@ -162,6 +169,7 @@ it('/map uses CARTO Positron when CARTO_API_KEY is configured', function () {
         ->toContain('data-carto-key="test-carto-key"')
         ->toContain('basemaps.cartocdn.com/light_all')
         ->toContain('?key=')
+        ->toContain("location.hostname === 'shootingsports.co.za'")
         ->not->toContain('class="ss-map is-osm-fallback"');
 });
 

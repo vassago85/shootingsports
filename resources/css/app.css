@@ -1564,8 +1564,10 @@ section.block { padding: 72px 0; }
 .match-named-links { margin: 18px 0 0; font-size: 14px; color: var(--muted); }
 .match-named-links a { color: var(--brass-dk, #7a5c12); text-decoration: underline; text-underline-offset: 2px; }
 
-/* Bundle A #2: show-all disciplines toggle */
+/* Closed <details> content must stay hidden. .disc-grid sets display:grid,
+   which overrides the browser default and would leave empty sports on the page. */
 .disc-more { margin-top: 18px; }
+.disc-more:not([open]) > .disc-grid { display: none; }
 .disc-more summary {
     cursor: pointer;
     font-family: var(--f-display);
@@ -2319,6 +2321,36 @@ html[lang] body.ss-public .home-hero .rail-body .t { text-transform: none; font-
 html[lang] body.ss-public .home-hero .rail-body .m {
     font-family: inherit; font-size: 13px; letter-spacing: 0; color: #c5d4c0;
 }
+@media (max-width: 860px) {
+    html[lang] body.ss-public .home-hero .hero-in {
+        grid-template-columns: 1fr;
+        gap: 18px;
+        padding: 28px 20px 22px;
+    }
+    html[lang] body.ss-public .home-hero h1 {
+        font-size: clamp(32px, 9vw, 40px);
+        line-height: 1.02;
+    }
+    html[lang] body.ss-public .home-hero .label {
+        letter-spacing: .08em;
+        line-height: 1.45;
+    }
+    html[lang] body.ss-public .home-hero .lede { margin-bottom: 14px; }
+    html[lang] body.ss-public .home-hero .hero-weekend .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    html[lang] body.ss-public .home-hero .hero-rail {
+        width: 100%;
+        margin: 0;
+    }
+    html[lang] body.ss-public .home-hero.has-photo {
+        background-image:
+            linear-gradient(180deg, rgba(14, 51, 40, .94) 0%, rgba(14, 51, 40, .84) 46%, rgba(14, 51, 40, .62) 100%),
+            var(--hero-image);
+        background-position: center 30%;
+    }
+}
 html[lang] body.ss-public .strip.home-stats {
     background: #0e3328; color: #f4f7f2; border: 0;
 }
@@ -2747,10 +2779,14 @@ html[lang] body.ss-public .disc .nm { text-transform: none; font-size: 22px; }
 }
 @media (max-width: 640px) {
     html[lang] body.ss-public .dir-filters,
-    html[lang] body.ss-public .home-choices { grid-template-columns: 1fr; }
+    html[lang] body.ss-public .home-choices,
+    html[lang] body.ss-public .dir-hero,
+    html[lang] body.ss-public .dir-split,
+    html[lang] body.ss-public .dir-split.is-clubs { grid-template-columns: 1fr; }
+    html[lang] body.ss-public .dir-hero-art { height: 160px; border-radius: 12px; }
 }
 
-/* Matches list, month, and map — same light register as the v2 mockup. */
+/* Matches list, month, and map. */
 html[lang] body.ss-public .match-board {
     background: transparent;
     color: #10251f;

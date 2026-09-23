@@ -53,12 +53,12 @@ return [
 
     'csp_report_only' => implode(' ', [
         "default-src 'self';",
-        "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://js.paystack.co https://analytics.charsley.co.za https://analytics.charsleydigital.co.za;",
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;",
+        "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://js.paystack.co https://analytics.charsley.co.za https://analytics.charsleydigital.co.za https://unpkg.com;",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com;",
         "font-src 'self' https://fonts.gstatic.com data:;",
         "img-src 'self' data: blob: https:;",
         "connect-src 'self' https://challenges.cloudflare.com https://api.paystack.co https://analytics.charsley.co.za https://analytics.charsleydigital.co.za https://nominatim.openstreetmap.org https://*.cartocdn.com;",
-        'frame-src https://challenges.cloudflare.com https://js.paystack.co;',
+        "frame-src 'self' https://challenges.cloudflare.com https://js.paystack.co;",
         "frame-ancestors 'self';",
         "base-uri 'self';",
         "form-action 'self';",

@@ -162,6 +162,10 @@ it('Discover renders "No matches listed yet" copy on zero-upcoming tiles', funct
         ->assertSee('Empty Sport')
         ->assertSee('No matches listed yet')
         ->assertSee('Show all', false);
+
+    $css = file_get_contents(resource_path('css/app.css'));
+
+    expect($css)->toContain('.disc-more:not([open]) > .disc-grid { display: none; }');
 });
 
 // #12 Industry always linked (SEO reconnect /suppliers into the graph)
