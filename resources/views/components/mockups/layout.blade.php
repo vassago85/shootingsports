@@ -40,9 +40,9 @@
         <div class="nav-in">
             <a class="brand" href="{{ $mk('mockups.home') }}">
                 <svg class="mark" width="28" height="28" viewBox="0 0 40 40" role="img" aria-label="Reticle mark">
-                    <circle cx="20" cy="20" r="17" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
-                    <circle cx="20" cy="20" r="7.5" fill="none" stroke="#FFFFFF" stroke-width="1"/>
-                    <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="#FFFFFF" stroke-width="1.6"/>
+                    <circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                    <circle cx="20" cy="20" r="7.5" fill="none" stroke="currentColor" stroke-width="1"/>
+                    <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="currentColor" stroke-width="1.6"/>
                     <circle cx="20" cy="20" r="2" fill="#6B7D3A"/>
                 </svg>
                 <span class="brand-text">
@@ -76,7 +76,7 @@
     <footer class="mk-foot">
         <div class="wrap mk-foot-grid">
             <div>
-                <strong class="wordmark" style="font-family:var(--f-display);text-transform:uppercase;color:#F1F2EE">ShootingSports</strong>
+                <strong class="wordmark">ShootingSports</strong>
                 <p>Matches, clubs, ranges and shooting sports across South Africa.</p>
             </div>
             <div>

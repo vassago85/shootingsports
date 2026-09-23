@@ -83,17 +83,24 @@
             </script>
         @endif
         @forelse ($ranges as $range)
-            <a class="mk-row" href="{{ $mk('mockups.range', ['slug' => $range['slug']]) }}">
-                <span>
-                    <span class="mk-row-title">{{ $range['name'] }}</span>
-                    <span class="mk-sub">{{ $range['place'] }}</span>
-                </span>
-                <span class="mk-row-meta">
-                    {{ $range['max_distance'] ?: 'Distance not listed' }}
-                    · {{ $range['access'] ?: 'Access not listed' }}
-                    @if ($range['disciplines'] !== [])<br>{{ implode(' · ', array_slice($range['disciplines'], 0, 3)) }}@endif
-                </span>
-                <span class="mk-count">{{ $range['upcoming_count'] }} upcoming</span>
+            @php
+                $place = collect([$range['town'] ?? null, $range['province'] ?? null])->filter(fn (?string $part): bool => filled($part) && $part !== '—')->implode(' · ');
+                $facts = collect([$range['max_distance'], $range['access']])->filter()->implode(' · ');
+            @endphp
+            <a class="mk-dir" href="{{ $mk('mockups.range', ['slug' => $range['slug']]) }}">
+                <span class="mk-dir-name">{{ $range['name'] }}</span>
+                @if ($place !== '')
+                    <span class="mk-dir-place">{{ $place }}</span>
+                @endif
+                @if ($facts !== '')
+                    <span class="mk-dir-meta">{{ $facts }}</span>
+                @endif
+                @if ($range['disciplines'] !== [])
+                    <span class="mk-dir-meta">{{ implode(' · ', array_slice($range['disciplines'], 0, 4)) }}</span>
+                @endif
+                @if ($range['upcoming_count'])
+                    <span class="mk-dir-count">{{ $range['upcoming_count'] }} upcoming {{ \Illuminate\Support\Str::plural('match', $range['upcoming_count']) }}</span>
+                @endif
             </a>
         @empty
             <p class="mk-empty"><strong>No ranges match these filters.</strong></p>

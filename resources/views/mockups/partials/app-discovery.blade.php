@@ -8,12 +8,21 @@
         $when = \Carbon\Carbon::parse($date, 'Africa/Johannesburg');
         $now = now()->timezone('Africa/Johannesburg');
 
-        if ($when->isSameWeek($now)) {
-            return 'This week';
+        $friday = $now->copy()->startOfWeek(\Carbon\Carbon::MONDAY)->addDays(4);
+        $sunday = $friday->copy()->addDays(2);
+
+        if ($when->between($friday, $sunday)) {
+            return 'This weekend';
         }
 
-        if ($when->isSameWeek($now->copy()->addWeek())) {
+        $nextWeek = $now->copy()->addWeek()->startOfWeek(\Carbon\Carbon::MONDAY);
+
+        if ($when->between($nextWeek, $nextWeek->copy()->endOfWeek(\Carbon\Carbon::SUNDAY))) {
             return 'Next week';
+        }
+
+        if ($when->isSameWeek($now)) {
+            return 'This week';
         }
 
         return $when->format('F');
@@ -22,15 +31,22 @@
 
 @if ($screen === 'matches')
     <div class="app-pad">
+        <div class="app-home-head">
+            <div class="app-home-title">
+                <strong>Matches</strong>
+            </div>
+            <a class="app-iconbtn" href="{{ $app('search') }}" aria-label="Search"><x-mockups.icon name="search" /></a>
+            <a class="app-iconbtn" href="{{ $app('calendar') }}" aria-label="Calendar"><x-mockups.icon name="calendar" /></a>
+        </div>
         <div class="app-chipbar" role="group" aria-label="Filters">
             <a class="app-chip" href="{{ $app('search') }}">Following</a>
             <a @class(['app-chip', 'on' => ($close['gps'] ?? false) === true]) href="{{ $app('matches', ['near' => 'denied']) }}" data-app-near="{{ $app('matches', ['near' => '1', 'km' => 100]) }}">Near me</a>
-            <a class="app-chip" href="{{ $app('matches', ['sheet' => 'sport']) }}">Sport</a>
+            <a @class(['app-chip', 'on' => $sheet === 'sport']) href="{{ $app('matches', ['sheet' => $sheet === 'sport' ? null : 'sport']) }}">Sport</a>
             <a class="app-chip" href="{{ $app('calendar') }}">Date</a>
-            <a @class(['app-chip', 'on' => $sheet === 'province']) href="{{ $app('matches', ['sheet' => $sheet === 'province' ? null : 'province']) }}">{{ ($close['place'] ?? null) ?: 'Province' }}</a>
+            <a @class(['app-chip', 'on' => $sheet === 'filters']) href="{{ $app('matches', ['sheet' => $sheet === 'filters' ? null : 'filters']) }}">Filters</a>
         </div>
 
-        @if ($sheet === 'province')
+        @if ($sheet === 'filters')
             <div class="app-chipbar" role="group" aria-label="Province">
                 <a @class(['app-chip', 'on' => ($close['using_home'] ?? false) === true]) href="{{ $app('matches', ['province' => null]) }}">{{ $close['home_place'] }}</a>
                 @foreach ($places as $province)

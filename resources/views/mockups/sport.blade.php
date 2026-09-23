@@ -20,16 +20,22 @@
                 @endphp
                 <div class="mk-actions">
                     <a class="btn @if ($following) mk-follow is-on @else ghost @endif" href="{{ $mk('mockups.sport', array_merge(['slug' => $sport['slug']], $followQuery)) }}" aria-pressed="{{ $following ? 'true' : 'false' }}">{{ $following ? '✓ Following' : 'Follow' }}</a>
-                    @if (($sport['children'] ?? []) !== [])
-                        <a class="btn ghost" href="{{ $mk('mockups.matches', ['sport' => $sport['slug']]) }}">All matches</a>
-                        <a class="btn ghost" href="{{ $mk('mockups.matches.calendar', ['sport' => $sport['slug']]) }}">Calendar</a>
-                    @else
-                        <a class="btn" href="{{ $mk('mockups.matches', ['sport' => $sport['slug']]) }}">Match list</a>
-                        <a class="btn ghost" href="{{ $mk('mockups.matches.calendar', ['sport' => $sport['slug']]) }}">Calendar</a>
-                    @endif
-                    <a class="btn ghost" href="{{ $mk('mockups.clubs', ['sport' => $sport['slug']]) }}">Find a club</a>
+                    <a class="btn" href="{{ $mk('mockups.matches', ['sport' => $sport['slug']]) }}">Find a match</a>
                 </div>
             </header>
+
+            @php
+                $clubCount = count($sport['clubs']);
+                $rangeCount = count($sport['ranges']);
+                $counts = collect([
+                    count($sport['upcoming']) ? count($sport['upcoming']).' upcoming '.Str::plural('match', count($sport['upcoming'])) : null,
+                    $clubCount ? $clubCount.' '.Str::plural('club', $clubCount) : null,
+                    $rangeCount ? $rangeCount.' '.Str::plural('range', $rangeCount) : null,
+                ])->filter();
+            @endphp
+            @if ($counts->isNotEmpty())
+                <p class="mk-context">{{ $counts->implode(' · ') }}</p>
+            @endif
 
             @include('mockups.partials.ad-space', ['sponsors' => $sponsors, 'limit' => $sponsors->count()])
 
@@ -50,115 +56,64 @@
                 </section>
             @endif
 
-            <section class="mk-section">
-                <h2>What is {{ $sport['name'] }}?</h2>
-                <div class="mk-prose">
-                    @if ($sport['paragraphs'] !== [])
-                        <p>{{ $sport['paragraphs'][0] }}</p>
-                    @elseif ($sport['blurb'])
-                        <p>{{ $sport['blurb'] }}</p>
-                    @else
-                        <p>A longer explanation has not been written for this sport yet.</p>
-                    @endif
-                </div>
-            </section>
-
-            <section class="mk-section">
-                <h2>What happens at a match?</h2>
-                <div class="mk-prose">
-                    @forelse (array_slice($sport['paragraphs'], 1) as $paragraph)
-                        <p>{{ $paragraph }}</p>
-                    @empty
-                        <p>The register does not yet describe a typical match for {{ $sport['name'] }} beyond the short introduction.</p>
-                    @endforelse
-                </div>
-            </section>
-
-            <section class="mk-section">
-                <h2>What equipment do I need?</h2>
-                <div class="mk-prose">
-                    @if ($sport['equipment'])
-                        <p>{{ $sport['equipment'] }}</p>
-                    @else
-                        <p>Equipment rules have not been written for this sport yet.@if($sport['distances']) Typical distances on the register: {{ $sport['distances'] }}.@endif</p>
-                    @endif
-                </div>
-            </section>
-
-            <section class="mk-section">
-                <h2>Can beginners participate?</h2>
-                <div class="mk-prose">
-                    @if ($sport['beginner_paragraph'])
-                        <p>{{ $sport['beginner_paragraph'] }}</p>
-                    @else
-                        <p>There is no beginner note on this sport page yet. Individual matches can still be flagged new-shooter friendly.</p>
-                    @endif
-                </div>
-            </section>
-
-            <section class="mk-section">
-                <h2>Typical costs</h2>
-                @if ($sport['fees'] !== [])
-                    <p>Published entry fees on upcoming {{ $sport['name'] }} matches: {{ implode(', ', $sport['fees']) }}.</p>
-                @else
-                    <p>No entry fees are published on upcoming matches for this sport, so a typical cost is not shown.</p>
-                @endif
-            </section>
-
-            <section class="mk-section">
-                <h2>Governing organisations</h2>
-                @if ($sport['federation'])
-                    <p><a href="{{ $mk('mockups.club', ['slug' => $sport['federation']['slug']]) }}">{{ $sport['federation']['name'] }}</a></p>
-                @else
-                    <p>No governing body is linked to this sport yet.</p>
-                @endif
-            </section>
-
-            <section class="mk-section">
-                <h2>Upcoming matches</h2>
-                @forelse ($sport['upcoming'] as $match)
-                    <x-mockups.match-row :match="$match" />
-                @empty
-                    <p>No upcoming matches are listed for {{ $sport['name'] }}.</p>
-                @endforelse
-            </section>
-
-            <section class="mk-section">
-                <h2>Clubs offering this sport</h2>
-                @forelse ($sport['clubs'] as $club)
-                    <a class="mk-row" href="{{ $mk('mockups.club', ['slug' => $club['slug']]) }}">
-                        <span class="mk-row-title">{{ $club['name'] }}</span>
-                        <span class="mk-row-meta">{{ $club['place'] }}</span>
-                    </a>
-                @empty
-                    <p>No clubs are linked to {{ $sport['name'] }} yet.</p>
-                @endforelse
-            </section>
-
-            <section class="mk-section">
-                <h2>Ranges where it is shot</h2>
-                @forelse ($sport['ranges'] as $range)
-                    <a class="mk-row" href="{{ $mk('mockups.range', ['slug' => $range['slug']]) }}">
-                        <span class="mk-row-title">{{ $range['name'] }}</span>
-                        <span class="mk-row-meta">{{ $range['place'] }}</span>
-                    </a>
-                @empty
-                    <p>No ranges are linked to {{ $sport['name'] }} yet.</p>
-                @endforelse
-            </section>
-
-            @if ($sport['related'] !== [])
+            @if ($sport['upcoming'] !== [])
                 <section class="mk-section">
-                    <h2>Related sports</h2>
-                    <div class="mk-tiles">
-                        @foreach ($sport['related'] as $related)
-                            <a class="mk-tile" href="{{ $mk('mockups.sport', ['slug' => $related['slug']]) }}">
-                                <span class="fam">{{ $related['family_label'] }}</span>
-                                <strong>{{ $related['name'] }}</strong>
-                                <span>{{ $related['blurb'] }}</span>
-                            </a>
-                        @endforeach
+                    <div class="mk-headrow">
+                        <h2>Upcoming matches</h2>
+                        <a class="mk-textlink" href="{{ $mk('mockups.matches', ['sport' => $sport['slug']]) }}">All matches</a>
                     </div>
+                    @foreach ($sport['upcoming'] as $match)
+                        <x-mockups.match-row :match="$match" />
+                    @endforeach
+                </section>
+            @endif
+
+            @if ($sport['clubs'] !== [] || $sport['ranges'] !== [])
+                <section class="mk-section">
+                    <h2>Where to shoot</h2>
+                    @foreach ($sport['clubs'] as $club)
+                        <a class="mk-row" href="{{ $mk('mockups.club', ['slug' => $club['slug']]) }}">
+                            <span class="mk-row-title">{{ $club['name'] }}</span>
+                            <span class="mk-row-meta">{{ collect(['Club', $club['place']])->filter()->implode(' · ') }}</span>
+                        </a>
+                    @endforeach
+                    @foreach ($sport['ranges'] as $range)
+                        <a class="mk-row" href="{{ $mk('mockups.range', ['slug' => $range['slug']]) }}">
+                            <span class="mk-row-title">{{ $range['name'] }}</span>
+                            <span class="mk-row-meta">{{ collect(['Range', $range['place']])->filter()->implode(' · ') }}</span>
+                        </a>
+                    @endforeach
+                </section>
+            @endif
+
+            @php
+                $learn = collect([
+                    ($sport['paragraphs'][0] ?? null) ? ['What is '.$sport['name'].'?', $sport['paragraphs'][0]] : null,
+                    count(array_slice($sport['paragraphs'], 1)) ? ['How does a match work?', implode(' ', array_slice($sport['paragraphs'], 1))] : null,
+                    $sport['equipment'] ? ['What equipment do I need?', $sport['equipment']] : null,
+                    $sport['beginner_paragraph'] ? ['Can beginners participate?', $sport['beginner_paragraph']] : null,
+                    $sport['fees'] !== [] ? ['Typical costs', implode(', ', $sport['fees'])] : null,
+                ])->filter();
+            @endphp
+            @if ($learn->isNotEmpty() || $sport['federation'] || $sport['related'] !== [])
+                <section class="mk-section">
+                    <h2>Learn about {{ $sport['name'] }}</h2>
+                    @foreach ($learn as [$heading, $copy])
+                        <h3 class="mk-kicker">{{ $heading }}</h3>
+                        <div class="mk-prose"><p>{{ $copy }}</p></div>
+                    @endforeach
+                    @if ($sport['federation'])
+                        <h3 class="mk-kicker">Governing organisation</h3>
+                        <p><a href="{{ $mk('mockups.club', ['slug' => $sport['federation']['slug']]) }}">{{ $sport['federation']['name'] }}</a></p>
+                    @endif
+                    @if ($sport['related'] !== [])
+                        <h3 class="mk-kicker">Related sports</h3>
+                        <div class="mk-meta">
+                            @foreach ($sport['related'] as $related)
+                                <a href="{{ $mk('mockups.sport', ['slug' => $related['slug']]) }}">{{ $related['name'] }}</a>
+                            @endforeach
+                        </div>
+                    @endif
                 </section>
             @endif
         @endif

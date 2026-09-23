@@ -1,110 +1,117 @@
-<x-mockups.layout title="Find your sport" description="The national register of South African shooting sport." active="home">
-    <section class="hero" style="padding:0">
-        <div class="hero-reticle-wrap" aria-hidden="true">
-            <svg class="hero-reticle" viewBox="0 0 400 400">
-                <circle cx="200" cy="200" r="182" fill="none" stroke="#F1F2EE" stroke-width="1.5"/>
-                <circle cx="200" cy="200" r="120" fill="none" stroke="#F1F2EE" stroke-width="1"/>
-                <circle cx="200" cy="200" r="52" fill="none" stroke="#F1F2EE" stroke-width="1"/>
-                <path d="M200 0v150M200 250v150M0 200h150M250 200h150" stroke="#F1F2EE" stroke-width="1.5"/>
-                <path d="M182 236h36M186 258h28M190 280h20M182 164h36M186 142h28M190 120h20" stroke="#F1F2EE" stroke-width="1.5"/>
-                <path d="M164 182v36M142 186v28M120 190v20M236 182v36M258 186v28M280 190v20" stroke="#F1F2EE" stroke-width="1.5"/>
-                <circle class="hero-reticle-dot" cx="200" cy="200" r="3.5" fill="#6B7D3A"/>
-            </svg>
+<x-mockups.layout title="Find somewhere to shoot" description="Matches, clubs, ranges and shooting sports across South Africa." active="home">
+    <section class="mk-finder">
+        <div class="wrap">
+            <p class="label">ShootingSports</p>
+            <h1>Find somewhere to shoot.</h1>
+            <p class="lede">Matches, clubs, ranges and shooting sports across South Africa.</p>
+            <form class="mk-finder-form" method="get" action="{{ $mk('mockups.matches') }}">
+                <label class="field">
+                    <span>What do you shoot?</span>
+                    <select name="sport">
+                        <option value="">Any sport</option>
+                        @foreach ($sportOptions as $sport)
+                            <option value="{{ $sport['slug'] }}">{{ $sport['name'] }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Where?</span>
+                    <select name="province">
+                        <option value="">Anywhere</option>
+                        <option value="near">Near me</option>
+                        @foreach ($provinces as $province)
+                            <option value="{{ $province->value }}">{{ $province->getLabel() }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label class="field">
+                    <span>When?</span>
+                    <input type="date" name="from">
+                </label>
+                <button class="btn" type="submit">Find matches</button>
+            </form>
+            <p class="mk-context">{{ $stats['matches'] }} upcoming matches · {{ $stats['ranges'] }} ranges · {{ $stats['sports'] }} sports</p>
         </div>
-        <div class="hero-in">
-            <div>
-                <p class="label">The national register of South African shooting sport</p>
-                <h1>Find your <em>sport</em>. Find your <em>club</em>. Find your <em>match</em>.</h1>
-                <p class="lede">Every discipline, every province, one calendar. Free to list, free to browse, no account needed to look around.</p>
-                <p class="hero-weekend">
-                    <a class="btn" href="{{ $mk('mockups.matches.calendar', ['month' => $weekendMonth, 'from' => $weekendFrom, 'to' => $weekendTo]) }}">What's shooting this weekend?</a>
-                </p>
-                <form class="console" method="get" action="{{ $mk('mockups.matches.calendar') }}" data-finder>
-                    <div class="console-primary">
-                        <label class="field">
-                            <span>Sport</span>
-                            <select name="sport">
-                                <option value="">Any sport</option>
-                                @foreach ($sportOptions as $sport)
-                                    <option value="{{ $sport['slug'] }}">{{ $sport['name'] }}</option>
-                                @endforeach
-                            </select>
-                        </label>
-                        <label class="field">
-                            <span>Province / near me</span>
-                            <select name="province">
-                                <option value="">Any province</option>
-                                <option value="near">Near me</option>
-                                @foreach ($provinces as $province)
-                                    <option value="{{ $province->value }}">{{ $province->getLabel() }}</option>
-                                @endforeach
-                            </select>
-                        </label>
-                        <label class="field">
-                            <span>Date</span>
-                            <input type="date" name="from">
-                        </label>
-                        <button class="btn console-search" type="submit">Find matches</button>
-                    </div>
-                </form>
-                <div class="quick-actions" role="group" aria-label="Quick match filters">
-                    <a href="{{ $mk('mockups.matches.calendar', ['month' => $weekendMonth, 'from' => $weekendFrom, 'to' => $weekendTo]) }}">This weekend</a>
-                    <a href="{{ $mk('mockups.matches.calendar') }}" data-near-link>Near me</a>
-                    <a href="{{ $mk('mockups.matches.calendar', ['province' => 'gauteng']) }}">Gauteng</a>
-                    <a href="{{ $mk('mockups.matches.calendar', ['beginner' => 1]) }}">New shooter friendly</a>
+    </section>
+
+    <section class="mk-section">
+        <div class="wrap">
+            <div class="mk-headrow">
+                <h2>{{ $weekend ? 'This weekend' : 'Coming up' }}</h2>
+                <a class="mk-textlink" href="{{ $weekend ? $mk('mockups.matches', ['from' => $weekendFrom, 'to' => $weekendTo]) : $mk('mockups.matches') }}">View all matches</a>
+            </div>
+            @forelse ($matches as $match)
+                <x-mockups.match-row :match="$match" />
+            @empty
+                <p class="mk-support">No upcoming matches are listed yet.</p>
+            @endforelse
+        </div>
+    </section>
+
+    @if ($sports->isNotEmpty())
+        <section class="mk-section">
+            <div class="wrap">
+                <div class="mk-headrow">
+                    <h2>Explore shooting sports</h2>
+                    <a class="mk-textlink" href="{{ $mk('mockups.sports') }}">All sports</a>
+                </div>
+                <div class="mk-sport-grid">
+                    @foreach ($sports as $sport)
+                        <a class="mk-sport-cell" href="{{ ($sport['children'] ?? []) !== [] ? $mk('mockups.sport', ['slug' => $sport['slug']]) : $mk('mockups.matches', ['sport' => $sport['slug']]) }}">
+                            <strong>{{ $sport['name'] }}</strong>
+                            @if ($sport['upcoming_count'])
+                                <span>{{ $sport['upcoming_count'] }} upcoming</span>
+                            @endif
+                        </a>
+                    @endforeach
                 </div>
             </div>
-            <div class="hero-rail">
-                <div class="rail-head">
-                    <h3>Coming up</h3>
-                    <span class="label">Nationwide</span>
-                </div>
-                @forelse ($matches as $match)
-                    <a class="rail-item" href="{{ $mk('mockups.match', ['slug' => $match['slug']]) }}">
-                        <div class="rail-date">
-                            <span class="dow">{{ $match['dow'] }}</span>
-                            <b>{{ $match['day'] }}</b>
-                            <span class="mo">{{ $match['month'] }}</span>
-                        </div>
-                        <div class="rail-body">
-                            <div class="t">{{ $match['title'] }}</div>
-                            <div class="m">{{ collect([$match['town'] ?: $match['province'], $match['discipline']])->filter()->implode(' · ') }}</div>
-                        </div>
-                    </a>
-                @empty
-                    <p class="empty">No upcoming matches listed yet.</p>
-                @endforelse
-                <p class="rail-more">
-                    <a href="{{ $mk('mockups.matches.calendar') }}">Open the calendar →</a>
-                </p>
+        </section>
+    @endif
+
+    <section class="mk-section">
+        <div class="wrap">
+            <h2>Find somewhere to shoot</h2>
+            <div class="mk-split">
+                <a class="mk-choice" href="{{ $mk('mockups.clubs') }}">
+                    <span class="label">Clubs</span>
+                    <strong>Find people shooting the same sports.</strong>
+                </a>
+                <a class="mk-choice" href="{{ $mk('mockups.ranges') }}">
+                    <span class="label">Ranges</span>
+                    <strong>Find somewhere to shoot.</strong>
+                </a>
             </div>
         </div>
     </section>
 
-    <div class="strip">
-        <div class="strip-in">
-            <div><span>Matches</span><b>{{ $stats['matches'] }}</b></div>
-            <div><span>Ranges</span><b>{{ $stats['ranges'] }}</b></div>
-            <div><span>Disciplines</span><b>{{ $stats['sports'] }}</b></div>
-            <div><span>Clubs</span><b>{{ $stats['clubs'] }}</b></div>
-        </div>
-    </div>
+    @if ($activity !== [])
+        <section class="mk-section">
+            <div class="wrap">
+                <h2>Shooting activity</h2>
+                <ul class="mk-activity">
+                    @foreach (array_slice($activity, 0, 5) as $item)
+                        <li><time>{{ $item['when'] }}</time><a href="{{ $item['href'] }}">{{ $item['text'] }}</a></li>
+                    @endforeach
+                </ul>
+            </div>
+        </section>
+    @endif
 
-    <section class="block" id="divisions" style="padding-top:28px">
+    <section class="mk-section">
         <div class="wrap">
-            <div class="sec-head">
-                <p class="label">Start here</p>
-                <h2>What are you interested in?</h2>
-                <p>Four divisions. Open one, choose a discipline, then a sub-discipline if it has one. The match list comes after that. The calendar is the other view of those events.</p>
-            </div>
-            <div class="division-choices">
-                @foreach ($divisions as $division)
-                    <a class="division-choice" href="{{ $mk('mockups.sports', ['division' => $division->value]) }}">
-                        <span class="nm">{{ $division->getLabel() }}</span>
-                        <span class="go">Open {{ strtolower($division->getLabel()) }} →</span>
-                    </a>
-                @endforeach
-            </div>
+            <h2>New to shooting?</h2>
+            <p class="mk-support">Start with a sport, then look for a match marked beginner friendly.</p>
+            <p><a class="mk-textlink" href="{{ $mk('mockups.matches', ['beginner' => 1]) }}">Beginner friendly matches</a></p>
+        </div>
+    </section>
+
+    <section class="mk-section">
+        <div class="wrap">
+            <h2>Clubs and organisers</h2>
+            <p class="mk-support">List a match on the national calendar. It is free to publish.</p>
+            <p><a class="btn" href="{{ $mk('mockups.manage.matches.new') }}">List an event</a></p>
+            <p class="mk-support" style="margin-top:18px"><a class="mk-textlink" href="{{ $mk('mockups.industry') }}">Shooting industry</a></p>
         </div>
     </section>
 </x-mockups.layout>

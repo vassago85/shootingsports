@@ -3,7 +3,7 @@
         <header class="mk-pagehead">
             <p class="label">Clubs</p>
             <h1>Find a shooting club</h1>
-            <p class="mk-lede">Clubs, series and associations on the register. The current directory includes series alongside clubs.</p>
+            <p class="mk-lede">Find people shooting the same sports.</p>
         </header>
         <form class="mk-filters" method="get">
             @if (request('device') === 'mobile')
@@ -32,31 +32,23 @@
                 <input type="search" name="town" value="{{ request('town') }}" placeholder="Town">
             </label>
             <label class="mk-check"><input type="checkbox" name="visitors" value="1" @checked(request('visitors') === '1')> Visitors welcome</label>
-            <label class="mk-check"><input type="checkbox" name="members" value="1" @checked(request('members') === '1')> New members</label>
             <button class="btn" type="submit">Filter</button>
         </form>
-        @if ($membersFilterUnused)
-            <aside class="mk-internal">
-                <span>Reviewer note</span>
-                <p>Accepting new members is not a field on clubs. This filter matches nothing until that is stored. Visitors welcome is a real field and does filter.</p>
-            </aside>
-        @endif
         @forelse ($clubs as $club)
-            <a class="mk-row" href="{{ $mk('mockups.club', ['slug' => $club['slug']]) }}">
-                <span class="mk-row-id">
-                    @if ($club['logo'])
-                        <img class="mk-logo" src="{{ $club['logo'] }}" alt="">
-                    @endif
-                    <span>
-                        <span class="mk-row-title">{{ $club['name'] }}</span>
-                        <span class="mk-sub">{{ $club['place'] ?: 'Location not listed' }}</span>
-                    </span>
-                </span>
-                <span class="mk-row-meta">
-                    {{ $club['disciplines'] !== [] ? implode(' · ', array_slice($club['disciplines'], 0, 4)) : 'Sports not listed' }}
-                    @if ($club['range'])<br>{{ $club['range'] }}@endif
-                </span>
-                <span class="mk-count">{{ $club['upcoming_count'] }} upcoming</span>
+            @php
+                $place = collect([$club['town'] ?? null, $club['province'] ?? null])->filter(fn (?string $part): bool => filled($part) && $part !== '—')->implode(' · ');
+            @endphp
+            <a class="mk-dir" href="{{ $mk('mockups.club', ['slug' => $club['slug']]) }}">
+                <span class="mk-dir-name">{{ $club['name'] }}</span>
+                @if ($place !== '')
+                    <span class="mk-dir-place">{{ $place }}</span>
+                @endif
+                @if ($club['disciplines'] !== [])
+                    <span class="mk-dir-meta">{{ implode(' · ', array_slice($club['disciplines'], 0, 4)) }}</span>
+                @endif
+                @if ($club['upcoming_count'])
+                    <span class="mk-dir-count">{{ $club['upcoming_count'] }} upcoming {{ \Illuminate\Support\Str::plural('match', $club['upcoming_count']) }}</span>
+                @endif
             </a>
         @empty
             <p class="mk-empty"><strong>No clubs match these filters.</strong></p>

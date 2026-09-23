@@ -43,12 +43,22 @@ class MockupController extends Controller
     {
         [$weekendStart, $weekendEnd] = ThisWeekend::range();
 
+        $from = $weekendStart->toDateString();
+        $to = $weekendEnd->toDateString();
+        $upcoming = $this->catalog->publicMatches();
+        $weekendMatches = $upcoming
+            ->filter(fn (array $match): bool => filled($match['date'] ?? null) && $match['date'] >= $from && $match['date'] <= $to)
+            ->take(6)
+            ->values();
+
         return view('mockups.home', [
             'stats' => $this->catalog->stats(),
-            'matches' => $this->catalog->publicMatches()->take(6),
-            'divisions' => Division::publicCases(),
-            'weekendFrom' => $weekendStart->toDateString(),
-            'weekendTo' => $weekendEnd->toDateString(),
+            'matches' => ($weekendMatches->isNotEmpty() ? $weekendMatches : $upcoming->take(6))->values(),
+            'weekend' => $weekendMatches->isNotEmpty(),
+            'sports' => $this->catalog->sportTiles(),
+            'activity' => $this->catalog->activity(),
+            'weekendFrom' => $from,
+            'weekendTo' => $to,
             'weekendMonth' => $weekendStart->format('Y-m'),
             'provinces' => Province::cases(),
             'sportOptions' => $this->catalog->sports(),
@@ -536,15 +546,15 @@ class MockupController extends Controller
                 'screens' => [
                     ['key' => 'splash', 'label' => 'Splash'],
                     ['key' => 'welcome', 'label' => 'Welcome'],
+                    ['key' => 'signin', 'label' => 'Sign in'],
                     ['key' => 'location', 'label' => 'Location'],
                     ['key' => 'sports-choose', 'label' => 'Choose sports'],
                     ['key' => 'follow-onboard', 'label' => 'Follow'],
                     ['key' => 'alerts-onboard', 'label' => 'Alerts'],
-                    ['key' => 'ready', 'label' => 'Ready'],
                 ],
             ],
             [
-                'group' => '02 · Home & discovery',
+                'group' => '02 · Daily use',
                 'screens' => [
                     ['key' => 'home', 'label' => 'Home'],
                     ['key' => 'matches', 'label' => 'Matches'],
@@ -555,61 +565,43 @@ class MockupController extends Controller
             [
                 'group' => '03 · Match journey',
                 'screens' => [
-                    ['key' => 'match', 'label' => 'Match detail'],
-                    ['key' => 'pack', 'label' => 'Pack for match'],
+                    ['key' => 'match', 'label' => 'Match'],
+                    ['key' => 'match', 'label' => 'Saved', 'params' => ['saved' => '1']],
+                    ['key' => 'pack', 'label' => 'Pack'],
                 ],
             ],
             [
-                'group' => '04 · Packing',
-                'screens' => [
-                    ['key' => 'packing', 'label' => 'Packing library'],
-                ],
-            ],
-            [
-                'group' => '05 · Explore',
+                'group' => '04 · Discover',
                 'screens' => [
                     ['key' => 'find', 'label' => 'Find'],
                     ['key' => 'clubs', 'label' => 'Clubs'],
-                    ['key' => 'club', 'label' => 'Club detail'],
+                    ['key' => 'club', 'label' => 'Club'],
                     ['key' => 'ranges', 'label' => 'Ranges'],
-                    ['key' => 'range', 'label' => 'Range detail'],
+                    ['key' => 'range', 'label' => 'Range'],
                     ['key' => 'sports', 'label' => 'Sports'],
-                    ['key' => 'sport', 'label' => 'Sport detail'],
-                ],
-            ],
-            [
-                'group' => '06 · Suppliers',
-                'screens' => [
+                    ['key' => 'sport', 'label' => 'Sport'],
                     ['key' => 'suppliers', 'label' => 'Suppliers'],
-                    ['key' => 'supplier', 'label' => 'Supplier detail'],
+                    ['key' => 'supplier', 'label' => 'Supplier'],
                 ],
             ],
             [
-                'group' => '07 · Account',
+                'group' => '05 · Personal',
                 'screens' => [
                     ['key' => 'you', 'label' => 'You'],
                     ['key' => 'following', 'label' => 'Following'],
-                    ['key' => 'alerts', 'label' => 'Alerts settings'],
+                    ['key' => 'packing', 'label' => 'Packing'],
+                    ['key' => 'alerts', 'label' => 'Alerts'],
                     ['key' => 'appearance', 'label' => 'Appearance'],
                 ],
             ],
             [
-                'group' => '08 · Subscription',
+                'group' => '06 · Account',
                 'screens' => [
-                    ['key' => 'subscription', 'label' => 'Pro'],
+                    ['key' => 'subscription', 'label' => 'Subscription'],
                     ['key' => 'plans', 'label' => 'Before purchase'],
                     ['key' => 'cancel', 'label' => 'Cancel'],
-                    ['key' => 'cancelled', 'label' => 'Cancelled'],
-                ],
-            ],
-            [
-                'group' => '09 · Privacy & states',
-                'screens' => [
-                    ['key' => 'data', 'label' => 'Your data'],
+                    ['key' => 'data', 'label' => 'Privacy & data'],
                     ['key' => 'delete', 'label' => 'Delete account'],
-                    ['key' => 'deleted', 'label' => 'Account deleted'],
-                    ['key' => 'permissions', 'label' => 'Permissions'],
-                    ['key' => 'signin', 'label' => 'Signed out'],
                 ],
             ],
         ];
@@ -624,8 +616,27 @@ class MockupController extends Controller
     private function appHome(Collection $matches, Collection $clubs, array $close): array
     {
         $featured = $matches->first();
-        $coming = $matches->slice(1, 4)->values();
-        $nearby = $matches->slice(1, 3)->values();
+        $rest = $matches->slice(1)->values();
+        $coming = $rest->take(3)->values();
+        $comingSlugs = $coming->pluck('slug');
+        $nearby = $rest
+            ->reject(fn (array $match): bool => $comingSlugs->contains($match['slug']))
+            ->sortBy(fn (array $match): float => is_numeric($match['distance_km'] ?? null) ? (float) $match['distance_km'] : 9999)
+            ->take(3)
+            ->values();
+        $soon = now()->timezone('Africa/Johannesburg')->addDays(21);
+        $closing = $rest
+            ->filter(function (array $match) use ($soon): bool {
+                if (! filled($match['entry_url'] ?? null) || ! filled($match['date'] ?? null)) {
+                    return false;
+                }
+
+                $date = Carbon::parse($match['date'], 'Africa/Johannesburg');
+
+                return $date->isFuture() && $date->lessThanOrEqualTo($soon);
+            })
+            ->take(2)
+            ->values();
         $activityClubs = $clubs
             ->sortByDesc('upcoming_count')
             ->take(4)
@@ -646,6 +657,7 @@ class MockupController extends Controller
             'featured' => $featured,
             'coming' => $coming,
             'nearby' => $nearby,
+            'closing' => $closing,
             'activity' => $activityClubs,
             'initials' => 'P',
         ];
@@ -682,9 +694,17 @@ class MockupController extends Controller
             ->filter(fn (array $group): bool => $group['items']->isNotEmpty())
             ->values();
 
+        $familyKeys = array_keys($families);
+        $chosenFamilies = $selectedSports->intersect($familyKeys);
+        $chosenSlugs = $selectedSports
+            ->reject(fn (string $value): bool => in_array($value, $familyKeys, true))
+            ->merge($sports->filter(fn (array $sport): bool => $chosenFamilies->contains($sport['family']))->pluck('slug'))
+            ->unique()
+            ->values();
+
         $suggestedClubs = $clubs
-            ->when($selectedSports->isNotEmpty(), fn ($collection) => $collection->filter(
-                fn (array $club): bool => array_intersect($club['discipline_slugs'] ?? [], $selectedSports->all()) !== []
+            ->when($chosenSlugs->isNotEmpty(), fn ($collection) => $collection->filter(
+                fn (array $club): bool => array_intersect($club['discipline_slugs'] ?? [], $chosenSlugs->all()) !== []
             ))
             ->when($province instanceof Province, fn ($collection) => $collection->filter(
                 fn (array $club): bool => ($club['province_value'] ?? null) === $province->value

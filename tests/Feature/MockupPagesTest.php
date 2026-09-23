@@ -75,10 +75,9 @@ it('keeps the live hero and opens a division onto its disciplines', function () 
 
     $this->get(route('mockups.home'))
         ->assertOk()
-        ->assertSee('Find your')
-        ->assertSee('What are you interested in?')
-        ->assertSee('Handgun')
-        ->assertSee(route('mockups.sports', ['division' => 'handgun']), false)
+        ->assertSee('Find somewhere to shoot.')
+        ->assertSee('Find matches')
+        ->assertSee('Explore shooting sports')
         ->assertDontSee('Sponsored')
         ->assertDontSee('Advertise here');
 
@@ -207,7 +206,7 @@ it('hides other provinces when the app location is gauteng', function () {
         $page->assertDontSee($cape['title']);
     }
 
-    $this->get(route('mockups.apps', ['screen' => 'matches', 'sheet' => 'province']))
+    $this->get(route('mockups.apps', ['screen' => 'matches', 'sheet' => 'filters']))
         ->assertOk()
         ->assertSee('Anywhere');
 

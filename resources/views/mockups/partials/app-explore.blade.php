@@ -28,33 +28,29 @@
         <div class="app-group" style="margin-top: 20px;">
             <a href="{{ $app('clubs') }}">
                 <span class="app-mark"><x-mockups.icon name="users" /></span>
-                <span class="app-group-copy"><span>Clubs &amp; series</span><small>{{ $stats['clubs'] }} on the register</small></span>
+                <span class="app-group-copy"><span>Clubs &amp; series</span><small>Find people shooting your sports.</small></span>
             </a>
             <a href="{{ $app('ranges') }}">
                 <span class="app-mark"><x-mockups.icon name="range" /></span>
-                <span class="app-group-copy"><span>Ranges</span><small>{{ $stats['ranges'] }} places to shoot</small></span>
+                <span class="app-group-copy"><span>Ranges</span><small>Find somewhere to shoot.</small></span>
             </a>
             <a href="{{ $app('sports') }}">
                 <span class="app-mark"><x-mockups.icon name="target" /></span>
-                <span class="app-group-copy"><span>Sports</span><small>{{ $stats['sports'] }} disciplines</small></span>
+                <span class="app-group-copy"><span>Sports</span><small>Discover another discipline.</small></span>
             </a>
         </div>
 
-        @if ($clubs->isNotEmpty())
-            <p class="app-sub">Popular near you</p>
-            @foreach ($clubs->sortByDesc('upcoming_count')->take(4) as $row)
-                <a class="app-row" href="{{ $app('club', ['club' => $row['slug']]) }}">
-                    <span class="app-row-main">
-                        <span class="app-mark"><x-mockups.icon name="flag" /></span>
-                        <span>
-                            <strong>{{ $row['name'] }}</strong>
-                            <em>{{ $row['upcoming_count'] }} upcoming</em>
-                        </span>
-                    </span>
-                    <x-mockups.icon name="chevron" class="app-chev" />
-                </a>
-            @endforeach
-        @endif
+        <p class="app-sub">Suppliers</p>
+        <a class="app-row" href="{{ $app('suppliers') }}">
+            <span class="app-row-main">
+                <span class="app-mark"><x-mockups.icon name="store" /></span>
+                <span>
+                    <strong>Dealers and gunsmiths</strong>
+                    <em>Optics, reloading and other shooting businesses.</em>
+                </span>
+            </span>
+            <x-mockups.icon name="chevron" class="app-chev" />
+        </a>
     </div>
 
 @elseif ($screen === 'clubs')
@@ -86,7 +82,7 @@
             @php $clubMatches = $matches->filter(fn (array $row): bool => ($row['organiser_slug'] ?? null) === $club['slug'])->values(); @endphp
             <p class="app-kicker">{{ collect([$club['type'], implode(' · ', array_slice($club['disciplines'], 0, 3))])->filter()->implode(' · ') }}</p>
             <h1 class="app-hero">{{ $club['name'] }}</h1>
-            <p class="app-lead">{{ $club['place'] ?: 'Place not listed yet.' }}</p>
+            @if (filled($club['place']))<p class="app-lead">{{ $club['place'] }}</p>@endif
             <div class="app-inline">
                 <a class="app-btn tonal" href="{{ $app('following') }}">Following</a>
                 @if ($club['website'])<a class="app-btn secondary" href="{{ $club['website'] }}" target="_blank" rel="noopener">Website</a>@endif

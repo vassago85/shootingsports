@@ -26,36 +26,34 @@
                     @if ($business['phone'])<a class="btn ghost" href="tel:{{ $business['phone'] }}">Call</a>@endif
                 </div>
             </header>
-            <section class="mk-section">
-                <h2>About</h2>
-                <div class="mk-prose"><p>{{ $business['description'] ?: 'No description has been published.' }}</p></div>
-            </section>
-            <section class="mk-section">
-                <h2>Services</h2>
-                @if ($business['services'] === [])
-                    <p>Category: {{ $business['category'] ?: 'Not listed' }}. No extra services are listed.</p>
-                @else
+            @if ($business['description'])
+                <section class="mk-section">
+                    <h2>About</h2>
+                    <div class="mk-prose"><p>{{ $business['description'] }}</p></div>
+                </section>
+            @endif
+            @if ($business['services'] !== [])
+                <section class="mk-section">
+                    <h2>Services</h2>
                     <div class="mk-meta">@foreach ($business['services'] as $service)<span>{{ $service }}</span>@endforeach</div>
-                @endif
-            </section>
+                </section>
+            @endif
             @if ($business['disciplines'] !== [])
                 <section class="mk-section">
                     <h2>Disciplines</h2>
                     <p>{{ implode(', ', $business['disciplines']) }}</p>
                 </section>
             @endif
-            <section class="mk-section">
-                <h2>Supporting shooting sports</h2>
-                @if ($business['placements'] !== [])
+            @if ($business['placements'] !== [])
+                <section class="mk-section">
+                    <h2>Supporting shooting sports</h2>
                     <ul class="mk-activity">
                         @foreach ($business['placements'] as $placement)
                             <li><time>Ad</time><span>{{ $placement['name'] }}@if($placement['slot']) · {{ $placement['slot'] }}@endif</span></li>
                         @endforeach
                     </ul>
-                @else
-                    <p>No sponsored clubs or matches are linked to this business.</p>
-                @endif
-            </section>
+                </section>
+            @endif
         @endif
     </div>
 </x-mockups.layout>

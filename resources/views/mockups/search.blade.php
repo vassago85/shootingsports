@@ -19,6 +19,7 @@
             <p class="mk-support">Showing a few from each part of the register. Type to search all of them.</p>
         @endif
         @foreach ($groups as $heading => $rows)
+            @if ($rows->isNotEmpty())
             <section class="mk-section">
                 <h2>{{ $heading }}</h2>
                 @forelse ($rows as $row)
@@ -37,6 +38,7 @@
                     <p>No {{ strtolower($heading) }} for that search.</p>
                 @endforelse
             </section>
+            @endif
         @endforeach
     </div>
 </x-mockups.layout>

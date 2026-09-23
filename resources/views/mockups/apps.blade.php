@@ -146,6 +146,12 @@
         foreach ($journey as $group) {
             foreach ($group['screens'] as $item) {
                 if ($item['key'] === $screen) {
+                    $savedMatch = $item['key'] === 'match' && request()->query('saved') === '1';
+
+                    if ($item['key'] === 'match' && (($item['label'] === 'Saved') !== $savedMatch)) {
+                        continue;
+                    }
+
                     $currentLabel = $item['label'];
                     $groupLabel = $group['group'];
                 }
@@ -167,7 +173,18 @@
                     <h3>{{ $group['group'] }}</h3>
                     @foreach ($group['screens'] as $item)
                         @php $counter++; @endphp
-                        <a href="{{ $app($item['key']) }}" @class(['on' => $screen === $item['key']])>
+                        @php
+                            $sideOn = $screen === $item['key'];
+
+                            if ($item['key'] === 'match') {
+                                $sideOn = $screen === 'match' && (
+                                    $item['label'] === 'Saved'
+                                        ? request()->query('saved') === '1'
+                                        : request()->query('saved') !== '1'
+                                );
+                            }
+                        @endphp
+                        <a href="{{ $app($item['key'], $item['params'] ?? []) }}" @class(['on' => $sideOn])>
                             <span class="app-side-n">{{ str_pad((string) $counter, 2, '0', STR_PAD_LEFT) }}</span>
                             <span>{{ $item['label'] }}</span>
                         </a>

@@ -6,25 +6,24 @@
     // Screens that own the whole viewport (no status bar, no tabs, no home bar).
     $fullBleed = in_array($screen, ['splash'], true);
     // Screens in the first-run journey: status bar visible, no tabs, no top bar.
-    $onboarding = in_array($screen, ['welcome', 'location', 'sports-choose', 'follow-onboard', 'alerts-onboard', 'ready'], true);
+    $onboarding = in_array($screen, ['welcome', 'location', 'sports-choose', 'follow-onboard', 'alerts-onboard'], true);
     // Signed-out state — status bar and content, no tabs.
     $signedOut = $screen === 'signin' || $screen === 'deleted';
 
     // Which bottom tab is active. Legacy `today` shows Home tab (as per spec).
     $tab = match (true) {
-        $screen === 'pack' && request()->filled('match') => 'home',
-        $screen === 'pack' && request()->filled('sport') => 'find',
+        $screen === 'pack' && request()->filled('match') => 'matches',
+        $screen === 'pack' && request()->filled('sport') => 'you',
         $screen === 'pack' => 'you',
         $screen === 'packing' => 'you',
-        in_array($screen, ['find', 'clubs', 'club', 'ranges', 'range', 'sports', 'sport'], true) => 'find',
-        in_array($screen, ['suppliers', 'supplier'], true) => 'suppliers',
+        in_array($screen, ['find', 'clubs', 'club', 'ranges', 'range', 'sports', 'sport', 'suppliers', 'supplier'], true) => 'find',
         in_array($screen, ['you', 'alerts', 'appearance', 'following', 'subscription', 'cancel', 'cancelled', 'plans', 'data', 'delete', 'permissions'], true) => 'you',
-        in_array($screen, ['home', 'today', 'matches', 'calendar', 'search', 'match'], true) => 'home',
+        in_array($screen, ['matches', 'today', 'calendar', 'search', 'match'], true) => 'matches',
         default => 'home',
     };
 
     // Whether a top bar and back arrow should render.
-    $rootScreens = ['home', 'find', 'suppliers', 'you'];
+    $rootScreens = ['home', 'matches', 'today', 'find', 'you'];
     $pushed = ! in_array($screen, $rootScreens, true) && ! $fullBleed && ! $onboarding;
     $showTabs = ! $fullBleed && ! $onboarding && ! $signedOut;
 
@@ -35,8 +34,8 @@
         $screen === 'pack' => ['you', 'You'],
         $screen === 'packing' => ['you', 'You'],
         $screen === 'search' => ['matches', 'Matches'],
-        $screen === 'matches', $screen === 'today' => ['home', 'Home'],
         $screen === 'calendar' => ['matches', 'Matches'],
+        $screen === 'suppliers' => ['find', 'Find'],
         $screen === 'match' => ['matches', 'Matches'],
         in_array($screen, ['clubs', 'ranges', 'sports'], true) => ['find', 'Find'],
         $screen === 'club' => ['clubs', 'Clubs'],
@@ -61,6 +60,7 @@
         'range' => 'Range',
         'sports' => 'Sports',
         'sport' => 'Sport',
+        'suppliers' => 'Suppliers',
         'supplier' => 'Supplier',
         'alerts' => 'Alerts',
         'appearance' => 'Appearance',
@@ -165,10 +165,7 @@
                     </a>
                     <strong>{{ $bar }}</strong>
                     <span class="phone-bar-actions">
-                        @if ($screen === 'match')
-                            <a href="#" aria-label="Share"><x-mockups.icon name="share" /></a>
-                            <a href="{{ $open('match').(request()->filled('match') ? '&saved=1' : '') }}" aria-label="Save"><x-mockups.icon name="bookmark" /></a>
-                        @elseif (in_array($screen, ['matches', 'today'], true))
+                        @if (in_array($screen, ['matches', 'today'], true))
                             <a href="{{ $open('search') }}" aria-label="Search"><x-mockups.icon name="search" /></a>
                             <a href="{{ $open('calendar') }}" aria-label="Calendar"><x-mockups.icon name="calendar" /></a>
                         @endif
@@ -186,13 +183,13 @@
                         <x-mockups.icon name="home" :solid="$tab === 'home'" />
                         <span>Home</span>
                     </a>
+                    <a href="{{ $open('matches') }}" @class(['on' => $tab === 'matches'])>
+                        <x-mockups.icon name="calendar" :solid="$tab === 'matches'" />
+                        <span>Matches</span>
+                    </a>
                     <a href="{{ $open('find') }}" @class(['on' => $tab === 'find'])>
                         <x-mockups.icon name="compass" :solid="$tab === 'find'" />
                         <span>Find</span>
-                    </a>
-                    <a href="{{ $open('suppliers') }}" @class(['on' => $tab === 'suppliers'])>
-                        <x-mockups.icon name="store" :solid="$tab === 'suppliers'" />
-                        <span>Suppliers</span>
                     </a>
                     <a href="{{ $open('you') }}" @class(['on' => $tab === 'you'])>
                         <x-mockups.icon name="user" :solid="$tab === 'you'" />

@@ -1,39 +1,50 @@
 @props(['match'])
-<article class="mk-match">
-    <div class="mk-date">
-        <span class="dow">{{ $match['dow'] }}</span>
+
+@php
+    $townLine = collect([$match['town'] ?? null, $match['province'] ?? null])->filter()->implode(', ');
+    $place = collect([$match['range'] ?? null, $townLine])->filter()->implode(' · ');
+    $levelValue = $match['level_value'] ?? null;
+    $levelBadge = in_array($levelValue, ['national', 'provincial', 'international'], true) ? $match['level'] : null;
+    $beginner = in_array('new-shooter-friendly', $match['flag_slugs'] ?? [], true);
+    $facts = collect([
+        ($match['rounds'] ?? null) ? $match['rounds'].' rounds' : null,
+        $match['distance'] ?? null,
+        $match['fee'] ?? null,
+        ($match['status_value'] ?? null) === 'entries_open' ? 'Registration open' : null,
+        isset($match['distance_km']) && $match['distance_km'] !== null ? round($match['distance_km']).' km' : null,
+    ])->filter()->values();
+@endphp
+
+<a class="mk-match" href="{{ $mk('mockups.match', ['slug' => $match['slug']]) }}">
+    <span class="mk-date">
         <b>{{ $match['day'] }}</b>
-        <span class="mo">{{ $match['month'] }}</span>
-    </div>
-    <div class="mk-match-copy">
-        @if ($match['organiser_logo'] ?? null)
-            <img class="mk-logo" src="{{ $match['organiser_logo'] }}" alt="">
+        <span>{{ $match['month'] }}</span>
+    </span>
+    <span class="mk-match-copy">
+        <span class="mk-match-top">
+            <span class="mk-title">{{ $match['title'] }}</span>
+            @if ($levelBadge || $beginner)
+                <span class="mk-match-flags">
+                    @if ($levelBadge)<span class="mk-badge">{{ $levelBadge }}</span>@endif
+                    @if ($beginner)<span class="mk-badge">Beginner friendly</span>@endif
+                </span>
+            @endif
+        </span>
+        @if ($match['discipline'] ?? null)
+            <span class="mk-sport">{{ $match['discipline'] }}</span>
         @endif
-        <div>
-        <h3 class="mk-title"><a href="{{ $mk('mockups.match', ['slug' => $match['slug']]) }}">{{ $match['title'] }}</a></h3>
-        <div class="mk-sub">
-            {{ collect([$match['discipline'], $match['organiser']])->filter()->implode(' · ') }}
-        </div>
-        <div class="mk-sub">
-            {{ collect([$match['range'], $match['town'], $match['province']])->filter()->implode(' · ') }}
-        </div>
-        <div class="mk-meta">
-            @if ($match['rounds'])<span>{{ $match['rounds'] }} rounds</span>@endif
-            @if ($match['stages'])<span>{{ $match['stages'] }} stages</span>@endif
-            @if ($match['targets'])<span>{{ $match['targets'] }} targets</span>@endif
-            @if ($match['distance'])<span>{{ $match['distance'] }}</span>@endif
-            @if ($match['fee'])<span>{{ $match['fee'] }}</span>@endif
-            @if ($match['level'])<span>{{ $match['level'] }}</span>@endif
-            @if ($match['distance_km'] !== null)<span>{{ round($match['distance_km']) }} km</span>@endif
-        </div>
-        @if ($match['badges'] !== [])
-            <div class="mk-badges">
-                @foreach ($match['badges'] as $badge)
-                    <span @class(['mk-badge', $badge['tone']])>{{ $badge['label'] }}</span>
+        @if ($place !== '')
+            <span class="mk-place">{{ $place }}</span>
+        @endif
+        @if (($match['organiser'] ?? null) || $facts->isNotEmpty())
+            <span class="mk-meta">
+                @if ($match['organiser'] ?? null)
+                    <span>{{ $match['organiser'] }}</span>
+                @endif
+                @foreach ($facts as $fact)
+                    <span>{{ $fact }}</span>
                 @endforeach
-            </div>
+            </span>
         @endif
-        </div>
-    </div>
-    <a class="btn ghost mk-go" href="{{ $mk('mockups.match', ['slug' => $match['slug']]) }}">View match</a>
-</article>
+    </span>
+</a>

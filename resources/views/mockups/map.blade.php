@@ -9,16 +9,13 @@
         <x-mockups.match-views />
         <x-mockups.match-filters :sports="$sports" :provinces="$provinces" />
         @include('mockups.partials.ad-space', ['sponsors' => $sponsors, 'limit' => $sponsors->count()])
-    </div>
-    @if ($unlocated !== [])
-        <div class="wrap">
+        @if ($unlocated !== [])
             <aside class="mk-internal">
                 <span>Reviewer note</span>
                 <p>{{ count($unlocated) }} {{ count($unlocated) === 1 ? 'match has' : 'matches have' }} no GPS, so {{ count($unlocated) === 1 ? 'it is' : 'they are' }} listed under the map and not pinned. Public copy does not mention missing coordinates.</p>
             </aside>
-        </div>
-    @endif
-    <div class="mk-map">
+        @endif
+        <div class="mk-map">
         <div id="mk-map" class="mk-map-canvas"></div>
         <div class="mk-map-panel" id="mk-map-panel">
             @foreach ($markers as $marker)
@@ -38,6 +35,7 @@
                 @endforeach
             @endif
         </div>
+    </div>
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script>

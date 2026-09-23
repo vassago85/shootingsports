@@ -19,27 +19,22 @@
         <p class="app-sub">Saved</p>
         <div class="app-group">
             <a href="{{ $app('matches') }}"><span class="app-mark"><x-mockups.icon name="bookmark" /></span><span class="app-group-copy"><span>Saved matches</span></span></a>
-            <a href="{{ $app('packing') }}"><span class="app-mark"><x-mockups.icon name="bag" /></span><span class="app-group-copy"><span>Packing</span></span></a>
+            <a href="{{ $app('packing') }}"><span class="app-mark"><x-mockups.icon name="bag" /></span><span class="app-group-copy"><span>Packing lists</span></span></a>
             <a href="{{ $app('calendar') }}"><span class="app-mark"><x-mockups.icon name="calendar" /></span><span class="app-group-copy"><span>Calendar</span></span></a>
         </div>
 
         <p class="app-sub">Preferences</p>
         <div class="app-group">
             <a href="{{ $app('location') }}"><span class="app-mark"><x-mockups.icon name="pin" /></span><span class="app-group-copy"><span>Location</span><small>{{ $close['home_place'] }}</small></span></a>
-            <a href="{{ $app('alerts') }}"><span class="app-mark"><x-mockups.icon name="bell" /></span><span class="app-group-copy"><span>Alerts</span><small>{{ $paused ? 'Emails off' : 'Emails on' }}</small></span></a>
+            <a href="{{ $app('alerts') }}"><span class="app-mark"><x-mockups.icon name="bell" /></span><span class="app-group-copy"><span>Notifications</span><small>{{ $paused ? 'Off' : 'On' }}</small></span></a>
             <a href="{{ $app('appearance') }}"><span class="app-mark"><x-mockups.icon name="sun" /></span><span class="app-group-copy"><span>Appearance</span><small>{{ $appearanceTheme === 'light' ? 'Light' : 'Dark' }}</small></span></a>
         </div>
 
         <p class="app-sub">Account</p>
         <div class="app-group">
             <a href="{{ $app('subscription') }}"><span class="app-mark"><x-mockups.icon name="card" /></span><span class="app-group-copy"><span>Subscription</span><small>Pro · renews {{ $renews }}</small></span></a>
-            <a href="{{ $app('data') }}"><span class="app-mark"><x-mockups.icon name="shield" /></span><span class="app-group-copy"><span>Privacy &amp; your data</span></span></a>
-            <a href="{{ route('terms') }}"><span class="app-mark"><x-mockups.icon name="file" /></span><span class="app-group-copy"><span>Terms</span></span></a>
+            <a href="{{ $app('data') }}"><span class="app-mark"><x-mockups.icon name="shield" /></span><span class="app-group-copy"><span>Privacy &amp; data</span></span></a>
             <a href="{{ $app('signin') }}"><span class="app-mark"><x-mockups.icon name="logout" /></span><span class="app-group-copy"><span>Sign out</span></span></a>
-        </div>
-
-        <div style="margin-top: 28px;">
-            <a class="app-btn quiet danger" href="{{ $app('delete') }}">Delete account</a>
         </div>
     </div>
 

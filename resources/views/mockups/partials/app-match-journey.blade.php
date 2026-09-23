@@ -1,11 +1,15 @@
 @if ($screen === 'match')
+    <div class="app-docked">
     <div class="app-pad">
-        @if ($saved)
-            <p class="app-banner">Saved on this phone.</p>
-        @endif
         @if ($match)
             @php
                 $packCount = count(\App\Support\Mockups\PackingKits::basics($match['discipline_slug'] ?? null, $match['family'] ?? null));
+                $placeLine = collect([$match['town'], $kmAway($match)])->filter()->implode(' · ');
+                $meta = collect([
+                    $match['fee'] ?? null,
+                    filled($match['rounds'] ?? null) ? $match['rounds'].' rounds' : null,
+                    $match['distance'] ?? null,
+                ])->filter();
             @endphp
             <span class="app-badge">
                 @if ($match['discipline'])<b>{{ $match['discipline'] }}</b>@endif
@@ -19,27 +23,16 @@
                     <span>{{ $match['month'] }}</span>
                 </div>
                 <div class="app-date-block-body">
-                    <strong>{{ $match['range'] ?: 'Venue to be confirmed' }}</strong>
-                    <em>{{ collect([$match['town'], $match['province']])->filter()->implode(' · ') }}</em>
+                    @if (filled($match['range']))<strong>{{ $match['range'] }}</strong>@endif
+                    @if ($placeLine !== '')<em>{{ $placeLine }}</em>@endif
                 </div>
             </div>
 
-            <div class="app-strip">
-                @if ($match['time'])<span>{{ $match['time'] }}</span>@endif
-                @if ($match['level'])<span>{{ $match['level'] }}</span>@endif
-                @if ($kmAway($match))<span>{{ $kmAway($match) }}</span>@endif
-            </div>
-
-            <div class="app-stack">
-                @if (filled($match['entry_url']))
-                    <a class="app-btn" href="{{ $match['entry_url'] }}" target="_blank" rel="noopener">Enter match</a>
-                @else
-                    <a class="app-btn" href="{{ $app('match', ['match' => $match['slug'], 'saved' => 1]) }}">Save match</a>
-                @endif
-                @if (filled($match['directions']))
-                    <a class="app-btn secondary" href="{{ $match['directions'] }}" target="_blank" rel="noopener">Directions</a>
-                @endif
-            </div>
+            @if ($meta->isNotEmpty())
+                <div class="app-strip">
+                    @foreach ($meta as $bit)<span>{{ $bit }}</span>@endforeach
+                </div>
+            @endif
 
             <div class="app-actionrow">
                 <a href="{{ $app('match', ['match' => $match['slug'], 'saved' => 1]) }}" @class(['on' => $saved])>
@@ -50,9 +43,15 @@
                     <x-mockups.icon name="calendar" />
                     <span>Calendar</span>
                 </a>
-                <a href="{{ $app('pack', ['match' => $match['slug']]) }}">
-                    <x-mockups.icon name="bag" />
-                    <span>Pack</span>
+                @if (filled($match['directions']))
+                    <a href="{{ $match['directions'] }}" target="_blank" rel="noopener">
+                        <x-mockups.icon name="pin" />
+                        <span>Directions</span>
+                    </a>
+                @endif
+                <a href="{{ $app('match', ['match' => $match['slug']]) }}" aria-label="Share">
+                    <x-mockups.icon name="share" />
+                    <span>Share</span>
                 </a>
             </div>
 
@@ -70,15 +69,15 @@
                 <p class="app-lead">{{ \Illuminate\Support\Str::limit($match['description'], 280) }}</p>
             @endif
 
-            <p class="app-sub">Match details</p>
-            <dl class="app-facts">
-                @if ($match['discipline'])<div><dt>Sport</dt><dd>{{ $match['discipline'] }}</dd></div>@endif
-                @if ($match['level'])<div><dt>Level</dt><dd>{{ $match['level'] }}</dd></div>@endif
-                @if ($match['organiser'])<div><dt>Organiser</dt><dd>{{ $match['organiser'] }}</dd></div>@endif
-                @if ($match['fee'])<div><dt>Entry fee</dt><dd>{{ $match['fee'] }}</dd></div>@endif
-                @if ($match['rounds'])<div><dt>Rounds</dt><dd>{{ $match['rounds'] }}</dd></div>@endif
-                @if ($match['distance'])<div><dt>Distance</dt><dd>{{ $match['distance'] }}</dd></div>@endif
-            </dl>
+            @if ($match['time'] || $match['fee'] || $match['rounds'] || $match['distance'])
+                <p class="app-sub">Match details</p>
+                <dl class="app-facts">
+                    @if ($match['time'])<div><dt>Starts</dt><dd>{{ $match['time'] }}</dd></div>@endif
+                    @if ($match['fee'])<div><dt>Entry fee</dt><dd>{{ $match['fee'] }}</dd></div>@endif
+                    @if ($match['rounds'])<div><dt>Rounds</dt><dd>{{ $match['rounds'] }}</dd></div>@endif
+                    @if ($match['distance'])<div><dt>Distance</dt><dd>{{ $match['distance'] }}</dd></div>@endif
+                </dl>
+            @endif
 
             @if ($match['range'])
                 <p class="app-sub">Venue</p>
@@ -111,18 +110,43 @@
                     <span class="app-row-main">
                         <span class="app-mark"><x-mockups.icon name="bag" /></span>
                         <span>
-                            <strong>Getting ready?</strong>
-                            <em>{{ $packCount }} items on your {{ $match['discipline'] }} checklist</em>
+                            <strong>Pack for this match</strong>
+                            <em>{{ $packCount }} items on your {{ $match['discipline'] }} list</em>
                         </span>
                     </span>
                     <x-mockups.icon name="chevron" class="app-chev" />
                 </a>
             @endif
+
+            @php
+                $similar = collect($matches)->filter(fn (array $row): bool => ($row['slug'] ?? null) !== $match['slug'] && ($row['discipline_slug'] ?? null) === ($match['discipline_slug'] ?? null))->take(3);
+                if ($similar->isEmpty()) {
+                    $similar = collect($matches)->filter(fn (array $row): bool => ($row['slug'] ?? null) !== $match['slug'])->take(3);
+                }
+            @endphp
+            @if ($similar->isNotEmpty())
+                <p class="app-sub">Similar matches</p>
+                @foreach ($similar as $row)
+                    <a class="app-match" href="{{ $app('match', ['match' => $row['slug']]) }}">
+                        <span class="app-when"><b>{{ $row['day'] }}</b><span>{{ $row['month'] }}</span></span>
+                        <span><strong>{{ $row['title'] }}</strong><em>{{ collect([$row['discipline'], $row['town'] ?: $row['province']])->filter()->implode(' · ') }}</em></span>
+                    </a>
+                @endforeach
+            @endif
         @else
             <h1 class="app-hero">No match open</h1>
-            <p class="app-lead">Nothing upcoming is listed in this preview.</p>
             <a class="app-btn" href="{{ $app('matches') }}">Back to matches</a>
         @endif
+    </div>
+    @if ($match)
+        <div class="app-dock">
+            @if (filled($match['entry_url']))
+                <a class="app-btn" href="{{ $match['entry_url'] }}" target="_blank" rel="noopener">Enter match</a>
+            @else
+                <a class="app-btn" href="{{ $app('match', ['match' => $match['slug'], 'saved' => 1]) }}">Save match</a>
+            @endif
+        </div>
+    @endif
     </div>
 
 @elseif ($screen === 'pack' && $packing)
@@ -147,7 +171,7 @@
             }
             foreach (['vest', 'choke', 'bipod', 'bag', 'rest', 'dope', 'mat', 'glove'] as $word) {
                 if (str_contains($lower, $word)) {
-                    return 'Match';
+                    return 'Essential';
                 }
             }
 
@@ -155,7 +179,7 @@
         };
         $basics = array_values(array_filter($packing['rows'], fn (array $row): bool => ! $row['custom']));
         $extras = array_values(array_filter($packing['rows'], fn (array $row): bool => $row['custom']));
-        $grouped = ['Essential' => [], 'Match' => [], 'Personal' => []];
+        $grouped = ['Essential' => [], 'Personal' => []];
         foreach ($basics as $row) {
             $grouped[$bucketOf($row['label'])][] = $row;
         }
@@ -166,14 +190,16 @@
     <div class="app-pad">
         @if ($packing['match'])
             <h1 class="app-hero">Pack for {{ $packing['match']['title'] }}</h1>
-            <p class="app-lead">{{ collect([$packing['sport'], $packing['match']['date_label'] ?? null])->filter()->implode(' · ') }}</p>
+            @if ($total > 0)
+                <p class="app-lead">{{ $done }} / {{ $total }} ready</p>
+            @endif
 
             @if ($ready)
                 <p class="app-banner">Ready to shoot. Everything is packed.</p>
             @elseif ($total > 0)
                 <div class="app-progress">
                     <div class="app-progress-head">
-                        <strong>{{ $done }} / {{ $total }} packed</strong>
+                        <strong>{{ $done }} / {{ $total }} ready</strong>
                         <span>{{ (int) round($done / $total * 100) }}%</span>
                     </div>
                     <div class="app-progress-bar"><i style="width: {{ (int) round($done / $total * 100) }}%"></i></div>
@@ -265,9 +291,23 @@
     @endphp
     <div class="app-pad">
         <h1 class="app-hero">Packing</h1>
-        <p class="app-lead">Reusable checklists for the sports you shoot.</p>
 
-        <p class="app-sub">My sports</p>
+        @if (($matches->first() ?? null) !== null)
+            @php $nextPack = $matches->first(); @endphp
+            <p class="app-sub">Your next match</p>
+            <a class="app-row" href="{{ $app('pack', ['match' => $nextPack['slug']]) }}">
+                <span class="app-row-main">
+                    <span class="app-when"><b>{{ $nextPack['day'] }}</b><span>{{ $nextPack['month'] }}</span></span>
+                    <span>
+                        <strong>{{ $nextPack['title'] }}</strong>
+                        <em>{{ $nextPack['dow'] ?: 'Continue packing' }}</em>
+                    </span>
+                </span>
+                <x-mockups.icon name="chevron" class="app-chev" />
+            </a>
+        @endif
+
+        <p class="app-sub">Your lists</p>
         <div class="app-group">
             @foreach ($mine as $row)
                 <a href="{{ $app('pack', ['sport' => $row['slug']]) }}">
@@ -277,15 +317,18 @@
             @endforeach
         </div>
 
-        <p class="app-sub">Other sports</p>
+        <p class="app-sub">Browse other sports</p>
+        @unless ($showAll)
+            <a class="app-see-all" href="{{ $app('packing', ['all' => 1]) }}">Browse other sports <x-mockups.icon name="chevron" /></a>
+        @else
         <form class="app-search-form" method="get" action="{{ $mk('mockups.apps') }}">
             <input type="hidden" name="screen" value="packing">
+            <input type="hidden" name="all" value="1">
             <label class="app-search-field">
                 <x-mockups.icon name="search" />
                 <input type="search" name="q" value="{{ $kitQuery }}" placeholder="Search sports" aria-label="Search sports">
             </label>
         </form>
-        @if ($showAll)
             <div class="app-group">
                 @forelse ($rest as $row)
                     <a href="{{ $app('pack', ['sport' => $row['slug']]) }}">
@@ -296,8 +339,6 @@
                     <p class="app-empty">No sports match that.</p>
                 @endforelse
             </div>
-        @else
-            <a class="app-see-all" href="{{ $app('packing', ['all' => 1]) }}">Browse all sports <x-mockups.icon name="chevron" /></a>
-        @endif
+        @endunless
     </div>
 @endif

@@ -3,26 +3,33 @@
         @if (! $club)
             <div class="mk-empty"><strong>No clubs in the register yet.</strong></div>
         @else
+            @php
+                $following = $follows['clubs']->contains($club['slug']);
+                $nextClubs = $following
+                    ? $follows['clubs']->reject(fn ($s) => $s === $club['slug'])->values()
+                    : $follows['clubs']->push($club['slug'])->unique()->values();
+                $followQuery = array_filter([
+                    'sport' => $follows['sports']->all(),
+                    'club' => $nextClubs->all(),
+                    'province' => $follows['province'],
+                ], fn ($value) => $value !== '' && $value !== []);
+                $upcoming = collect($club['upcoming']);
+                $next = $upcoming->first();
+                $rest = $upcoming->slice(1)->values();
+            @endphp
             <header class="mk-pagehead">
                 @if ($club['logo'])
-                    <img class="mk-logo mk-logo-lg" src="{{ $club['logo'] }}" alt="{{ $club['name'] }} logo">
+                    <img class="mk-logo mk-logo-lg" src="{{ $club['logo'] }}" alt="">
                 @endif
-                <p class="label">{{ $club['type'] }} · {{ $club['place'] ?: 'Location not listed' }}</p>
                 <h1>{{ $club['name'] }}</h1>
-                <p class="mk-lede">{{ $club['disciplines'] !== [] ? implode(' · ', $club['disciplines']) : 'Sports not listed yet.' }}</p>
-                @php
-                    $following = $follows['clubs']->contains($club['slug']);
-                    $nextClubs = $following
-                        ? $follows['clubs']->reject(fn ($s) => $s === $club['slug'])->values()
-                        : $follows['clubs']->push($club['slug'])->unique()->values();
-                    $followQuery = array_filter([
-                        'sport' => $follows['sports']->all(),
-                        'club' => $nextClubs->all(),
-                        'province' => $follows['province'],
-                    ], fn ($value) => $value !== '' && $value !== []);
-                @endphp
+                @if ($club['place'])
+                    <p class="mk-lede">{{ $club['place'] }}</p>
+                @endif
+                @if ($club['disciplines'] !== [])
+                    <p class="mk-sportline">{{ implode(' · ', $club['disciplines']) }}</p>
+                @endif
                 <div class="mk-actions">
-                    <a class="btn @if ($following) mk-follow is-on @endif" href="{{ $mk('mockups.club', array_merge(['slug' => $club['slug']], $followQuery)) }}" aria-pressed="{{ $following ? 'true' : 'false' }}">{{ $following ? '✓ Following' : 'Follow club' }}</a>
+                    <a class="btn ghost @if ($following) mk-follow is-on @endif" href="{{ $mk('mockups.club', array_merge(['slug' => $club['slug']], $followQuery)) }}" aria-pressed="{{ $following ? 'true' : 'false' }}">{{ $following ? 'Following' : 'Follow' }}</a>
                     @if ($club['website'])
                         <a class="btn ghost" href="{{ $club['website'] }}">Website</a>
                     @endif
@@ -34,80 +41,70 @@
                 </div>
             </header>
 
-            <section class="mk-section">
-                <h2>About</h2>
-                <div class="mk-prose">
-                    @if ($club['description'])
-                        <p>{{ $club['description'] }}</p>
-                    @else
-                        <p>No description has been published.</p>
+            @if ($upcoming->isNotEmpty())
+                <section class="mk-section">
+                    <h2>{{ $upcoming->count() }} upcoming {{ \Illuminate\Support\Str::plural('match', $upcoming->count()) }}</h2>
+                    <h3 class="mk-kicker">Next up</h3>
+                    <x-mockups.match-row :match="$next" />
+                    @if ($rest->isNotEmpty())
+                        <h3 class="mk-kicker">Upcoming</h3>
+                        @foreach ($rest as $match)
+                            <x-mockups.match-row :match="$match" />
+                        @endforeach
                     @endif
-                </div>
-            </section>
+                    <p style="margin-top:12px"><a class="mk-textlink" href="{{ $mk('mockups.matches.calendar', ['club' => $club['slug']]) }}">Upcoming calendar</a></p>
+                </section>
+            @endif
 
-            <section class="mk-section">
-                <h2>Disciplines</h2>
-                @if ($club['disciplines'] === [])
-                    <p>No sports are linked yet.</p>
-                @else
+            @if ($club['description'])
+                <section class="mk-section">
+                    <h2>About</h2>
+                    <div class="mk-prose"><p>{{ $club['description'] }}</p></div>
+                </section>
+            @endif
+
+            @if ($club['range_slug'])
+                <section class="mk-section">
+                    <h2>Where we shoot</h2>
+                    <p><a href="{{ $mk('mockups.range', ['slug' => $club['range_slug']]) }}">{{ $club['range'] }}</a></p>
+                </section>
+            @endif
+
+            @if ($club['disciplines'] !== [])
+                <section class="mk-section">
+                    <h2>Disciplines</h2>
                     <div class="mk-meta">
                         @foreach ($club['discipline_slugs'] as $index => $slug)
                             <a href="{{ $mk('mockups.sport', ['slug' => $slug]) }}">{{ $club['disciplines'][$index] }}</a>
                         @endforeach
                     </div>
-                @endif
-            </section>
+                </section>
+            @endif
 
-            <section class="mk-section">
-                <h2>Upcoming matches</h2>
-                @forelse ($club['upcoming'] as $match)
-                    <x-mockups.match-row :match="$match" />
-                @empty
-                    <p>No upcoming matches are listed.</p>
-                @endforelse
-            </section>
+            @if ($club['visitors_welcome'])
+                <section class="mk-section">
+                    <h2>Membership</h2>
+                    <p>Visitors are welcome.</p>
+                </section>
+            @endif
 
-            <section class="mk-section">
-                <h2>Where we shoot</h2>
-                @if ($club['range_slug'])
-                    <p><a href="{{ $mk('mockups.range', ['slug' => $club['range_slug']]) }}">{{ $club['range'] }}</a></p>
-                @else
-                    <p>No range is linked from an upcoming match yet.</p>
-                @endif
-            </section>
+            @if ($club['email'] || $club['phone'] || $club['website'])
+                <section class="mk-section">
+                    <h2>Contact</h2>
+                    <dl class="mk-dl">
+                        @if ($club['email'])<dt>Email</dt><dd><a href="mailto:{{ $club['email'] }}">{{ $club['email'] }}</a></dd>@endif
+                        @if ($club['phone'])<dt>Phone</dt><dd><a href="tel:{{ $club['phone'] }}">{{ $club['phone'] }}</a></dd>@endif
+                        @if ($club['website'])<dt>Website</dt><dd><a href="{{ $club['website'] }}">{{ $club['website'] }}</a></dd>@endif
+                    </dl>
+                </section>
+            @endif
 
-            <section class="mk-section">
-                <h2>Membership</h2>
-                <dl class="mk-dl">
-                    <dt>Visitors welcome</dt><dd>{{ $club['visitors_welcome'] ? 'Yes' : 'Not indicated' }}</dd>
-                    <dt>Accepting members</dt><dd>Not recorded</dd>
-                    <dt>New shooters welcome</dt><dd>Not recorded separately from visitors</dd>
-                    <dt>Contact</dt><dd>{{ $club['email'] ?: ($club['phone'] ?: 'Not listed') }}</dd>
-                </dl>
-            </section>
-
-            <section class="mk-section">
-                <h2>Contact</h2>
-                <dl class="mk-dl">
-                    <dt>Email</dt><dd>{{ $club['email'] ?: 'Not listed' }}</dd>
-                    <dt>Phone</dt><dd>{{ $club['phone'] ?: 'Not listed' }}</dd>
-                    <dt>Website</dt><dd>@if($club['website'])<a href="{{ $club['website'] }}">{{ $club['website'] }}</a>@else Not listed @endif</dd>
-                </dl>
-            </section>
-
-            <section class="mk-section">
-                <h2>Social links</h2>
-                @if ($club['facebook'])
+            @if ($club['facebook'])
+                <section class="mk-section">
+                    <h2>Photos and links</h2>
                     <p><a href="{{ $club['facebook'] }}">Facebook</a></p>
-                @else
-                    <p>No social links are listed.</p>
-                @endif
-            </section>
-
-            <section class="mk-section">
-                <h2>Recent activity</h2>
-                <p class="mk-sub">Listing updated {{ $club['updated'] ?: 'on an unknown date' }}. Verification: {{ $club['verification'] ?: 'Not recorded' }}.</p>
-            </section>
+                </section>
+            @endif
         @endif
     </div>
 </x-mockups.layout>

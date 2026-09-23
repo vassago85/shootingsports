@@ -14,25 +14,45 @@
             <header class="mk-pagehead">
                 <p class="label">{{ collect([$match['discipline'], $match['level']])->filter()->implode(' · ') }}</p>
                 <h1>{{ $match['title'] }}</h1>
-                <p class="mk-lede">{{ collect([$match['date_label'], $match['time'] ? $match['time'] : null, $match['range'], $match['town'], $match['province']])->filter()->implode(' · ') }}</p>
+                <p class="mk-event-date">{{ trim($match['day'].' '.$match['month']) }}@if ($match['date']) {{ \Illuminate\Support\Carbon::parse($match['date'])->format('Y') }}@endif</p>
+                @if ($match['organiser'] || $match['range'] || $match['town'])
+                    <p class="mk-place">
+                        @if ($match['organiser_slug'])
+                            <a href="{{ $mk('mockups.club', ['slug' => $match['organiser_slug']]) }}">{{ $match['organiser'] }}</a>
+                        @elseif ($match['organiser'])
+                            {{ $match['organiser'] }}
+                        @endif
+                        @if ($match['range'] || $match['town'])
+                            <br>{{ collect([$match['range'], collect([$match['town'], $match['province']])->filter()->implode(', ')])->filter()->implode(' · ') }}
+                        @endif
+                    </p>
+                @endif
                 <div class="mk-actions">
                     @if ($match['entry_url'])
                         <a class="btn" href="{{ $match['entry_url'] }}">Enter match</a>
-                    @else
-                        <button class="btn" type="button" disabled>Entry link not listed</button>
                     @endif
                     @if ($match['calendar_url'] ?? null)
-                    <a class="btn ghost" href="{{ $match['calendar_url'] }}">Add to calendar</a>
-                @endif
-                    <button class="btn ghost" type="button" data-share="{{ $mk('mockups.match', ['slug' => $match['slug']]) }}">Share</button>
-                    @if ($match['organiser'])
-                        <button class="btn ghost" type="button" data-follow="Follow organiser">Follow organiser</button>
+                        <a class="mk-textlink" href="{{ $match['calendar_url'] }}">Add to calendar</a>
                     @endif
+                    <button class="mk-textlink" type="button" data-share="{{ $mk('mockups.match', ['slug' => $match['slug']]) }}">Share</button>
                 </div>
-                @if ($match['badges'] !== [])
-                    <div class="mk-badges">
-                        @foreach ($match['badges'] as $badge)
-                            <span @class(['mk-badge', $badge['tone']])>{{ $badge['label'] }}</span>
+                @php
+                    $facts = collect([
+                        $match['time'] === 'All day' ? 'All day' : ($match['time'] ?: null),
+                        $match['fee'],
+                        $match['member_fee'] ? 'Members '.$match['member_fee'] : null,
+                        $match['rounds'] ? $match['rounds'].' rounds' : null,
+                        $match['stages'] ? $match['stages'].' stages' : null,
+                        $match['distance'],
+                        in_array($match['level_value'], ['national', 'provincial', 'international'], true) ? $match['level'] : null,
+                        $match['status_value'] === 'entries_open' ? 'Registration open' : null,
+                        in_array('new-shooter-friendly', $match['flag_slugs'], true) ? 'Beginner friendly' : null,
+                    ])->filter()->unique()->values();
+                @endphp
+                @if ($facts->isNotEmpty())
+                    <div class="mk-facts">
+                        @foreach ($facts as $fact)
+                            <span>{{ $fact }}</span>
                         @endforeach
                     </div>
                 @endif
@@ -40,35 +60,16 @@
 
             @include('mockups.partials.ad-space', ['sponsors' => $sponsors, 'limit' => $sponsors->count()])
 
-            <section class="mk-section">
-                <h2>Match information</h2>
-                <dl class="mk-dl">
-                    <dt>Date</dt><dd>{{ $match['date_label'] ?: 'Not listed' }}</dd>
-                    <dt>Start time</dt><dd>{{ $match['time'] ?: 'Not listed' }}</dd>
-                    <dt>Registration closes</dt><dd>Not recorded</dd>
-                    <dt>Entry fee</dt><dd>{{ $match['fee'] ?: 'Not listed' }}@if($match['member_fee']) <span class="mk-sub">(members {{ $match['member_fee'] }})</span>@endif</dd>
-                    <dt>Rounds</dt><dd>{{ $match['rounds'] ?: 'Not listed' }}</dd>
-                    <dt>Stages</dt><dd>{{ $match['stages'] ?: 'Not listed' }}</dd>
-                    <dt>Maximum distance</dt><dd>{{ $match['distance'] ?: 'Not listed' }}</dd>
-                    <dt>Match level</dt><dd>{{ $match['level'] ?: 'Not listed' }}</dd>
-                    <dt>Beginner friendly</dt><dd>{{ in_array('new-shooter-friendly', $match['flag_slugs'], true) ? 'Yes' : 'Not recorded' }}</dd>
-                    <dt>Organiser</dt><dd>@if($match['organiser_slug'])<a href="{{ $mk('mockups.club', ['slug' => $match['organiser_slug']]) }}">{{ $match['organiser'] }}</a>@else Not listed @endif</dd>
-                    <dt>Status</dt><dd>{{ $match['status'] }}</dd>
-                </dl>
-            </section>
-
-            <section class="mk-section">
-                <h2>About this match</h2>
-                <div class="mk-prose">
-                    @if ($match['description'] !== '')
+            @if ($match['description'] !== '')
+                <section class="mk-section">
+                    <h2>About</h2>
+                    <div class="mk-prose">
                         @foreach (preg_split("/\n\s*\n/", $match['description']) as $paragraph)
                             <p>{{ $paragraph }}</p>
                         @endforeach
-                    @else
-                        <p>No description has been published for this match.</p>
-                    @endif
-                </div>
-            </section>
+                    </div>
+                </section>
+            @endif
 
             @if ($match['equipment'])
                 <section class="mk-section">
@@ -77,17 +78,27 @@
                 </section>
             @endif
 
-            <section class="mk-section">
-                <h2>Venue</h2>
-                <p><strong>{{ $match['range'] ?: 'Range not linked' }}</strong></p>
-                <p class="mk-sub">{{ collect([$match['address'], $match['town'], $match['province']])->filter()->implode(', ') }}</p>
-                @if ($match['directions'])
-                    <p style="margin-top:10px"><a class="btn ghost" href="{{ $match['directions'] }}">Directions</a></p>
-                @endif
-                @if ($match['has_gps'])
-                    <p class="mk-sub" style="margin-top:8px">{{ $match['lat'] }}, {{ $match['lng'] }}</p>
-                @endif
-            </section>
+            @if ($match['range'] || $match['town'] || $match['address'])
+                <section class="mk-section">
+                    <h2>Venue</h2>
+                    @if ($match['range'])
+                        <p class="mk-row-title">
+                            @if ($match['range_slug'])
+                                <a href="{{ $mk('mockups.range', ['slug' => $match['range_slug']]) }}">{{ $match['range'] }}</a>
+                            @else
+                                {{ $match['range'] }}
+                            @endif
+                        </p>
+                    @endif
+                    @php $venueLine = collect([$match['address'], $match['town'], $match['province']])->filter()->implode(', '); @endphp
+                    @if ($venueLine !== '')
+                        <p class="mk-sub">{{ $venueLine }}</p>
+                    @endif
+                    @if ($match['directions'])
+                        <p style="margin-top:10px"><a class="btn ghost" href="{{ $match['directions'] }}">Directions</a></p>
+                    @endif
+                </section>
+            @endif
 
             @if ($match['organiser_profile'])
                 <section class="mk-section">
@@ -126,6 +137,7 @@
     </div>
     @if ($match && $match['entry_url'])
         <div class="mk-sticky">
+            @if ($match['fee'])<span>{{ $match['fee'] }}</span>@endif
             <a class="btn" href="{{ $match['entry_url'] }}">Enter match</a>
         </div>
     @endif

@@ -9,11 +9,10 @@
     <div class="app-welcome">
         <div class="app-welcome-mark"><x-mockups.icon name="target" /></div>
         <h1 class="app-welcome-hero">Find somewhere to shoot.</h1>
-        <p class="app-welcome-sub">Matches, clubs, ranges and shooting sports across South Africa.</p>
+        <p class="app-welcome-sub">Your matches, clubs and ranges. An account can wait.</p>
         <div class="app-welcome-actions">
-            <a class="app-btn" href="{{ $app('location') }}">Get started</a>
-            <a class="app-btn secondary" href="{{ $app('signin') }}">I already have an account</a>
-            <a class="app-textlink center" href="{{ $app('home') }}">Explore without an account</a>
+            <a class="app-btn" href="{{ $app('location') }}">Continue as guest</a>
+            <a class="app-btn secondary" href="{{ $app('signin') }}">Sign in</a>
         </div>
         <p class="app-welcome-legal"><a href="{{ route('terms') }}">Terms</a> · <a href="{{ route('privacy') }}">Privacy</a></p>
     </div>
@@ -58,18 +57,15 @@
         <div class="app-onboard-progress" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
         <div class="app-onboard-body">
             <h1 class="app-onboard-hero">What do you shoot?</h1>
-            <p class="app-onboard-lead">Choose as many as you like. You can change this later.</p>
-            @foreach ($onboarding['sports_by_family'] ?? [] as $group)
-                <p class="app-sub">{{ $group['label'] }}</p>
-                <div class="app-tilegrid">
-                    @foreach ($group['items'] as $sport)
-                        <a href="{{ $toggle($sport['slug']) }}" @class(['app-tile', 'on' => $chosen->contains($sport['slug'])])>
-                            <x-mockups.icon :name="$familyIcon($sport['family'])" />
-                            <span>{{ $sport['name'] }}</span>
-                        </a>
-                    @endforeach
-                </div>
-            @endforeach
+            <p class="app-onboard-lead">Pick the groups that matter. You can narrow it later.</p>
+            <div class="app-tilegrid">
+                @foreach ($onboarding['sports_by_family'] ?? [] as $group)
+                    <a href="{{ $toggle($group['key']) }}" @class(['app-tile', 'on' => $chosen->contains($group['key'])])>
+                        <x-mockups.icon :name="$familyIcon($group['key'])" />
+                        <span>{{ $group['label'] }}</span>
+                    </a>
+                @endforeach
+            </div>
         </div>
         <div class="app-onboard-actions">
             @if ($chosen->isNotEmpty())
@@ -132,8 +128,8 @@
             </ul>
         </div>
         <div class="app-onboard-actions">
-            <a class="app-btn" href="{{ $app('ready') }}">Enable alerts</a>
-            <a class="app-textlink center" href="{{ $app('ready') }}">Not now</a>
+            <a class="app-btn" href="{{ $app('home') }}">Enable alerts</a>
+            <a class="app-textlink center" href="{{ $app('home') }}">Not now</a>
         </div>
     </div>
 

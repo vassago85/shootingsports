@@ -87,12 +87,12 @@
         <p class="app-welcome-sub">Matches, clubs and ranges across South Africa. An account is optional.</p>
         <div class="app-welcome-actions">
             @if ($ios)
-                <a class="app-btn apple" href="{{ $app('you') }}">Sign in with Apple</a>
+                <a class="app-btn apple" href="{{ $app('location') }}">Sign in with Apple</a>
             @else
-                <a class="app-btn google" href="{{ $app('you') }}">Continue with Google</a>
+                <a class="app-btn google" href="{{ $app('location') }}">Continue with Google</a>
             @endif
-            <a class="app-btn secondary" href="{{ $app('you') }}">Continue with email</a>
-            <a class="app-textlink center" href="{{ $app('home') }}">Explore without an account</a>
+            <a class="app-btn secondary" href="{{ $app('location') }}">Continue with email</a>
+            <a class="app-textlink center" href="{{ $app('location') }}">Continue as guest</a>
         </div>
         <p class="app-welcome-legal">By continuing you agree to the <a href="{{ route('terms') }}">Terms</a> and <a href="{{ route('privacy') }}">Privacy policy</a>. You must be 18 or older.</p>
     </div>

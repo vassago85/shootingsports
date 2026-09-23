@@ -57,6 +57,19 @@
         @endforeach
     @endif
 
+    @if (($home['closing'] ?? collect())->isNotEmpty())
+        <p class="app-sub">Registration closing</p>
+        @foreach ($home['closing'] as $row)
+            <a class="app-match" href="{{ $app('match', ['match' => $row['slug']]) }}">
+                <span class="app-when"><b>{{ $row['day'] }}</b><span>{{ $row['month'] }}</span></span>
+                <span>
+                    <strong>{{ $row['title'] }}</strong>
+                    <em>{{ collect([$row['discipline'], $row['fee']])->filter()->implode(' · ') }}</em>
+                </span>
+            </a>
+        @endforeach
+    @endif
+
     @if (($home['activity'] ?? []) !== [])
         <p class="app-sub">From clubs you follow</p>
         <ul class="app-activity">
