@@ -26,6 +26,17 @@ enum Division: string implements HasLabel
         };
     }
 
+    public function cardPhoto(): ?string
+    {
+        return match ($this) {
+            self::Handgun => 'images/divisions/handgun.jpg',
+            self::BoltActionRifle => 'images/divisions/bolt-action-rifle.jpg',
+            self::SelfLoadingRifle => 'images/divisions/self-loading-rifle.jpg',
+            self::Shotgun => 'images/divisions/shotgun.jpg',
+            self::AirRifle => null,
+        };
+    }
+
     public function isPublic(): bool
     {
         return $this !== self::AirRifle;

@@ -18,12 +18,11 @@ beforeEach(function () {
 
 // ---- Live reticle sweep -------------------------------------------
 
-it('homepage hero reticle wraps the SVG in an animated container', function () {
+it('homepage hero is the photo landing without the reticle', function () {
     $html = $this->get(route('home'))->assertOk()->getContent();
 
-    // Wrapper drives the sweep — SVG stays static inside it.
-    expect($html)->toContain('class="hero-reticle-wrap"')
-        ->and($html)->toContain('class="hero-reticle"');
+    expect($html)->not->toContain('class="hero-reticle-wrap"')
+        ->and($html)->toContain('Find your');
 });
 
 it('the reticle animation is disabled for prefers-reduced-motion visitors', function () {
@@ -38,10 +37,10 @@ it('the reticle animation is disabled for prefers-reduced-motion visitors', func
         ->and($css)->toContain('.hero-reticle-dot { animation: none; }');
 });
 
-it('the homepage centre bullseye carries the pulse class', function () {
+it('the homepage no longer puts a pulsing bullseye over the photo', function () {
     $html = $this->get(route('home'))->assertOk()->getContent();
 
-    expect($html)->toContain('class="hero-reticle-dot"');
+    expect($html)->not->toContain('class="hero-reticle-dot"');
 });
 
 // ---- DOPE-card discipline-family accents --------------------------

@@ -77,8 +77,9 @@
                         <script>
                             const map = L.map('one-range').setView([{{ $range['lat'] }}, {{ $range['lng'] }}], 12);
                             const cartoKey = @json($cartoApiKey);
+                            const cartoStyle = @json(request()->query('theme') === 'dark' ? 'dark_all' : 'light_all');
                             if (cartoKey) {
-                                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=' + encodeURIComponent(cartoKey), { attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+                                L.tileLayer('https://{s}.basemaps.cartocdn.com/' + cartoStyle + '/{z}/{x}/{y}{r}.png?key=' + encodeURIComponent(cartoKey), { attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
                             } else {
                                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 }).addTo(map);
                             }

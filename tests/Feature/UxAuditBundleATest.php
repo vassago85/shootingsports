@@ -57,14 +57,14 @@ it('club rows do not print an Unconfirmed badge', function () {
 
 // ---- #4 Stat bar --------------------------------------------------
 
-it('homepage stat bar shows Matches Ranges Disciplines Clubs & series', function () {
+it('homepage stat bar shows Matches Ranges Disciplines Clubs', function () {
     $html = $this->get(route('home'))->assertOk()->getContent();
 
     expect($html)
         ->toContain('<span>Matches</span>')
         ->toContain('<span>Ranges</span>')
         ->toContain('<span>Disciplines</span>')
-        ->toContain('<span>Clubs &amp; series</span>')
+        ->toContain('<span>Clubs</span>')
         ->not->toContain('<span>Provinces</span>')
         ->not->toContain('<span>Upcoming matches</span>');
 });

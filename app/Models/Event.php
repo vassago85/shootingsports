@@ -273,6 +273,28 @@ class Event extends Model
     }
 
     /**
+     * Location for public pages. Null when the match has no venue
+     * and no host town, so templates can omit the line entirely.
+     */
+    public function listedLocation(): ?string
+    {
+        $label = $this->locationLabel();
+
+        return $label === 'Venue TBC' || $label === '' ? null : $label;
+    }
+
+    /**
+     * Host name for public pages. Null when neither a club nor a
+     * range is on the match.
+     */
+    public function listedHost(): ?string
+    {
+        $name = $this->hostOrganisation?->name ?? $this->venue?->name;
+
+        return filled($name) ? $name : null;
+    }
+
+    /**
      * "Who is putting on this match" for cards / meta lines. Prefers
      * the host organisation, falls back to the venue when a range
      * operator hosts the match themselves (no external club), and

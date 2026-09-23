@@ -80,6 +80,24 @@ class DisciplineController extends Controller
         return view('public.disciplines.show', $this->pageData($discipline, $provinceEnum));
     }
 
+    public function about(Discipline $discipline): View
+    {
+        abort_unless($discipline->is_published, 404);
+
+        $data = $this->pageData($discipline, null);
+        $data['seo'] = Seo::disciplineAbout($discipline);
+        $data['jsonLd'] = [
+            JsonLd::breadcrumbs([
+                ['name' => 'Home', 'url' => route('home')],
+                ['name' => 'Discover', 'url' => route('disciplines.index')],
+                ['name' => $discipline->name, 'url' => route('disciplines.show', $discipline->slug)],
+                ['name' => 'More information', 'url' => route('disciplines.about', $discipline->slug)],
+            ]),
+        ];
+
+        return view('public.disciplines.about', $data);
+    }
+
     public function landing(string $province, Discipline $discipline): View
     {
         return $this->show($discipline, $province);

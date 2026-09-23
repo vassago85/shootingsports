@@ -5,17 +5,12 @@
     :json-ld="$jsonLd"
 >
     <main id="main">
-        <section class="page-hero">
-            <div class="wrap">
-                <p class="label">Matches</p>
-                <h1>What's on, where</h1>
-                <p>
-                    {{ $totalMatches }} upcoming {{ $totalMatches === 1 ? 'match' : 'matches' }}
-                    on {{ count($pins) }} {{ count($pins) === 1 ? 'pinned range' : 'pinned ranges' }}.
-                    Click a pin for the range page.
-                </p>
-            </div>
-        </section>
+        <div class="wrap dir-page">
+            <x-dir-hero page="matches" kicker="Matches" title="Map">
+                {{ $totalMatches }} upcoming {{ $totalMatches === 1 ? 'match' : 'matches' }}.
+                Select a pin to see what is shot there.
+            </x-dir-hero>
+        </div>
 
         <section class="match-board">
             <div class="wrap">

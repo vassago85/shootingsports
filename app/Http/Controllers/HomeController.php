@@ -9,6 +9,7 @@ use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\Venue;
 use App\Support\PublicCache;
+use App\Support\ThisWeekend;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
@@ -35,13 +36,25 @@ class HomeController extends Controller
             ];
         });
 
-        $monthAhead = Event::query()
+        [$weekendFrom, $weekendTo] = ThisWeekend::range();
+
+        $weekend = Event::query()
             ->upcoming()
             ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
-            ->where('starts_at', '<=', now()->addDays(30))
+            ->whereBetween('starts_at', [$weekendFrom, $weekendTo])
             ->orderBy('starts_at')
-            ->limit(10)
+            ->limit(4)
             ->get();
+
+        $monthAhead = $weekend->isNotEmpty()
+            ? $weekend
+            : Event::query()
+                ->upcoming()
+                ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
+                ->where('starts_at', '<=', now()->addDays(30))
+                ->orderBy('starts_at')
+                ->limit(4)
+                ->get();
 
         $rail = $monthAhead->isNotEmpty()
             ? $monthAhead
@@ -49,13 +62,28 @@ class HomeController extends Controller
                 ->upcoming()
                 ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
                 ->orderBy('starts_at')
-                ->limit(10)
+                ->limit(4)
                 ->get();
+
+        $railLabel = match (true) {
+            $weekend->isNotEmpty() => 'This weekend',
+            $monthAhead->isNotEmpty() => 'Next 30 days',
+            default => 'Next up',
+        };
+
+        $upcoming = Event::query()
+            ->upcoming()
+            ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
+            ->where('starts_at', '<=', now()->addDays(30))
+            ->orderBy('starts_at')
+            ->limit(10)
+            ->get();
 
         return view('public.home', [
             'stats' => $stats,
             'rail' => $rail,
-            'railLabel' => $monthAhead->isNotEmpty() ? 'Next 30 days' : 'Next up',
+            'railLabel' => $railLabel,
+            'upcoming' => $upcoming,
         ]);
     }
 }

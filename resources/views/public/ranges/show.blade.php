@@ -8,14 +8,17 @@
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
-                <p class="label">Range · {{ $venue->province?->getLabel() }}</p>
+                <p class="label">{{ collect(['Range', $venue->province?->getLabel()])->filter()->implode(' · ') }}</p>
                 <h1>{{ $venue->name }} <x-listing-tier-badge :listing="$venue" /></h1>
-                <p>{{ $venue->address ?: $venue->town }}</p>
+                @if (filled($venue->address ?: $venue->town))
+                    <p>{{ $venue->address ?: $venue->town }}</p>
+                @endif
                 <x-verification-badge :listing="$venue" />
             </div>
         </section>
         <section class="block">
             <div class="wrap">
+                @if ($venue->max_distance_m || $venue->bay_count || $venue->access || $venue->day_fee_cents || $venue->metro)
                 <dl class="dope-rows" style="max-width:420px;padding:0 0 28px">
                     @if ($venue->max_distance_m)
                         <div class="r"><dt>Max distance</dt><dd>{{ number_format($venue->max_distance_m) }} m</dd></div>
@@ -33,21 +36,22 @@
                         <div class="r"><dt>Metro</dt><dd>{{ $venue->metro->getLabel() }}</dd></div>
                     @endif
                 </dl>
+                @endif
                 <p style="margin:0 0 28px">
                     <a class="btn" href="{{ route('enquiries.listing', ['type' => 'venue', 'id' => $venue->id]) }}">Enquire via platform</a>
                 </p>
-                <div class="club-tags" style="margin-bottom:28px">
-                    @foreach ($inferredDisciplines as $discipline)
-                        <a class="tag" href="{{ route('disciplines.show', $discipline->slug) }}">{{ $discipline->name }}</a>
-                    @endforeach
-                </div>
-                <div class="sec-head">
-                    <p class="label">Calendar</p>
-                    <h2>Matches at this range</h2>
-                </div>
-                @if ($events->isEmpty())
-                    <p class="empty">No upcoming matches at this range.</p>
-                @else
+                @if ($inferredDisciplines->isNotEmpty())
+                    <div class="club-tags" style="margin-bottom:28px">
+                        @foreach ($inferredDisciplines as $discipline)
+                            <a class="tag" href="{{ route('disciplines.show', $discipline->slug) }}">{{ $discipline->name }}</a>
+                        @endforeach
+                    </div>
+                @endif
+                @if ($events->isNotEmpty())
+                    <div class="sec-head">
+                        <p class="label">Calendar</p>
+                        <h2>Matches at this range</h2>
+                    </div>
                     <div class="dope-grid">
                         @foreach ($events as $event)
                             <x-event-card :event="$event" />

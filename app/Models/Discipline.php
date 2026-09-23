@@ -13,10 +13,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'slug', 'name', 'family', 'parent_id', 'federation_organisation_id',
-    'short_blurb', 'body', 'typical_distances', 'equipment_rules',
+    'short_blurb', 'image_path', 'body', 'typical_distances', 'equipment_rules',
     'sort_order', 'is_published',
 ])]
 class Discipline extends Model
@@ -31,6 +32,15 @@ class Discipline extends Model
             'sort_order' => 'integer',
             'is_published' => 'boolean',
         ];
+    }
+
+    public function imageUrl(): ?string
+    {
+        if (! filled($this->image_path)) {
+            return null;
+        }
+
+        return Storage::disk('media')->url($this->image_path);
     }
 
     public function parent(): BelongsTo

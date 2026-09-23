@@ -8,17 +8,23 @@
     <main id="main">
         <section class="page-hero">
             <div class="wrap">
-                <p class="label">{{ $provider->category->getLabel() }} · {{ $provider->province?->getLabel() }}</p>
+                <p class="label">{{ collect([$provider->category->getLabel(), $provider->province?->getLabel()])->filter()->implode(' · ') }}</p>
                 <h1>{{ $provider->name }} <x-listing-tier-badge :listing="$provider" /></h1>
-                <p>{{ $provider->description }}</p>
+                @if (filled($provider->description))
+                    <p>{{ $provider->description }}</p>
+                @endif
                 <x-verification-badge :listing="$provider" />
             </div>
         </section>
         <section class="block">
             <div class="wrap">
                 <dl class="dope-rows" style="max-width:420px;padding:0">
-                    <div class="r"><dt>Town</dt><dd>{{ $provider->town }}</dd></div>
-                    <div class="r"><dt>Province</dt><dd>{{ $provider->province?->getLabel() }}</dd></div>
+                    @if (filled($provider->town))
+                        <div class="r"><dt>Town</dt><dd>{{ $provider->town }}</dd></div>
+                    @endif
+                    @if ($provider->province)
+                        <div class="r"><dt>Province</dt><dd>{{ $provider->province->getLabel() }}</dd></div>
+                    @endif
                     @if ($provider->serviceCategories()->isNotEmpty())
                         <div class="r"><dt>Also offers</dt><dd>{{ $provider->serviceCategories()->map(fn ($c) => $c->getLabel())->implode(', ') }}</dd></div>
                     @endif

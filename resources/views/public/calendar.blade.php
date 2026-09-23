@@ -5,13 +5,27 @@
     :json-ld="$jsonLd"
 >
     <main id="main">
-        <section class="page-hero">
-            <div class="wrap">
-                <p class="label">Matches</p>
-                <h1>What's on, and where</h1>
-                <p>South Africa's national match programme. Planned dates render as provisional; confirmed dates look different.</p>
-            </div>
-        </section>
+        <div class="wrap dir-page">
+            <x-dir-hero page="matches" kicker="Matches" title="Find a match">
+                Discover shooting matches across South Africa. The list is the main view. Calendar and map are other ways to explore.
+            </x-dir-hero>
+
+            @if (auth()->user()?->is_staff && filled(config('product-backlog.items')))
+                <section class="build-list" aria-labelledby="build-list-heading">
+                    <h2 id="build-list-heading" class="label">Still to build</h2>
+                    <ul>
+                        @foreach (config('product-backlog.items') as $item)
+                            <li>
+                                <span>{{ $item['title'] }}</span>
+                                @if (($item['audience'] ?? null) === 'pro')
+                                    <span class="build-list-plan">Pro</span>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
+        </div>
         {{--
             Match board — dark surface for the results list, sticky filter
             toolbar, dense horizontal rows. The Livewire component owns the

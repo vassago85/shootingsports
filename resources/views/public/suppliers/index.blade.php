@@ -1,15 +1,13 @@
 <x-layouts.public :title="$seoTitle" :description="$seoDescription" :json-ld="$jsonLd">
     <main id="main">
-        <section class="page-hero">
-            <div class="wrap">
-                <p class="label">Directory</p>
-                <h1>Industry</h1>
-                <p>Every shooting-related business, listed free. We do not sell firearms or take a cut of a transfer.</p>
+        <div class="wrap dir-page">
+            <x-dir-hero page="industry" kicker="Directory" title="Industry">
+                Every shooting-related business, listed free. We do not sell firearms or take a cut of a transfer.
                 @if ($division)
-                    <p>Showing suppliers linked to {{ $division->getLabel() }} sports.</p>
+                    Showing suppliers linked to {{ $division->getLabel() }} sports.
                 @endif
-            </div>
-        </section>
+            </x-dir-hero>
+        </div>
         <section class="block">
             <div class="wrap">
                 <div class="disc-grid">

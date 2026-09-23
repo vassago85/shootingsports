@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\Division;
 use App\Enums\Province;
+use App\Enums\VenueAccess;
+use App\Models\Discipline;
 use App\Models\Venue;
 use App\Queries\PublicEventQuery;
 use App\Services\Discovery\DiscoveryStats;
 use App\Services\Venues\VenueResolver;
+use App\Support\Geo;
 use App\Support\JsonLd;
 use App\Support\Seo;
 use Illuminate\Http\RedirectResponse;
@@ -27,12 +30,25 @@ class VenueController extends Controller
             ? Province::fromUrlSlug($request->string('province')->toString())
             : null;
         $division = Division::fromPublicQuery($request->string('division')->toString());
+        $minDistance = in_array((int) $request->input('min_distance'), [100, 300, 600, 1000], true)
+            ? (int) $request->input('min_distance')
+            : null;
+        $visitors = $request->boolean('visitors');
+        $disciplineSlug = $request->string('discipline')->toString();
+        $discipline = $disciplineSlug !== ''
+            ? Discipline::query()->where('slug', $disciplineSlug)->where('is_published', true)->first()
+            : null;
+        $view = $request->string('view')->toString() === 'map' ? 'map' : 'list';
 
         $venues = Venue::query()
             ->published()
             ->with('disciplines')
+            ->withCount(['events as upcoming_matches_count' => fn ($query) => $query->upcoming()])
             ->when($province, fn ($q) => $q->where('province', $province))
             ->when($division, fn ($q) => $q->inDivision($division))
+            ->when($discipline, fn ($q) => $q->whereHas('disciplines', fn ($links) => $links->whereKey($discipline->id)))
+            ->when($minDistance, fn ($q) => $q->where('max_distance_m', '>=', $minDistance))
+            ->when($visitors, fn ($q) => $q->where('access', VenueAccess::Public))
             ->orderByTier()
             ->get();
 
@@ -61,11 +77,27 @@ class VenueController extends Controller
             ['name' => 'Ranges', 'url' => route('ranges.index')],
         ]);
 
+        $pins = $venues
+            ->filter(fn (Venue $venue): bool => $venue->hasCoordinates()
+                && Geo::isInsideSouthAfrica((float) $venue->lat, (float) $venue->lng))
+            ->map(fn (Venue $venue): array => [
+                'slug' => $venue->slug,
+                'lat' => (float) $venue->lat,
+                'lng' => (float) $venue->lng,
+            ])
+            ->values();
+
         return view('public.ranges.index', [
             'venues' => $venues,
+            'pins' => $pins,
             'province' => $province,
             'division' => $division,
+            'discipline' => $discipline,
+            'minDistance' => $minDistance,
+            'visitors' => $visitors,
+            'view' => $view,
             'provinces' => Province::cases(),
+            'sports' => Discipline::query()->where('is_published', true)->orderBy('name')->get(['id', 'name', 'slug']),
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,
             'jsonLd' => [$itemList, $breadcrumbs],

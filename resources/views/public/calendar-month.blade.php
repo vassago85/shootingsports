@@ -5,13 +5,11 @@
     :json-ld="$jsonLd"
 >
     <main id="main">
-        <section class="page-hero">
-            <div class="wrap">
-                <p class="label">Matches</p>
-                <h1>What's on, and where</h1>
-                <p>Upcoming matches on a month grid. Planned dates stay provisional; confirmed dates look different on the match page.</p>
-            </div>
-        </section>
+        <div class="wrap dir-page">
+            <x-dir-hero page="calendar" kicker="Matches" title="Calendar">
+                The same matches as the list, laid out by month. The list is the main view.
+            </x-dir-hero>
+        </div>
         <section class="match-board">
             <div class="wrap">
                 <livewire:calendar-month

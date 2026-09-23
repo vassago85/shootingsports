@@ -20,7 +20,7 @@ class EventSpecRows
 
         $rows = [
             ['Discipline', $discipline?->name],
-            ['Venue', $event->locationLabel()],
+            ['Venue', $event->listedLocation()],
         ];
 
         if (self::isShotgun($family, $slug)) {

@@ -40,6 +40,7 @@ return [
         'disciplines.index',
         'divisions.show',
         'disciplines.show',
+        'disciplines.about',
         'disciplines.province',
         'clubs.index',
         'clubs.show',

@@ -199,6 +199,15 @@ class SitemapController extends Controller
                 $urls->push($root);
             }
 
+            $about = $this->safeUrl('disciplines about sitemap', $discipline, fn (): array => [
+                'loc' => route('disciplines.about', $discipline->slug),
+                'lastmod' => $discipline->updated_at?->toAtomString(),
+            ]);
+
+            if ($about !== null) {
+                $urls->push($about);
+            }
+
             foreach (Province::cases() as $province) {
                 if ($this->disciplineProvinceListingCount($discipline, $province) < $minimum) {
                     continue;

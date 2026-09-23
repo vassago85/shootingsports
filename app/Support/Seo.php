@@ -181,6 +181,19 @@ final readonly class Seo
         );
     }
 
+    public static function disciplineAbout(Discipline $discipline): self
+    {
+        $description = filled($discipline->body)
+            ? (string) $discipline->body
+            : (string) $discipline->short_blurb;
+
+        return new self(
+            title: 'About '.$discipline->name,
+            description: self::clip($description),
+            canonical: route('disciplines.about', $discipline->slug),
+        );
+    }
+
     public static function clip(string $text, int $limit = 158): string
     {
         $text = trim((string) preg_replace('/\s+/u', ' ', $text));

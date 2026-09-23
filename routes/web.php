@@ -68,6 +68,7 @@ Route::get('/divisions/{division}', [DivisionController::class, 'show'])
     ->where('division', 'handgun|bolt-action-rifle|self-loading-rifle|shotgun|air-rifle')
     ->name('divisions.show');
 Route::get('/disciplines/{discipline:slug}/calendar.ics', [IcalController::class, 'discipline'])->name('ical.discipline');
+Route::get('/disciplines/{discipline:slug}/about', [DisciplineController::class, 'about'])->name('disciplines.about');
 Route::get('/disciplines/{discipline:slug}/{province}', [DisciplineController::class, 'redirectLegacyProvince'])
     ->where('province', $provincePattern)
     ->name('disciplines.province');

@@ -25,18 +25,29 @@
             <div class="wrap">
                 <p class="label">{{ \App\Support\EventDate::headline($event->starts_at, $event->ends_at) }}</p>
                 <h1>{{ $event->title }}</h1>
-                <p>
-                    @if ($hostUrl)
-                        <a href="{{ $hostUrl }}">{{ $event->hostDisplayName() }}</a>
-                    @else
-                        {{ $event->hostDisplayName() }}
-                    @endif
-                    @if ($rangeUrl)
-                        · <a href="{{ $rangeUrl }}">{{ $event->locationLabel() }}</a>
-                    @elseif ($event->locationLabel() !== 'Venue TBC')
-                        · {{ $event->locationLabel() }}
-                    @endif
-                </p>
+                @php
+                    $hostName = $event->listedHost();
+                    $place = $event->listedLocation();
+                @endphp
+                @if ($hostName || $place)
+                    <p>
+                        @if ($hostName)
+                            @if ($hostUrl)
+                                <a href="{{ $hostUrl }}">{{ $hostName }}</a>
+                            @else
+                                {{ $hostName }}
+                            @endif
+                        @endif
+                        @if ($place)
+                            @if ($hostName) · @endif
+                            @if ($rangeUrl)
+                                <a href="{{ $rangeUrl }}">{{ $place }}</a>
+                            @else
+                                {{ $place }}
+                            @endif
+                        @endif
+                    </p>
+                @endif
                 <div class="pill-row" style="position:static;margin-top:16px">
                     <x-event-status-pill :event="$event" />
                 </div>
@@ -110,8 +121,8 @@
                             @endif
                         </dl>
 
-                        <div class="match-entry-cta">
-                            @if ($event->entry_url)
+                        @if ($event->entry_url)
+                            <div class="match-entry-cta">
                                 <a
                                     class="btn"
                                     href="{{ $event->entry_url }}"
@@ -123,19 +134,8 @@
                                     We list third-party events. We are not the organiser.
                                     See <a href="{{ route('terms') }}">Terms of Use</a>.
                                 </p>
-                            @else
-                                <p class="match-entry-note">
-                                    No online entry link on file for this match.
-                                    @if ($hostUrl)
-                                        Contact <a href="{{ $hostUrl }}">{{ $host->name }}</a> to enter.
-                                    @else
-                                        Ask at the range on the day.
-                                    @endif
-                                    We list third-party events. We are not the organiser.
-                                    See <a href="{{ route('terms') }}">Terms of Use</a>.
-                                </p>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
 
                         <div class="match-secondary">
                             @auth
@@ -147,15 +147,17 @@
                             @endauth
                         </div>
 
-                        <p class="match-named-links">
-                            @if ($hostUrl)
-                                <a href="{{ $hostUrl }}">{{ $host->name }}</a>
-                            @endif
-                            @if ($rangeUrl)
-                                @if ($hostUrl) · @endif
-                                <a href="{{ $rangeUrl }}">{{ $venue->name }}</a>
-                            @endif
-                        </p>
+                        @if ($hostUrl || $rangeUrl)
+                            <p class="match-named-links">
+                                @if ($hostUrl)
+                                    <a href="{{ $hostUrl }}">{{ $host->name }}</a>
+                                @endif
+                                @if ($rangeUrl)
+                                    @if ($hostUrl) · @endif
+                                    <a href="{{ $rangeUrl }}">{{ $venue->name }}</a>
+                                @endif
+                            </p>
+                        @endif
                     </aside>
                 </div>
             </div>

@@ -22,14 +22,14 @@
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" sizes="16x16 32x32 48x48">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
-    <meta name="theme-color" content="#1B1F27">
+    <meta name="theme-color" content="#0e3328">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body>
+<body class="ss-public">
     <a class="skip" href="#main">Skip to content</a>
     <header class="nav">
         <div class="nav-in">
@@ -47,25 +47,27 @@
             </a>
             <nav class="nav-links" aria-label="Primary">
                 <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') && ! request()->routeIs('calendar.month') ? 'on' : '' }}">Matches</a>
-                <a href="{{ route('calendar.month') }}" class="{{ request()->routeIs('calendar.month') ? 'on' : '' }}">Calendar</a>
                 <a href="{{ route('disciplines.index') }}" class="{{ request()->routeIs('disciplines.*') ? 'on' : '' }}">Sports</a>
                 <a href="{{ route('clubs.index') }}" class="{{ request()->routeIs('clubs.*') || request()->routeIs('federations.*') ? 'on' : '' }}">Clubs</a>
                 <a href="{{ route('ranges.index') }}" class="{{ request()->routeIs('ranges.*') ? 'on' : '' }}">Ranges</a>
                 <a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'on' : '' }}">Industry</a>
             </nav>
             <div class="nav-cta">
-                <a class="btn ghost on-dark" href="{{ route('claim') }}">For Clubs</a>
+                <a class="nav-search" href="{{ route('calendar') }}" aria-label="Search">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="M20 20l-3.5-3.5"/>
+                    </svg>
+                </a>
                 @auth
                     <a class="btn ghost on-dark" href="{{ route('my-calendar') }}">Account</a>
                     @if (auth()->user()?->is_staff || auth()->user()?->is_match_director)
-                        <a class="btn" href="{{ url('/desk') }}">Desk</a>
-                    @endif
-                    @if (auth()->user()?->isSupplier())
-                        <a class="btn ghost on-dark" href="{{ route('suppliers.onboard') }}">My business</a>
+                        <a class="btn ghost on-dark" href="{{ url('/desk') }}">Desk</a>
                     @endif
                 @else
-                    <a class="btn light" href="{{ route('login') }}">Sign in</a>
+                    <a class="btn ghost on-dark" href="{{ route('login') }}">Sign in</a>
                 @endauth
+                <a class="btn lime" href="{{ url('/desk/events/create') }}">List an event</a>
             </div>
             <button class="hamburger" id="burger" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">Menu</button>
         </div>

@@ -28,7 +28,8 @@ it('renders the redesign mockup index', function () {
         ->assertSee('Club desk')
         ->assertSee('Club management')
         ->assertSee('iOS and Android')
-        ->assertSee('Needs attention');
+        ->assertSee('Needs attention')
+        ->assertSee('Public — visual V2');
 });
 
 it('renders each public and admin mockup', function (string $route) {
@@ -48,6 +49,20 @@ it('renders each public and admin mockup', function (string $route) {
     'mockups.industry',
     'mockups.business',
     'mockups.search',
+    'mockups.v2.home',
+    'mockups.v2.matches',
+    'mockups.v2.matches.calendar',
+    'mockups.v2.matches.map',
+    'mockups.v2.match',
+    'mockups.v2.sports',
+    'mockups.v2.sport',
+    'mockups.v2.clubs',
+    'mockups.v2.club',
+    'mockups.v2.ranges',
+    'mockups.v2.range',
+    'mockups.v2.industry',
+    'mockups.v2.business',
+    'mockups.v2.search',
     'mockups.account',
     'mockups.account.following',
     'mockups.onboarding',
@@ -526,6 +541,26 @@ it('shows the club desk with the sample club and its upcoming matches', function
         ->assertSee('% complete');
 });
 
+it('renders the visual v2 register and follows the theme on the range map', function () {
+    $this->get(route('mockups.v2.home'))
+        ->assertOk()
+        ->assertSee('Find your')
+        ->assertSee('The SA Register')
+        ->assertDontSee('Trusted by');
+
+    $this->get(route('mockups.v2.matches'))
+        ->assertOk()
+        ->assertSee('Find a match')
+        ->assertDontSee('Advertise here');
+
+    $this->get(route('mockups.v2.ranges'))->assertOk()->assertSee('Find a shooting range');
+    $this->get(route('mockups.v2.clubs'))->assertOk()->assertSee('Find a shooting club');
+
+    $dark = $this->get(route('mockups.v2.ranges', ['theme' => 'dark']))->assertOk()->getContent();
+
+    expect($dark)->toContain('v2-dark')->toContain('const cartoStyle = "dark_all"');
+});
+
 it('uses the configured CARTO key on the mockup match map', function () {
     config(['services.carto.api_key' => 'test-carto-key']);
 
@@ -533,8 +568,12 @@ it('uses the configured CARTO key on the mockup match map', function () {
 
     expect($html)
         ->toContain('const cartoKey = "test-carto-key"')
-        ->toContain('basemaps.cartocdn.com/dark_all')
+        ->toContain('const cartoStyle = "light_all"')
         ->toContain('?key=');
+
+    $dark = $this->get(route('mockups.matches.map', ['theme' => 'dark']))->assertOk()->getContent();
+
+    expect($dark)->toContain('const cartoStyle = "dark_all"');
 });
 
 it('falls back to OpenStreetMap tiles on the mockup map when no CARTO key is set', function () {
@@ -611,6 +650,14 @@ it('keeps booked banners together in the slot they were given', function () {
         ->and(substr_count($html, 'aria-label="Partner"'))->toBe(1)
         ->and($html)->not->toContain('Suppliers only banner')
         ->and($html)->not->toContain('Benchrest optic banner');
+
+    $v2 = $this->get(route('mockups.v2.matches'))->assertOk()->getContent();
+
+    expect(strpos($v2, 'October range banner'))->toBeInt()
+        ->and(substr_count($v2, 'aria-label="Partner"'))->toBe(1)
+        ->and($v2)->toContain('Sponsored')
+        ->and($v2)->not->toContain('Suppliers only banner')
+        ->and($v2)->not->toContain('Benchrest optic banner');
 });
 
 it('stacks a division advert above the sport advert on that sport’s matches', function () {

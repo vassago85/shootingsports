@@ -26,6 +26,11 @@ it('asks which division on the home page and links the month calendar', function
         ->toContain('What are you interested in?')
         ->toContain('Find your')
         ->toContain('href="'.route('divisions.show', 'handgun').'"')
+        ->toContain('images/divisions/handgun.jpg')
+        ->toContain('images/divisions/bolt-action-rifle.jpg')
+        ->toContain('images/divisions/self-loading-rifle.jpg')
+        ->toContain('images/divisions/shotgun.jpg')
+        ->toContain('has-photo')
         ->toContain('href="'.route('divisions.show', 'bolt-action-rifle').'"')
         ->toContain('href="'.route('divisions.show', 'self-loading-rifle').'"')
         ->toContain('href="'.route('divisions.show', 'shotgun').'"')
@@ -126,11 +131,35 @@ it('links the sport organisation short name to its website', function () {
         'federation_organisation_id' => $federation->id,
     ]);
 
-    $this->get(route('disciplines.show', $discipline->slug))
+    $this->get(route('disciplines.about', $discipline->slug))
         ->assertOk()
         ->assertSee('https://saprf.co.za', false)
         ->assertSee('SAPRF')
         ->assertDontSee('Governed by', false);
+
+    $this->get(route('disciplines.show', $discipline->slug))
+        ->assertOk()
+        ->assertDontSee('https://saprf.co.za', false);
+});
+
+it('keeps the short description and matches on the sport page and the longer write-up on its own page', function () {
+    $discipline = Discipline::factory()->create([
+        'name' => 'Field Target',
+        'short_blurb' => 'Knockdown targets with a spring rifle.',
+        'body' => 'Field Target is shot from unsupported positions at unknown distances.',
+    ]);
+
+    $this->get(route('disciplines.show', $discipline->slug))
+        ->assertOk()
+        ->assertSee('Knockdown targets with a spring rifle.')
+        ->assertSee('More about this sport')
+        ->assertSee('Next Field Target matches')
+        ->assertDontSee('unsupported positions');
+
+    $this->get(route('disciplines.about', $discipline->slug))
+        ->assertOk()
+        ->assertSee('unsupported positions')
+        ->assertSee('More information');
 });
 
 it('shows a handgun sponsor on handgun and not on shotgun', function () {

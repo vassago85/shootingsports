@@ -20,6 +20,16 @@ class MockupUrl
             unset($parameters['device']);
         }
 
+        $theme = request()->query('theme');
+
+        if ($preserveDevice && in_array($theme, ['light', 'dark'], true) && ! array_key_exists('theme', $parameters)) {
+            $parameters['theme'] = $theme;
+        }
+
+        if (array_key_exists('theme', $parameters) && ! in_array($parameters['theme'], ['light', 'dark'], true)) {
+            unset($parameters['theme']);
+        }
+
         return route($name, $parameters);
     }
 }

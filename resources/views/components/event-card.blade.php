@@ -59,7 +59,9 @@
             <h3>
                 <a href="{{ $matchUrl }}" class="dope-title-link">{{ $event->title }}</a>
             </h3>
-            <span class="club">{{ $event->hostDisplayName() }}</span>
+            @if ($listedHost = $event->listedHost())
+                <span class="club">{{ $listedHost }}</span>
+            @endif
         </div>
         <div class="dope-date {{ \App\Support\EventDate::isMultiDay($event->starts_at, $event->ends_at) ? 'is-range' : '' }}">
             <span class="dow">{{ \App\Support\EventDate::weekday($event->starts_at, $event->ends_at) }}</span>
@@ -72,7 +74,10 @@
         @if ($venueName)
             <div class="dope-venue">{{ $venueName }}</div>
         @endif
-        <div class="dope-place">{{ $venuePlace !== '' ? $venuePlace : $event->locationLabel() }}</div>
+        @php $placeLine = $venuePlace !== '' ? $venuePlace : $event->listedLocation(); @endphp
+        @if (filled($placeLine))
+            <div class="dope-place">{{ $placeLine }}</div>
+        @endif
         @if ($highlight !== '')
             <div class="dope-highlight">{{ $highlight }}</div>
         @endif

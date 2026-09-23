@@ -4,13 +4,11 @@
     :json-ld="$jsonLd"
 >
     <main id="main">
-        <section class="page-hero">
-            <div class="wrap">
-                <p class="label">Find your sport</p>
-                <h1>Sports</h1>
-                <p>Precision rifle, IPSC, clays, benchrest, gong, PR22. Every discipline shot in South Africa, what it is, who governs it, and where the next match is.</p>
-            </div>
-        </section>
+        <div class="wrap dir-page">
+            <x-dir-hero page="sports" kicker="Find your sport" title="Sports">
+                Precision rifle, IPSC, clays, benchrest, gong, PR22. Every discipline shot in South Africa, what it is, who governs it, and where the next match is.
+            </x-dir-hero>
+        </div>
         <section class="block">
             <div class="wrap">
                 {{-- Bundle A #2: populated tiles first; empties behind
@@ -23,7 +21,7 @@
                 @endphp
                 <div class="disc-grid">
                     @foreach ($populated as $discipline)
-                        <a class="disc" href="{{ route('disciplines.show', $discipline->slug) }}">
+                        <a @class(['disc', 'has-photo' => filled($discipline->imageUrl())]) href="{{ route('disciplines.show', $discipline->slug) }}" @if ($discipline->imageUrl()) style="--hero-image: url('{{ str_replace(['\\', "'"], ['/', ''], $discipline->imageUrl()) }}')" @endif>
                             <span class="fam">{{ $discipline->family->getLabel() }}</span>
                             <span class="nm">{{ $discipline->name }}</span>
                             <span class="ct">{{ $discipline->events_count }} upcoming</span>
@@ -35,7 +33,7 @@
                         <summary>Show all {{ $total }} disciplines →</summary>
                         <div class="disc-grid" style="margin-top:1px">
                             @foreach ($empty as $discipline)
-                                <a class="disc is-quiet" href="{{ route('disciplines.show', $discipline->slug) }}">
+                                <a @class(['disc', 'is-quiet', 'has-photo' => filled($discipline->imageUrl())]) href="{{ route('disciplines.show', $discipline->slug) }}" @if ($discipline->imageUrl()) style="--hero-image: url('{{ str_replace(['\\', "'"], ['/', ''], $discipline->imageUrl()) }}')" @endif>
                                     <span class="fam">{{ $discipline->family->getLabel() }}</span>
                                     <span class="nm">{{ $discipline->name }}</span>
                                     <span class="ct ct-quiet">No matches listed yet</span>

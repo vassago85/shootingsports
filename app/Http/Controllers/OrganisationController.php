@@ -23,6 +23,8 @@ class OrganisationController extends Controller
             ? Province::fromUrlSlug($request->string('province')->toString())
             : null;
         $division = Division::fromPublicQuery($request->string('division')->toString());
+        $town = trim($request->string('town')->toString());
+        $visitors = $request->boolean('visitors');
 
         $clubs = Organisation::query()
             ->published()
@@ -30,6 +32,8 @@ class OrganisationController extends Controller
             ->with('disciplines')
             ->when($province, fn ($q) => $q->where('province', $province))
             ->when($division, fn ($q) => $q->inDivision($division))
+            ->when($town !== '', fn ($q) => $q->where('town', 'like', '%'.addcslashes($town, '%_\\').'%'))
+            ->when($visitors, fn ($q) => $q->where('visitors_welcome', true))
             ->orderBy('name')
             ->get();
 
@@ -59,6 +63,8 @@ class OrganisationController extends Controller
             'clubs' => $clubs,
             'province' => $province,
             'division' => $division,
+            'town' => $town,
+            'visitors' => $visitors,
             'provinces' => Province::cases(),
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,

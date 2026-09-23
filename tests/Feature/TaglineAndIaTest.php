@@ -69,7 +69,7 @@ it('offers This weekend shortcuts on the homepage', function () {
         ->assertOk()
         ->assertSee('What\'s shooting this weekend?', false)
         ->assertSee(route('calendar', ['weekend' => 1]), false)
-        ->assertSee('New shooter friendly', false);
+        ->assertDontSee('New shooter friendly', false);
 });
 
 it('labels the suppliers footer link as Industry', function () {
@@ -98,7 +98,7 @@ it('keeps Industry out of the home stats bar even when the directory is populate
         ->assertOk()
         ->assertDontSee('<span>Industry</span>', false)
         ->assertDontSee('<span>Suppliers</span>', false)
-        ->assertSee('<span>Clubs &amp; series</span>', false);
+        ->assertSee('<span>Clubs</span>', false);
 });
 
 it('rebrands the /suppliers page as Industry', function () {

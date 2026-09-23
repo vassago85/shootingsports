@@ -10,6 +10,7 @@ use App\Enums\OrganisationUserRole;
 use App\Enums\VerificationState;
 use App\Filament\Desk\Resources\Events\Pages\CreateEvent as DeskCreateEvent;
 use App\Filament\Desk\Resources\Organisations\Pages\CreateOrganisation as DeskCreateOrganisation;
+use App\Filament\Resources\Disciplines\Pages\CreateDiscipline;
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Organisations\Pages\CreateOrganisation as AdminCreateOrganisation;
 use App\Models\Discipline;
@@ -33,6 +34,29 @@ it('auto-fills organisation slug from name on admin create', function () {
         ->assertFormSet([
             'slug' => 'royal-flush-steel-challenge',
         ]);
+});
+
+it('auto-fills a discipline slug from the name', function () {
+    $staff = User::factory()->create(['is_staff' => true]);
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+    Livewire::actingAs($staff)
+        ->test(CreateDiscipline::class)
+        ->fillForm([
+            'name' => 'Precision Rifle',
+            'family' => 'rifle',
+            'short_blurb' => 'Unknown-distance steel.',
+            'sort_order' => 0,
+            'is_published' => true,
+            'videos' => [],
+        ])
+        ->assertFormSet([
+            'slug' => 'precision-rifle',
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(Discipline::query()->where('name', 'Precision Rifle')->value('slug'))->toBe('precision-rifle');
 });
 
 it('creates a club from admin', function () {

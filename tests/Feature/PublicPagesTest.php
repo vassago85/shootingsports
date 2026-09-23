@@ -12,6 +12,7 @@ use App\Enums\OrganisationType;
 use App\Enums\ProviderCategory;
 use App\Enums\ProviderTier;
 use App\Enums\Province;
+use App\Enums\VenueAccess;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
@@ -25,7 +26,8 @@ it('renders the home page instead of the Laravel welcome screen', function () {
     $this->get(route('home'))
         ->assertOk()
         ->assertSee('Shooting matches in South Africa')
-        ->assertSee('Match finder')
+        ->assertSee('Find your')
+        ->assertDontSee('Match finder')
         ->assertDontSee('Let’s get started');
 });
 
@@ -88,6 +90,24 @@ it('shows a published discipline page and noindexes thin province slices', funct
         ->assertSee('Precision Rifle');
 
     expect(Cache::get(PublicCache::key('discipline.precision-rifle.all')))->toBeNull();
+});
+
+it('shows a discipline picture on the sport page and the sports directory', function () {
+    $discipline = Discipline::factory()->create([
+        'slug' => 'precision-rifle-photo',
+        'name' => 'Precision Rifle Photo',
+        'image_path' => 'discipline-images/prs.jpg',
+        'is_published' => true,
+    ]);
+
+    $this->get(route('disciplines.show', $discipline->slug))
+        ->assertOk()
+        ->assertSee('discipline-images/prs.jpg', false)
+        ->assertSee('has-photo', false);
+
+    $this->get(route('disciplines.index'))
+        ->assertOk()
+        ->assertSee('discipline-images/prs.jpg', false);
 });
 
 it('invalidates public stats without leaking versioned cache keys', function () {
@@ -252,6 +272,52 @@ it('lists ranges and shows enquire CTAs without public emails', function () {
         ->assertOk()
         ->assertSee('Enquire via platform')
         ->assertSee('Featured');
+});
+
+it('filters ranges by public access and minimum distance', function () {
+    Venue::factory()->create([
+        'name' => 'Open Long Range',
+        'slug' => 'open-long-range',
+        'status' => ListingStatus::Published,
+        'access' => VenueAccess::Public,
+        'max_distance_m' => 1000,
+    ]);
+    Venue::factory()->create([
+        'name' => 'Closed Short Range',
+        'slug' => 'closed-short-range',
+        'status' => ListingStatus::Published,
+        'access' => VenueAccess::MembersOnly,
+        'max_distance_m' => 100,
+    ]);
+
+    $this->get(route('ranges.index', ['visitors' => 1, 'min_distance' => 600]))
+        ->assertOk()
+        ->assertSee('Find a shooting range')
+        ->assertSee('Open Long Range')
+        ->assertDontSee('Closed Short Range');
+});
+
+it('filters clubs that welcome visitors', function () {
+    Organisation::factory()->create([
+        'name' => 'Open Club',
+        'slug' => 'open-club',
+        'status' => ListingStatus::Published,
+        'type' => OrganisationType::Club,
+        'visitors_welcome' => true,
+    ]);
+    Organisation::factory()->create([
+        'name' => 'Closed Club',
+        'slug' => 'closed-club',
+        'status' => ListingStatus::Published,
+        'type' => OrganisationType::Club,
+        'visitors_welcome' => false,
+    ]);
+
+    $this->get(route('clubs.index', ['visitors' => 1]))
+        ->assertOk()
+        ->assertSee('Find your club')
+        ->assertSee('Open Club')
+        ->assertDontSee('Closed Club');
 });
 
 it('serves contact and advertise enquiry forms', function () {

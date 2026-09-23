@@ -32,6 +32,18 @@ class MockupController extends Controller
         });
     }
 
+    /**
+     * Visual V2 uses the same catalog data on a parallel route group.
+     */
+    private function mockupView(string $name): string
+    {
+        if (request()->routeIs('mockups.v2.*')) {
+            return 'mockups.v2.'.substr($name, strlen('mockups.'));
+        }
+
+        return $name;
+    }
+
     public function index(): View
     {
         return view('mockups.index', [
@@ -51,7 +63,7 @@ class MockupController extends Controller
             ->take(6)
             ->values();
 
-        return view('mockups.home', [
+        return view($this->mockupView('mockups.home'), [
             'stats' => $this->catalog->stats(),
             'matches' => ($weekendMatches->isNotEmpty() ? $weekendMatches : $upcoming->take(6))->values(),
             'weekend' => $weekendMatches->isNotEmpty(),
@@ -75,7 +87,7 @@ class MockupController extends Controller
         $sportFilter = $this->selectedSport($request);
         $pageMatches = $matches->forPage($page, $perPage)->values();
 
-        return view('mockups.matches', [
+        return view($this->mockupView('mockups.matches'), [
             'matches' => $pageMatches,
             'total' => $matches->count(),
             'page' => $page,
@@ -104,7 +116,7 @@ class MockupController extends Controller
 
         $calendar = $this->catalog->calendar($month, $request->query());
 
-        return view('mockups.calendar', [
+        return view($this->mockupView('mockups.calendar'), [
             'calendar' => $calendar,
             'sports' => $this->catalog->sports(),
             'provinces' => Province::cases(),
@@ -123,7 +135,7 @@ class MockupController extends Controller
         $division = Division::fromPublicQuery($request->string('division')->toString());
         $sportFilter = $this->selectedSport($request);
 
-        return view('mockups.map', [
+        return view($this->mockupView('mockups.map'), [
             'markers' => $mapped['markers'],
             'unlocated' => $mapped['unlocated'],
             'total' => $result['matches']->count(),
@@ -139,7 +151,7 @@ class MockupController extends Controller
 
         abort_if($slug !== null && $match === null, 404);
 
-        return view('mockups.match', [
+        return view($this->mockupView('mockups.match'), [
             'match' => $match,
             'choices' => $this->catalog->publicMatches()->take(12),
             'sponsors' => $match
@@ -174,7 +186,7 @@ class MockupController extends Controller
             return str_contains($haystack, mb_strtolower($q));
         })->values();
 
-        return view('mockups.sports', [
+        return view($this->mockupView('mockups.sports'), [
             'sports' => $sports,
             'division' => $division,
             'sponsors' => $division instanceof Division
@@ -195,7 +207,7 @@ class MockupController extends Controller
             ...array_column($sport['children'] ?? [], 'slug'),
         ])));
 
-        return view('mockups.sport', [
+        return view($this->mockupView('mockups.sport'), [
             'sport' => $sport,
             'choices' => $this->catalog->sports(),
             'sponsors' => $this->catalog->sponsorStack(null, $sportSlugs),
@@ -207,7 +219,7 @@ class MockupController extends Controller
     {
         $members = $request->query('members') === '1';
 
-        return view('mockups.clubs', [
+        return view($this->mockupView('mockups.clubs'), [
             'clubs' => $members ? collect() : $this->catalog->filterClubs($request->query()),
             'sports' => $this->catalog->sports(),
             'provinces' => Province::cases(),
@@ -221,7 +233,7 @@ class MockupController extends Controller
 
         abort_if($slug !== null && $club === null, 404);
 
-        return view('mockups.club', [
+        return view($this->mockupView('mockups.club'), [
             'club' => $club,
             'choices' => $this->catalog->clubs(),
             'follows' => $this->readFollows($request),
@@ -232,7 +244,7 @@ class MockupController extends Controller
     {
         $result = $this->catalog->filterRanges($request->query());
 
-        return view('mockups.ranges', [
+        return view($this->mockupView('mockups.ranges'), [
             'ranges' => $result['ranges'],
             'hiddenForDistance' => $result['hidden_for_distance'],
             'sports' => $this->catalog->sports(),
@@ -247,7 +259,7 @@ class MockupController extends Controller
 
         abort_if($slug !== null && $range === null, 404);
 
-        return view('mockups.range', [
+        return view($this->mockupView('mockups.range'), [
             'range' => $range,
             'choices' => $this->catalog->ranges()->take(12),
         ]);
@@ -274,7 +286,7 @@ class MockupController extends Controller
             return str_contains(mb_strtolower($business['name'].' '.$business['description'].' '.$business['category']), mb_strtolower($q));
         })->values();
 
-        return view('mockups.industry', [
+        return view($this->mockupView('mockups.industry'), [
             'businesses' => $businesses,
             'categories' => $this->catalog->directoryBusinesses()->pluck('category', 'category_value')->filter(),
             'provinces' => Province::cases(),
@@ -287,7 +299,7 @@ class MockupController extends Controller
 
         abort_if($slug !== null && $business === null, 404);
 
-        return view('mockups.business', [
+        return view($this->mockupView('mockups.business'), [
             'business' => $business,
             'choices' => $this->catalog->directoryBusinesses(),
         ]);
@@ -308,7 +320,7 @@ class MockupController extends Controller
             'Industry' => $this->catalog->directoryBusinesses()->filter(fn (array $row): bool => $match($row['name'].' '.$row['category'].' '.$row['description']))->take($q === '' ? 4 : 12)->values(),
         ];
 
-        return view('mockups.search', [
+        return view($this->mockupView('mockups.search'), [
             'q' => $q,
             'groups' => $groups,
         ]);

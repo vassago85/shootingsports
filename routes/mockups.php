@@ -23,6 +23,23 @@ Route::prefix('mockups')->name('mockups.')->group(function (): void {
     Route::get('/industry', [MockupController::class, 'industry'])->name('industry');
     Route::get('/business/{slug?}', [MockupController::class, 'business'])->name('business');
     Route::get('/search', [MockupController::class, 'search'])->name('search');
+
+    Route::prefix('v2')->name('v2.')->group(function (): void {
+        Route::get('/', [MockupController::class, 'home'])->name('home');
+        Route::get('/matches', [MockupController::class, 'matches'])->name('matches');
+        Route::get('/matches/calendar', [MockupController::class, 'calendar'])->name('matches.calendar');
+        Route::get('/matches/map', [MockupController::class, 'map'])->name('matches.map');
+        Route::get('/match/{slug?}', [MockupController::class, 'match'])->name('match');
+        Route::get('/sports', [MockupController::class, 'sports'])->name('sports');
+        Route::get('/sport/{slug?}', [MockupController::class, 'sport'])->name('sport');
+        Route::get('/clubs', [MockupController::class, 'clubs'])->name('clubs');
+        Route::get('/club/{slug?}', [MockupController::class, 'club'])->name('club');
+        Route::get('/ranges', [MockupController::class, 'ranges'])->name('ranges');
+        Route::get('/range/{slug?}', [MockupController::class, 'range'])->name('range');
+        Route::get('/industry', [MockupController::class, 'industry'])->name('industry');
+        Route::get('/business/{slug?}', [MockupController::class, 'business'])->name('business');
+        Route::get('/search', [MockupController::class, 'search'])->name('search');
+    });
     Route::get('/account', [MockupController::class, 'account'])->name('account');
     Route::get('/account/following', [MockupController::class, 'following'])->name('account.following');
     Route::get('/onboarding', [MockupController::class, 'onboarding'])->name('onboarding');

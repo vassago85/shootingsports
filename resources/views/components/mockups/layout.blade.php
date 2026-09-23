@@ -23,7 +23,7 @@
     <style>{!! file_get_contents(resource_path('css/mockups.css')) !!}</style>
     @stack('head')
 </head>
-<body class="mk-public">
+<body @class(['mk-public', 'mk-theme-light' => request()->query('theme') !== 'dark', 'mk-theme-dark' => request()->query('theme') === 'dark'])>
     <a class="skip" href="#main">Skip to content</a>
     <div class="mk-ribbon">
         <span>Redesign mockup</span>
@@ -34,6 +34,8 @@
         <span class="sp">
             <a href="{{ $mk(request()->route()->getName(), request()->route()->parameters(), false) }}">Desktop</a>
             <a href="{{ $mk(request()->route()->getName(), array_merge(request()->route()->parameters(), request()->except('device', 'page'), ['device' => 'mobile']), false) }}">Mobile</a>
+            <a href="{{ $mk(request()->route()->getName(), array_merge(request()->route()->parameters(), request()->except('theme', 'page'), ['theme' => 'light'])) }}" @class(['on' => request()->query('theme') !== 'dark'])>Light</a>
+            <a href="{{ $mk(request()->route()->getName(), array_merge(request()->route()->parameters(), request()->except('theme', 'page'), ['theme' => 'dark'])) }}" @class(['on' => request()->query('theme') === 'dark'])>Dark</a>
         </span>
     </div>
     <header class="nav">

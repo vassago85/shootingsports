@@ -81,7 +81,7 @@ it('the match page shows a prominent "Enter here" button linking to the external
         ->assertSee('target="_blank"', false);
 });
 
-it('the match page shows a helpful "no online entry" note when entry_url is null', function () {
+it('the match page omits the entry block when entry_url is null', function () {
     $host = Organisation::factory()->create(['name' => 'Test Rifle Club', 'type' => 'club']);
     $event = Event::factory()->create([
         'entry_url' => null,
@@ -91,7 +91,7 @@ it('the match page shows a helpful "no online entry" note when entry_url is null
     $response = $this->get(route('matches.show', $event->slug));
 
     $response->assertOk()
-        ->assertSee('No online entry link on file', false)
+        ->assertDontSee('No online entry link on file', false)
         ->assertSee('Test Rifle Club', false)
         ->assertDontSee('Enter here');
 });

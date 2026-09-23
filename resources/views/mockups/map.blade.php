@@ -42,8 +42,9 @@
             const markers = @json($markers);
             const map = L.map('mk-map');
             const cartoKey = @json($cartoApiKey);
+            const cartoStyle = @json(request()->query('theme') === 'dark' ? 'dark_all' : 'light_all');
             if (cartoKey) {
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=' + encodeURIComponent(cartoKey), {
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/' + cartoStyle + '/{z}/{x}/{y}{r}.png?key=' + encodeURIComponent(cartoKey), {
                     attribution: '&copy; OpenStreetMap &copy; CARTO',
                     subdomains: 'abcd',
                     maxZoom: 19

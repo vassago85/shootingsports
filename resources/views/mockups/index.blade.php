@@ -35,6 +35,21 @@
                 ['New match', 'The shared match editor, in organiser mode. Nothing saves.', 'mockups.manage.matches.new', []],
                 ['Club profile', 'Editor with completeness. Public page stays in sync.', 'mockups.manage.profile', []],
             ];
+            $visual = [
+                ['Home', 'Forest-green header, register hero, divisions and coming up.', 'mockups.v2.home', []],
+                ['Matches', 'Match list with the shared filter bar and compact rows.', 'mockups.v2.matches', []],
+                ['Calendar', 'The same matches on the month calendar.', 'mockups.v2.matches.calendar', []],
+                ['Map', 'Match map, with light or dark tiles.', 'mockups.v2.matches.map', []],
+                ['Match', 'One real upcoming match.', 'mockups.v2.match', $sample['match'] ? ['slug' => $sample['match']] : []],
+                ['Sports', 'Discipline directory.', 'mockups.v2.sports', []],
+                ['Sport', 'One sport, activity first.', 'mockups.v2.sport', $sample['sport'] ? ['slug' => $sample['sport']] : []],
+                ['Clubs', 'Club list with the register sidebar.', 'mockups.v2.clubs', []],
+                ['Club', 'One club.', 'mockups.v2.club', $sample['club'] ? ['slug' => $sample['club']] : []],
+                ['Ranges', 'Range list beside the map.', 'mockups.v2.ranges', []],
+                ['Range', 'One range.', 'mockups.v2.range', $sample['range'] ? ['slug' => $sample['range']] : []],
+                ['Industry', 'Suppliers, with sponsored listings still labelled.', 'mockups.v2.industry', []],
+                ['Business', 'One industry listing.', 'mockups.v2.business', $sample['business'] ? ['slug' => $sample['business']] : []],
+            ];
             $apps = [
                 ['iOS and Android', 'Phone screens. Each sport has a packing list, and you add items when packing for a match.', 'mockups.apps', ['screen' => 'pack']],
             ];
@@ -54,7 +69,7 @@
             ];
         @endphp
 
-        @foreach (['Public' => $public, 'Account' => $account, 'Club management' => $manage, 'Apps' => $apps, 'Admin' => $admin] as $heading => $items)
+        @foreach (['Public' => $public, 'Public — visual V2' => $visual, 'Account' => $account, 'Club management' => $manage, 'Apps' => $apps, 'Admin' => $admin] as $heading => $items)
             <section class="mk-index-group">
                 <h2>{{ $heading }}</h2>
                 @foreach ($items as [$name, $description, $route, $params])

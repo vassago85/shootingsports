@@ -74,15 +74,15 @@
                 <h3 class="mb-title-wrap">
                     <a href="{{ $matchUrl }}" class="mb-title-link mb-title">{{ $event->title }}</a>
                 </h3>
-                <div class="mb-host">{{ $hostName }}</div>
-                @if (filled($venueName) || filled($venuePlace))
-                    <div class="mb-place">
-                        @if (filled($venueName)){{ $venueName }}@endif
-                        @if (filled($venueName) && filled($venuePlace)) · @endif
-                        @if (filled($venuePlace)){{ $venuePlace }}@endif
-                    </div>
-                @elseif ($event->locationLabel() !== '')
-                    <div class="mb-place">{{ $event->locationLabel() }}</div>
+                @if ($listedHost = $event->listedHost())
+                    <div class="mb-host">{{ $listedHost }}</div>
+                @endif
+                @php
+                    $placeLine = collect([$venueName, $venuePlace])->filter()->implode(' · ');
+                    $placeLine = $placeLine !== '' ? $placeLine : $event->listedLocation();
+                @endphp
+                @if (filled($placeLine))
+                    <div class="mb-place">{{ $placeLine }}</div>
                 @endif
             </div>
         </div>
