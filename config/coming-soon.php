@@ -104,8 +104,7 @@ return [
         '.well-known/*',
         'paystack/*',
         'email/unsubscribe/*',
-        'mockups',
-        'mockups/*',
+        'mockups/apps',
     ],
 
 ];
