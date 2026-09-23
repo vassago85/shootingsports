@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\EditProfile;
+use App\Filament\Pages\Auth\Login;
 use App\Http\Middleware\ApplySecurityHeaders;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
@@ -27,7 +28,7 @@ class DeskPanelProvider extends PanelProvider
         return $panel
             ->id('desk')
             ->path('desk')
-            ->login()
+            ->login(Login::class)
             // Registration is no longer served from the desk panel — the
             // public /register flow owns all signups (shooter, MD,
             // supplier — one form, role tickboxes). /desk/register

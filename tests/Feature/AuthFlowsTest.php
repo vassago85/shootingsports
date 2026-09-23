@@ -24,7 +24,10 @@ it('renders the public login page for guests', function () {
     $this->get('/login')
         ->assertOk()
         ->assertSee('Log in')
-        ->assertSee('Create an account');
+        ->assertSee('Create an account')
+        ->assertSee('wire:model.blur="email"', false)
+        ->assertSee('wire:model.blur="password"', false)
+        ->assertSee('autocomplete="username"', false);
 });
 
 it('renders the unified signup page for guests', function () {

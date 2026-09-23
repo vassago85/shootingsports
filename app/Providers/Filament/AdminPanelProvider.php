@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\EditProfile;
+use App\Filament\Pages\Auth\Login;
 use App\Http\Middleware\ApplySecurityHeaders;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
@@ -27,7 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(Login::class)
             ->profile(EditProfile::class)
             ->passwordReset()
             ->brandName('Shooting Sports')
