@@ -84,10 +84,10 @@
             <p>{{ $newEnquiries }} new. Platform contact, advertise interest, and listing enquiries.</p>
         </a>
 
-        <a class="desk-card" href="{{ $createEventUrl }}">
+        <a class="desk-card" href="{{ $pendingMatches > 0 ? $pendingMatchesUrl : $createEventUrl }}">
             <p class="kicker">03 — Calendar</p>
             <h2>Events</h2>
-            <p>{{ $upcoming }} upcoming on the public calendar. Add or edit staff-owned matches.</p>
+            <p>{{ $pendingMatches }} submitted match{{ $pendingMatches === 1 ? '' : 'es' }} waiting for approval. {{ $upcoming }} upcoming on the public calendar.</p>
         </a>
 
         <a class="desk-card" href="{{ $placementsUrl }}">

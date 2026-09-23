@@ -38,7 +38,7 @@
                                 <input type="checkbox" wire:model.live="wants_md">
                                 <div>
                                     <b>Match director, club or series admin</b>
-                                    <p>Publish matches on the calendar for a club, range, series or federation. Staff review this request, usually within one working day.</p>
+                                    <p>Submit matches for a club or series. Confirm your email, then send the match in. It stays off the calendar until we approve it.</p>
                                 </div>
                             </label>
                         </div>
@@ -48,7 +48,7 @@
                                 <span>Which club, range, series or host will you publish for? *</span>
                                 <textarea wire:model="host_hint" rows="3" maxlength="500" placeholder="e.g. Pretoria Rifle &amp; Pistol Club. I run the Wednesday IPSC shoots."></textarea>
                                 <small style="color:var(--slate);font-size:12px;display:block;margin-top:4px">
-                                    Staff use this to approve your request. The more specific, the faster it goes through.
+                                    You will use this on the next step, when you enter the match.
                                 </small>
                                 @error('host_hint') <span class="err">{{ $message }}</span> @enderror
                             </label>

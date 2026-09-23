@@ -9,6 +9,12 @@
         </section>
         <section class="block">
             <div class="wrap" style="max-width:520px">
+                @if (session('status') && session('status') !== 'verification-link-sent')
+                    <div class="empty" style="border-color:var(--brass);margin-bottom:18px">
+                        {{ session('status') }}
+                    </div>
+                @endif
+
                 @if (session('status') === 'verification-link-sent')
                     <div class="empty" style="border-color:var(--brass);margin-bottom:18px">
                         A new confirmation link has been sent to your email address.

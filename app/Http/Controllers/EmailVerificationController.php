@@ -85,6 +85,14 @@ class EmailVerificationController extends Controller
             return route('suppliers.onboard');
         }
 
+        // Match directors confirm their email, then file the match.
+        // The form is also the landing for anyone still waiting on
+        // that review, so a later visit to the notice page gets them
+        // back to the same step.
+        if ($user !== null && ($request->session()->has('md.pending_host') || $user->isMdPending())) {
+            return route('matches.submit');
+        }
+
         return $user?->defaultRedirectPath() ?? route('home');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Events;
 
+use App\Actions\ApproveSubmittedMatch;
 use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\ListingSource;
@@ -13,6 +14,7 @@ use App\Filament\Support\EventFlagSelect;
 use App\Filament\Support\EventVenueRepeater;
 use App\Models\Event;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -324,9 +326,24 @@ class EventResource extends Resource
             ->filters([
                 SelectFilter::make('status')->options(EventStatus::class),
                 SelectFilter::make('level')->options(EventLevel::class),
+                SelectFilter::make('source')->options(ListingSource::class),
                 TrashedFilter::make(),
             ])
             ->recordActions([
+                Action::make('approveSubmission')
+                    ->label('Approve match')
+                    ->icon(Heroicon::OutlinedCheckBadge)
+                    ->color('success')
+                    ->visible(fn (Event $record): bool => $record->status === EventStatus::Draft
+                        && $record->source === ListingSource::Submission)
+                    ->requiresConfirmation()
+                    ->modalHeading('Publish this match?')
+                    ->modalDescription('The match goes on the public calendar. If the host club is still pending, it is published too.')
+                    ->action(function (Event $record): void {
+                        app(ApproveSubmittedMatch::class)($record);
+
+                        Notification::make()->title('Match approved.')->success()->send();
+                    }),
                 EditAction::make(),
             ])
             ->toolbarActions([

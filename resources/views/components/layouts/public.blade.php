@@ -67,7 +67,13 @@
                 @else
                     <a class="btn ghost on-dark" href="{{ route('login') }}">Sign in</a>
                 @endauth
-                <a class="btn lime" href="{{ url('/desk/events/create') }}">List an event</a>
+                @if (auth()->user()?->is_staff || auth()->user()?->is_match_director)
+                    <a class="btn lime" href="{{ url('/desk/events/create') }}">List an event</a>
+                @elseif (auth()->check())
+                    <a class="btn lime" href="{{ route('matches.submit') }}">List an event</a>
+                @else
+                    <a class="btn lime" href="{{ route('register', ['director' => 1]) }}">List an event</a>
+                @endif
             </div>
             <button class="hamburger" id="burger" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">Menu</button>
         </div>
@@ -86,6 +92,9 @@
                 @if (auth()->user()?->is_staff || auth()->user()?->is_match_director)
                     <a href="{{ url('/desk') }}">Desk</a>
                 @endif
+                @unless (auth()->user()->is_staff || auth()->user()->is_match_director)
+                    <a href="{{ route('matches.submit') }}">Submit a match</a>
+                @endunless
                 @if (auth()->user()?->isSupplier())
                     <a href="{{ route('suppliers.onboard') }}">My business</a>
                 @endif

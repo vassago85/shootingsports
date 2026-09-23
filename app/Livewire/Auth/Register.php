@@ -22,7 +22,10 @@ use Livewire\Component;
  *   - "Publish matches for a club, range or series" (match director)
  *       Requires a host_hint so staff have something to review. The
  *       user is created is_match_director=false with md_requested_at
- *       set, and an MdSignup enquiry lands in the staff queue.
+ *       set, and an MdSignup enquiry lands in the staff queue. The
+ *       hint is stashed in the session and, after email confirmation,
+ *       they go to /matches/submit. The match stays a draft until
+ *       staff approve it.
  *
  *   - "List my business in the industry directory" (supplier)
  *       Requires a business_name. The name is stashed in the session
@@ -34,7 +37,7 @@ use Livewire\Component;
  * roles. The post-signup redirect is layered:
  *
  *   supplier ticked → /email/verify (must confirm before onboarding)
- *   md ticked       → /my-calendar with "pending review" flash
+ *   md ticked       → /email/verify, then /matches/submit
  *   neither         → /my-calendar
  */
 class Register extends Component
@@ -52,6 +55,13 @@ class Register extends Component
     public string $password_confirmation = '';
 
     public bool $wants_md = false;
+
+    public function mount(): void
+    {
+        if (request()->boolean('director')) {
+            $this->wants_md = true;
+        }
+    }
 
     /**
      * Free-text description of the club / series / range the applicant
@@ -120,6 +130,12 @@ class Register extends Component
             Session::put('supplier.pending_business_name', trim($this->business_name));
         }
 
+        if ($this->wants_md) {
+            // Shown on /matches/submit so the club note they typed is
+            // still in front of them after the email confirmation hop.
+            Session::put('md.pending_host', trim($this->host_hint));
+        }
+
         // The Pro trial is intentionally not auto-started at signup —
         // users land on Free and can opt in from /upgrade whenever they
         // like. Keeps the signup form short and stops us from burning a
@@ -130,17 +146,17 @@ class Register extends Component
         Auth::login($user);
         Session::regenerate();
 
-        if ($this->wants_supplier) {
-            // Supplier onboarding is verified-gated so we must send
-            // them via the notice first. Verification link redirects
-            // to /suppliers/onboard afterwards (see EmailVerificationController).
+        if ($this->wants_supplier || $this->wants_md) {
+            // Both follow-on forms are verified-gated. Supplier
+            // onboarding wins when both boxes are ticked; the match
+            // form is the next stop once that listing exists.
+            if ($this->wants_md && ! $this->wants_supplier) {
+                session()->flash('status', 'Confirm your email, then submit your match. It stays off the calendar until we approve it.');
+            }
+
             $this->redirect(route('verification.notice'), navigate: false);
 
             return;
-        }
-
-        if ($this->wants_md) {
-            session()->flash('status', 'Thanks. Your match director request is in. We usually review within one working day, and you will get an email as soon as it is approved. In the meantime, your shooter account works exactly as normal.');
         }
 
         $this->redirect('/my-calendar', navigate: false);

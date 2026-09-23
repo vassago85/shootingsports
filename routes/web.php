@@ -28,9 +28,11 @@ use App\Http\Controllers\UnsubscribeController;
 use App\Http\Controllers\VenueController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
+use App\Livewire\Matches\SubmitMatch;
 use App\Livewire\Settings\NotificationPreferences;
 use App\Livewire\Suppliers\CreateListing as SupplierCreateListing;
 use App\Livewire\Upgrade;
+use App\Models\Event;
 use App\Models\Provider;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -111,6 +113,18 @@ Route::get('/supplier/{provider:slug}', [ProviderController::class, 'show'])->na
 // permanent redirect so any external link or crawler discovery of
 // the singular path still resolves.
 Route::redirect('/matches', '/calendar', 301);
+// Director match intake. Registered before /matches/{event} so
+// "submit" is not captured as a match slug. The match is a draft
+// until staff approve it from /admin.
+Route::middleware(['auth', 'verified'])->group(function (): void {
+    Route::get('/matches/submit', SubmitMatch::class)->name('matches.submit');
+    Route::get('/matches/submit/{event:slug}/thanks', function (Event $event) {
+        abort_unless($event->created_by === auth()->id() || auth()->user()?->is_staff, 403);
+
+        return view('public.matches.submitted', ['event' => $event]);
+    })->name('matches.submit.thanks');
+});
+
 Route::get('/matches/{event:slug}', [EventController::class, 'show'])->name('matches.show');
 
 Route::get('/my-calendar', [ShooterCalendarController::class, 'mine'])

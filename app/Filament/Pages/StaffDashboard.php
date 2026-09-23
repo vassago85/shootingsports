@@ -4,6 +4,8 @@ namespace App\Filament\Pages;
 
 use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
+use App\Enums\EventStatus;
+use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
 use App\Filament\Resources\Enquiries\EnquiryResource;
 use App\Filament\Resources\Events\EventResource;
@@ -65,6 +67,16 @@ class StaffDashboard extends Page
             'createOrgUrl' => OrganisationResource::getUrl('create'),
             'eventsUrl' => EventResource::getUrl('index'),
             'createEventUrl' => EventResource::getUrl('create'),
+            'pendingMatches' => Event::query()
+                ->where('status', EventStatus::Draft)
+                ->where('source', ListingSource::Submission)
+                ->count(),
+            'pendingMatchesUrl' => EventResource::getUrl('index', [
+                'tableFilters' => [
+                    'status' => ['value' => EventStatus::Draft->value],
+                    'source' => ['value' => ListingSource::Submission->value],
+                ],
+            ]),
             'enquiriesUrl' => EnquiryResource::getUrl('index'),
             'placementsUrl' => PlacementResource::getUrl('index'),
             'emailUrl' => ManageMailSettings::getUrl(),

@@ -113,7 +113,7 @@ it('rejects passwords shorter than 8 characters', function () {
 
 // ---- Match-director role (review-gated) ---------------------------
 
-it('ticking the match director role creates a PENDING MD, flashes review status, and lands on /my-calendar', function () {
+it('ticking the match director role creates a PENDING MD and sends them to confirm their email', function () {
     Event::fake([Registered::class]);
 
     Livewire::test(Register::class)
@@ -124,7 +124,7 @@ it('ticking the match director role creates a PENDING MD, flashes review status,
         ->set('wants_md', true)
         ->set('host_hint', 'Pretoria Rifle & Pistol Club — I run the Wednesday IPSC shoots.')
         ->call('register')
-        ->assertRedirect('/my-calendar');
+        ->assertRedirect(route('verification.notice'));
 
     $user = User::query()->where('email', 'dana@example.test')->firstOrFail();
 
@@ -134,7 +134,8 @@ it('ticking the match director role creates a PENDING MD, flashes review status,
         ->and($user->md_rejected_at)->toBeNull()
         ->and($user->isMdPending())->toBeTrue();
 
-    expect(session('status'))->toContain('Your match director request is in');
+    expect(session('status'))->toContain('submit your match')
+        ->and(session('md.pending_host'))->toBe('Pretoria Rifle & Pistol Club — I run the Wednesday IPSC shoots.');
     Event::assertDispatched(Registered::class);
     $this->assertAuthenticatedAs($user);
 });
@@ -218,7 +219,8 @@ it('ticking both MD and supplier stores both intents and routes the user through
         ->and($user->isMdPending())->toBeTrue();
 
     // Supplier business name stashed for /suppliers/onboard.
-    expect(session('supplier.pending_business_name'))->toBe('Multi Roles Trading');
+    expect(session('supplier.pending_business_name'))->toBe('Multi Roles Trading')
+        ->and(session('md.pending_host'))->toBe('Some Club — I run the monthly shoots.');
 
     // MD signup enquiry is written even when supplier is also picked.
     expect(Enquiry::query()->where('type', EnquiryType::MdSignup->value)->where('user_id', $user->id)->exists())
