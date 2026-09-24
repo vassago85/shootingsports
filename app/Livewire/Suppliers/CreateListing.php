@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 
 /**
  * Supplier onboarding step 2 — create the industry listing once the
@@ -32,6 +34,8 @@ use Livewire\Component;
  */
 class CreateListing extends Component
 {
+    use WithFileUploads;
+
     #[Validate('required|string|max:160')]
     public string $name = '';
 
@@ -56,6 +60,12 @@ class CreateListing extends Component
 
     #[Validate('nullable|url|max:255')]
     public ?string $website_url = null;
+
+    #[Validate('nullable|image|mimes:jpeg,png,webp|max:3072')]
+    public ?TemporaryUploadedFile $logo = null;
+
+    #[Validate('nullable|string|max:160')]
+    public string $tagline = '';
 
     #[Validate('required|string|min:20|max:2000')]
     public string $description = '';
@@ -123,6 +133,8 @@ class CreateListing extends Component
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:40',
             'website_url' => 'nullable|url|max:255',
+            'logo' => 'nullable|image|mimes:jpeg,png,webp|max:3072',
+            'tagline' => 'nullable|string|max:160',
             'description' => 'required|string|min:20|max:2000',
         ]);
 
@@ -136,7 +148,7 @@ class CreateListing extends Component
             ->values()
             ->all();
 
-        $provider = Provider::create([
+        $provider = new Provider([
             'name' => trim($this->name),
             'category' => $this->category,
             'services' => $services !== [] ? $services : null,
@@ -145,12 +157,21 @@ class CreateListing extends Component
             'email' => $this->email !== null ? strtolower(trim($this->email)) : null,
             'phone' => $this->phone,
             'website_url' => $this->website_url,
+            'tagline' => filled($this->tagline) ? trim($this->tagline) : null,
             'description' => trim($this->description),
             'status' => ListingStatus::Pending,
             'verification_state' => VerificationState::Unconfirmed,
             'source' => ListingSource::Claimed,
             'claimed_by' => $user->id,
         ]);
+
+        if ($this->logo !== null && ! $provider->attachLogo($this->logo)) {
+            $this->addError('logo', 'The logo could not be saved. Try a smaller PNG or JPEG.');
+
+            return;
+        }
+
+        $provider->save();
 
         Session::flash('status', 'Thanks. Your listing is in for review. Staff usually publish within one working day, and you will get an email as soon as it goes live.');
 

@@ -31,6 +31,7 @@ use App\Livewire\Auth\Register;
 use App\Livewire\Matches\SubmitMatch;
 use App\Livewire\Settings\NotificationPreferences;
 use App\Livewire\Suppliers\CreateListing as SupplierCreateListing;
+use App\Livewire\Suppliers\EditListing as SupplierEditListing;
 use App\Livewire\Upgrade;
 use App\Models\Event;
 use App\Models\Provider;
@@ -212,6 +213,7 @@ Route::middleware('auth')->group(function (): void {
 // the user has confirmation the submission landed.
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/suppliers/onboard', SupplierCreateListing::class)->name('suppliers.onboard');
+    Route::get('/suppliers/onboard/{provider:slug}/edit', SupplierEditListing::class)->name('suppliers.onboard.edit');
     Route::get('/suppliers/onboard/{provider:slug}/thanks', function (Provider $provider) {
         abort_unless($provider->claimed_by === auth()->id() || auth()->user()?->is_staff, 403);
 

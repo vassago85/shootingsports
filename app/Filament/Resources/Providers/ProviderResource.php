@@ -23,12 +23,14 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
@@ -87,7 +89,27 @@ class ProviderResource extends Resource
                     ->tel(),
                 TextInput::make('website_url')
                     ->url(),
+                TextInput::make('tagline')
+                    ->label('Short description')
+                    ->maxLength(160)
+                    ->helperText('One line on directory cards and at the top of the public page.')
+                    ->columnSpanFull(),
                 Textarea::make('description')
+                    ->label('About')
+                    ->helperText('Longer profile copy under Services.')
+                    ->columnSpanFull(),
+                FileUpload::make('logo_path')
+                    ->label('Logo')
+                    ->disk('media')
+                    ->directory('provider-logos')
+                    ->visibility('public')
+                    ->image()
+                    ->imageEditor()
+                    ->imageResizeMode('contain')
+                    ->imageResizeTargetWidth(512)
+                    ->imageResizeTargetHeight(512)
+                    ->maxSize(3072)
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                     ->columnSpanFull(),
                 Select::make('tier')
                     ->options(ProviderTier::class)
@@ -118,6 +140,11 @@ class ProviderResource extends Resource
         return $table
             ->recordTitleAttribute('name')
             ->columns([
+                ImageColumn::make('logo_path')
+                    ->label('')
+                    ->disk('media')
+                    ->imageSize(40)
+                    ->square(),
                 TextColumn::make('slug')
                     ->searchable(),
                 TextColumn::make('name')

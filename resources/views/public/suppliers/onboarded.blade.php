@@ -23,11 +23,17 @@
                     @endif
                     <div class="r"><dt>Province</dt><dd>{{ $provider->province?->getLabel() }}</dd></div>
                     <div class="r"><dt>Town</dt><dd>{{ $provider->town }}</dd></div>
+                    @if (filled($provider->tagline))
+                        <div class="r"><dt>Short description</dt><dd>{{ $provider->tagline }}</dd></div>
+                    @endif
                     <div class="r"><dt>Status</dt><dd>{{ $provider->status?->getLabel() }}</dd></div>
                 </dl>
 
-                <p style="margin-top:22px;color:var(--slate)">
-                    Need to change something before it's reviewed? <a href="{{ route('contact') }}">Email us</a> and we will update it.
+                <p style="margin-top:22px">
+                    <a class="btn" href="{{ route('suppliers.onboard.edit', $provider) }}">Add a logo or short description</a>
+                </p>
+                <p style="margin-top:14px;color:var(--slate)">
+                    Need a category or town change? <a href="{{ route('contact') }}">Email us</a> and we will update it.
                 </p>
             </div>
         </section>

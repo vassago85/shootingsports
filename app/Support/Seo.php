@@ -150,7 +150,9 @@ final readonly class Seo
 
         $sentence = $provider->name.' is a '.$category.($place !== '' ? ' in '.$place : '').'.';
 
-        if (filled($provider->description)) {
+        if (filled($provider->tagline)) {
+            $sentence .= ' '.$provider->tagline;
+        } elseif (filled($provider->description)) {
             $sentence .= ' '.$provider->description;
         }
 

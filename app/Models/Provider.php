@@ -20,12 +20,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'slug', 'name', 'category', 'services', 'province', 'town', 'metro', 'lat', 'lng',
-    'email', 'phone', 'website_url', 'description', 'tier', 'status',
+    'email', 'phone', 'website_url', 'logo_path', 'tagline', 'description', 'tier', 'status',
     'verification_state', 'last_verified_at', 'verification_token',
     'claimed_by', 'source',
 ])]
@@ -73,6 +76,82 @@ class Provider extends Model
         }
 
         return $values->values();
+    }
+
+    /**
+     * Public URL of the uploaded logo, or null when none is set.
+     * Files live on the "media" disk, same as organisation logos.
+     */
+    public function logoUrl(): ?string
+    {
+        if (! filled($this->logo_path)) {
+            return null;
+        }
+
+        return Storage::disk('media')->url($this->logo_path);
+    }
+
+    /**
+     * Store a replacement logo and drop the previous file.
+     */
+    public function attachLogo(UploadedFile $logo): bool
+    {
+        $stored = $logo->store('provider-logos', 'media');
+
+        if (! is_string($stored) || $stored === '') {
+            return false;
+        }
+
+        if (filled($this->logo_path) && $this->logo_path !== $stored) {
+            Storage::disk('media')->delete($this->logo_path);
+        }
+
+        $this->logo_path = $stored;
+
+        return true;
+    }
+
+    public function initials(): string
+    {
+        return collect(preg_split('/\s+/', trim($this->name)) ?: [])
+            ->filter()
+            ->take(2)
+            ->map(fn (string $word): string => mb_strtoupper(mb_substr($word, 0, 1)))
+            ->implode('');
+    }
+
+    /**
+     * One line for directory rows. The tagline wins; otherwise a clip of the longer description.
+     */
+    public function cardSummary(): ?string
+    {
+        if (filled($this->tagline)) {
+            return $this->tagline;
+        }
+
+        $description = trim((string) $this->description);
+
+        if ($description === '') {
+            return null;
+        }
+
+        $collapsed = preg_replace('/\s+/', ' ', $description);
+
+        return Str::limit(is_string($collapsed) ? $collapsed : $description, 140);
+    }
+
+    /**
+     * Primary category, then any extra services, for the public profile grid.
+     *
+     * @return Collection<int, ProviderCategory>
+     */
+    public function offeredCategories(): Collection
+    {
+        return collect([$this->category])
+            ->merge($this->serviceCategories())
+            ->filter()
+            ->unique()
+            ->values();
     }
 
     public function claimedBy(): BelongsTo

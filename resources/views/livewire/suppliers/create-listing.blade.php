@@ -84,6 +84,28 @@
                     </label>
 
                     <label class="field">
+                        <span>Logo (optional)</span>
+                        <input type="file" wire:model="logo" accept="image/jpeg,image/png,image/webp">
+                        <small style="color:var(--slate);font-size:12px;display:block;margin-top:4px">
+                            Square PNG, JPG, or WebP. Max 3 MB. Shown on your directory card and profile.
+                        </small>
+                        <span wire:loading wire:target="logo">Uploading…</span>
+                        @if ($logo && $logo->isPreviewable())
+                            <img class="supplier-logo-preview" src="{{ $logo->temporaryUrl() }}" alt="Logo preview">
+                        @endif
+                        @error('logo') <span class="err">{{ $message }}</span> @enderror
+                    </label>
+
+                    <label class="field">
+                        <span>Short description</span>
+                        <input type="text" wire:model="tagline" maxlength="160" placeholder="One line visitors see in the directory.">
+                        <small style="color:var(--slate);font-size:12px;display:block;margin-top:4px">
+                            Up to 160 characters. Shown on category cards and at the top of your page.
+                        </small>
+                        @error('tagline') <span class="err">{{ $message }}</span> @enderror
+                    </label>
+
+                    <label class="field">
                         <span>Describe your business *</span>
                         <textarea wire:model="description" rows="5" required minlength="20" maxlength="2000" placeholder="What you do, what you stock, what makes you worth listing. Aim for a paragraph."></textarea>
                         <small style="color:var(--slate);font-size:12px;display:block;margin-top:4px">

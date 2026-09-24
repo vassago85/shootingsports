@@ -354,7 +354,8 @@ class JsonLd
             '@type' => 'LocalBusiness',
             'name' => $provider->name,
             'url' => $provider->website_url ?: url()->current(),
-            'description' => $provider->description,
+            'description' => $provider->tagline ?: $provider->description,
+            'image' => $provider->logoUrl(),
             'address' => self::postalAddress(null, $provider->town, $provider->province?->getLabel()),
         ]);
     }
