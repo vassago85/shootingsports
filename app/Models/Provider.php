@@ -79,6 +79,32 @@ class Provider extends Model
     }
 
     /**
+     * Whether this listing should appear on a category page: as the
+     * primary category, or as one of the extra services.
+     */
+    public function offers(ProviderCategory $category): bool
+    {
+        if ($this->category === $category) {
+            return true;
+        }
+
+        return $this->serviceCategories()->contains(
+            fn (ProviderCategory $service): bool => $service === $category,
+        );
+    }
+
+    /**
+     * Published listings whose primary category or extra services match.
+     */
+    public function scopeOffering($query, ProviderCategory $category)
+    {
+        return $query->where(function ($query) use ($category): void {
+            $query->where('category', $category)
+                ->orWhereJsonContains('services', $category->value);
+        });
+    }
+
+    /**
      * Public URL of the uploaded logo, or null when none is set.
      * Files live on the "media" disk, same as organisation logos.
      */

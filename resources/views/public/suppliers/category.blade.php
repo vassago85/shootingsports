@@ -20,15 +20,32 @@
                 @endforeach
             </div>
             <div class="dir-split is-clubs">
-                <div class="dir-list">
-                    @forelse ($providers as $provider)
-                        <x-supplier-row :provider="$provider" />
-                    @empty
-                        <p class="empty">
-                            Free to list. <a href="{{ route('claim') }}">Claim this category</a>
-                            and your business appears here.
-                        </p>
-                    @endforelse
+                <div>
+                    @if ($primaryProviders->isNotEmpty())
+                        <div class="dir-list">
+                            @foreach ($primaryProviders as $provider)
+                                <x-supplier-row :provider="$provider" />
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if ($secondaryProviders->isNotEmpty())
+                        <h2 class="dir-secondary">Secondary</h2>
+                        <div class="dir-list">
+                            @foreach ($secondaryProviders as $provider)
+                                <x-supplier-row :provider="$provider" secondary />
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if ($primaryProviders->isEmpty() && $secondaryProviders->isEmpty())
+                        <div class="dir-list">
+                            <p class="empty">
+                                Free to list. <a href="{{ route('claim') }}">Claim this category</a>
+                                and your business appears here.
+                            </p>
+                        </div>
+                    @endif
                 </div>
                 <aside class="dir-aside">
                     <div class="dir-note">

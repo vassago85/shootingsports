@@ -7,10 +7,7 @@
 
         <header class="cs-nav">
             <a class="cs-brand" href="{{ route('coming-soon') }}">
-                <span class="cs-brand-text">
-                    <span class="cs-wordmark">ShootingSports</span>
-                    <span class="cs-sub">The SA Register</span>
-                </span>
+                <x-brand-logo class="cs-brand-logo" />
             </a>
         </header>
 

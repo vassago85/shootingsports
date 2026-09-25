@@ -18,15 +18,23 @@ class ProviderController extends Controller
     {
         $division = Division::fromPublicQuery($request->string('division')->toString());
 
-        $providers = Provider::query()
+        $listed = Provider::query()
             ->published()
             ->listed()
             ->when($division, fn ($query) => $query->inDivision($division))
             ->orderByTier()
-            ->get()
-            ->groupBy(fn (Provider $provider) => $provider->category->value);
+            ->get();
 
-        $total = $providers->reduce(fn (int $carry, $group): int => $carry + $group->count(), 0);
+        $providers = collect(ProviderCategory::publicCases())
+            ->mapWithKeys(function (ProviderCategory $category) use ($listed) {
+                [$primary, $secondary] = $listed
+                    ->filter(fn (Provider $provider): bool => $provider->offers($category))
+                    ->partition(fn (Provider $provider): bool => $provider->category === $category);
+
+                return [$category->value => $primary->concat($secondary)->values()];
+            });
+
+        $total = $listed->count();
         $countPhrase = match ($total) {
             0 => 'No industry listings yet',
             1 => '1 industry supplier',
@@ -73,10 +81,19 @@ class ProviderController extends Controller
 
         $providers = Provider::query()
             ->published()
-            ->where('category', $categoryEnum)
+            ->listed()
+            ->offering($categoryEnum)
             ->when($provinceEnum, fn ($q) => $q->where('province', $provinceEnum))
+            ->orderByRaw('case when category = ? then 0 else 1 end', [$categoryEnum->value])
             ->orderByTier()
             ->get();
+
+        $primaryProviders = $providers
+            ->filter(fn (Provider $provider): bool => $provider->category === $categoryEnum)
+            ->values();
+        $secondaryProviders = $providers
+            ->reject(fn (Provider $provider): bool => $provider->category === $categoryEnum)
+            ->values();
 
         $crumbs = [
             ['name' => 'Home', 'url' => route('home')],
@@ -95,6 +112,8 @@ class ProviderController extends Controller
             'category' => $categoryEnum,
             'province' => $provinceEnum,
             'providers' => $providers,
+            'primaryProviders' => $primaryProviders,
+            'secondaryProviders' => $secondaryProviders,
             'provinces' => Province::cases(),
             'noindex' => $providers->isEmpty()
                 || ($provinceEnum !== null && $providers->count() < 3),

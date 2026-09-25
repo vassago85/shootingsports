@@ -30,16 +30,7 @@
 
         <header class="cs-nav">
             <a class="cs-brand" href="{{ route('coming-soon') }}">
-                <svg class="cs-mark" width="30" height="30" viewBox="0 0 40 40" role="img" aria-label="Reticle mark">
-                    <circle cx="20" cy="20" r="17" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
-                    <circle cx="20" cy="20" r="7.5" fill="none" stroke="#FFFFFF" stroke-width="1"/>
-                    <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="#FFFFFF" stroke-width="1.6"/>
-                    <circle cx="20" cy="20" r="2" fill="#6B7D3A"/>
-                </svg>
-                <span class="cs-brand-text">
-                    <span class="cs-wordmark">ShootingSports</span>
-                    <span class="cs-sub">The SA Register</span>
-                </span>
+                <x-brand-logo class="cs-brand-logo" />
             </a>
             <div class="cs-nav-cta">
                 @auth

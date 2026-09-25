@@ -36,7 +36,9 @@ class DeskPanelProvider extends PanelProvider
             ->passwordReset()
             ->profile(EditProfile::class)
             ->brandName('Shooting Sports Desk')
-            ->favicon(asset('favicon.svg'))
+            ->brandLogo(asset('images/brand/logo-lockup.png'))
+            ->brandLogoHeight('2.5rem')
+            ->favicon(asset('favicon-32.png'))
             ->viteTheme('resources/css/filament/desk/theme.css')
             ->defaultThemeMode(ThemeMode::Dark)
             ->colors([

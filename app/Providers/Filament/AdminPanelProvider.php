@@ -32,7 +32,9 @@ class AdminPanelProvider extends PanelProvider
             ->profile(EditProfile::class)
             ->passwordReset()
             ->brandName('Shooting Sports')
-            ->favicon(asset('favicon.svg'))
+            ->brandLogo(asset('images/brand/logo-lockup.png'))
+            ->brandLogoHeight('2.5rem')
+            ->favicon(asset('favicon-32.png'))
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->defaultThemeMode(ThemeMode::Dark)
             ->colors([

@@ -1,4 +1,4 @@
-@props(['provider'])
+@props(['provider', 'secondary' => false])
 
 <a {{ $attributes->class('dir-row supplier-row') }} href="{{ route('suppliers.show', $provider->slug) }}">
     @if ($provider->logoUrl())
@@ -12,6 +12,9 @@
             <span class="dir-blurb">{{ $summary }}</span>
         @endif
         <span>{{ collect([$provider->town, $provider->province?->getLabel()])->filter()->implode(' · ') }}</span>
+        @if ($secondary && $provider->category)
+            <span class="dir-role">Primary · {{ $provider->category->getLabel() }}</span>
+        @endif
         <x-verification-badge :listing="$provider" />
     </span>
     <span class="dir-chev" aria-hidden="true">›</span>

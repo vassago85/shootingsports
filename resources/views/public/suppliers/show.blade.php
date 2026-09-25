@@ -49,7 +49,10 @@
                     <h2>Services and products</h2>
                     <div class="supplier-services">
                         @foreach ($offers as $service)
-                            <a class="supplier-service" href="{{ route('suppliers.category', $service->urlSlug()) }}">{{ $service->getLabel() }}</a>
+                            <a class="supplier-service {{ $service === $provider->category ? 'is-primary' : '' }}" href="{{ route('suppliers.category', $service->urlSlug()) }}">
+                                <span class="supplier-service-role">{{ $service === $provider->category ? 'Primary' : 'Secondary' }}</span>
+                                <span class="supplier-service-name">{{ $service->getLabel() }}</span>
+                            </a>
                         @endforeach
                     </div>
                 </section>

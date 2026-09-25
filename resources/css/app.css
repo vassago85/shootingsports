@@ -143,9 +143,8 @@ header.nav {
 .nav-cta { display: flex; align-items: center; gap: 10px; margin-left: auto; }
 .nav-cta .btn { white-space: nowrap; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-right: auto; }
-.brand-text { display: flex; flex-direction: column; line-height: 1; }
-.brand-text .wordmark { font-family: var(--f-display); font-weight: 700; font-size: 19px; letter-spacing: .02em; color: #f2f3f0; text-transform: uppercase; }
-.brand-text .sub { font-family: var(--f-mono); font-size: 9px; letter-spacing: .22em; color: var(--brass-lt); text-transform: uppercase; margin-top: 3px; }
+.brand-logo { height: 40px; width: auto; display: block; }
+@media (max-width: 420px) { .brand-logo { height: 32px; } }
 .nav-links { display: flex; align-items: center; gap: 22px; }
 .nav-links a {
     font-family: var(--f-display); font-size: 15px; font-weight: 500; letter-spacing: .05em;
@@ -1952,21 +1951,7 @@ footer.site a:hover { color: #fff; }
     display: flex; align-items: center; gap: 12px;
     text-decoration: none; color: inherit;
 }
-.cs-brand-text { display: flex; flex-direction: column; line-height: 1; }
-.cs-wordmark {
-    font-family: var(--f-display);
-    font-weight: 700; font-size: 20px;
-    letter-spacing: .02em;
-    text-transform: uppercase;
-    color: #f2f3f0;
-}
-.cs-sub {
-    font-family: var(--f-mono);
-    font-size: 9px; letter-spacing: .24em;
-    text-transform: uppercase;
-    color: var(--brass-lt);
-    margin-top: 4px;
-}
+.cs-brand-logo { height: 46px; }
 .cs-nav-cta { display: flex; align-items: center; gap: 14px; }
 .cs-hello {
     font-family: var(--f-mono); font-size: 11px;
@@ -2732,6 +2717,22 @@ html[lang] body.ss-public .dir-logo { object-fit: cover; }
 html[lang] body.ss-public .dir-hero.is-copy { grid-template-columns: 1fr; }
 html[lang] body.ss-public .supplier-row .dir-main > span { display: block; }
 html[lang] body.ss-public .supplier-row .dir-blurb { color: #10251f; margin-top: 2px; }
+html[lang] body.ss-public .dir-secondary {
+    margin: 28px 0 10px;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #52655e;
+}
+html[lang] body.ss-public .dir-role {
+    margin-top: 4px;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #52655e;
+}
 
 html[lang] body.ss-public .supplier-profile { color: #10251f; padding-bottom: 48px; }
 html[lang] body.ss-public .supplier-crumb {
@@ -2806,16 +2807,28 @@ html[lang] body.ss-public .supplier-services {
     gap: 10px;
 }
 html[lang] body.ss-public .supplier-service {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     background: #fff;
     border: 1px solid #dce3de;
     border-radius: 8px;
-    padding: 16px 16px 16px 18px;
+    padding: 14px 16px;
     color: #10251f;
     font-weight: 650;
     text-decoration: none;
 }
-html[lang] body.ss-public .supplier-service::before { content: "→"; color: #245d3f; margin-right: 10px; }
+html[lang] body.ss-public .supplier-service-role {
+    margin-bottom: 4px;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #52655e;
+}
+html[lang] body.ss-public .supplier-service.is-primary { border-color: #245d3f; }
+html[lang] body.ss-public .supplier-service-name::before { content: "→"; color: #245d3f; margin-right: 10px; }
 html[lang] body.ss-public .supplier-service:hover { border-color: #245d3f; background: #f7f8f5; }
 html[lang] body.ss-public .supplier-details {
     display: grid;

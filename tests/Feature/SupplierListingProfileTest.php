@@ -38,6 +38,8 @@ it('shows the short description, services, and logo on a supplier profile', func
         ->assertSee('Long-range coaching and everyday stock.')
         ->assertSee('A longer profile of the academy')
         ->assertSee('Services and products')
+        ->assertSee('Primary')
+        ->assertSee('Secondary')
         ->assertSee('Optics')
         ->assertSee('Dealer')
         ->assertSee('provider-logos/tuneup.png', false)
@@ -58,6 +60,68 @@ it('shows the short description on the category listing', function () {
         ->assertOk()
         ->assertSee('Tuneup Long Range Precision')
         ->assertSee('Long-range coaching and everyday stock.');
+});
+
+it('lists a supplier under each secondary industry category after the primary listings', function () {
+    Provider::factory()->create([
+        'name' => 'Optics Only Shop',
+        'category' => ProviderCategory::Optics,
+        'province' => Province::Gauteng,
+        'status' => ListingStatus::Published,
+    ]);
+
+    Provider::factory()->create([
+        'name' => 'Tuneup Long Range Precision',
+        'category' => ProviderCategory::Instructor,
+        'services' => [ProviderCategory::Optics->value, ProviderCategory::Dealer->value],
+        'province' => Province::Gauteng,
+        'status' => ListingStatus::Published,
+    ]);
+
+    Provider::factory()->create([
+        'name' => 'Hidden Optics Desk',
+        'category' => ProviderCategory::Dealer,
+        'services' => [ProviderCategory::Optics->value],
+        'status' => ListingStatus::Pending,
+    ]);
+
+    Provider::factory()->create([
+        'name' => 'Zulu Range Optics',
+        'category' => ProviderCategory::Instructor,
+        'services' => [ProviderCategory::Optics->value],
+        'province' => Province::WesternCape,
+        'status' => ListingStatus::Published,
+    ]);
+
+    $this->get(route('suppliers.category', 'optics'))
+        ->assertOk()
+        ->assertSeeInOrder([
+            'Optics Only Shop',
+            'Secondary',
+            'Tuneup Long Range Precision',
+            'Primary · Instructor / academy',
+        ])
+        ->assertDontSee('Hidden Optics Desk');
+
+    $this->get(route('suppliers.province', ['optics', 'gauteng']))
+        ->assertOk()
+        ->assertSee('Tuneup Long Range Precision')
+        ->assertDontSee('Zulu Range Optics');
+
+    $this->get(route('suppliers.category', 'dealer'))
+        ->assertOk()
+        ->assertSee('Tuneup Long Range Precision')
+        ->assertSee('Primary · Instructor / academy');
+
+    $this->get(route('suppliers.category', 'instructor'))
+        ->assertOk()
+        ->assertSee('Tuneup Long Range Precision')
+        ->assertDontSee('Optics Only Shop')
+        ->assertDontSee('Secondary');
+
+    $this->get(route('suppliers.index'))
+        ->assertOk()
+        ->assertSeeInOrder(['Optics', '3 listed']);
 });
 
 it('stores an optional logo and short description when a supplier registers', function () {

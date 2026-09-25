@@ -243,7 +243,8 @@ class SitemapController extends Controller
         foreach (ProviderCategory::publicCases() as $category) {
             $nationalCount = Provider::query()
                 ->published()
-                ->where('category', $category)
+                ->listed()
+                ->offering($category)
                 ->count();
 
             if ($nationalCount < 1) {
@@ -258,7 +259,8 @@ class SitemapController extends Controller
             foreach (Province::cases() as $province) {
                 $provinceCount = Provider::query()
                     ->published()
-                    ->where('category', $category)
+                    ->listed()
+                    ->offering($category)
                     ->where('province', $province)
                     ->count();
 

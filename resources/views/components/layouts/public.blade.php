@@ -19,6 +19,8 @@
         :image="$image"
         :json-ld="$jsonLd"
     />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16.png') }}">
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" sizes="16x16 32x32 48x48">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
@@ -34,16 +36,7 @@
     <header class="nav">
         <div class="nav-in">
             <a class="brand" href="{{ route('home') }}">
-                <svg class="mark" width="28" height="28" viewBox="0 0 40 40" role="img" aria-label="Reticle mark">
-                    <circle cx="20" cy="20" r="17" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
-                    <circle cx="20" cy="20" r="7.5" fill="none" stroke="#FFFFFF" stroke-width="1"/>
-                    <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="#FFFFFF" stroke-width="1.6"/>
-                    <circle cx="20" cy="20" r="2" fill="#6B7D3A"/>
-                </svg>
-                <span class="brand-text">
-                    <span class="wordmark">ShootingSports</span>
-                    <span class="sub">The SA Register</span>
-                </span>
+                <x-brand-logo />
             </a>
             <nav class="nav-links" aria-label="Primary">
                 <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') && ! request()->routeIs('calendar.month') ? 'on' : '' }}">Matches</a>
@@ -138,16 +131,7 @@
             <div class="foot-grid">
                 <div class="foot-about">
                     <a class="brand" href="{{ route('home') }}" style="margin-right:0">
-                        <svg class="mark" width="28" height="28" viewBox="0 0 40 40" role="img" aria-label="Reticle mark">
-                            <circle cx="20" cy="20" r="17" fill="none" stroke="#FFFFFF" stroke-width="1.6"/>
-                            <circle cx="20" cy="20" r="7.5" fill="none" stroke="#FFFFFF" stroke-width="1"/>
-                            <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="#FFFFFF" stroke-width="1.6"/>
-                            <circle cx="20" cy="20" r="2" fill="#6B7D3A"/>
-                        </svg>
-                        <span class="brand-text">
-                            <span class="wordmark">ShootingSports</span>
-                            <span class="sub">The SA Register</span>
-                        </span>
+                        <x-brand-logo />
                     </a>
                     <p>An independent, neutral register of South African shooting sport. Every club and federation listed on the same terms, free of charge.</p>
                 </div>
