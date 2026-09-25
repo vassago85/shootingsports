@@ -11,6 +11,7 @@ use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Support\EventDisciplineSelect;
 use App\Filament\Support\EventFlagSelect;
+use App\Filament\Support\EventPartnerSelect;
 use App\Filament\Support\EventVenueRepeater;
 use App\Models\Event;
 use BackedEnum;
@@ -37,6 +38,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -176,6 +178,7 @@ class EventResource extends Resource
                                         ->columnSpan(1),
                                 ]),
                                 EventFlagSelect::make(),
+                                EventPartnerSelect::make(),
                             ]),
 
                         Tab::make('Entry & Fees')
@@ -327,6 +330,26 @@ class EventResource extends Resource
                 SelectFilter::make('status')->options(EventStatus::class),
                 SelectFilter::make('level')->options(EventLevel::class),
                 SelectFilter::make('source')->options(ListingSource::class),
+                Filter::make('missing_organiser')
+                    ->label('Missing an organiser')
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)
+                        ? $query->missingOrganiser()
+                        : $query),
+                Filter::make('missing_registration_link')
+                    ->label('Missing a registration link')
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)
+                        ? $query->missingRegistrationLink()
+                        : $query),
+                Filter::make('missing_sport')
+                    ->label('Missing a sport')
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)
+                        ? $query->missingSport()
+                        : $query),
+                Filter::make('missing_range')
+                    ->label('Missing a range')
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)
+                        ? $query->missingRange()
+                        : $query),
                 TrashedFilter::make(),
             ])
             ->recordActions([

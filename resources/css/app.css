@@ -1561,6 +1561,33 @@ section.block { padding: 72px 0; }
     padding: 20px 22px 22px;
 }
 .match-facts .dope-rows { padding: 0 0 18px; }
+.match-partners { border-top: 1px solid var(--rule); margin-top: 18px; padding-top: 16px; }
+.match-partners h2 {
+    font-size: 13px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--slate);
+    margin: 0 0 10px;
+}
+.match-partners ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.match-partners a { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; }
+.match-partners a:hover { color: var(--brass-dk, #7a5c12); }
+.match-partners img,
+.match-partners .match-partner-mark {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 4px;
+    flex: none;
+}
+.match-partners .match-partner-mark {
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gunmetal);
+}
 .match-facts .dope-rows a { color: var(--brass-dk, #7a5c12); text-decoration: underline; text-underline-offset: 2px; }
 .match-entry-cta { border-top: 1px solid var(--rule); padding-top: 18px; }
 .match-entry-cta .btn { display: inline-flex; width: 100%; justify-content: center; font-size: 16px; padding: 13px 26px; }
@@ -2714,6 +2741,20 @@ html[lang] body.ss-public .dir-logo {
     font-weight: 700;
 }
 html[lang] body.ss-public .dir-logo { object-fit: contain; }
+html[lang] body.ss-public .dir-logo.is-cover { object-fit: cover; }
+html[lang] body.ss-public .range-photos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin: 0 0 28px;
+}
+html[lang] body.ss-public .range-photos img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 10px;
+    background: #e7efe8;
+}
 html[lang] body.ss-public .dir-hero.is-copy { grid-template-columns: 1fr; }
 html[lang] body.ss-public .supplier-row .dir-main > span { display: block; }
 html[lang] body.ss-public .supplier-row .dir-blurb { color: #10251f; margin-top: 2px; }

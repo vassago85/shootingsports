@@ -61,6 +61,10 @@ class Register extends Component
         if (request()->boolean('director')) {
             $this->wants_md = true;
         }
+
+        if (request()->boolean('supplier')) {
+            $this->wants_supplier = true;
+        }
     }
 
     /**
@@ -105,6 +109,8 @@ class Register extends Component
             'is_staff' => false,
             'is_match_director' => false,
             'md_requested_at' => $this->wants_md ? now() : null,
+            'supplier_requested_at' => $this->wants_supplier ? now() : null,
+            'pending_business_name' => $this->wants_supplier ? trim($this->business_name) : null,
         ]);
 
         if ($this->wants_md) {

@@ -26,16 +26,17 @@ it('suppliers index links empty categories to the category page', function () {
     expect($html)
         ->toContain('Free to list. Open this category')
         ->toContain(route('suppliers.category', $category->urlSlug()))
-        ->not->toContain('0 listed');
+        ->not->toContain('>0 listed<');
 });
 
-it('suppliers category empty state links to claim', function () {
+it('suppliers category empty state links to the supplier signup', function () {
     $category = ProviderCategory::cases()[0];
 
     $this->get(route('suppliers.category', $category->urlSlug()))
         ->assertOk()
-        ->assertSee('Free to list')
-        ->assertSee(route('claim'));
+        ->assertSee('List your business')
+        ->assertSee(route('register', ['supplier' => 1]), false)
+        ->assertDontSee('Claim this category');
 });
 
 // ---- #3 Unconfirmed badge silent ----------------------------------

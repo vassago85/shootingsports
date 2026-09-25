@@ -101,6 +101,18 @@ class JsonLd
             $payload['image'] = $coverUrl;
         }
 
+        if ($event->relationLoaded('partners') && $event->partners->isNotEmpty()) {
+            $payload['sponsor'] = $event->partners
+                ->map(fn (Provider $partner): array => array_filter([
+                    '@type' => 'Organization',
+                    'name' => $partner->name,
+                    'url' => route('suppliers.show', $partner),
+                    'logo' => $partner->logoUrl(),
+                ]))
+                ->values()
+                ->all();
+        }
+
         return $payload;
     }
 
@@ -334,6 +346,7 @@ class JsonLd
             '@id' => $venue->schemaId(),
             'name' => $venue->name,
             'url' => route('ranges.show', $venue->slug),
+            'image' => ($images = $venue->imageUrls()) !== [] ? $images : null,
             'sport' => self::sportLabel($venue),
             'address' => self::postalAddress($venue->address, $venue->town, $venue->province?->getLabel()),
             'geo' => ($venue->lat && $venue->lng) ? [

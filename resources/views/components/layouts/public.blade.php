@@ -21,7 +21,6 @@
     />
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16.png') }}">
-    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" sizes="16x16 32x32 48x48">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <meta name="theme-color" content="#0e3328">
@@ -60,6 +59,11 @@
                 @else
                     <a class="btn ghost on-dark" href="{{ route('login') }}">Sign in</a>
                 @endauth
+                @if (auth()->user()?->isSupplier())
+                    <a class="btn ghost on-dark" href="{{ route('suppliers.onboard') }}">My business</a>
+                @elseif (auth()->check())
+                    <a class="btn ghost on-dark" href="{{ route('suppliers.start') }}">List your business</a>
+                @endif
                 @if (auth()->user()?->is_staff || auth()->user()?->is_match_director)
                     <a class="btn lime" href="{{ url('/desk/events/create') }}">List an event</a>
                 @elseif (auth()->check())
@@ -90,6 +94,8 @@
                 @endunless
                 @if (auth()->user()?->isSupplier())
                     <a href="{{ route('suppliers.onboard') }}">My business</a>
+                @else
+                    <a href="{{ route('suppliers.start') }}">List your business</a>
                 @endif
             @else
                 <a href="{{ route('login') }}">Sign in</a>

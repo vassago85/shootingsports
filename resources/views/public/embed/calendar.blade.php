@@ -7,7 +7,7 @@
     <link rel="alternate" type="application/json+oembed" href="{{ $oembedUrl }}" title="Shooting Sports oEmbed">
     <title>{{ $listingName ? $listingName.' calendar' : 'Match calendar' }} · Shooting Sports</title>
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
-    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16.png') }}">
     @if ($theme->googleFontsHref())
         <link rel="stylesheet" href="{{ $theme->googleFontsHref() }}">
     @endif

@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\UploadedFile;
@@ -188,6 +189,14 @@ class Provider extends Model
     public function placements(): HasMany
     {
         return $this->hasMany(Placement::class);
+    }
+
+    public function sponsoredEvents(): BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'event_provider')
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderBy('event_provider.sort_order');
     }
 
     public function scopePublished($query)

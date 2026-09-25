@@ -3,6 +3,7 @@
     :description="$seo->description"
     :canonical="$seo->canonical"
     :robots="$seo->robots"
+    :image="$venue->imageUrls()[0] ?? null"
     :json-ld="$jsonLd"
 >
     <main id="main">
@@ -18,6 +19,13 @@
         </section>
         <section class="block">
             <div class="wrap">
+                @if ($photos = $venue->imageUrls())
+                    <div class="range-photos">
+                        @foreach ($photos as $photo)
+                            <img src="{{ $photo }}" alt="{{ $venue->name }}">
+                        @endforeach
+                    </div>
+                @endif
                 @if ($venue->max_distance_m || $venue->bay_count || $venue->access || $venue->day_fee_cents || $venue->metro)
                 <dl class="dope-rows" style="max-width:420px;padding:0 0 28px">
                     @if ($venue->max_distance_m)

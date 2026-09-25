@@ -178,6 +178,19 @@ class Event extends Model
         return $this->belongsToMany(Flag::class, 'event_flag');
     }
 
+    /**
+     * Industry listings sponsoring this match. Public pages only
+     * render partners that are still published and listable.
+     */
+    public function partners(): BelongsToMany
+    {
+        return $this->belongsToMany(Provider::class, 'event_provider')
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderBy('event_provider.sort_order')
+            ->orderBy('providers.name');
+    }
+
     public function savedByUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'saved_events')->withTimestamps();
@@ -227,6 +240,45 @@ class Event extends Model
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('status', '!=', EventStatus::Draft);
+    }
+
+    public function scopeExcludingVerificationFixtures(Builder $query): Builder
+    {
+        return $query->where('slug', 'not like', 'verify-%');
+    }
+
+    public function scopeMissingOrganiser(Builder $query): Builder
+    {
+        return $query
+            ->where('status', '!=', EventStatus::Draft)
+            ->excludingVerificationFixtures()
+            ->whereNull('host_organisation_id');
+    }
+
+    public function scopeMissingRegistrationLink(Builder $query): Builder
+    {
+        return $query
+            ->upcoming()
+            ->excludingVerificationFixtures()
+            ->where(function (Builder $query): void {
+                $query->whereNull('entry_url')->orWhere('entry_url', '');
+            });
+    }
+
+    public function scopeMissingSport(Builder $query): Builder
+    {
+        return $query
+            ->upcoming()
+            ->excludingVerificationFixtures()
+            ->whereDoesntHave('disciplines');
+    }
+
+    public function scopeMissingRange(Builder $query): Builder
+    {
+        return $query
+            ->upcoming()
+            ->excludingVerificationFixtures()
+            ->whereNull('venue_id');
     }
 
     public function scopeIndexable(Builder $query): Builder

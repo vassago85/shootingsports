@@ -7,8 +7,12 @@ use App\Enums\ListingStatus;
 use App\Enums\ProviderCategory;
 use App\Enums\Province;
 use App\Enums\VerificationState;
+use App\Mail\SupplierListingSubmittedMail;
 use App\Models\Provider;
+use App\Models\User;
+use App\Support\StaffInbox;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -88,7 +92,8 @@ class CreateListing extends Component
         // Pre-fill from the signup step so the supplier does not
         // retype their business name. The email defaults to the
         // account address for the same reason.
-        $pendingName = (string) Session::pull('supplier.pending_business_name', '');
+        $pendingName = trim((string) ($user?->pending_business_name ?: Session::pull('supplier.pending_business_name', '')));
+        Session::forget('supplier.pending_business_name');
 
         if ($pendingName !== '' && $this->name === '') {
             $this->name = $pendingName;
@@ -140,40 +145,65 @@ class CreateListing extends Component
 
         $user = Auth::user();
 
-        // De-duplicate: strip the primary out of services (belt and
-        // braces — the UI already hides it) and drop empties.
+        if ($user === null) {
+            $this->redirect(route('login'), navigate: false);
+
+            return;
+        }
+
         $services = collect($this->services)
             ->filter(fn ($v): bool => is_string($v) && $v !== '' && $v !== $this->category)
             ->unique()
             ->values()
             ->all();
 
-        $provider = new Provider([
-            'name' => trim($this->name),
-            'category' => $this->category,
-            'services' => $services !== [] ? $services : null,
-            'province' => $this->province,
-            'town' => trim($this->town),
-            'email' => $this->email !== null ? strtolower(trim($this->email)) : null,
-            'phone' => $this->phone,
-            'website_url' => $this->website_url,
-            'tagline' => filled($this->tagline) ? trim($this->tagline) : null,
-            'description' => trim($this->description),
-            'status' => ListingStatus::Pending,
-            'verification_state' => VerificationState::Unconfirmed,
-            'source' => ListingSource::Claimed,
-            'claimed_by' => $user->id,
-        ]);
+        $provider = DB::transaction(function () use ($user, $services): ?Provider {
+            User::query()->whereKey($user->id)->lockForUpdate()->first();
 
-        if ($this->logo !== null && ! $provider->attachLogo($this->logo)) {
+            $existing = Provider::query()->where('claimed_by', $user->id)->first();
+
+            if ($existing !== null) {
+                return $existing;
+            }
+
+            $provider = new Provider([
+                'name' => trim($this->name),
+                'category' => $this->category,
+                'services' => $services !== [] ? $services : null,
+                'province' => $this->province,
+                'town' => trim($this->town),
+                'email' => filled($this->email) ? strtolower(trim((string) $this->email)) : null,
+                'phone' => filled($this->phone) ? trim((string) $this->phone) : null,
+                'website_url' => filled($this->website_url) ? trim((string) $this->website_url) : null,
+                'tagline' => filled($this->tagline) ? trim($this->tagline) : null,
+                'description' => trim($this->description),
+                'status' => ListingStatus::Pending,
+                'verification_state' => VerificationState::Unconfirmed,
+                'source' => ListingSource::Claimed,
+                'claimed_by' => $user->id,
+            ]);
+
+            if ($this->logo !== null && ! $provider->attachLogo($this->logo)) {
+                return null;
+            }
+
+            $provider->save();
+            $user->forceFill(['pending_business_name' => null])->save();
+
+            return $provider;
+        });
+
+        if ($provider === null) {
             $this->addError('logo', 'The logo could not be saved. Try a smaller PNG or JPEG.');
 
             return;
         }
 
-        $provider->save();
-
-        Session::flash('status', 'Thanks. Your listing is in for review. Staff usually publish within one working day, and you will get an email as soon as it goes live.');
+        if ($provider->wasRecentlyCreated) {
+            $provider->setRelation('claimedBy', $user);
+            StaffInbox::queue(new SupplierListingSubmittedMail($provider), $user->email);
+            Session::flash('status', 'Thanks. Your listing is in for review. Staff usually publish within one working day, and you will get an email as soon as it goes live.');
+        }
 
         $this->redirect(route('suppliers.onboard.thanks', ['provider' => $provider->slug]), navigate: false);
     }

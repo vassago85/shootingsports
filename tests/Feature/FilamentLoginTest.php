@@ -13,6 +13,9 @@ beforeEach(function () {
 it('renders the admin login so iOS password autofill can fill it', function () {
     $this->get('/admin/login')
         ->assertOk()
+        ->assertSee('favicon-16.png', false)
+        ->assertSee('favicon-32.png', false)
+        ->assertSee('favicon.ico', false)
         ->assertSee('type="password"', false)
         ->assertSee('autocomplete="username"', false)
         ->assertSee('autocomplete="current-password"', false)
@@ -24,6 +27,9 @@ it('renders the admin login so iOS password autofill can fill it', function () {
 it('renders the desk login so iOS password autofill can fill it', function () {
     $this->get('/desk/login')
         ->assertOk()
+        ->assertSee('favicon-16.png', false)
+        ->assertSee('favicon-32.png', false)
+        ->assertSee('favicon.ico', false)
         ->assertSee('type="password"', false)
         ->assertSee('wire:model.blur="data.password"', false)
         ->assertDontSee('x-bind:type', false);

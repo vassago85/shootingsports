@@ -121,6 +121,26 @@
                             @endif
                         </dl>
 
+                        @if ($event->partners->isNotEmpty())
+                            <div class="match-partners">
+                                <h2>Partners</h2>
+                                <ul>
+                                    @foreach ($event->partners as $partner)
+                                        <li>
+                                            <a href="{{ route('suppliers.show', $partner) }}">
+                                                @if ($partner->logoUrl())
+                                                    <img src="{{ $partner->logoUrl() }}" alt="">
+                                                @else
+                                                    <span class="match-partner-mark">{{ $partner->initials() }}</span>
+                                                @endif
+                                                <span>{{ $partner->name }}</span>
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         @if ($event->entry_url)
                             <div class="match-entry-cta">
                                 <a

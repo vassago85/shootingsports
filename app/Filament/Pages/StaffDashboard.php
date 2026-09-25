@@ -35,7 +35,6 @@ use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Database\Eloquent\Builder;
 
 class StaffDashboard extends Page
 {
@@ -80,6 +79,7 @@ class StaffDashboard extends Page
             ->count();
         $pendingClaims = Claim::query()->where('status', ClaimStatus::Pending)->count();
         $pendingSubmissions = Submission::query()->where('status', SubmissionStatus::Pending)->count();
+        $pendingProviders = Provider::query()->where('status', ListingStatus::Pending)->count();
         $proSubscribers = $this->activeProSubscribers();
 
         return [
@@ -95,8 +95,8 @@ class StaffDashboard extends Page
             'proSalesOpen' => (bool) config('plans.pro_enabled'),
             'pendingMatches' => $pendingMatches,
             'stats' => $this->registerStats($upcoming),
-            'summary' => $this->attentionSummary($pendingMatches, $pendingOrgs, $newEnquiries, $pendingClaims, $pendingSubmissions),
-            'attention' => $this->attentionRows($pendingMatches, $pendingOrgs, $newEnquiries, $pendingClaims, $pendingSubmissions),
+            'summary' => $this->attentionSummary($pendingMatches, $pendingOrgs, $newEnquiries, $pendingClaims, $pendingSubmissions, $pendingProviders),
+            'attention' => $this->attentionRows($pendingMatches, $pendingOrgs, $newEnquiries, $pendingClaims, $pendingSubmissions, $pendingProviders),
             'activity' => $this->upcomingActivity(),
             'newest' => $this->newestRecords(),
             'submissions' => $this->recentSubmissions(),
@@ -115,7 +115,7 @@ class StaffDashboard extends Page
             'claimsUrl' => ClaimResource::getUrl('index'),
             'submissionsUrl' => SubmissionResource::getUrl('index'),
             'usersUrl' => UserResource::getUrl('index'),
-            'mdPendingUrl' => UserResource::getUrl('index', ['tableFilters' => ['md_status' => ['value' => 'pending']]]),
+            'mdPendingUrl' => UserResource::getUrl('index', ['filters' => ['md_status' => ['value' => 'pending']]]),
         ];
     }
 
@@ -137,7 +137,7 @@ class StaffDashboard extends Page
     /**
      * @return list<array{severity: string, count: int, label: string}>
      */
-    private function attentionSummary(int $pendingMatches, int $pendingOrgs, int $newEnquiries, int $pendingClaims, int $pendingSubmissions): array
+    private function attentionSummary(int $pendingMatches, int $pendingOrgs, int $newEnquiries, int $pendingClaims, int $pendingSubmissions, int $pendingProviders): array
     {
         $critical = $pendingMatches
             + $this->missingVenueCount()
@@ -150,12 +150,10 @@ class StaffDashboard extends Page
             + $newEnquiries
             + $this->mdRequestsPending()
             + $pendingClaims
-            + $pendingSubmissions;
+            + $pendingSubmissions
+            + $pendingProviders;
 
-        $suggestion = Discipline::query()
-            ->where('is_published', true)
-            ->where(fn (Builder $query) => $query->whereNull('body')->orWhere('body', ''))
-            ->count();
+        $suggestion = Discipline::query()->withoutLongerDescription()->count();
 
         return [
             ['severity' => 'critical', 'count' => $critical, 'label' => 'Critical'],
@@ -167,7 +165,7 @@ class StaffDashboard extends Page
     /**
      * @return list<array{severity: string, title: string, problem: string, href: string}>
      */
-    private function attentionRows(int $pendingMatches, int $pendingOrgs, int $newEnquiries, int $pendingClaims, int $pendingSubmissions): array
+    private function attentionRows(int $pendingMatches, int $pendingOrgs, int $newEnquiries, int $pendingClaims, int $pendingSubmissions, int $pendingProviders): array
     {
         $rows = [];
 
@@ -185,7 +183,7 @@ class StaffDashboard extends Page
                 'severity' => 'attention',
                 'title' => 'Club claims',
                 'problem' => $pendingClaims.' waiting for review',
-                'href' => ClaimResource::getUrl('index'),
+                'href' => ClaimResource::getUrl('index', ['filters' => ['status' => ['value' => ClaimStatus::Pending->value]]]),
             ];
         }
 
@@ -194,7 +192,7 @@ class StaffDashboard extends Page
                 'severity' => 'attention',
                 'title' => 'Register corrections',
                 'problem' => $pendingSubmissions.' waiting to be merged',
-                'href' => SubmissionResource::getUrl('index'),
+                'href' => SubmissionResource::getUrl('index', ['filters' => ['status' => ['value' => SubmissionStatus::Pending->value]]]),
             ];
         }
 
@@ -203,7 +201,16 @@ class StaffDashboard extends Page
                 'severity' => 'attention',
                 'title' => 'Clubs and series',
                 'problem' => $pendingOrgs.' pending listing'.($pendingOrgs === 1 ? '' : 's'),
-                'href' => OrganisationResource::getUrl('index'),
+                'href' => OrganisationResource::getUrl('index', ['filters' => ['status' => ['value' => ListingStatus::Pending->value]]]),
+            ];
+        }
+
+        if ($pendingProviders > 0) {
+            $rows[] = [
+                'severity' => 'attention',
+                'title' => 'Industry listings',
+                'problem' => $pendingProviders.' pending listing'.($pendingProviders === 1 ? '' : 's'),
+                'href' => ProviderResource::getUrl('index', ['filters' => ['status' => ['value' => ListingStatus::Pending->value]]]),
             ];
         }
 
@@ -212,7 +219,7 @@ class StaffDashboard extends Page
                 'severity' => 'attention',
                 'title' => 'Enquiries',
                 'problem' => $newEnquiries.' new',
-                'href' => EnquiryResource::getUrl('index'),
+                'href' => EnquiryResource::getUrl('index', ['filters' => ['status' => ['value' => EnquiryStatus::New->value]]]),
             ];
         }
 
@@ -223,7 +230,7 @@ class StaffDashboard extends Page
                 'severity' => 'attention',
                 'title' => 'Match director requests',
                 'problem' => $mdPending.' awaiting review',
-                'href' => UserResource::getUrl('index', ['tableFilters' => ['md_status' => ['value' => 'pending']]]),
+                'href' => UserResource::getUrl('index', ['filters' => ['md_status' => ['value' => 'pending']]]),
             ];
         }
 
@@ -234,7 +241,7 @@ class StaffDashboard extends Page
                 'severity' => 'critical',
                 'title' => 'Matches',
                 'problem' => $missingSport.' missing a sport',
-                'href' => EventResource::getUrl('index'),
+                'href' => $this->attentionFilterUrl(EventResource::class, 'missing_sport'),
             ];
         }
 
@@ -245,7 +252,7 @@ class StaffDashboard extends Page
                 'severity' => 'critical',
                 'title' => 'Matches',
                 'problem' => $missingOrganiser.' missing an organiser',
-                'href' => EventResource::getUrl('index'),
+                'href' => $this->attentionFilterUrl(EventResource::class, 'missing_organiser'),
             ];
         }
 
@@ -256,7 +263,7 @@ class StaffDashboard extends Page
                 'severity' => 'critical',
                 'title' => 'Matches',
                 'problem' => $missingVenue.' missing a range',
-                'href' => EventResource::getUrl('index'),
+                'href' => $this->attentionFilterUrl(EventResource::class, 'missing_range'),
             ];
         }
 
@@ -267,7 +274,7 @@ class StaffDashboard extends Page
                 'severity' => 'attention',
                 'title' => 'Matches',
                 'problem' => $missingEntry.' missing a registration link',
-                'href' => EventResource::getUrl('index'),
+                'href' => $this->attentionFilterUrl(EventResource::class, 'missing_registration_link'),
             ];
         }
 
@@ -278,21 +285,18 @@ class StaffDashboard extends Page
                 'severity' => 'critical',
                 'title' => 'Ranges',
                 'problem' => $missingGps.' missing GPS',
-                'href' => VenueResource::getUrl('index'),
+                'href' => $this->attentionFilterUrl(VenueResource::class, 'missing_gps'),
             ];
         }
 
-        $thinSports = Discipline::query()
-            ->where('is_published', true)
-            ->where(fn (Builder $query) => $query->whereNull('body')->orWhere('body', ''))
-            ->count();
+        $thinSports = Discipline::query()->withoutLongerDescription()->count();
 
         if ($thinSports > 0) {
             $rows[] = [
                 'severity' => 'suggestion',
                 'title' => 'Sports',
                 'problem' => $thinSports.' without a longer description',
-                'href' => DisciplineResource::getUrl('index'),
+                'href' => $this->attentionFilterUrl(DisciplineResource::class, 'without_longer_description'),
             ];
         }
 
@@ -412,44 +416,48 @@ class StaffDashboard extends Page
     private function pendingMatchesUrl(): string
     {
         return EventResource::getUrl('index', [
-            'tableFilters' => [
+            'filters' => [
                 'status' => ['value' => EventStatus::Draft->value],
                 'source' => ['value' => ListingSource::Submission->value],
             ],
         ]);
     }
 
+    /**
+     * @param  class-string  $resource
+     */
+    private function attentionFilterUrl(string $resource, string $filter): string
+    {
+        return $resource::getUrl('index', [
+            'filters' => [
+                $filter => ['isActive' => true],
+            ],
+        ]);
+    }
+
     private function missingVenueCount(): int
     {
-        return Event::query()->upcoming()->where('slug', 'not like', 'verify-%')->whereNull('venue_id')->count();
+        return Event::query()->missingRange()->count();
     }
 
     private function missingEntryCount(): int
     {
-        return Event::query()->upcoming()->where('slug', 'not like', 'verify-%')->where(function (Builder $query): void {
-            $query->whereNull('entry_url')->orWhere('entry_url', '');
-        })->count();
+        return Event::query()->missingRegistrationLink()->count();
     }
 
     private function missingSportCount(): int
     {
-        return Event::query()->upcoming()->where('slug', 'not like', 'verify-%')->whereDoesntHave('disciplines')->count();
+        return Event::query()->missingSport()->count();
     }
 
     private function missingOrganiserCount(): int
     {
-        return Event::query()
-            ->where('status', '!=', EventStatus::Draft)
-            ->where('slug', 'not like', 'verify-%')
-            ->whereNull('host_organisation_id')
-            ->count();
+        return Event::query()->missingOrganiser()->count();
     }
 
     private function missingGpsCount(): int
     {
-        return Venue::query()->published()->where(function (Builder $query): void {
-            $query->whereNull('lat')->orWhereNull('lng');
-        })->count();
+        return Venue::query()->missingGps()->count();
     }
 
     /**

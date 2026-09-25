@@ -30,11 +30,13 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Matches\SubmitMatch;
 use App\Livewire\Settings\NotificationPreferences;
+use App\Livewire\Suppliers\ClaimListing as SupplierClaimListing;
 use App\Livewire\Suppliers\CreateListing as SupplierCreateListing;
 use App\Livewire\Suppliers\EditListing as SupplierEditListing;
 use App\Livewire\Upgrade;
 use App\Models\Event;
 use App\Models\Provider;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -204,6 +206,16 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
         ->middleware('throttle:6,1')
         ->name('verification.send');
+
+    Route::get('/suppliers/start', function () {
+        $user = auth()->user();
+
+        if ($user instanceof User && $user->supplier_requested_at === null) {
+            $user->forceFill(['supplier_requested_at' => now()])->save();
+        }
+
+        return redirect()->route('suppliers.onboard');
+    })->name('suppliers.start');
 });
 
 // Supplier onboarding — the listing form itself. Requires a verified
@@ -214,6 +226,7 @@ Route::middleware('auth')->group(function (): void {
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/suppliers/onboard', SupplierCreateListing::class)->name('suppliers.onboard');
     Route::get('/suppliers/onboard/{provider:slug}/edit', SupplierEditListing::class)->name('suppliers.onboard.edit');
+    Route::get('/supplier/{provider:slug}/claim', SupplierClaimListing::class)->name('suppliers.claim');
     Route::get('/suppliers/onboard/{provider:slug}/thanks', function (Provider $provider) {
         abort_unless($provider->claimed_by === auth()->id() || auth()->user()?->is_staff, 403);
 

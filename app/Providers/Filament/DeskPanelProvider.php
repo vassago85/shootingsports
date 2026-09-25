@@ -13,6 +13,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -38,7 +39,10 @@ class DeskPanelProvider extends PanelProvider
             ->brandName('Shooting Sports Desk')
             ->brandLogo(asset('images/brand/logo-lockup.png'))
             ->brandLogoHeight('2.5rem')
-            ->favicon(asset('favicon-32.png'))
+            ->renderHook(
+                PanelsRenderHook::HEAD_START,
+                fn (): string => view('filament.favicons')->render(),
+            )
             ->viteTheme('resources/css/filament/desk/theme.css')
             ->defaultThemeMode(ThemeMode::Dark)
             ->colors([

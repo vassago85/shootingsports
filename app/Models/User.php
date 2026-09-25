@@ -26,6 +26,7 @@ use Laravel\Sanctum\HasApiTokens;
     'digest_frequency', 'association_membership_number',
     'is_staff', 'is_match_director',
     'md_requested_at', 'md_approved_at', 'md_rejected_at', 'md_rejection_reason',
+    'supplier_requested_at', 'pending_business_name',
     'plan', 'plan_expires_at',
     'paystack_customer_code', 'paystack_subscription_code', 'paystack_authorization_code',
     'plan_billing_cycle', 'plan_cancelled_at',
@@ -51,6 +52,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'is_staff' => 'boolean',
             'is_match_director' => 'boolean',
             'md_requested_at' => 'datetime',
+            'supplier_requested_at' => 'datetime',
             'md_approved_at' => 'datetime',
             'md_rejected_at' => 'datetime',
             'plan' => Plan::class,
@@ -81,6 +83,17 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
                 $user->unsubscribe_token = Str::random(48);
             }
         });
+    }
+
+    /**
+     * True until this person owns a supplier listing. Set when they tick
+     * the supplier box at signup, or when they follow "List your business".
+     * Stored on the user so confirming email on another device still
+     * opens the listing form.
+     */
+    public function needsSupplierOnboarding(): bool
+    {
+        return $this->supplier_requested_at !== null && ! $this->isSupplier();
     }
 
     /**

@@ -7,9 +7,11 @@ use App\Enums\Province;
 use App\Enums\VerificationState;
 use App\Livewire\Auth\Register;
 use App\Livewire\Suppliers\CreateListing;
+use App\Mail\SupplierListingSubmittedMail;
 use App\Models\Provider;
 use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
@@ -55,7 +57,9 @@ it('ticking supplier creates an unverified account, dispatches a verification no
 
     expect($user->hasVerifiedEmail())->toBeFalse()
         ->and($user->is_staff)->toBeFalse()
-        ->and($user->is_match_director)->toBeFalse();
+        ->and($user->is_match_director)->toBeFalse()
+        ->and($user->supplier_requested_at)->not->toBeNull()
+        ->and($user->pending_business_name)->toBe('Delmas Gun Shop');
 
     Notification::assertSentTo($user, VerifyEmail::class);
     $this->assertAuthenticatedAs($user);
@@ -239,7 +243,9 @@ it('does not show the My business nav entry to a signed-in user without a listin
     $this->actingAs(User::factory()->create())
         ->get('/')
         ->assertOk()
-        ->assertDontSee('My business');
+        ->assertDontSee('My business')
+        ->assertSee('List your business')
+        ->assertSee(route('suppliers.start'), false);
 });
 
 it('shows the My business nav entry to a user who owns a supplier listing', function () {
@@ -269,4 +275,109 @@ it('provider serviceCategories() drops the primary and unknown values', function
     $labels = $provider->serviceCategories()->map(fn ($c) => $c->getLabel())->all();
 
     expect($labels)->toEqualCanonicalizing(['Optics', 'Ammunition']);
+});
+
+it('opens signup with the supplier box ticked from List your business', function () {
+    $this->get(route('register', ['supplier' => 1]))
+        ->assertOk()
+        ->assertSee('Business name');
+});
+
+it('sends a supplier to the listing form after email confirmation even without the signup session', function () {
+    $user = User::factory()->unverified()->create([
+        'supplier_requested_at' => now(),
+        'pending_business_name' => 'Delmas Gun Shop',
+    ]);
+
+    $url = URL::temporarySignedRoute(
+        'verification.verify',
+        now()->addHour(),
+        ['id' => $user->id, 'hash' => sha1($user->email)],
+    );
+
+    $this->actingAs($user)
+        ->get($url)
+        ->assertRedirect(route('suppliers.onboard').'?verified=1');
+
+    Livewire::actingAs($user->fresh())
+        ->test(CreateListing::class)
+        ->assertSet('name', 'Delmas Gun Shop');
+});
+
+it('records list-your-business intent for an existing account and continues to the form', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('suppliers.start'))
+        ->assertRedirect(route('suppliers.onboard'));
+
+    expect($user->fresh()->supplier_requested_at)->not->toBeNull();
+});
+
+it('emails staff when a supplier listing is submitted and will not create a second one', function () {
+    Mail::fake();
+    config()->set('registration.notify_emails', ['dirk@example.test', 'di@example.test']);
+
+    $user = User::factory()->create([
+        'pending_business_name' => 'Delmas Gun Shop',
+        'supplier_requested_at' => now(),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(CreateListing::class)
+        ->set('category', ProviderCategory::Dealer->value)
+        ->set('province', Province::Gauteng->value)
+        ->set('town', 'Delmas')
+        ->set('description', 'A long-enough description of a small-town gun shop with everyday stock.')
+        ->call('submit')
+        ->assertRedirect();
+
+    expect(Provider::query()->where('claimed_by', $user->id)->count())->toBe(1)
+        ->and($user->fresh()->pending_business_name)->toBeNull();
+
+    Mail::assertQueued(SupplierListingSubmittedMail::class, 2);
+    Mail::assertQueued(SupplierListingSubmittedMail::class, fn (SupplierListingSubmittedMail $mail): bool => $mail->hasTo('dirk@example.test'));
+
+    $listing = Provider::query()->where('claimed_by', $user->id)->firstOrFail();
+
+    $this->actingAs($user)
+        ->get(route('suppliers.onboard'))
+        ->assertRedirect(route('suppliers.onboard.thanks', $listing));
+
+    expect(Provider::query()->where('claimed_by', $user->id)->count())->toBe(1)
+        ->and(Provider::query()->where('name', 'A Second Shop')->exists())->toBeFalse();
+});
+
+it('tells a published supplier their listing is live and points a pending director at the match form', function () {
+    $owner = User::factory()->create([
+        'md_requested_at' => now(),
+        'is_match_director' => false,
+    ]);
+    $pending = Provider::factory()->create([
+        'name' => 'Waiting Shop',
+        'claimed_by' => $owner->id,
+        'status' => ListingStatus::Pending,
+        'category' => ProviderCategory::Dealer,
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('suppliers.onboard.thanks', $pending))
+        ->assertOk()
+        ->assertSee('in for review')
+        ->assertSee('Submit your match')
+        ->assertSee(route('matches.submit'), false);
+
+    $live = Provider::factory()->create([
+        'name' => 'Live Shop',
+        'claimed_by' => User::factory()->create()->id,
+        'status' => ListingStatus::Published,
+        'category' => ProviderCategory::Dealer,
+    ]);
+
+    $this->actingAs($live->claimedBy)
+        ->get(route('suppliers.onboard.thanks', $live))
+        ->assertOk()
+        ->assertSee('is live')
+        ->assertDontSee('in for review')
+        ->assertSee(route('suppliers.show', $live), false);
 });

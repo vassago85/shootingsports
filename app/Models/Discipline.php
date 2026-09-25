@@ -7,6 +7,7 @@ use App\Enums\Division;
 use App\Support\DivisionCatalog;
 use Database\Factories\DisciplineFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -41,6 +42,13 @@ class Discipline extends Model
         }
 
         return Storage::disk('media')->url($this->image_path);
+    }
+
+    public function scopeWithoutLongerDescription(Builder $query): Builder
+    {
+        return $query
+            ->where('is_published', true)
+            ->where(fn (Builder $query) => $query->whereNull('body')->orWhere('body', ''));
     }
 
     public function parent(): BelongsTo

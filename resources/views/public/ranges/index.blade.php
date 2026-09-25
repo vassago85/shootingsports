@@ -73,7 +73,11 @@
                                 ->implode('');
                         @endphp
                         <a class="dir-row" href="{{ route('ranges.show', $venue->slug) }}">
-                            <span class="dir-initials">{{ $initials }}</span>
+                            @if ($cover = $venue->imageUrls()[0] ?? null)
+                                <img class="dir-logo is-cover" src="{{ $cover }}" alt="">
+                            @else
+                                <span class="dir-initials">{{ $initials }}</span>
+                            @endif
                             <span class="dir-main">
                                 <strong>{{ $venue->name }} <x-listing-tier-badge :listing="$venue" /></strong>
                                 @php $rangePlace = collect([$venue->town, $venue->province?->getLabel()])->filter()->implode(' · '); @endphp

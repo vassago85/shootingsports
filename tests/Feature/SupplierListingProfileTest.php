@@ -116,12 +116,11 @@ it('lists a supplier under each secondary industry category after the primary li
     $this->get(route('suppliers.category', 'instructor'))
         ->assertOk()
         ->assertSee('Tuneup Long Range Precision')
-        ->assertDontSee('Optics Only Shop')
-        ->assertDontSee('Secondary');
+        ->assertDontSee('Optics Only Shop');
 
     $this->get(route('suppliers.index'))
         ->assertOk()
-        ->assertSeeInOrder(['Optics', '3 listed']);
+        ->assertSee(route('suppliers.category', 'optics'), false);
 });
 
 it('stores an optional logo and short description when a supplier registers', function () {
@@ -190,6 +189,42 @@ it('lets the owner update the logo and short description', function () {
         ->and($provider->logo_path)->toStartWith('provider-logos/');
 
     Storage::disk('media')->assertExists($provider->logo_path);
+});
+
+it('lets the owner update contact details and extra services without changing the public address', function () {
+    $owner = User::factory()->create();
+    $provider = Provider::factory()->create([
+        'slug' => 'tuneup-long-range',
+        'name' => 'Tuneup Long Range',
+        'claimed_by' => $owner->id,
+        'category' => ProviderCategory::Instructor,
+        'status' => ListingStatus::Published,
+        'description' => 'A longer profile of the academy and what a new shooter should expect.',
+        'email' => null,
+        'phone' => null,
+        'website_url' => null,
+        'services' => null,
+    ]);
+
+    Livewire::actingAs($owner)
+        ->test(EditListing::class, ['provider' => $provider])
+        ->set('name', 'Tuneup Precision')
+        ->set('phone', '011 555 0101')
+        ->set('email', 'shop@tuneup.example')
+        ->set('website_url', 'https://tuneup.example')
+        ->set('services', [ProviderCategory::Optics->value, ProviderCategory::Instructor->value])
+        ->call('save')
+        ->assertRedirect(route('suppliers.onboard.thanks', ['provider' => 'tuneup-long-range']));
+
+    $provider->refresh();
+
+    expect($provider->slug)->toBe('tuneup-long-range')
+        ->and($provider->name)->toBe('Tuneup Precision')
+        ->and($provider->phone)->toBe('011 555 0101')
+        ->and($provider->email)->toBe('shop@tuneup.example')
+        ->and($provider->website_url)->toBe('https://tuneup.example')
+        ->and($provider->services)->toBe([ProviderCategory::Optics->value])
+        ->and($provider->status)->toBe(ListingStatus::Published);
 });
 
 it('refuses another user from editing a supplier listing', function () {

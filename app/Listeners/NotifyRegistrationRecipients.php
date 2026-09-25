@@ -4,8 +4,8 @@ namespace App\Listeners;
 
 use App\Mail\NewRegistrationMail;
 use App\Models\User;
+use App\Support\StaffInbox;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Support\Facades\Mail;
 
 class NotifyRegistrationRecipients
 {
@@ -17,24 +17,13 @@ class NotifyRegistrationRecipients
             return;
         }
 
-        $emails = collect(config('registration.notify_emails', []))
-            ->filter(fn (mixed $email): bool => is_string($email) && trim($email) !== '')
-            ->map(fn (string $email): string => trim($email))
-            ->reject(fn (string $email): bool => strcasecmp($email, $user->email) === 0)
-            ->unique(fn (string $email): string => strtolower($email))
-            ->values();
-
-        if ($emails->isEmpty()) {
-            return;
-        }
-
         $roles = ['Shooter'];
 
         if ($user->isMdPending() || $user->is_match_director) {
             $roles[] = 'Match director';
         }
 
-        $businessName = session('supplier.pending_business_name');
+        $businessName = $user->pending_business_name ?: session('supplier.pending_business_name');
         $businessName = is_string($businessName) && trim($businessName) !== '' ? trim($businessName) : null;
 
         if ($businessName !== null) {
@@ -44,13 +33,11 @@ class NotifyRegistrationRecipients
         $hostHint = session('md.pending_host');
         $hostHint = is_string($hostHint) && trim($hostHint) !== '' ? trim($hostHint) : null;
 
-        foreach ($emails as $email) {
-            Mail::to($email)->queue((new NewRegistrationMail(
-                registrant: $user,
-                roles: $roles,
-                hostHint: $hostHint,
-                businessName: $businessName,
-            ))->afterCommit());
-        }
+        StaffInbox::queue(new NewRegistrationMail(
+            registrant: $user,
+            roles: $roles,
+            hostHint: $hostHint,
+            businessName: $businessName,
+        ), $user->email);
     }
 }

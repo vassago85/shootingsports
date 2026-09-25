@@ -41,7 +41,7 @@
                     @if ($primaryProviders->isEmpty() && $secondaryProviders->isEmpty())
                         <div class="dir-list">
                             <p class="empty">
-                                Free to list. <a href="{{ route('claim') }}">Claim this category</a>
+                                Free to list. <a href="{{ \App\Support\SupplierListing::startUrl() }}">List your business</a>
                                 and your business appears here.
                             </p>
                         </div>
@@ -51,7 +51,7 @@
                     <div class="dir-note">
                         <h2>List your business</h2>
                         <p>Gunsmiths, dealers, and instructors can list free. Staff review the page before it goes live.</p>
-                        <a class="btn" href="{{ route('claim') }}">Claim this category</a>
+                        <a class="btn" href="{{ \App\Support\SupplierListing::startUrl() }}">List your business</a>
                     </div>
                 </aside>
             </div>

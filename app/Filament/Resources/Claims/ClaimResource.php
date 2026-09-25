@@ -21,6 +21,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -89,19 +90,28 @@ class ClaimResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('status')->options(ClaimStatus::class),
             ])
             ->recordActions([
                 Action::make('approve')
                     ->visible(fn (Claim $record): bool => $record->status === ClaimStatus::Pending)
-                    ->schema([
-                        Select::make('role')
-                            ->options(OrganisationUserRole::class)
-                            ->default(OrganisationUserRole::Admin->value)
-                            ->required(),
-                    ])
+                    ->schema(function (Claim $record): array {
+                        if ($record->claimable_type !== 'organisation') {
+                            return [];
+                        }
+
+                        return [
+                            Select::make('role')
+                                ->options(OrganisationUserRole::class)
+                                ->default(OrganisationUserRole::Admin->value)
+                                ->required(),
+                        ];
+                    })
+                    ->requiresConfirmation()
                     ->action(function (Claim $record, array $data): void {
-                        $record->approve(auth()->user(), OrganisationUserRole::from($data['role']));
+                        $role = OrganisationUserRole::tryFrom((string) ($data['role'] ?? '')) ?? OrganisationUserRole::Admin;
+
+                        $record->approve(auth()->user(), $role);
                     }),
                 Action::make('reject')
                     ->color('danger')

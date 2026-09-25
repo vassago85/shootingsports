@@ -24,6 +24,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -31,7 +32,9 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -108,6 +111,21 @@ class VenueResource extends Resource
                     ->columnSpanFull(),
                 Textarea::make('notes')
                     ->columnSpanFull(),
+                FileUpload::make('image_paths')
+                    ->label('Photos')
+                    ->disk('media')
+                    ->directory('range-images')
+                    ->visibility('public')
+                    ->image()
+                    ->multiple()
+                    ->reorderable()
+                    ->appendFiles()
+                    ->panelLayout('grid')
+                    ->maxFiles(8)
+                    ->maxSize(4096)
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                    ->helperText('Photos of the range. The first one is the cover on the ranges list. JPEG, PNG, or WebP, up to 4 MB each.')
+                    ->columnSpanFull(),
                 Select::make('tier')
                     ->options(ProviderTier::class)
                     ->default('free')
@@ -136,6 +154,12 @@ class VenueResource extends Resource
         return $table
             ->recordTitleAttribute('name')
             ->columns([
+                ImageColumn::make('image_paths')
+                    ->label('Photo')
+                    ->disk('media')
+                    ->getStateUsing(fn (Venue $record): ?string => collect($record->image_paths)->first())
+                    ->imageSize(40)
+                    ->square(),
                 TextColumn::make('slug')
                     ->searchable(),
                 TextColumn::make('name')
@@ -200,6 +224,11 @@ class VenueResource extends Resource
             ->filters([
                 SelectFilter::make('verification_state')->options(VerificationState::class),
                 SelectFilter::make('province')->options(Province::class),
+                Filter::make('missing_gps')
+                    ->label('Missing GPS')
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)
+                        ? $query->missingGps()
+                        : $query),
                 TrashedFilter::make(),
             ])
             ->recordActions([

@@ -22,12 +22,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'slug', 'name', 'province', 'town', 'metro', 'lat', 'lng', 'address',
     'geocode_source', 'geocoded_at',
     'max_distance_m', 'bay_count', 'access', 'day_fee_cents', 'facilities',
-    'notes', 'tier', 'status', 'verification_state', 'last_verified_at',
+    'notes', 'image_paths', 'tier', 'status', 'verification_state', 'last_verified_at',
     'verification_token', 'claimed_by', 'source',
 ])]
 class Venue extends Model
@@ -49,12 +50,25 @@ class Venue extends Model
             'access' => VenueAccess::class,
             'day_fee_cents' => 'integer',
             'facilities' => 'array',
+            'image_paths' => 'array',
             'tier' => ProviderTier::class,
             'status' => ListingStatus::class,
             'verification_state' => VerificationState::class,
             'last_verified_at' => 'immutable_datetime',
             'source' => ListingSource::class,
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function imageUrls(): array
+    {
+        return collect($this->image_paths)
+            ->filter(fn (mixed $path): bool => is_string($path) && $path !== '')
+            ->map(fn (string $path): string => Storage::disk('media')->url($path))
+            ->values()
+            ->all();
     }
 
     public function hasCoordinates(): bool
@@ -85,6 +99,13 @@ class Venue extends Model
     public function scopePublished($query)
     {
         return $query->where('status', ListingStatus::Published);
+    }
+
+    public function scopeMissingGps($query)
+    {
+        return $query->published()->where(function ($query): void {
+            $query->whereNull('lat')->orWhereNull('lng');
+        });
     }
 
     public function scopeIndexable($query)

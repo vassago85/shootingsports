@@ -7,6 +7,7 @@ use App\Enums\EventStatus;
 use App\Enums\OrganisationUserRole;
 use App\Filament\Support\EventDisciplineSelect;
 use App\Filament\Support\EventFlagSelect;
+use App\Filament\Support\EventPartnerSelect;
 use App\Filament\Support\EventVenueRepeater;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
@@ -129,6 +130,11 @@ class EventForm
                 Section::make('Who this match is for')
                     ->schema([
                         EventFlagSelect::make(),
+                    ]),
+
+                Section::make('Supplier partners')
+                    ->schema([
+                        EventPartnerSelect::make()->hiddenLabel(),
                     ]),
 
                 Section::make('Fees')

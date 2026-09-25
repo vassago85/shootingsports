@@ -29,6 +29,17 @@
                         @if ($provider->website_url)
                             <a class="btn ghost" href="{{ $provider->website_url }}" rel="noopener noreferrer">Website</a>
                         @endif
+                        @auth
+                            @if ($provider->claimed_by === auth()->id())
+                                <a class="btn ghost" href="{{ route('suppliers.onboard.edit', $provider) }}">Edit your listing</a>
+                            @elseif ($provider->claimed_by === null)
+                                <a class="btn ghost" href="{{ route('suppliers.claim', $provider) }}">This is my business</a>
+                            @endif
+                        @else
+                            @if ($provider->claimed_by === null)
+                                <a class="btn ghost" href="{{ route('suppliers.claim', $provider) }}">This is my business</a>
+                            @endif
+                        @endauth
                     </p>
                     <x-verification-badge :listing="$provider" />
                 </div>

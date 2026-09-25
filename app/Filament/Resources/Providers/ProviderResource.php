@@ -205,6 +205,7 @@ class ProviderResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('status')->options(ListingStatus::class),
                 SelectFilter::make('verification_state')->options(VerificationState::class),
                 SelectFilter::make('category')->options(ProviderCategory::class),
                 TrashedFilter::make(),
