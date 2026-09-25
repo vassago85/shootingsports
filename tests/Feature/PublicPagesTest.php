@@ -158,6 +158,7 @@ it('lists Feather Fur and Target under reloading and as a secondary optics suppl
         ->assertSee('Feather Fur and Target')
         ->assertSee('Reloading components, equipment, and optics in Pretoria.')
         ->assertSee('Faerie Glen')
+        ->assertSee('provider-logos/feather-fur-and-target.png', false)
         ->assertSee('https://ffat.co.za', false)
         ->assertDontSee('orders@ffat.co.za');
 
@@ -178,6 +179,7 @@ it('lists MC Tactical as a dealer that also offers optics, chassis, and reloadin
         ->assertSee('MC Tactical')
         ->assertSee('Firearms, optics, chassis, and reloading supplies in Pretoria.')
         ->assertSee('Garsfontein')
+        ->assertSee('provider-logos/mc-tactical.png', false)
         ->assertSee('https://mctactical.co.za', false)
         ->assertDontSee('sales@mctactical.co.za');
 
@@ -311,6 +313,121 @@ it('lists every Wildman store as a dealer and shows the shared logo', function (
         ->assertDontSee('Wildman Montana');
 
     expect(Provider::query()->where('logo_path', 'provider-logos/wildman.png')->count())->toBe(25);
+});
+
+it('lists Gun Warrior as a Centurion dealer and Axis Precision Worx under chassis', function () {
+    $this->get(route('suppliers.show', 'gun-warrior'))
+        ->assertOk()
+        ->assertSee('Gun Warrior')
+        ->assertSee('106 Edward Avenue')
+        ->assertSee('provider-logos/gun-warrior.png', false)
+        ->assertSee('https://www.gunwarrior.co.za', false)
+        ->assertDontSee('info@gunwarrior.co.za');
+
+    $this->get(route('suppliers.show', 'axis-precision-worx'))
+        ->assertOk()
+        ->assertSee('Axis Precision Worx')
+        ->assertSee('Triangle Farm')
+        ->assertSee('provider-logos/axis-precision-worx.png', false)
+        ->assertSee('https://www.axisprecisionworx.com', false)
+        ->assertDontSee('info@axisprecisionworx.com');
+
+    $this->get(route('suppliers.category', 'dealer'))
+        ->assertOk()
+        ->assertSee('Gun Warrior')
+        ->assertDontSee('Secondary');
+
+    $this->get(route('suppliers.province', ['chassis-stocks', 'western-cape']))
+        ->assertOk()
+        ->assertSee('Axis Precision Worx')
+        ->assertDontSee('Gun Warrior');
+
+    $this->get(route('suppliers.category', 'chassis-stocks'))
+        ->assertOk()
+        ->assertSee('Gun Warrior')
+        ->assertSee('Primary · Dealer');
+});
+
+it('lists both Dave Sheer Guns shops, with the Cape Town logo', function () {
+    $this->get(route('suppliers.show', 'dave-sheer-guns-cape-town'))
+        ->assertOk()
+        ->assertSee('Dave Sheer Guns Cape Town')
+        ->assertSee('Groot Phesantekraal View')
+        ->assertSee('provider-logos/dave-sheer-guns-cape-town.png', false)
+        ->assertSee('https://davesheerct.com', false)
+        ->assertDontSee('admin@davesheerct.com');
+
+    $this->get(route('suppliers.show', 'dave-sheer-guns-johannesburg'))
+        ->assertOk()
+        ->assertSee('Dave Sheer Guns Johannesburg')
+        ->assertSee('95 Forest Road, Bramley')
+        ->assertSee('https://davesheer.com', false);
+
+    $this->get(route('suppliers.category', 'dealer'))
+        ->assertOk()
+        ->assertSee('Dave Sheer Guns Cape Town')
+        ->assertSee('Dave Sheer Guns Johannesburg')
+        ->assertDontSee('Secondary');
+
+    $this->get(route('suppliers.province', ['dealer', 'western-cape']))
+        ->assertOk()
+        ->assertSee('Dave Sheer Guns Cape Town')
+        ->assertDontSee('Dave Sheer Guns Johannesburg');
+
+    $this->get(route('suppliers.category', 'gunsmith'))
+        ->assertOk()
+        ->assertSee('Dave Sheer Guns Cape Town')
+        ->assertSee('Primary · Dealer');
+});
+
+it('lists Boomsticks as a Paarl dealer with ammunition, optics, and reloading', function () {
+    $this->get(route('suppliers.show', 'boomsticks'))
+        ->assertOk()
+        ->assertSee('Boomsticks')
+        ->assertSee('21 Station Street')
+        ->assertSee('provider-logos/boomsticks.png', false)
+        ->assertSee('https://boomsticks.co.za', false)
+        ->assertDontSee('onlinesales@boomsticks.co.za');
+
+    $this->get(route('suppliers.province', ['dealer', 'western-cape']))
+        ->assertOk()
+        ->assertSee('Boomsticks')
+        ->assertDontSee('Secondary');
+
+    $this->get(route('suppliers.category', 'reloading-components'))
+        ->assertOk()
+        ->assertSee('Boomsticks')
+        ->assertSee('Primary · Dealer');
+});
+
+it('lists Lock n Load and Gunslinger as Pretoria dealers', function () {
+    $this->get(route('suppliers.show', 'lock-n-load'))
+        ->assertOk()
+        ->assertSee("Lock 'n Load")
+        ->assertSee('461 Lois Avenue')
+        ->assertSee('provider-logos/lock-n-load.png', false)
+        ->assertSee('https://locknload.pro', false)
+        ->assertDontSee('info@locknload.pro');
+
+    $this->get(route('suppliers.show', 'gunslinger'))
+        ->assertOk()
+        ->assertSee('Gunslinger')
+        ->assertSee('Erasmuskloof')
+        ->assertSee('provider-logos/gunslinger.png', false)
+        ->assertSee('https://gunslinger.bz', false)
+        ->assertDontSee('sales@gunslinger.bz');
+
+    $this->get(route('suppliers.category', 'dealer'))
+        ->assertOk()
+        ->assertSee("Lock 'n Load")
+        ->assertSee('Gunslinger')
+        ->assertDontSee('Secondary');
+
+    $this->get(route('suppliers.category', 'gunsmith'))
+        ->assertOk()
+        ->assertSee("Lock 'n Load")
+        ->assertSee('Primary · Dealer')
+        ->assertDontSee('Gunslinger');
 });
 
 it('keeps distributor accounts off the public register', function () {
