@@ -152,6 +152,128 @@ it('shows club, range, supplier and match pages by slug', function () {
     $this->get(route('suppliers.show', $provider->slug))->assertOk()->assertSee('Ridgeline Rifleworks');
 });
 
+it('lists Feather Fur and Target under reloading and as a secondary optics supplier', function () {
+    $this->get(route('suppliers.show', 'feather-fur-and-target'))
+        ->assertOk()
+        ->assertSee('Feather Fur and Target')
+        ->assertSee('Reloading components, equipment, and optics in Pretoria.')
+        ->assertSee('Faerie Glen')
+        ->assertSee('https://ffat.co.za', false)
+        ->assertDontSee('orders@ffat.co.za');
+
+    $this->get(route('suppliers.category', 'reloading-components'))
+        ->assertOk()
+        ->assertSeeInOrder(['Feather Fur and Target', 'Secondary']);
+
+    $this->get(route('suppliers.category', 'optics'))
+        ->assertOk()
+        ->assertSee('Feather Fur and Target')
+        ->assertSee('Secondary')
+        ->assertSee('Primary · Reloading components');
+});
+
+it('lists MC Tactical as a dealer that also offers optics, chassis, and reloading', function () {
+    $this->get(route('suppliers.show', 'mc-tactical'))
+        ->assertOk()
+        ->assertSee('MC Tactical')
+        ->assertSee('Firearms, optics, chassis, and reloading supplies in Pretoria.')
+        ->assertSee('Garsfontein')
+        ->assertSee('https://mctactical.co.za', false)
+        ->assertDontSee('sales@mctactical.co.za');
+
+    $this->get(route('suppliers.category', 'dealer'))
+        ->assertOk()
+        ->assertSee('MC Tactical')
+        ->assertDontSee('Secondary');
+
+    $this->get(route('suppliers.category', 'optics'))
+        ->assertOk()
+        ->assertSee('MC Tactical')
+        ->assertSee('Primary · Dealer');
+
+    $this->get(route('suppliers.category', 'chassis-stocks'))
+        ->assertOk()
+        ->assertSee('MC Tactical')
+        ->assertSee('Secondary');
+});
+
+it('lists Out There Sport Shooting Club as a public range in Bashewa', function () {
+    $this->get(route('ranges.show', 'out-there-sport-shooting-club'))
+        ->assertOk()
+        ->assertSee('Out There Sport Shooting Club')
+        ->assertSee('Moria Saai Farm, Garsfontein Road, Bashewa, Pretoria, 0056')
+        ->assertSee('300 m')
+        ->assertSee('Public')
+        ->assertSee('R150')
+        ->assertSee('Pretoria');
+});
+
+it('lists Blue Gum Valley Shooting Range as a public range near Bronkhorstspruit', function () {
+    $this->get(route('ranges.show', 'blue-gum-valley-shooting-range'))
+        ->assertOk()
+        ->assertSee('Blue Gum Valley Shooting Range')
+        ->assertSee('30 Knoppiesfontein Road, Onbekend, Bronkhorstspruit')
+        ->assertSee('Public')
+        ->assertSee('Pretoria');
+
+    $this->get(route('ranges.index', ['province' => 'gauteng']))
+        ->assertOk()
+        ->assertSee('Blue Gum Valley Shooting Range')
+        ->assertSee('Bronkhorstspruit');
+});
+
+it('lists Zimbi as a dealer that also offers ammunition, optics, reloading, and safes', function () {
+    $this->get(route('suppliers.show', 'zimbi'))
+        ->assertOk()
+        ->assertSee('Zimbi')
+        ->assertSee('Specialist hunting and firearms shop in Pretoria.')
+        ->assertSee('Persequor')
+        ->assertSee('https://zimbi.co.za', false)
+        ->assertDontSee('zimbi@zimbi.co.za');
+
+    $this->get(route('suppliers.category', 'dealer'))
+        ->assertOk()
+        ->assertSee('Zimbi')
+        ->assertDontSee('Secondary');
+
+    $this->get(route('suppliers.category', 'ammunition'))
+        ->assertOk()
+        ->assertSee('Zimbi')
+        ->assertSee('Secondary')
+        ->assertSee('Primary · Dealer');
+
+    $this->get(route('suppliers.category', 'safes-storage'))
+        ->assertOk()
+        ->assertSee('Zimbi')
+        ->assertSee('Primary · Dealer');
+});
+
+it('lists each Safari Outdoor store in its own province, with shooting lines as secondary', function () {
+    $this->get(route('suppliers.show', 'safari-outdoor-pretoria'))
+        ->assertOk()
+        ->assertSee('Safari Outdoor Pretoria')
+        ->assertSee('Lynnwood Bridge')
+        ->assertSee('https://safarioutdoor.co.za', false)
+        ->assertDontSee('info@so.co.za');
+
+    $this->get(route('suppliers.category', 'dealer'))
+        ->assertOk()
+        ->assertSee('Safari Outdoor Pretoria')
+        ->assertSee('Safari Outdoor Stellenbosch')
+        ->assertDontSee('Secondary');
+
+    $this->get(route('suppliers.province', ['dealer', 'western-cape']))
+        ->assertOk()
+        ->assertSee('Safari Outdoor Stellenbosch')
+        ->assertDontSee('Safari Outdoor Pretoria');
+
+    $this->get(route('suppliers.province', ['optics', 'mpumalanga']))
+        ->assertOk()
+        ->assertSee('Safari Outdoor Nelspruit')
+        ->assertSee('Secondary')
+        ->assertSee('Primary · Dealer');
+});
+
 it('keeps distributor accounts off the public register', function () {
     $this->get(route('suppliers.category', 'distributor'))->assertNotFound();
 
