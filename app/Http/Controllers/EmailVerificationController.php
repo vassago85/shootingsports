@@ -15,7 +15,9 @@ use Illuminate\View\View;
  *                         page shown by the `verified` middleware and
  *                         after registration.
  *   verification.verify — GET /email/verify/{id}/{hash}, the signed
- *                         link inside the email itself.
+ *                         link inside the email itself. An expired
+ *                         signature is caught in bootstrap/app.php and
+ *                         sent back here so the user can request another.
  *   verification.send   — POST /email/verification-notification, the
  *                         "resend link" button on the notice page.
  *

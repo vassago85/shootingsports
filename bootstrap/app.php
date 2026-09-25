@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -50,4 +51,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // A confirmation link is only valid for an hour. Once it expires
+        // the signed middleware would otherwise show a bare 403, with no
+        // way to ask for a fresh email. Send them back to the notice page
+        // where they can request another.
+        $exceptions->render(function (InvalidSignatureException $exception, Request $request) {
+            if (! $request->routeIs('verification.verify')) {
+                return null;
+            }
+
+            return redirect()
+                ->route('verification.notice')
+                ->with('status', 'verification-link-expired');
+        });
     })->create();

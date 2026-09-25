@@ -136,6 +136,7 @@ class UserResource extends Resource
                     ->searchable(),
                 TextColumn::make('email_verified_at')
                     ->dateTime()
+                    ->placeholder('Not confirmed')
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -206,6 +207,16 @@ class UserResource extends Resource
                             default => $query,
                         };
                     }),
+                TernaryFilter::make('email_verified_at')
+                    ->label('Email confirmed')
+                    ->placeholder('All users')
+                    ->trueLabel('Confirmed')
+                    ->falseLabel('Waiting on confirmation')
+                    ->queries(
+                        true: fn ($query) => $query->whereNotNull('email_verified_at'),
+                        false: fn ($query) => $query->whereNull('email_verified_at'),
+                        blank: fn ($query) => $query,
+                    ),
                 TernaryFilter::make('is_staff')
                     ->label('Staff')
                     ->placeholder('All users')
@@ -224,6 +235,26 @@ class UserResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('resendVerification')
+                    ->label('Resend confirmation')
+                    ->icon(Heroicon::OutlinedPaperAirplane)
+                    ->visible(fn (User $record): bool => ! $record->hasVerifiedEmail())
+                    ->requiresConfirmation()
+                    ->modalHeading('Resend the confirmation email?')
+                    ->modalDescription(fn (User $record): string => "A fresh confirmation link will be sent to {$record->email}.")
+                    ->action(function (User $record): void {
+                        if ($record->hasVerifiedEmail()) {
+                            return;
+                        }
+
+                        $record->sendEmailVerificationNotification();
+
+                        Notification::make()
+                            ->title('Confirmation email sent')
+                            ->body("A new link is on its way to {$record->email}.")
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('approveMdRequest')
                     ->label('Approve MD request')
                     ->icon(Heroicon::OutlinedCheckBadge)
