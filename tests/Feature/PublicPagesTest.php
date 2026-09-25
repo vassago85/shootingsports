@@ -274,6 +274,45 @@ it('lists each Safari Outdoor store in its own province, with shooting lines as 
         ->assertSee('Primary · Dealer');
 });
 
+it('lists every Wildman store as a dealer and shows the shared logo', function () {
+    $this->get(route('suppliers.show', 'wildman-centurion'))
+        ->assertOk()
+        ->assertSee('Wildman Centurion')
+        ->assertSee('Centurion Gate')
+        ->assertSee('provider-logos/wildman.png', false)
+        ->assertSee('https://wildmanhuntingandoutdoor.com', false);
+
+    $this->get(route('suppliers.show', 'wildman-bethlehem'))
+        ->assertOk()
+        ->assertDontSee('orders@wildmanbeth.co.za');
+
+    $this->get(route('suppliers.category', 'dealer'))
+        ->assertOk()
+        ->assertSee('Wildman Centurion')
+        ->assertSee('Wildman Cape Gate')
+        ->assertDontSee('Secondary');
+
+    $this->get(route('suppliers.province', ['dealer', 'western-cape']))
+        ->assertOk()
+        ->assertSee('Wildman Cape Gate')
+        ->assertSee('Wildman George')
+        ->assertDontSee('Wildman Centurion');
+
+    $this->get(route('suppliers.province', ['dealer', 'northern-cape']))
+        ->assertOk()
+        ->assertSee('Wildman Kimberley')
+        ->assertSee('Wildman Hinterland Hartswater');
+
+    $this->get(route('suppliers.category', 'gunsmith'))
+        ->assertOk()
+        ->assertSee('Wildman Centurion')
+        ->assertSee('Wildman Silver Lakes')
+        ->assertSee('Primary · Dealer')
+        ->assertDontSee('Wildman Montana');
+
+    expect(Provider::query()->where('logo_path', 'provider-logos/wildman.png')->count())->toBe(25);
+});
+
 it('keeps distributor accounts off the public register', function () {
     $this->get(route('suppliers.category', 'distributor'))->assertNotFound();
 

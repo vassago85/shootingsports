@@ -2713,7 +2713,7 @@ html[lang] body.ss-public .dir-logo {
     font-size: 22px;
     font-weight: 700;
 }
-html[lang] body.ss-public .dir-logo { object-fit: cover; }
+html[lang] body.ss-public .dir-logo { object-fit: contain; }
 html[lang] body.ss-public .dir-hero.is-copy { grid-template-columns: 1fr; }
 html[lang] body.ss-public .supplier-row .dir-main > span { display: block; }
 html[lang] body.ss-public .supplier-row .dir-blurb { color: #10251f; margin-top: 2px; }
