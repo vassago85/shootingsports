@@ -16,7 +16,14 @@ class EventPartnerSelect
                 modifyQueryUsing: fn (Builder $query): Builder => $query
                     ->published()
                     ->listed()
-                    ->orderBy('name'),
+                    // The options query is SELECT DISTINCT providers.*, and
+                    // Postgres has no equality operator for the json `services`
+                    // column, so the event edit page 500s. id and name are enough
+                    // for the picker, and the pivot sort column must not stay in
+                    // ORDER BY once it is no longer selected.
+                    ->reorder()
+                    ->orderBy('providers.name')
+                    ->select(['providers.id', 'providers.name']),
             )
             ->multiple()
             ->searchable()

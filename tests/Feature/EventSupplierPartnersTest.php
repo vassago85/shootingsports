@@ -67,6 +67,8 @@ it('lets staff attach a supplier partner from the event form', function () {
 
     Livewire::actingAs($staff)
         ->test(EditEvent::class, ['record' => $event->getRouteKey()])
+        ->assertSuccessful()
+        ->assertSee('Feather Fur and Target')
         ->fillForm([
             'partners' => [$partner->id],
         ])
