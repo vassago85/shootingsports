@@ -8,6 +8,7 @@ use App\Mail\EnquiryReplyMail;
 use App\Models\Enquiry;
 use App\Models\EnquiryReply;
 use App\Models\User;
+use App\Support\EnquiryListingContact;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -42,6 +43,14 @@ class RecordEnquiryReply
             'status' => EnquiryStatus::New,
             'read_at' => null,
         ])->save();
+
+        $listingEmail = EnquiryListingContact::address($enquiry);
+
+        if ($listingEmail !== null) {
+            Mail::to($listingEmail)->queue(new EnquiryFollowUpMail($enquiry, $reply));
+
+            return $reply;
+        }
 
         $staffEmails = User::query()
             ->where('is_staff', true)

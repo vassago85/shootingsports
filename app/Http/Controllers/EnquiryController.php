@@ -15,6 +15,7 @@ use App\Models\Provider;
 use App\Models\User;
 use App\Models\Venue;
 use App\Services\Enquiries\RecordEnquiryReply;
+use App\Support\EnquiryListingContact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
@@ -89,9 +90,7 @@ class EnquiryController extends Controller
             'about' => $about,
             'aboutType' => $type,
             'heading' => 'Enquire about '.$aboutName,
-            'intro' => $type === 'event'
-                ? 'Your message is sent through Shooting Sports and forwarded to the organiser. Their address is not shown on the event page.'
-                : 'Your message is delivered to Shooting Sports staff. We will relay it appropriately. Listing emails are not shown publicly.',
+            'intro' => 'Your message is sent through Shooting Sports. If this listing has a contact email, it goes straight to them. Otherwise staff receive it. The address is not shown on the page.',
         ]);
     }
 
@@ -137,20 +136,19 @@ class EnquiryController extends Controller
             'user_agent' => substr((string) $request->userAgent(), 0, 500),
         ]);
 
-        $staffEmails = User::query()
-            ->where('is_staff', true)
-            ->whereNotNull('email')
-            ->pluck('email')
-            ->all();
+        $listingEmail = EnquiryListingContact::address($enquiry);
 
-        foreach ($staffEmails as $email) {
-            Mail::to($email)->queue(new EnquiryReceivedMail($enquiry));
-        }
+        if ($listingEmail !== null) {
+            Mail::to($listingEmail)->queue(new EnquiryForwardedMail($enquiry));
+        } else {
+            $staffEmails = User::query()
+                ->where('is_staff', true)
+                ->whereNotNull('email')
+                ->pluck('email');
 
-        $about = $enquiry->about;
-
-        if ($about instanceof Event && filled($about->contact_email)) {
-            Mail::to($about->contact_email)->queue(new EnquiryForwardedMail($enquiry));
+            foreach ($staffEmails as $email) {
+                Mail::to($email)->queue(new EnquiryReceivedMail($enquiry));
+            }
         }
 
         return redirect()
