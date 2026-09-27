@@ -2328,11 +2328,9 @@ html[lang] body.ss-public .home-hero .hero-in {
     grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
 }
 html[lang] body.ss-public .home-hero .hero-rail {
-    align-self: start; margin: 8px 0 8px auto; width: min(100%, 420px);
-    max-height: 42rem; overflow-y: auto;
-    scrollbar-color: rgba(197, 224, 122, 0.75) transparent;
+    align-self: center; margin: 22px 0 22px auto; width: min(100%, 380px); max-height: none;
     background: rgba(8, 24, 19, .72); border: 1px solid rgba(255,255,255,.12);
-    border-radius: 12px; padding: 14px 14px 10px;
+    border-radius: 12px; padding: 12px 12px 8px;
 }
 html[lang] body.ss-public .home-hero .rail-head { border-bottom: 0; padding-bottom: 0; margin-bottom: 6px; }
 html[lang] body.ss-public .home-hero .rail-head h3 { font-size: 14px; letter-spacing: .12em; }
@@ -2375,7 +2373,6 @@ html[lang] body.ss-public .home-hero .rail-body .m {
     html[lang] body.ss-public .home-hero .hero-rail {
         width: 100%;
         margin: 0;
-        max-height: 28rem;
     }
     html[lang] body.ss-public .home-hero.has-photo {
         background-image:

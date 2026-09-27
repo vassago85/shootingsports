@@ -32,28 +32,49 @@ it('renders the home page instead of the Laravel welcome screen', function () {
         ->assertDontSee('Let’s get started');
 });
 
-it('lists home-rail matches across the next 30 days', function () {
-    // Sunday, so "this weekend" is today only and the rail is the 30-day list.
-    Carbon::setTestNow(Carbon::create(2026, 9, 27, 18, 0, 0, 'Africa/Johannesburg'));
-
-    foreach (range(1, 12) as $day) {
-        Event::factory()->confirmed()->create([
-            'title' => sprintf('Window match %02d', $day),
-            'starts_at' => now()->addDays($day),
-        ]);
-    }
+it('keeps the home rail to this weekend when that window still has matches', function () {
+    Carbon::setTestNow(Carbon::create(2026, 9, 16, 10, 0, 0, 'Africa/Johannesburg'));
 
     Event::factory()->confirmed()->create([
-        'title' => 'Far horizon match',
-        'starts_at' => now()->addDays(45),
+        'title' => 'Saturday Steel',
+        'starts_at' => Carbon::create(2026, 9, 19, 9, 0, 0, 'Africa/Johannesburg'),
+    ]);
+    Event::factory()->confirmed()->create([
+        'title' => 'Following Weekend Gong',
+        'starts_at' => Carbon::create(2026, 9, 26, 9, 0, 0, 'Africa/Johannesburg'),
     ]);
 
-    $this->get(route('home'))
-        ->assertOk()
-        ->assertSee('Next 30 days')
-        ->assertSee('Window match 01')
-        ->assertSee('Window match 12')
-        ->assertDontSee('Far horizon match');
+    $rail = str($this->get(route('home'))->assertOk()->getContent())
+        ->between('class="hero-rail"', 'class="strip home-stats"')
+        ->toString();
+
+    expect($rail)->toContain('This weekend')
+        ->toContain('Saturday Steel')
+        ->not->toContain('Following Weekend Gong');
+
+    Carbon::setTestNow();
+});
+
+it('shows next weekend on the home rail when this weekend is already over', function () {
+    Carbon::setTestNow(Carbon::create(2026, 9, 27, 18, 0, 0, 'Africa/Johannesburg'));
+
+    Event::factory()->confirmed()->create([
+        'title' => 'Weekend League',
+        'starts_at' => Carbon::create(2026, 10, 3, 9, 0, 0, 'Africa/Johannesburg'),
+    ]);
+    Event::factory()->confirmed()->create([
+        'title' => 'Midweek Practice',
+        'starts_at' => Carbon::create(2026, 10, 7, 9, 0, 0, 'Africa/Johannesburg'),
+    ]);
+
+    $rail = str($this->get(route('home'))->assertOk()->getContent())
+        ->between('class="hero-rail"', 'class="strip home-stats"')
+        ->toString();
+
+    expect($rail)->toContain('Next weekend')
+        ->toContain('Weekend League')
+        ->not->toContain('Midweek Practice')
+        ->not->toContain('Next 30 days');
 
     Carbon::setTestNow();
 });

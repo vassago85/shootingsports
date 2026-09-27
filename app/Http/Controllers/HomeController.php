@@ -11,6 +11,8 @@ use App\Models\Provider;
 use App\Models\Venue;
 use App\Support\PublicCache;
 use App\Support\ThisWeekend;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
@@ -38,39 +40,30 @@ class HomeController extends Controller
         });
 
         [$weekendFrom, $weekendTo] = ThisWeekend::range();
+        $weekend = $this->railEventsBetween($weekendFrom, $weekendTo);
 
-        $weekend = Event::query()
-            ->upcoming()
-            ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
-            ->whereBetween('starts_at', [$weekendFrom, $weekendTo])
-            ->orderBy('starts_at')
-            ->limit(4)
-            ->get();
+        if ($weekend->isNotEmpty()) {
+            $rail = $weekend;
+            $railLabel = 'This weekend';
+        } else {
+            // Sunday evening the current window is today only. Show the
+            // coming Friday–Sunday instead of the rest of the month.
+            [$nextFrom, $nextTo] = ThisWeekend::nextRange();
+            $nextWeekend = $this->railEventsBetween($nextFrom, $nextTo);
 
-        $monthAhead = $weekend->isNotEmpty()
-            ? $weekend
-            : Event::query()
-                ->upcoming()
-                ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
-                ->where('starts_at', '<=', now()->addDays(30))
-                ->orderBy('starts_at')
-                ->limit(30)
-                ->get();
-
-        $rail = $monthAhead->isNotEmpty()
-            ? $monthAhead
-            : Event::query()
-                ->upcoming()
-                ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
-                ->orderBy('starts_at')
-                ->limit(4)
-                ->get();
-
-        $railLabel = match (true) {
-            $weekend->isNotEmpty() => 'This weekend',
-            $monthAhead->isNotEmpty() => 'Next 30 days',
-            default => 'Next up',
-        };
+            if ($nextWeekend->isNotEmpty()) {
+                $rail = $nextWeekend;
+                $railLabel = 'Next weekend';
+            } else {
+                $rail = Event::query()
+                    ->upcoming()
+                    ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
+                    ->orderBy('starts_at')
+                    ->limit(4)
+                    ->get();
+                $railLabel = 'Next up';
+            }
+        }
 
         $upcoming = Event::query()
             ->upcoming()
@@ -87,5 +80,18 @@ class HomeController extends Controller
             'upcoming' => $upcoming,
             'articles' => Article::query()->published()->with('author')->orderByDesc('published_at')->limit(3)->get(),
         ]);
+    }
+
+    /**
+     * @return Collection<int, Event>
+     */
+    private function railEventsBetween(Carbon $from, Carbon $to): Collection
+    {
+        return Event::query()
+            ->upcoming()
+            ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
+            ->whereBetween('starts_at', [$from, $to])
+            ->orderBy('starts_at')
+            ->get();
     }
 }
