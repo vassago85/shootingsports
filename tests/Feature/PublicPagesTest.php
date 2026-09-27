@@ -19,6 +19,7 @@ use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\Venue;
 use App\Support\PublicCache;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
@@ -31,8 +32,11 @@ it('renders the home page instead of the Laravel welcome screen', function () {
         ->assertDontSee('Let’s get started');
 });
 
-it('lists the next ten home-rail matches inside 30 days', function () {
-    foreach (range(1, 11) as $day) {
+it('lists home-rail matches across the next 30 days', function () {
+    // Sunday, so "this weekend" is today only and the rail is the 30-day list.
+    Carbon::setTestNow(Carbon::create(2026, 9, 27, 18, 0, 0, 'Africa/Johannesburg'));
+
+    foreach (range(1, 12) as $day) {
         Event::factory()->confirmed()->create([
             'title' => sprintf('Window match %02d', $day),
             'starts_at' => now()->addDays($day),
@@ -48,9 +52,10 @@ it('lists the next ten home-rail matches inside 30 days', function () {
         ->assertOk()
         ->assertSee('Next 30 days')
         ->assertSee('Window match 01')
-        ->assertSee('Window match 10')
-        ->assertDontSee('Window match 11')
+        ->assertSee('Window match 12')
         ->assertDontSee('Far horizon match');
+
+    Carbon::setTestNow();
 });
 
 it('lists upcoming matches on the calendar', function () {

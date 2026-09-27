@@ -54,7 +54,7 @@ class HomeController extends Controller
                 ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
                 ->where('starts_at', '<=', now()->addDays(30))
                 ->orderBy('starts_at')
-                ->limit(4)
+                ->limit(30)
                 ->get();
 
         $rail = $monthAhead->isNotEmpty()
