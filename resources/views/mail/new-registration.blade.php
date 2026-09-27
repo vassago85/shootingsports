@@ -1,13 +1,20 @@
-New account on Shooting Sports
+<x-mail::message>
+# New account
 
-Name: {{ $registrant->name }}
-Email: {{ $registrant->email }}
-Asked to be: {{ implode(', ', $roles) }}
+**Name:** {{ $registrant->name }}
+
+**Email:** {{ $registrant->email }}
+
+**Asked to be:** {{ implode(', ', $roles) }}
+
 @if (filled($hostHint))
-Club or series: {{ $hostHint }}
+**Club or series:** {{ $hostHint }}
 @endif
 @if (filled($businessName))
-Business: {{ $businessName }}
+**Business:** {{ $businessName }}
 @endif
 
-Review them in the admin: {{ url('/admin/users') }}
+<x-mail::button :url="url('/admin/users')">
+Review in admin
+</x-mail::button>
+</x-mail::message>

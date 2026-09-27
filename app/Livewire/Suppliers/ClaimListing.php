@@ -38,14 +38,21 @@ class ClaimListing extends Component
 
         $user = Auth::user();
 
-        if ($provider->claimed_by === $user?->id) {
-            $this->redirect(route('suppliers.onboard.thanks', ['provider' => $provider->slug]), navigate: false);
+        if ($provider->claimed_by !== null && $provider->claimed_by !== $user?->id) {
+            $this->blocked = 'taken';
 
             return;
         }
 
-        if ($provider->claimed_by !== null) {
-            $this->blocked = 'taken';
+        if ($user === null) {
+            session()->put('url.intended', route('suppliers.claim', $provider));
+            $this->blocked = 'guest';
+
+            return;
+        }
+
+        if ($provider->claimed_by === $user->id) {
+            $this->redirect(route('suppliers.onboard.thanks', ['provider' => $provider->slug]), navigate: false);
 
             return;
         }

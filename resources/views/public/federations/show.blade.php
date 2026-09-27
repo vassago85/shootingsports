@@ -17,6 +17,11 @@
                         <h1>{{ $organisation->name }}</h1>
                         <p>{{ $organisation->description }}</p>
                         <x-verification-badge :listing="$organisation" />
+                        @if ($organisation->claimed_by === null)
+                            <p style="margin:14px 0 0">
+                                <a class="btn ghost on-dark" href="{{ route('listings.claim', ['type' => 'club', 'slug' => $organisation->slug]) }}">This is my organisation</a>
+                            </p>
+                        @endif
                     </div>
                 </div>
             </div>

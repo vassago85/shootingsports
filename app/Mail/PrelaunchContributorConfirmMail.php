@@ -29,7 +29,7 @@ class PrelaunchContributorConfirmMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            text: 'mail.prelaunch-contributor-confirm',
+            markdown: 'mail.prelaunch-contributor-confirm',
         );
     }
 }

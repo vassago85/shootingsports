@@ -41,7 +41,7 @@ class ProTrialEnded extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            text: 'mail.pro-trial-ended',
+            markdown: 'mail.pro-trial-ended',
             with: [
                 'user' => $this->user,
             ],

@@ -1,11 +1,19 @@
-Shooting Sports replied to your enquiry
+<x-mail::message>
+# Reply from Shooting Sports
+
 @if ($enquiry->subject)
-about "{{ $enquiry->subject }}"
+About **{{ $enquiry->subject }}**.
 @endif
 
----
-{{ $reply->body }}
----
+<x-mail::panel>
+{!! nl2br(e($reply->body)) !!}
+</x-mail::panel>
 
-You can read the thread and answer on the site:
-{{ route('enquiries.thread', $enquiry->reply_token) }}
+<x-mail::button :url="route('enquiries.thread', $enquiry->reply_token)">
+Read the thread
+</x-mail::button>
+
+You can answer on that page. We will email you when there is another reply.
+
+@include('mail.partials.footer-transactional')
+</x-mail::message>

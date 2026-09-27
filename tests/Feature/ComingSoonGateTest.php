@@ -42,10 +42,10 @@ it('redirects guests to /coming-soon when the gate is on', function () {
     $this->get('/calendar')->assertRedirect(route('coming-soon'));
 });
 
-it('redirects /register to /coming-soon when the gate is on', function () {
+it('keeps /register open when the gate is on so unclaimed listings can be claimed', function () {
     config()->set('coming-soon.enabled', true);
 
-    $this->get('/register')->assertRedirect(route('coming-soon'));
+    $this->get('/register')->assertOk();
 });
 
 it('the legacy /directors/register and /suppliers/register bookmarks 301 to /register when the gate is off', function () {

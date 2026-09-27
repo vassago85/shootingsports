@@ -40,6 +40,9 @@
                 @endif
                 <p style="margin:14px 0 0; display:flex; gap:10px; flex-wrap:wrap">
                     <a class="btn" href="{{ route('enquiries.listing', ['type' => 'organisation', 'id' => $organisation->id]) }}">Enquire via platform</a>
+                    @if ($organisation->claimed_by === null)
+                        <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'club', 'slug' => $organisation->slug]) }}">This is my club</a>
+                    @endif
                     <livewire:follow-button
                         type="organisation"
                         :id="$organisation->id"

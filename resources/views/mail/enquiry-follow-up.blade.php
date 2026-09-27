@@ -1,13 +1,19 @@
-{{ $enquiry->name }} replied on the site.
+<x-mail::message>
+# {{ $enquiry->name }} replied
 
-Type: {{ $enquiry->type->getLabel() }}
-From: {{ $enquiry->name }} <{{ $enquiry->email }}>
+**Type:** {{ $enquiry->type->getLabel() }}
+
+**From:** {{ $enquiry->name }} ({{ $enquiry->email }})
+
 @if ($enquiry->subject)
-Subject: {{ $enquiry->subject }}
+**Subject:** {{ $enquiry->subject }}
 @endif
 
----
-{{ $reply->body }}
----
+<x-mail::panel>
+{!! nl2br(e($reply->body)) !!}
+</x-mail::panel>
 
-Open /admin to manage enquiries.
+<x-mail::button :url="url('/admin')">
+Open admin
+</x-mail::button>
+</x-mail::message>

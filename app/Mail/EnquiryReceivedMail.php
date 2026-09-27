@@ -27,7 +27,7 @@ class EnquiryReceivedMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            text: 'mail.enquiry-received',
+            markdown: 'mail.enquiry-received',
         );
     }
 }

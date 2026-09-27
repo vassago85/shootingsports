@@ -44,7 +44,7 @@ it('hides the claim link once a supplier page has an owner', function () {
         ->assertDontSee('This is my business');
 });
 
-it('sends a guest who wants to claim a listing to log in', function () {
+it('shows a guest how to register before claiming a supplier', function () {
     $provider = Provider::factory()->create([
         'category' => ProviderCategory::Dealer,
         'claimed_by' => null,
@@ -52,7 +52,10 @@ it('sends a guest who wants to claim a listing to log in', function () {
     ]);
 
     $this->get(route('suppliers.claim', $provider))
-        ->assertRedirect(route('login'));
+        ->assertOk()
+        ->assertSee('Create an account')
+        ->assertSee('A site admin approves the claim')
+        ->assertSessionHas('url.intended', route('suppliers.claim', $provider));
 });
 
 it('refuses a claim on a listing that is not public yet', function () {

@@ -34,7 +34,7 @@ class NewRegistrationMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            text: 'mail.new-registration',
+            markdown: 'mail.new-registration',
         );
     }
 }

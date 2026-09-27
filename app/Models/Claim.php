@@ -64,6 +64,17 @@ class Claim extends Model
                     'granted_at' => now(),
                 ],
             );
+
+            $claimant = $this->user;
+
+            if ($claimant instanceof User && $claimant->is_match_director !== true) {
+                $claimant->forceFill([
+                    'is_match_director' => true,
+                    'md_approved_at' => now(),
+                    'md_rejected_at' => null,
+                    'md_rejection_reason' => null,
+                ])->save();
+            }
         }
     }
 

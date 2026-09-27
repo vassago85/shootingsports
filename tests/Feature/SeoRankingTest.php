@@ -35,12 +35,12 @@ it('keeps member routes gated while the public directory is exposed', function (
     config()->set('coming-soon.expose_public', false);
 
     $this->get('/')->assertRedirect(route('coming-soon'));
-    $this->get('/register')->assertRedirect(route('coming-soon'));
+    $this->get('/register')->assertOk();
 
     config()->set('coming-soon.expose_public', true);
 
     $this->get('/')->assertOk();
-    $this->get('/register')->assertRedirect(route('coming-soon'));
+    $this->get('/register')->assertOk();
 
     $this->actingAs(User::factory()->create())
         ->get('/my-calendar')

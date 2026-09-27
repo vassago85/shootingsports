@@ -1,19 +1,25 @@
-New enquiry on Shooting Sports
+<x-mail::message>
+# New enquiry
 
-Type: {{ $enquiry->type->getLabel() }}
-From: {{ $enquiry->name }} <{{ $enquiry->email }}>
+**Type:** {{ $enquiry->type->getLabel() }}
+
+**From:** {{ $enquiry->name }} ({{ $enquiry->email }})
+
 @if ($enquiry->phone)
-Phone: {{ $enquiry->phone }}
+**Phone:** {{ $enquiry->phone }}
 @endif
 @if ($enquiry->subject)
-Subject: {{ $enquiry->subject }}
+**Subject:** {{ $enquiry->subject }}
 @endif
 @if ($enquiry->about)
-About: {{ class_basename($enquiry->about) }} — {{ $enquiry->about->name }}
+**About:** {{ class_basename($enquiry->about) }} — {{ $enquiry->about->name }}
 @endif
 
----
-{{ $enquiry->body }}
----
+<x-mail::panel>
+{!! nl2br(e($enquiry->body)) !!}
+</x-mail::panel>
 
-Open /admin to manage enquiries.
+<x-mail::button :url="url('/admin')">
+Open admin
+</x-mail::button>
+</x-mail::message>

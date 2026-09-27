@@ -144,6 +144,16 @@
                         <p class="match-entry-note" style="margin-bottom:14px">
                             <a href="{{ route('enquiries.listing', ['type' => 'event', 'id' => $event->id]) }}">Ask the organiser</a>
                         </p>
+                        @if (($host && $host->claimed_by === null) || ($venue && $venue->claimed_by === null))
+                            <p style="margin:0 0 14px;display:flex;flex-wrap:wrap;gap:10px">
+                                @if ($host && $host->claimed_by === null)
+                                    <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'match', 'slug' => $event->slug]) }}">This is my match</a>
+                                @endif
+                                @if ($venue && $venue->claimed_by === null)
+                                    <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'range', 'slug' => $venue->slug]) }}">This is my range</a>
+                                @endif
+                            </p>
+                        @endif
 
                         @if ($event->entry_url)
                             <div class="match-entry-cta">

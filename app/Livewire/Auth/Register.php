@@ -38,7 +38,7 @@ use Livewire\Component;
  *
  *   supplier ticked → /email/verify (must confirm before onboarding)
  *   md ticked       → /email/verify, then /matches/submit
- *   neither         → /my-calendar
+ *   neither         → the page they were trying to reach, or /my-calendar
  */
 class Register extends Component
 {
@@ -165,7 +165,7 @@ class Register extends Component
             return;
         }
 
-        $this->redirect('/my-calendar', navigate: false);
+        $this->redirectIntended('/my-calendar', navigate: false);
     }
 
     public function render()

@@ -31,7 +31,7 @@ class EnquiryFollowUpMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            text: 'mail.enquiry-follow-up',
+            markdown: 'mail.enquiry-follow-up',
         );
     }
 }

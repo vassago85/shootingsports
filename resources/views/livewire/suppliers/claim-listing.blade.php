@@ -9,7 +9,20 @@
         </section>
         <section class="block">
             <div class="wrap" style="max-width:640px">
-                @if ($blocked === 'pending')
+                @if ($blocked === 'guest')
+                    <div class="empty" style="border-color:var(--brass)">
+                        <p style="margin-top:0">This listing is not claimed yet. Three steps:</p>
+                        <ol style="margin:0 0 18px;padding-left:1.2rem;line-height:1.7">
+                            <li>Create an account. Leave the match director and supplier boxes unticked so you come straight back to this page.</li>
+                            <li>Tell us how you are connected to {{ $provider->name }}.</li>
+                            <li>A site admin approves the claim before you can edit the page.</li>
+                        </ol>
+                        <p style="display:flex;flex-wrap:wrap;gap:10px;margin:0">
+                            <a class="btn" href="{{ route('register') }}">Create an account</a>
+                            <a class="btn ghost" href="{{ route('login') }}">I already have an account</a>
+                        </p>
+                    </div>
+                @elseif ($blocked === 'pending')
                     <div class="empty" style="border-color:var(--brass)">
                         <p>Your claim is in for review. Staff will email you once it is decided. Until then the public page stays as it is.</p>
                     </div>

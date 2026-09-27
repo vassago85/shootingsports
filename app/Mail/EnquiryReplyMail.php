@@ -34,7 +34,7 @@ class EnquiryReplyMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            text: 'mail.enquiry-reply',
+            markdown: 'mail.enquiry-reply',
         );
     }
 }

@@ -1,9 +1,15 @@
-Someone wants to claim a supplier listing on Shooting Sports
+<x-mail::message>
+# Supplier claim to review
 
-Business: {{ $provider->name }}
-From: {{ $claim->user?->name }} <{{ $claim->user?->email }}>
+**Business:** {{ $provider->name }}
 
-Why they say it is theirs:
-{{ $claim->evidence }}
+**From:** {{ $claim->user?->name }} ({{ $claim->user?->email }})
 
-Review claims in the admin: {{ url('/admin/claims') }}
+<x-mail::panel>
+{!! nl2br(e($claim->evidence)) !!}
+</x-mail::panel>
+
+<x-mail::button :url="url('/admin/claims')">
+Review claims
+</x-mail::button>
+</x-mail::message>

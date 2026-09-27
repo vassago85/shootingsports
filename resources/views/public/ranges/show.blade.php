@@ -47,6 +47,9 @@
                 @endif
                 <p style="margin:0 0 28px">
                     <a class="btn" href="{{ route('enquiries.listing', ['type' => 'venue', 'id' => $venue->id]) }}">Enquire via platform</a>
+                    @if ($venue->claimed_by === null)
+                        <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'range', 'slug' => $venue->slug]) }}">This is my range</a>
+                    @endif
                 </p>
                 @if ($inferredDisciplines->isNotEmpty())
                     <div class="club-tags" style="margin-bottom:28px">

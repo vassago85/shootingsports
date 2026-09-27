@@ -30,6 +30,7 @@ use App\Http\Controllers\VenueController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\FindYourDiscipline;
+use App\Livewire\Listings\SubmitClaim;
 use App\Livewire\Matches\SubmitMatch;
 use App\Livewire\Settings\NotificationPreferences;
 use App\Livewire\Suppliers\ClaimListing as SupplierClaimListing;
@@ -97,6 +98,9 @@ Route::redirect('/clubs/muletech-ridge-range', '/ranges/muletech-ridge-range', 3
 Route::redirect('/clubs/dwarskloof-shooting-range', '/ranges/dwarskloof-shooting-range', 301);
 
 Route::get('/clubs/{organisation:slug}', [OrganisationController::class, 'show'])->name('clubs.show');
+Route::get('/claim/{type}/{slug}', SubmitClaim::class)
+    ->whereIn('type', ['club', 'range', 'match'])
+    ->name('listings.claim');
 Route::get('/federations/{organisation:slug}', [OrganisationController::class, 'federation'])->name('federations.show');
 
 Route::get('/ranges', [VenueController::class, 'index'])->name('ranges.index');
@@ -114,6 +118,7 @@ Route::get('/suppliers/{category}', [ProviderController::class, 'category'])
     ->where('category', $categoryPattern)
     ->name('suppliers.category');
 Route::get('/supplier/{provider:slug}', [ProviderController::class, 'show'])->name('suppliers.show');
+Route::get('/supplier/{provider:slug}/claim', SupplierClaimListing::class)->name('suppliers.claim');
 
 Route::get('/find', FindYourDiscipline::class)->name('find');
 Route::get('/feed', FeedController::class)->name('feed');
@@ -245,7 +250,6 @@ Route::middleware('auth')->group(function (): void {
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/suppliers/onboard', SupplierCreateListing::class)->name('suppliers.onboard');
     Route::get('/suppliers/onboard/{provider:slug}/edit', SupplierEditListing::class)->name('suppliers.onboard.edit');
-    Route::get('/supplier/{provider:slug}/claim', SupplierClaimListing::class)->name('suppliers.claim');
     Route::get('/suppliers/onboard/{provider:slug}/thanks', function (Provider $provider) {
         abort_unless($provider->claimed_by === auth()->id() || auth()->user()?->is_staff, 403);
 

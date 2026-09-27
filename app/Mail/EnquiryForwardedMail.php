@@ -30,7 +30,7 @@ class EnquiryForwardedMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            text: 'mail.enquiry-forwarded',
+            markdown: 'mail.enquiry-forwarded',
         );
     }
 }

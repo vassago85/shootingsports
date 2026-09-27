@@ -27,7 +27,7 @@ class SupplierClaimSubmittedMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            text: 'mail.supplier-claim-submitted',
+            markdown: 'mail.supplier-claim-submitted',
         );
     }
 }
