@@ -11,14 +11,26 @@ beforeEach(function () {
     $this->withoutVite();
 });
 
-it('resolves Mon–Fri to the upcoming Saturday–Sunday window', function () {
+it('resolves Mon–Thu to the upcoming Friday–Sunday window', function () {
     Carbon::setTestNow(Carbon::create(2026, 9, 16, 10, 0, 0, 'Africa/Johannesburg')); // Wednesday
 
     [$from, $to] = ThisWeekend::range();
 
-    expect($from->toDateString())->toBe('2026-09-19')
+    expect($from->toDateString())->toBe('2026-09-18')
         ->and($to->toDateString())->toBe('2026-09-20')
-        ->and(ThisWeekend::label())->toBe('19–20 Sep');
+        ->and(ThisWeekend::label())->toBe('18–20 Sep');
+
+    Carbon::setTestNow();
+});
+
+it('keeps Friday inside the current weekend', function () {
+    Carbon::setTestNow(Carbon::create(2026, 9, 18, 9, 0, 0, 'Africa/Johannesburg'));
+
+    [$from, $to] = ThisWeekend::range();
+
+    expect($from->toDateString())->toBe('2026-09-18')
+        ->and($to->toDateString())->toBe('2026-09-20')
+        ->and(ThisWeekend::label())->toBe('18–20 Sep');
 
     Carbon::setTestNow();
 });
@@ -96,7 +108,7 @@ it('shows a useful empty state when nothing is listed this weekend', function ()
 
     Livewire::test(CalendarFilter::class, ['weekend' => true])
         ->assertSee('Nothing listed for this weekend')
-        ->assertSee('19–20 Sep')
+        ->assertSee('18–20 Sep')
         ->assertSee('Show all upcoming');
 
     Carbon::setTestNow();

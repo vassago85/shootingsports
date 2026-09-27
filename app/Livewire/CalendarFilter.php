@@ -317,10 +317,10 @@ class CalendarFilter extends Component
     }
 
     /**
-     * Group events into "This weekend", "Next weekend", then month buckets
-     * so the match board reads like a national programme instead of a flat
-     * grid. Preserves the underlying event order — the query already sorts
-     * by starts_at ascending.
+     * Group events into "This weekend", "Next weekend", and month buckets.
+     * Weekend sections sit immediately before the rest of the month they
+     * fall in, so next weekend is not buried under earlier dates in that
+     * month. Event order inside a section follows starts_at.
      *
      * @param  Collection<int, Event>  $events
      * @return list<array{label: string, events: Collection<int, Event>}>
@@ -333,30 +333,66 @@ class CalendarFilter extends Component
 
         $tz = config('app.timezone');
         [$weekendStart, $weekendEnd] = ThisWeekend::range();
-        $nextWeekendStart = $weekendStart->copy()->addWeek()->startOfDay();
-        $nextWeekendEnd = $weekendEnd->copy()->addWeek()->endOfDay();
+        [$nextWeekendStart, $nextWeekendEnd] = ThisWeekend::nextRange();
 
-        $buckets = [];
+        $thisWeekend = collect();
+        $nextWeekend = collect();
+        /** @var array<string, array{label: string, events: Collection<int, Event>}> $months */
+        $months = [];
 
         foreach ($events as $event) {
             $startsAt = $event->starts_at->timezone($tz);
 
             if ($startsAt->gte($weekendStart) && $startsAt->lte($weekendEnd)) {
-                $key = 'this-weekend';
-                $label = 'This weekend · '.ThisWeekend::label();
+                $thisWeekend->push($event);
             } elseif ($startsAt->gte($nextWeekendStart) && $startsAt->lte($nextWeekendEnd)) {
-                $key = 'next-weekend';
-                $label = 'Next weekend · '.$nextWeekendStart->format('j').'–'.$nextWeekendEnd->format('j M');
+                $nextWeekend->push($event);
             } else {
                 $key = $startsAt->format('Y-m');
-                $label = $startsAt->format('F Y');
+                $months[$key] ??= [
+                    'label' => $startsAt->format('F Y'),
+                    'events' => collect(),
+                ];
+                $months[$key]['events']->push($event);
             }
-
-            $buckets[$key] ??= ['label' => $label, 'events' => collect()];
-            $buckets[$key]['events']->push($event);
         }
 
-        return array_values($buckets);
+        /** @var array<string, list<array{label: string, events: Collection<int, Event>}>> $highlights */
+        $highlights = [];
+
+        if ($thisWeekend->isNotEmpty()) {
+            $highlights[$weekendStart->format('Y-m')][] = [
+                'label' => 'This weekend · '.ThisWeekend::label(),
+                'events' => $thisWeekend,
+            ];
+        }
+
+        if ($nextWeekend->isNotEmpty()) {
+            $highlights[$nextWeekendStart->format('Y-m')][] = [
+                'label' => 'Next weekend · '.ThisWeekend::nextLabel(),
+                'events' => $nextWeekend,
+            ];
+        }
+
+        $keys = array_values(array_unique([
+            ...array_keys($months),
+            ...array_keys($highlights),
+        ]));
+        sort($keys);
+
+        $sections = [];
+
+        foreach ($keys as $key) {
+            foreach ($highlights[$key] ?? [] as $section) {
+                $sections[] = $section;
+            }
+
+            if (isset($months[$key])) {
+                $sections[] = $months[$key];
+            }
+        }
+
+        return $sections;
     }
 
     private function safeDate(?string $value): ?Carbon

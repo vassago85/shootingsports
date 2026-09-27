@@ -15,7 +15,7 @@ beforeEach(function () {
 });
 
 it('groups CalendarFilter results into "This weekend" and month buckets', function () {
-    // Wednesday 16 Sep 2026 — this weekend is Sat 19 / Sun 20.
+    // Wednesday 16 Sep 2026 — this weekend is Fri 18 through Sun 20.
     Carbon::setTestNow(Carbon::create(2026, 9, 16, 10, 0, 0, 'Africa/Johannesburg'));
 
     $host = Organisation::factory()->create([
@@ -40,12 +40,67 @@ it('groups CalendarFilter results into "This weekend" and month buckets', functi
     ]);
 
     Livewire::test(CalendarFilter::class)
-        ->assertSee('This weekend')
-        ->assertSee('Next weekend')
-        ->assertSee('October 2026')
-        ->assertSee('Weekend Steel')
-        ->assertSee('Next Weekend Gong')
-        ->assertSee('October Long Range');
+        ->assertSeeInOrder([
+            'This weekend',
+            'Weekend Steel',
+            'Next weekend',
+            'Next Weekend Gong',
+            'October 2026',
+            'October Long Range',
+        ]);
+
+    Carbon::setTestNow();
+});
+
+it('groups Friday through Sunday as next weekend when today is Sunday', function () {
+    // Sunday 27 Sep 2026. This weekend is today only. Next weekend is
+    // Fri 2 Oct through Sun 4 Oct — not Sunday 4 Oct on its own.
+    Carbon::setTestNow(Carbon::create(2026, 9, 27, 18, 0, 0, 'Africa/Johannesburg'));
+
+    $host = Organisation::factory()->create([
+        'status' => ListingStatus::Published,
+        'type' => OrganisationType::Club,
+    ]);
+
+    Event::factory()->confirmed()->create([
+        'title' => 'Late September Shoot',
+        'host_organisation_id' => $host->id,
+        'starts_at' => Carbon::create(2026, 9, 28, 9, 0, 0, 'Africa/Johannesburg'),
+    ]);
+    Event::factory()->confirmed()->create([
+        'title' => 'Thursday Practice',
+        'host_organisation_id' => $host->id,
+        'starts_at' => Carbon::create(2026, 10, 1, 9, 0, 0, 'Africa/Johannesburg'),
+    ]);
+    Event::factory()->confirmed()->create([
+        'title' => 'Friday League',
+        'host_organisation_id' => $host->id,
+        'starts_at' => Carbon::create(2026, 10, 2, 9, 0, 0, 'Africa/Johannesburg'),
+    ]);
+    Event::factory()->confirmed()->create([
+        'title' => 'Saturday Handgun',
+        'host_organisation_id' => $host->id,
+        'starts_at' => Carbon::create(2026, 10, 3, 9, 0, 0, 'Africa/Johannesburg'),
+    ]);
+    Event::factory()->confirmed()->create([
+        'title' => 'Sunday Defensive',
+        'host_organisation_id' => $host->id,
+        'starts_at' => Carbon::create(2026, 10, 4, 9, 0, 0, 'Africa/Johannesburg'),
+    ]);
+
+    Livewire::test(CalendarFilter::class)
+        ->assertSee('Next weekend · 2–4 Oct')
+        ->assertDontSee('Next weekend · 4–4 Oct')
+        ->assertSeeInOrder([
+            'September 2026',
+            'Late September Shoot',
+            'Next weekend · 2–4 Oct',
+            'Friday League',
+            'Saturday Handgun',
+            'Sunday Defensive',
+            'October 2026',
+            'Thursday Practice',
+        ]);
 
     Carbon::setTestNow();
 });
