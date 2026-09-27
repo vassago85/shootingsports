@@ -16,10 +16,12 @@
                 @endif
 
                 <form wire:submit="authenticate" class="enquiry-form" novalidate>
+                    @error('email')
+                        <p class="login-error" role="alert">{{ $message }}</p>
+                    @enderror
                     <label class="field">
                         <span>Email</span>
-                        <input type="email" wire:model.blur="email" required autofocus autocomplete="username" autocapitalize="none" maxlength="255">
-                        @error('email') <span class="err">{{ $message }}</span> @enderror
+                        <input type="email" wire:model.blur="email" required autofocus autocomplete="username" autocapitalize="none" maxlength="255" @error('email') aria-invalid="true" @enderror>
                     </label>
                     <label class="field">
                         <span>Password</span>

@@ -281,7 +281,8 @@ it('rejects wrong credentials and does not log the user in', function () {
         ->set('email', 'sam@example.test')
         ->set('password', 'the_wrong_password_here')
         ->call('authenticate')
-        ->assertHasErrors('email');
+        ->assertHasErrors('email')
+        ->assertSee('The email or password is incorrect.');
 
     $this->assertGuest();
 });

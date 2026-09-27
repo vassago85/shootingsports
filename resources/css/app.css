@@ -1296,13 +1296,21 @@ section.block { padding: 72px 0; }
 .enquiry-form .hp {
     position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden;
 }
-.enquiry-form .err {
+.enquiry-form .field .err {
     color: #f0776b;
     font-family: var(--f-sans);
     font-size: 13px;
     letter-spacing: 0;
     text-transform: none;
     margin-top: 4px;
+}
+.login-error {
+    color: #f0776b;
+    background: rgba(240, 119, 107, .12);
+    border: 1px solid #f0776b;
+    padding: 12px 14px;
+    margin: 0 0 18px;
+    font-size: 15px;
 }
 
 /* /upgrade page — two-card price picker + feature list */
