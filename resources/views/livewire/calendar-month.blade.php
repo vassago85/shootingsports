@@ -180,7 +180,7 @@
                     <ul class="month-cal-chips">
                         @foreach ($shown as $event)
                             <li>
-                                <a href="{{ route('matches.show', $event->slug) }}" title="{{ $event->title }}">
+                                <a href="{{ route('events.show', $event->slug) }}" title="{{ $event->title }}">
                                     <span class="chip-title">{{ \Illuminate\Support\Str::limit($event->title, 28) }}</span>
                                     @if ($event->venue?->town)
                                         <span class="chip-town">{{ $event->venue->town }}</span>

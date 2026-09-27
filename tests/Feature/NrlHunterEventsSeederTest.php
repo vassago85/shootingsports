@@ -81,7 +81,7 @@ it('seeds NRL Hunter SA and the Season 6 matches from the posters', function () 
         ->and($kwaThabileng->venue?->town)->toBe('Reitz')
         ->and($kwaThabileng->venue?->province)->toBe(Province::FreeState);
 
-    $this->get(route('matches.show', 'nrl-hunter-kwa-thabileng-2027'))
+    $this->get(route('events.show', 'nrl-hunter-kwa-thabileng-2027'))
         ->assertOk()
         ->assertSee('/media/event-banners/nrl-hunter-kwa-thabileng-2027.png', false);
 });

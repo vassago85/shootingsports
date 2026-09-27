@@ -78,6 +78,43 @@ class PaystackClient
     }
 
     /**
+     * One-off charge. Unlike {@see initializeTransaction()} this does not
+     * attach a subscription plan, so Paystack charges `amount` once.
+     *
+     * @param  array<string, mixed>  $metadata
+     * @return array{authorization_url:string, access_code:string, reference:string}
+     */
+    public function initializeOneOffTransaction(
+        string $email,
+        int $amountCents,
+        string $callbackUrl,
+        ?string $reference = null,
+        array $metadata = [],
+    ): array {
+        $payload = [
+            'email' => $email,
+            'amount' => $amountCents,
+            'currency' => config('services.paystack.currency', 'ZAR'),
+            'callback_url' => $callbackUrl,
+            'reference' => $reference ?? $this->generateReference(),
+            'metadata' => $metadata,
+        ];
+
+        $response = $this->request()
+            ->post($this->baseUrl.'/transaction/initialize', $payload)
+            ->throw()
+            ->json();
+
+        $this->ensureOk($response, 'initializeOneOffTransaction');
+
+        return [
+            'authorization_url' => (string) ($response['data']['authorization_url'] ?? ''),
+            'access_code' => (string) ($response['data']['access_code'] ?? ''),
+            'reference' => (string) ($response['data']['reference'] ?? $payload['reference']),
+        ];
+    }
+
+    /**
      * Verify a returned transaction. Callback pages MUST call this
      * before crediting anything to the user — the Paystack redirect
      * itself carries only a reference, which is trivial to forge.

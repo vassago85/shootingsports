@@ -38,8 +38,10 @@
                 <x-brand-logo />
             </a>
             <nav class="nav-links" aria-label="Primary">
-                <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') && ! request()->routeIs('calendar.month') ? 'on' : '' }}">Matches</a>
+                <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') && ! request()->routeIs('calendar.month') ? 'on' : '' }}">Events</a>
                 <a href="{{ route('disciplines.index') }}" class="{{ request()->routeIs('disciplines.*') ? 'on' : '' }}">Sports</a>
+                <a href="{{ route('find') }}" class="{{ request()->routeIs('find') ? 'on' : '' }}">Find</a>
+                <a href="{{ route('feed') }}" class="{{ request()->routeIs('feed') ? 'on' : '' }}">Activity</a>
                 <a href="{{ route('clubs.index') }}" class="{{ request()->routeIs('clubs.*') || request()->routeIs('federations.*') ? 'on' : '' }}">Clubs</a>
                 <a href="{{ route('ranges.index') }}" class="{{ request()->routeIs('ranges.*') ? 'on' : '' }}">Ranges</a>
                 <a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'on' : '' }}">Industry</a>
@@ -53,7 +55,7 @@
                 </a>
                 @auth
                     <a class="btn ghost on-dark" href="{{ route('my-calendar') }}">Account</a>
-                    @if (auth()->user()?->is_staff || auth()->user()?->is_match_director)
+                    @if (auth()->user()?->is_staff || auth()->user()?->is_match_director || auth()->user()?->is_media_partner)
                         <a class="btn ghost on-dark" href="{{ url('/desk') }}">Desk</a>
                     @endif
                 @else
@@ -67,7 +69,7 @@
                 @if (auth()->user()?->is_staff || auth()->user()?->is_match_director)
                     <a class="btn lime" href="{{ url('/desk/events/create') }}">List an event</a>
                 @elseif (auth()->check())
-                    <a class="btn lime" href="{{ route('matches.submit') }}">List an event</a>
+                    <a class="btn lime" href="{{ route('events.submit') }}">List an event</a>
                 @else
                     <a class="btn lime" href="{{ route('register', ['director' => 1]) }}">List an event</a>
                 @endif
@@ -75,9 +77,11 @@
             <button class="hamburger" id="burger" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">Menu</button>
         </div>
         <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
-            <a href="{{ route('calendar') }}">Matches</a>
+            <a href="{{ route('calendar') }}">Events</a>
             <a href="{{ route('calendar.month') }}">Calendar</a>
             <a href="{{ route('disciplines.index') }}">Sports</a>
+            <a href="{{ route('find') }}">Find</a>
+            <a href="{{ route('feed') }}">Activity</a>
             <a href="{{ route('clubs.index') }}">Clubs</a>
             <a href="{{ route('ranges.index') }}">Ranges</a>
             <a href="{{ route('suppliers.index') }}">Industry</a>
@@ -86,11 +90,11 @@
                 <a href="{{ route('my-calendar') }}">My calendar</a>
                 <a href="{{ route('my-log') }}">My log</a>
                 <a href="{{ route('settings.notifications') }}">Notifications</a>
-                @if (auth()->user()?->is_staff || auth()->user()?->is_match_director)
+                @if (auth()->user()?->is_staff || auth()->user()?->is_match_director || auth()->user()?->is_media_partner)
                     <a href="{{ url('/desk') }}">Desk</a>
                 @endif
                 @unless (auth()->user()->is_staff || auth()->user()->is_match_director)
-                    <a href="{{ route('matches.submit') }}">Submit a match</a>
+                    <a href="{{ route('events.submit') }}">Submit an event</a>
                 @endunless
                 @if (auth()->user()?->isSupplier())
                     <a href="{{ route('suppliers.onboard') }}">My business</a>
@@ -144,7 +148,7 @@
                 <div>
                     <h4>Browse</h4>
                     <ul>
-                        <li><a href="{{ route('calendar') }}">Matches</a></li>
+                        <li><a href="{{ route('calendar') }}">Events</a></li>
                         <li><a href="{{ route('disciplines.index') }}">Sports</a></li>
                         <li><a href="{{ route('clubs.index') }}">Clubs &amp; series</a></li>
                         <li><a href="{{ route('ranges.index') }}">Ranges</a></li>
@@ -178,6 +182,7 @@
             </div>
             <div class="foot-bottom">
                 <span>shootingsports.co.za</span>
+                <x-media-partner />
                 <span>Not a firearms dealer · no sales or transfers facilitated</span>
             </div>
         </div>

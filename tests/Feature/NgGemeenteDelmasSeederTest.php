@@ -34,7 +34,7 @@ it('seeds the NG Delmas Gongskiet from the 2027 poster', function () {
         ->and($event->hostOrganisation?->email)->toBe('william@gunshopdelmas.co.za')
         ->and($event->disciplines->pluck('slug')->all())->toBe(['gong-shooting']);
 
-    $this->get(route('matches.show', 'ng-delmas-gongskiet-2027'))
+    $this->get(route('events.show', 'ng-delmas-gongskiet-2027'))
         ->assertOk()
         ->assertSee('/media/event-banners/ng-delmas-gongskiet-2027.png', false)
         ->assertSee('Plaas Witklipbank')

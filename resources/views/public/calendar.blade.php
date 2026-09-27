@@ -6,7 +6,7 @@
 >
     <main id="main">
         <div class="wrap dir-page">
-            <x-dir-hero page="matches" kicker="Matches" title="Find a match">
+            <x-dir-hero page="matches" kicker="Events" title="Find an event">
                 Discover shooting matches across South Africa. The list is the main view. Calendar and map are other ways to explore.
             </x-dir-hero>
 

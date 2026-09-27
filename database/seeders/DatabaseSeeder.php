@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             SendItElr2026Seeder::class,
             SaprfEventsSeeder::class,
+            XsssaEventsSeeder::class,
             CtsasaEventsSeeder::class,
             NrlHunterEventsSeeder::class,
             SpringbokvlakteGongskietSeeder::class,

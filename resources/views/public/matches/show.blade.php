@@ -157,6 +157,19 @@
                             </div>
                         @endif
 
+                        <livewire:enter-event :event="$event" :key="'enter-'.$event->id" />
+
+                        @if ($articles->isNotEmpty())
+                            <div class="match-partners">
+                                <h2>Activity</h2>
+                                <ul>
+                                    @foreach ($articles as $article)
+                                        <li><a href="{{ route('feed', ['discipline' => $article->disciplines->first()?->slug]) }}">{{ $article->title }}</a></li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <div class="match-secondary">
                             @auth
                                 <livewire:save-to-calendar :event="$event" variant="button" :key="'save-match-'.$event->id" />

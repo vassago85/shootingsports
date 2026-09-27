@@ -41,6 +41,8 @@
                     @foreach ($families as $item)
                         <button type="button" class="mb-chip" wire:click="setFamily('{{ $item->value }}')" aria-pressed="{{ $family === $item->value ? 'true' : 'false' }}">{{ $item->getLabel() }}</button>
                     @endforeach
+                    <button type="button" class="mb-chip" wire:click="setKind('training')" aria-pressed="{{ $kind === 'training' ? 'true' : 'false' }}">Training</button>
+                    <button type="button" class="mb-chip" wire:click="setKind('')" aria-pressed="{{ $kind === null || $kind === '' ? 'true' : 'false' }}">All events</button>
                     <button type="button" class="mb-chip" wire:click="toggleNovice" aria-pressed="{{ $novice ? 'true' : 'false' }}">New shooter</button>
                     <button
                         type="button"

@@ -42,7 +42,7 @@ it('seeds the Muletech Ridge Range Loskuil fundraiser from the poster', function
         ->and($event->venue?->name)->toBe('Muletech Ridge Range')
         ->and($event->disciplines->pluck('slug')->all())->toBe(['precision-rifle']);
 
-    $this->get(route('matches.show', 'muletech-loskuil-fundraising-shoot-2026'))
+    $this->get(route('events.show', 'muletech-loskuil-fundraising-shoot-2026'))
         ->assertOk()
         ->assertSee('/media/event-banners/muletech-loskuil-fundraising-shoot-2026.png', false)
         ->assertSee('Loskuil Primary')

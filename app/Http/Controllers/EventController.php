@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EventKind;
 use App\Enums\EventStatus;
+use App\Models\Article;
 use App\Models\Event;
 use App\Support\EventSpecRows;
 use App\Support\JsonLd;
@@ -24,6 +26,20 @@ class EventController extends Controller
             'banner',
             'partners' => fn ($query) => $query->published()->listed(),
         ]);
+
+        $disciplineIds = $event->disciplines->pluck('id');
+        $articles = Article::query()
+            ->published()
+            ->where(function ($query) use ($event, $disciplineIds): void {
+                $query->whereJsonContains('event_kinds', $event->kind?->value ?? EventKind::Competition->value);
+
+                if ($disciplineIds->isNotEmpty()) {
+                    $query->orWhereHas('disciplines', fn ($inner) => $inner->whereIn('disciplines.id', $disciplineIds));
+                }
+            })
+            ->orderByDesc('published_at')
+            ->limit(3)
+            ->get();
 
         // Breadcrumb: Home › Calendar › (Province)? › Match title. The
         // province rung uses the venue's province so a match in a
@@ -50,6 +66,7 @@ class EventController extends Controller
 
         return view('public.matches.show', [
             'event' => $event,
+            'articles' => $articles,
             'specs' => EventSpecRows::for($event),
             'seo' => Seo::forEvent($event),
             'jsonLd' => [

@@ -35,7 +35,7 @@ it('seeds the Agri Bo-Kammanassie 2-man gong challenge from the poster', functio
         ->and($event->venue?->province)->toBe(Province::WesternCape)
         ->and($event->disciplines->pluck('slug')->all())->toBe(['gong-shooting']);
 
-    $this->get(route('matches.show', 'agri-bo-kammanassie-2-man-gong-2026'))
+    $this->get(route('events.show', 'agri-bo-kammanassie-2-man-gong-2026'))
         ->assertOk()
         ->assertSee('/media/event-banners/agri-bo-kammanassie-2-man-gong-2026.png', false)
         ->assertSee('Meulrivier');

@@ -22,6 +22,7 @@
                 @endif
                 <p style="margin-top:18px">
                     <a class="sport-link" href="{{ route('disciplines.about', $discipline->slug) }}">More about this sport →</a>
+                    <a class="sport-link" href="{{ route('disciplines.rankings', $discipline) }}">Rankings →</a>
                 </p>
                 <nav class="siblings" aria-label="Related disciplines in this family">
                     @foreach ($familySiblings as $sibling)
@@ -89,7 +90,7 @@
                     <h2>Next {{ $discipline->name }} matches</h2>
                 </div>
                 @forelse ($events as $event)
-                    <a class="match-row" href="{{ route('matches.show', $event->slug) }}">
+                    <a class="match-row" href="{{ route('events.show', $event->slug) }}">
                         <div class="m-date">
                             <span class="dow">{{ \App\Support\EventDate::weekday($event->starts_at, $event->ends_at) }}</span>
                             <b>{{ \App\Support\EventDate::dayOfMonth($event->starts_at, $event->ends_at) }}</b>
@@ -121,6 +122,14 @@
                     <a class="sport-link" href="{{ route('calendar', ['discipline' => $discipline->slug, 'province' => $province?->urlSlug()]) }}">Open in the calendar →</a>
                     <a class="sport-link" href="{{ route('ical.discipline', $discipline->slug) }}">iCal feed →</a>
                 </p>
+                @if (($articles ?? collect())->isNotEmpty())
+                    <h2 style="margin-top:28px">Activity</h2>
+                    <ul>
+                        @foreach ($articles as $article)
+                            <li><a href="{{ route('feed') }}">{{ $article->title }}</a></li>
+                        @endforeach
+                    </ul>
+                @endif
             </section>
         </div>
     </main>

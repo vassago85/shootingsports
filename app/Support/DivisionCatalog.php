@@ -105,6 +105,16 @@ final class DivisionCatalog
                 'family' => DisciplineFamily::Rifle,
                 'blurb' => 'Pistol-calibre carbine, often shot alongside handgun leagues.',
             ],
+            'ipsc-mini-rifle' => [
+                'name' => 'IPSC Mini Rifle',
+                'family' => DisciplineFamily::Rifle,
+                'blurb' => 'IPSC stages with a .22 LR semi-automatic rifle.',
+            ],
+            'xtreme-steel' => [
+                'name' => 'Xtreme Steel',
+                'family' => DisciplineFamily::Rifle,
+                'blurb' => 'XSSSA practical rifle on natural terrain: target recognition, range estimation, wind, and the gear you can carry.',
+            ],
             'fitasc' => [
                 'name' => 'FITASC',
                 'family' => DisciplineFamily::Shotgun,
@@ -152,7 +162,9 @@ final class DivisionCatalog
             'gong-shooting' => [$bolt],
             'metallic-silhouette' => [$bolt],
             'big-bore' => [$bolt],
+            'xtreme-steel' => [$bolt],
             'ipsc-rifle' => [$self],
+            'ipsc-mini-rifle' => [$self],
             'service-rifle' => [$self],
             'combat-rifle' => [$self],
             'pcc' => [$self],

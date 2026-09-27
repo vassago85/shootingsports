@@ -1,10 +1,10 @@
-<x-layouts.public title="Shooting matches in South Africa">
+<x-layouts.public title="Shooting events in South Africa">
     <main id="main">
         <x-page-photo page="home" class="hero home-hero" style="padding:0">
             <div class="hero-in">
                 <div>
                     <p class="label">The national register of South African shooting sport</p>
-                    <h1>Find your <em>sport</em>.<br>Find your <em>club</em>.<br>Find your <em>match</em>.</h1>
+                    <h1>Find your <em>sport</em>.<br>Find your <em>club</em>.<br>Find your <em>event</em>.</h1>
                     <p class="lede">Every discipline, every province, one calendar. South African shooting sport in one place.</p>
                     <p class="hero-weekend">
                         <a class="btn lime" href="{{ route('calendar', ['weekend' => 1]) }}">What's shooting this weekend?</a>
@@ -16,7 +16,7 @@
                         <span class="label">Nationwide</span>
                     </div>
                     @forelse ($rail as $event)
-                        <a class="rail-item" href="{{ route('matches.show', $event->slug) }}">
+                        <a class="rail-item" href="{{ route('events.show', $event->slug) }}">
                             <div class="rail-date">
                                 <span class="mo">{{ \App\Support\EventDate::monthWithYear($event->starts_at, $event->ends_at) }}</span>
                                 <b>{{ \App\Support\EventDate::dayOfMonth($event->starts_at, $event->ends_at) }}</b>
@@ -61,6 +61,7 @@
                     <div class="sec-head">
                         <p class="label">Start here</p>
                         <h2>What are you interested in?</h2>
+                        <p><a href="{{ route('find') }}">Not sure? Find your discipline</a></p>
                     </div>
                     <a href="{{ route('disciplines.index') }}">Explore all sports</a>
                 </div>
@@ -76,6 +77,28 @@
             </div>
         </section>
 
+        @if ($articles->isNotEmpty())
+            <section class="block" id="activity">
+                <div class="wrap">
+                    <div class="home-headrow">
+                        <div class="sec-head">
+                            <p class="label">Activity</p>
+                            <h2>From the range</h2>
+                        </div>
+                        <a href="{{ route('feed') }}">All articles</a>
+                    </div>
+                    @foreach ($articles as $article)
+                        <article>
+                            <h3>{{ $article->title }}</h3>
+                            @if ($article->excerpt)
+                                <p>{{ $article->excerpt }}</p>
+                            @endif
+                        </article>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
         <section class="block home-follow">
             <div class="wrap">
                 <div class="home-headrow">
@@ -87,7 +110,7 @@
                 </div>
                 <div class="dir-list">
                     @forelse ($upcoming as $event)
-                        <a class="dir-match" href="{{ route('matches.show', $event->slug) }}">
+                        <a class="dir-match" href="{{ route('events.show', $event->slug) }}">
                             <span class="dir-date">
                                 <b>{{ \App\Support\EventDate::dayOfMonth($event->starts_at, $event->ends_at) }}</b>
                                 <span>{{ \App\Support\EventDate::monthWithYear($event->starts_at, $event->ends_at) }}</span>

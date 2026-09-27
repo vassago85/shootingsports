@@ -365,7 +365,7 @@ it('tells a published supplier their listing is live and points a pending direct
         ->assertOk()
         ->assertSee('in for review')
         ->assertSee('Submit your match')
-        ->assertSee(route('matches.submit'), false);
+        ->assertSee(route('events.submit'), false);
 
     $live = Provider::factory()->create([
         'name' => 'Live Shop',

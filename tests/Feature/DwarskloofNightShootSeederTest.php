@@ -35,7 +35,7 @@ it('seeds the Dwarskloof night shoot as a hostless range match', function () {
         ->and($event->venue?->slug)->toBe('dwarskloof-shooting-range')
         ->and($event->disciplines->pluck('slug')->all())->toBe(['ipsc-practical']);
 
-    $this->get(route('matches.show', 'dwarskloof-running-gunning-night-2026'))
+    $this->get(route('events.show', 'dwarskloof-running-gunning-night-2026'))
         ->assertOk()
         ->assertSee('/media/event-banners/dwarskloof-running-gunning-night-2026.png', false)
         // Hostless event falls back to venue name on the meta line.

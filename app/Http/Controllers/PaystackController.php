@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PaystackEvent;
 use App\Models\User;
+use App\Services\Entries\RecordEventEntryPayment;
 use App\Services\Paystack\PaystackClient;
 use App\Services\Paystack\SubscriptionApplier;
 use Illuminate\Http\JsonResponse;
@@ -54,6 +55,14 @@ class PaystackController extends Controller
 
         if (($verified['status'] ?? '') !== 'success') {
             return redirect('/upgrade')->with('status', 'Payment was not completed. Nothing was charged.');
+        }
+
+        if ($this->isEventEntryPayment($verified)) {
+            $entry = app(RecordEventEntryPayment::class)->markPaid($verified);
+            $entry?->load('event');
+            $target = $entry?->event?->publicUrl() ?? route('calendar');
+
+            return redirect($target)->with('status', 'You are entered. The fee was paid on this site.');
         }
 
         $user = $this->resolveUserFromVerified($verified);
@@ -202,8 +211,36 @@ class PaystackController extends Controller
     /**
      * @param  array<string, mixed>  $data
      */
+    private function isEventEntryPayment(array $data): bool
+    {
+        $purpose = data_get($data, 'metadata.purpose');
+
+        if (is_string($purpose)) {
+            return $purpose === 'event_entry';
+        }
+
+        $metadata = $data['metadata'] ?? null;
+
+        if (is_string($metadata)) {
+            $decoded = json_decode($metadata, true);
+
+            return is_array($decoded) && ($decoded['purpose'] ?? null) === 'event_entry';
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
     private function onChargeSuccess(array $data): void
     {
+        if ($this->isEventEntryPayment($data)) {
+            app(RecordEventEntryPayment::class)->markPaid($data);
+
+            return;
+        }
+
         $email = (string) data_get($data, 'customer.email', '');
         $subscriptionCode = (string) data_get($data, 'plan_object.subscription_code', '');
 

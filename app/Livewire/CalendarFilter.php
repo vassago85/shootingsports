@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Enums\Division;
+use App\Enums\EventKind;
 use App\Enums\Province;
 use App\Exceptions\PlanLimitExceeded;
 use App\Models\Discipline;
@@ -49,6 +50,9 @@ class CalendarFilter extends Component
     public ?string $lng = null;
 
     #[Url]
+    public ?string $kind = null;
+
+    #[Url]
     public ?string $from = null;
 
     #[Url]
@@ -61,6 +65,11 @@ class CalendarFilter extends Component
     public function setFamily(string $family): void
     {
         $this->family = $family;
+    }
+
+    public function setKind(?string $kind): void
+    {
+        $this->kind = EventKind::tryFrom((string) $kind)?->value;
     }
 
     public function toggleNovice(): void
@@ -286,6 +295,7 @@ class CalendarFilter extends Component
             weekend: $this->weekend,
             novice: $this->novice,
             confirmedOnly: $this->confirmed,
+            kind: $this->kind,
             limit: $this->limit,
         );
 

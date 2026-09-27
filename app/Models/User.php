@@ -24,7 +24,7 @@ use Laravel\Sanctum\HasApiTokens;
 #[Fillable([
     'name', 'email', 'password', 'calendar_slug', 'home_province', 'travel_radius_km',
     'digest_frequency', 'association_membership_number',
-    'is_staff', 'is_match_director',
+    'is_staff', 'is_match_director', 'is_media_partner',
     'md_requested_at', 'md_approved_at', 'md_rejected_at', 'md_rejection_reason',
     'supplier_requested_at', 'pending_business_name',
     'plan', 'plan_expires_at',
@@ -51,6 +51,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'digest_frequency' => DigestFrequency::class,
             'is_staff' => 'boolean',
             'is_match_director' => 'boolean',
+            'is_media_partner' => 'boolean',
             'md_requested_at' => 'datetime',
             'supplier_requested_at' => 'datetime',
             'md_approved_at' => 'datetime',
@@ -234,7 +235,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'admin' => $this->is_staff,
             // Staff can access desk unconditionally (staff > MD > shooter).
             // Everyone else must have opted into the MD signup path.
-            'desk' => $this->is_staff || $this->is_match_director,
+            'desk' => $this->is_staff || $this->is_match_director || $this->is_media_partner,
             default => false,
         };
     }
@@ -249,7 +250,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     {
         return match (true) {
             $this->is_staff => '/admin',
-            $this->is_match_director => '/desk',
+            $this->is_match_director || $this->is_media_partner => '/desk',
             default => '/my-calendar',
         };
     }
@@ -339,6 +340,26 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function attendedEvents(): HasMany
     {
         return $this->hasMany(AttendedEvent::class);
+    }
+
+    public function eventEntries(): HasMany
+    {
+        return $this->hasMany(EventEntry::class);
+    }
+
+    public function eventResults(): HasMany
+    {
+        return $this->hasMany(EventResult::class);
+    }
+
+    public function equipment(): HasMany
+    {
+        return $this->hasMany(ShooterEquipment::class);
+    }
+
+    public function articles(): HasMany
+    {
+        return $this->hasMany(Article::class);
     }
 
     public function claims(): HasMany

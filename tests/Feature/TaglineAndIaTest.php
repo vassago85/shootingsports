@@ -34,7 +34,7 @@ it('renders the new tagline on the home hero', function () {
         ->assertSee('Find your', false)
         ->assertSee('<em>sport</em>', false)
         ->assertSee('<em>club</em>', false)
-        ->assertSee('<em>match</em>', false)
+        ->assertSee('<em>event</em>', false)
         ->assertDontSee('The national register of South African shooting sport. Clubs, ranges, suppliers');
 });
 
@@ -54,11 +54,11 @@ it('labels the disciplines nav link as Sports', function () {
     expect($html)->toContain('href="'.route('disciplines.index').'">Sports</a>');
 });
 
-it('labels the calendar nav link as Matches and keeps Map off the primary nav', function () {
+it('labels the calendar nav link as Events and keeps Map off the primary nav', function () {
     $html = $this->get(route('home'))->assertOk()->getContent();
 
     expect($html)
-        ->toContain('href="'.route('calendar').'">Matches</a>')
+        ->toContain('href="'.route('calendar').'">Events</a>')
         ->toContain('href="'.route('clubs.index').'">Clubs</a>')
         ->toContain('href="'.route('ranges.index').'">Ranges</a>')
         ->not->toContain('href="'.route('map').'">Map</a>');

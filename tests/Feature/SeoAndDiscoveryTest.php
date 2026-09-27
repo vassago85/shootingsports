@@ -49,7 +49,7 @@ it('renders both site graph and per-event JSON-LD on a match page', function () 
         'host_organisation_id' => $club->id,
     ]);
 
-    $response = $this->get(route('matches.show', $event->slug));
+    $response = $this->get(route('events.show', $event->slug));
 
     $response->assertOk();
 
@@ -307,7 +307,7 @@ it('a match page emits BreadcrumbList schema with Home > Calendar > Province > T
         'venue_id' => $venue->id,
     ]);
 
-    $response = $this->get(route('matches.show', $event->slug));
+    $response = $this->get(route('events.show', $event->slug));
 
     $response->assertOk()
         ->assertSee('"@type":"BreadcrumbList"', false)

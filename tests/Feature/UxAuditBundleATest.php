@@ -134,7 +134,7 @@ it('match page links the venue and exposes Directions', function () {
         'status' => 'confirmed',
     ]);
 
-    $response = $this->get(route('matches.show', $event->slug))->assertOk();
+    $response = $this->get(route('events.show', $event->slug))->assertOk();
 
     $response->assertSee('match-layout', false)
         ->assertSee('Enter here', false)

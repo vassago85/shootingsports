@@ -105,7 +105,7 @@
                                     <td>{{ $entry->event_date?->format('j M') }}</td>
                                     <td>
                                         @if ($entry->event_id && $entry->event)
-                                            <a href="{{ route('matches.show', $entry->event->slug) }}">{{ $entry->event_name_snapshot }}</a>
+                                            <a href="{{ route('events.show', $entry->event->slug) }}">{{ $entry->event_name_snapshot }}</a>
                                         @else
                                             {{ $entry->event_name_snapshot }}
                                         @endif

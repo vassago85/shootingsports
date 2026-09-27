@@ -59,7 +59,7 @@ it('a match show page renders for guests', function () {
         'starts_at' => now()->addDays(10),
     ]);
 
-    $this->get(route('matches.show', $event->slug))
+    $this->get(route('events.show', $event->slug))
         ->assertOk()
         ->assertSee($event->title);
 });

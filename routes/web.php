@@ -11,6 +11,7 @@ use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\EmbedController;
 use App\Http\Controllers\EnquiryController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IcalController;
 use App\Http\Controllers\LlmsTxtController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\UnsubscribeController;
 use App\Http\Controllers\VenueController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
+use App\Livewire\FindYourDiscipline;
 use App\Livewire\Matches\SubmitMatch;
 use App\Livewire\Settings\NotificationPreferences;
 use App\Livewire\Suppliers\ClaimListing as SupplierClaimListing;
@@ -74,6 +76,7 @@ Route::get('/divisions/{division}', [DivisionController::class, 'show'])
     ->name('divisions.show');
 Route::get('/disciplines/{discipline:slug}/calendar.ics', [IcalController::class, 'discipline'])->name('ical.discipline');
 Route::get('/disciplines/{discipline:slug}/about', [DisciplineController::class, 'about'])->name('disciplines.about');
+Route::get('/disciplines/{discipline:slug}/rankings', [DisciplineController::class, 'rankings'])->name('disciplines.rankings');
 Route::get('/disciplines/{discipline:slug}/{province}', [DisciplineController::class, 'redirectLegacyProvince'])
     ->where('province', $provincePattern)
     ->name('disciplines.province');
@@ -112,23 +115,32 @@ Route::get('/suppliers/{category}', [ProviderController::class, 'category'])
     ->name('suppliers.category');
 Route::get('/supplier/{provider:slug}', [ProviderController::class, 'show'])->name('suppliers.show');
 
-// Bare /matches is not a listing surface — /calendar is. Keep it a
-// permanent redirect so any external link or crawler discovery of
-// the singular path still resolves.
+Route::get('/find', FindYourDiscipline::class)->name('find');
+Route::get('/feed', FeedController::class)->name('feed');
+
+// Bare /matches and /events are not listing surfaces — /calendar is.
 Route::redirect('/matches', '/calendar', 301);
-// Director match intake. Registered before /matches/{event} so
-// "submit" is not captured as a match slug. The match is a draft
+Route::redirect('/events', '/calendar', 301);
+// Director event intake. Registered before /events/{event} so
+// "submit" is not captured as an event slug. The event is a draft
 // until staff approve it from /admin.
 Route::middleware(['auth', 'verified'])->group(function (): void {
-    Route::get('/matches/submit', SubmitMatch::class)->name('matches.submit');
-    Route::get('/matches/submit/{event:slug}/thanks', function (Event $event) {
+    Route::get('/events/submit', SubmitMatch::class)->name('events.submit');
+    Route::get('/events/submit/{event:slug}/thanks', function (Event $event) {
         abort_unless($event->created_by === auth()->id() || auth()->user()?->is_staff, 403);
 
         return view('public.matches.submitted', ['event' => $event]);
-    })->name('matches.submit.thanks');
+    })->name('events.submit.thanks');
+});
+Route::permanentRedirect('/matches/submit', '/events/submit');
+Route::get('/matches/submit/{slug}/thanks', function (string $slug) {
+    return redirect()->route('events.submit.thanks', $slug, 301);
 });
 
-Route::get('/matches/{event:slug}', [EventController::class, 'show'])->name('matches.show');
+Route::get('/events/{event:slug}', [EventController::class, 'show'])->name('events.show');
+Route::get('/matches/{slug}', function (string $slug) {
+    return redirect()->route('events.show', $slug, 301);
+})->where('slug', '^(?!submit$).+');
 
 Route::get('/my-calendar', [ShooterCalendarController::class, 'mine'])
     ->middleware('auth')

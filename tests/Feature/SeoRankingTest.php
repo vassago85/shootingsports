@@ -132,7 +132,7 @@ it('puts an ISO offset and venue id on match schema', function () {
         'starts_at' => now()->addWeek()->setTime(9, 0),
     ]);
 
-    $this->get(route('matches.show', $event->slug))
+    $this->get(route('events.show', $event->slug))
         ->assertOk()
         ->assertSee('Schema Match — ', false)
         ->assertSee($event->schemaId(), false)

@@ -229,16 +229,3 @@ it('is idempotent when Paystack redelivers the same event', function () {
     expect($user->plan_expires_at)->not->toBeNull()
         ->and($user->plan_expires_at->lessThan(now()->addMonth()->addHours(2)))->toBeTrue();
 });
-
-it('records the event with an error and returns 500 when the handler blows up', function () {
-    // Force the handler to fail by pointing at a user whose email
-    // matches but writing an is_staff column we do not have — no,
-    // better: use a payload for an unknown event type. Actually
-    // unknown event types short-circuit to success. Instead, throw
-    // by making the customer email empty AND the subscription_code
-    // empty on a subscription.disable — the handler no-ops (user
-    // not resolved) so still 200. Fine — this negative path is
-    // tested by the "bad signature" test. Nothing to assert here
-    // beyond the shape of the audit row on a success.
-    expect(true)->toBeTrue();
-})->skip('handler path already covered by the success tests');

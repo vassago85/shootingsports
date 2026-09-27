@@ -23,7 +23,7 @@ beforeEach(function (): void {
 });
 
 it('sends a guest to log in before they can submit a match', function () {
-    $this->get(route('matches.submit'))
+    $this->get(route('events.submit'))
         ->assertRedirect(route('login'));
 });
 
@@ -33,7 +33,7 @@ it('sends an unverified user to confirm their email before they can submit a mat
     ]);
 
     $this->actingAs($user)
-        ->get(route('matches.submit'))
+        ->get(route('events.submit'))
         ->assertRedirect(route('verification.notice'));
 });
 
@@ -41,9 +41,9 @@ it('opens the match form for a signed-in user', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->get(route('matches.submit'))
+        ->get(route('events.submit'))
         ->assertOk()
-        ->assertSee('List a match');
+        ->assertSee('List an event');
 });
 
 it('stores a draft match off the public calendar until staff approve it', function () {
@@ -86,10 +86,10 @@ it('stores a draft match off the public calendar until staff approve it', functi
         ->and(Enquiry::query()->where('user_id', $user->id)->where('type', EnquiryType::MdSignup)->count())->toBe(1)
         ->and((new PublicEventQuery)->builder()->whereKey($event->id)->exists())->toBeFalse();
 
-    $this->get(route('matches.show', $event->slug))->assertNotFound();
+    $this->get(route('events.show', $event->slug))->assertNotFound();
 
     $this->actingAs($user)
-        ->get(route('matches.submit.thanks', ['event' => $event->slug]))
+        ->get(route('events.submit.thanks', ['event' => $event->slug]))
         ->assertOk()
         ->assertSee('Wednesday IPSC')
         ->assertSee('Waiting for approval');
@@ -103,7 +103,7 @@ it('stores a draft match off the public calendar until staff approve it', functi
         ->and($host->status)->toBe(ListingStatus::Published)
         ->and((new PublicEventQuery)->builder()->whereKey($event->id)->exists())->toBeTrue();
 
-    $this->get(route('matches.show', $event->slug))
+    $this->get(route('events.show', $event->slug))
         ->assertOk()
         ->assertSee('Wednesday IPSC');
 });
@@ -209,7 +209,7 @@ it('hides another persons submitted match', function () {
     ]);
 
     $this->actingAs($stranger)
-        ->get(route('matches.submit.thanks', ['event' => $event->slug]))
+        ->get(route('events.submit.thanks', ['event' => $event->slug]))
         ->assertForbidden();
 });
 
@@ -226,7 +226,7 @@ it('sends a pending director to the match form after they confirm their email', 
 
     $this->actingAs($user)
         ->get($url)
-        ->assertRedirect(route('matches.submit').'?verified=1');
+        ->assertRedirect(route('events.submit').'?verified=1');
 });
 
 it('sends a shooter to their calendar after they confirm their email', function () {

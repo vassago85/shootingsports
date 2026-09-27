@@ -42,7 +42,8 @@
                 <h2>5. Third-party events, venues, and links</h2>
                 <ul>
                     <li>Clicking through to register, pay, or view results takes you to a <b>third-party</b> site or system under that party’s terms.</li>
-                    <li>We are not a party to any registration, entry fee, refund, squadding, equipment, or match-day arrangement.</li>
+                    <li>We can record an entry when the organiser turns that on. If they choose “pay the club”, the fee is still paid to them. If they choose to take payment here, Paystack charges the public entry fee to this site. We are not the organiser, and we do not automatically pay the club out or issue refunds.</li>
+                    <li>We are not a party to squadding, equipment, or match-day arrangements.</li>
                     <li>You use ranges and attend matches at your own risk and subject to the organiser’s rules, the Firearms Control Act and related regulations, and applicable range and safety requirements. We do not assess or certify compliance of any event or venue.</li>
                 </ul>
 
@@ -61,7 +62,7 @@
                     <li>Browsing the public calendar and directory remains free. Pro adds personalisation and convenience features (for example higher follow and saved-search limits, attendance-log depth, exports) as described on the upgrade page; feature limits may change.</li>
                     <li>Paid Pro is billed via our payment provider (Paystack). Card data is handled by Paystack; we do not store full card numbers.</li>
                     <li>Trials (where offered) do not require a card unless you choose to subscribe. Cancelling stops future charges; access continues until the end of the period already paid, as stated in the product UI.</li>
-                    <li>Prices are in South African Rand as displayed at checkout. We do not hold shooter funds for third-party match entries.</li>
+                    <li>Prices are in South African Rand as displayed at checkout. Entry fees taken on an event page are separate from Pro and are charged once via Paystack.</li>
                 </ul>
 
                 <h2>8. Advertising and enquiries</h2>

@@ -12,6 +12,11 @@
         </section>
         <section class="block">
             <div class="wrap">
+                <livewire:manage-equipment />
+            </div>
+        </section>
+        <section class="block">
+            <div class="wrap">
                 {{-- Post-signup / persistent flash for match director
                      requests. Session flash covers the first render right
                      after the redirect from /directors/register; the

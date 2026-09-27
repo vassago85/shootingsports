@@ -34,7 +34,7 @@ it('seeds the Vaaldriehoek dangerous-game shoot from the poster', function () {
         ->and($event->venue?->province)->toBe(Province::FreeState)
         ->and($event->disciplines->pluck('slug')->all())->toBe(['hunting-rifle']);
 
-    $this->get(route('matches.show', 'vaaldriehoek-gevaarlike-wild-2026'))
+    $this->get(route('events.show', 'vaaldriehoek-gevaarlike-wild-2026'))
         ->assertOk()
         ->assertSee('/media/event-banners/vaaldriehoek-gevaarlike-wild-2026.png', false)
         ->assertSee('Koepel');

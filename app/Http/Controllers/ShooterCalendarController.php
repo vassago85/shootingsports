@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EntryStatus;
 use App\Models\Event;
 use App\Models\User;
 use App\Queries\PublicEventQuery;
+use App\Support\Rankings;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\View\View;
 
@@ -36,17 +38,27 @@ class ShooterCalendarController extends Controller
         ]);
     }
 
-    public function show(string $shooter): View
+    public function show(string $shooter, Rankings $rankings): View
     {
         $user = User::query()->where('calendar_slug', $shooter)->firstOrFail();
+        $user->ensureCalendarSlug();
 
         $events = (new PublicEventQuery(
             eventIds: $user->savedEvents()->pluck('events.id')->all(),
         ))->get();
 
+        $profile = $rankings->profile($user);
+
         return view('public.shooters.show', [
             'user' => $user,
             'events' => $events,
+            'profile' => $profile,
+            'equipment' => $user->equipment()->orderBy('category')->get(),
+            'upcomingEntries' => $user->eventEntries()
+                ->where('status', EntryStatus::Entered)
+                ->whereHas('event', fn ($query) => $query->where('starts_at', '>=', now()))
+                ->with('event')
+                ->get(),
         ]);
     }
 

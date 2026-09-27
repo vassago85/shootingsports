@@ -23,7 +23,7 @@
                 </dl>
 
                 <p style="margin-top:22px">
-                    <a class="btn" href="{{ route('matches.submit') }}">Submit another match</a>
+                    <a class="btn" href="{{ route('events.submit') }}">Submit another match</a>
                 </p>
             </div>
         </section>

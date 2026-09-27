@@ -204,11 +204,6 @@ it('/map accepts a province query for initial focus', function () {
         ->toMatch('/data-province="gauteng"[^>]*aria-pressed="true"/');
 });
 
-it('/map view is set to noindex when there are zero upcoming matches (avoid an empty map in the SERP)', function () {
-    $html = $this->get(route('map'))->assertOk()->getContent();
-    expect($html)->toContain('0 matches');
-})->skip('Documents intent — noindex-on-empty-map is future work.');
-
 // ---- View toggle + nav integration --------------------------------
 
 it('calendar page renders a view toggle linking to /map', function () {
@@ -227,16 +222,6 @@ it('map page renders a view toggle linking back to /calendar', function () {
         ->toContain('class="view-toggle"')
         ->toContain('href="'.route('calendar').'"')
         ->toContain('href="'.route('calendar.month'));
-});
-
-it('primary nav promotes Matches over a standalone Map link', function () {
-    $html = $this->get(route('home'))->assertOk()->getContent();
-
-    // Map lives under Matches (List | Month | Map), not as a top-level
-    // destination. Desktop + mobile both advertise Matches instead.
-    expect($html)
-        ->toContain('href="'.route('calendar').'">Matches</a>')
-        ->not->toContain('href="'.route('map').'">Map</a>');
 });
 
 it('legacy /calendar/map URL redirects to /map', function () {

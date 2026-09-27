@@ -5,7 +5,7 @@
     use App\Enums\EventStatus;
     use App\Support\EventDate;
 
-    $matchUrl = route('matches.show', $event->slug);
+    $matchUrl = route('events.show', $event->slug);
     $discipline = $event->primaryDiscipline() ?? $event->disciplines->first();
     $family = $discipline?->family->value;
     $status = $event->status;

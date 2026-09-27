@@ -35,7 +35,7 @@ it('seeds SAHRSA and the Cape Winelands Open from the poster', function () {
         ->and($event->venue?->province)->toBe(Province::WesternCape)
         ->and($event->disciplines->pluck('slug')->all())->toBe(['hunting-rifle']);
 
-    $this->get(route('matches.show', 'sahrsa-cape-winelands-open-2026'))
+    $this->get(route('events.show', 'sahrsa-cape-winelands-open-2026'))
         ->assertOk()
         ->assertSee('/media/event-banners/sahrsa-cape-winelands-open-2026.png', false)
         ->assertSee('Kinga Distillery');

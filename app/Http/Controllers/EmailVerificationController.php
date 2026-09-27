@@ -99,7 +99,7 @@ class EmailVerificationController extends Controller
         }
 
         if ($user !== null && ($request->session()->has('md.pending_host') || $user->isMdPending())) {
-            return route('matches.submit');
+            return route('events.submit');
         }
 
         return $user?->defaultRedirectPath() ?? route('home');

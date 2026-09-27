@@ -39,7 +39,7 @@ it('event card makes the whole card clickable via the title anchor', function ()
     // pointing at the match detail page. The CSS ::after rule stretches
     // it across the article — we assert the anchor + class combo.
     expect($html)->toContain('class="dope-title-link"')
-        ->and($html)->toContain('href="'.route('matches.show', $event->slug).'"');
+        ->and($html)->toContain('href="'.route('events.show', $event->slug).'"');
 });
 
 it('event card View match button points to the internal match page (not the external entry URL)', function () {
@@ -49,12 +49,12 @@ it('event card View match button points to the internal match page (not the exte
     $withHtml = view('components.event-card', ['event' => $withEntry])->render();
     $withoutHtml = view('components.event-card', ['event' => $withoutEntry])->render();
 
-    // Primary CTA always points at matches.show — never straight out
+    // Primary CTA always points at events.show — never straight out
     // to the organiser entry form. The match page owns "Enter here".
     expect($withHtml)
         ->toContain('class="dope-primary"')
         ->toContain('View match')
-        ->toContain('href="'.route('matches.show', $withEntry->slug).'"')
+        ->toContain('href="'.route('events.show', $withEntry->slug).'"')
         ->not->toContain('https://example.test/enter')
         ->not->toContain('Entry details');
 
@@ -63,7 +63,7 @@ it('event card View match button points to the internal match page (not the exte
     expect($withoutHtml)
         ->toContain('class="dope-primary"')
         ->toContain('View match')
-        ->toContain('href="'.route('matches.show', $withoutEntry->slug).'"')
+        ->toContain('href="'.route('events.show', $withoutEntry->slug).'"')
         ->not->toContain('Entry details');
 });
 
@@ -72,7 +72,7 @@ it('the match page shows a prominent "Enter here" button linking to the external
         'entry_url' => 'https://example.test/enter-me',
     ]);
 
-    $response = $this->get(route('matches.show', $event->slug));
+    $response = $this->get(route('events.show', $event->slug));
 
     $response->assertOk()
         ->assertSee('Enter here', false)
@@ -88,7 +88,7 @@ it('the match page omits the entry block when entry_url is null', function () {
         'host_organisation_id' => $host->id,
     ]);
 
-    $response = $this->get(route('matches.show', $event->slug));
+    $response = $this->get(route('events.show', $event->slug));
 
     $response->assertOk()
         ->assertDontSee('No online entry link on file', false)

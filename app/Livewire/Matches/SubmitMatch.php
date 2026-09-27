@@ -4,6 +4,7 @@ namespace App\Livewire\Matches;
 
 use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
+use App\Enums\EventKind;
 use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\ListingSource;
@@ -47,6 +48,8 @@ class SubmitMatch extends Component
 
     public string $description = '';
 
+    public string $kind = 'competition';
+
     public string $signup_note = '';
 
     public function mount(): void
@@ -76,6 +79,7 @@ class SubmitMatch extends Component
             'town' => ['nullable', 'string', 'max:120'],
             'discipline_id' => ['nullable', 'integer', 'exists:disciplines,id'],
             'description' => ['nullable', 'string', 'max:2000'],
+            'kind' => ['required', Rule::enum(EventKind::class)],
         ], [], [
             'title' => 'match title',
             'starts_on' => 'date',
@@ -94,6 +98,7 @@ class SubmitMatch extends Component
                 'ends_at' => $startsAt->copy()->endOfDay(),
                 'all_day' => true,
                 'level' => EventLevel::Club,
+                'kind' => EventKind::from($this->kind),
                 'status' => EventStatus::Draft,
                 'description' => trim($this->description) !== '' ? trim($this->description) : null,
                 'created_by' => $user->id,
@@ -112,7 +117,7 @@ class SubmitMatch extends Component
         Session::forget('md.pending_host');
         Session::flash('status', 'Thanks. Your match is in for review. It stays off the public calendar until we approve it.');
 
-        $this->redirect(route('matches.submit.thanks', ['event' => $event->slug]), navigate: false);
+        $this->redirect(route('events.submit.thanks', ['event' => $event->slug]), navigate: false);
     }
 
     public function render()
@@ -126,7 +131,7 @@ class SubmitMatch extends Component
                 ->orderBy('name')
                 ->pluck('name', 'id')
                 ->all(),
-        ])->layout('components.layouts.public', ['title' => 'Submit a match']);
+        ])->layout('components.layouts.public', ['title' => 'Submit an event']);
     }
 
     private function resolveHost(User $user): Organisation

@@ -35,7 +35,7 @@ it('seeds Free Civilian Shooters Round 3 from the poster', function () {
         ->and($event->venue?->province)->toBe(Province::Gauteng)
         ->and($event->disciplines->pluck('slug')->all())->toBe(['pr22-rimfire']);
 
-    $this->get(route('matches.show', 'free-civilian-round-3-2026'))
+    $this->get(route('events.show', 'free-civilian-round-3-2026'))
         ->assertOk()
         ->assertSee('/media/event-banners/free-civilian-round-3-2026.png', false)
         ->assertSee('Dwarskloof');

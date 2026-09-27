@@ -34,7 +34,7 @@ it('seeds the Bottari Corolla Challenge from the Duiker poster', function () {
         ->and($event->venue?->province)->toBe(Province::Mpumalanga)
         ->and($event->disciplines->pluck('slug')->all())->toBe(['hunting-rifle']);
 
-    $this->get(route('matches.show', 'bottari-corolla-challenge-2026'))
+    $this->get(route('events.show', 'bottari-corolla-challenge-2026'))
         ->assertOk()
         ->assertSee('/media/event-banners/bottari-corolla-challenge-2026.png', false)
         ->assertSee('Charles Kruger');

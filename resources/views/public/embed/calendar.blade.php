@@ -22,7 +22,7 @@
     <main id="main" class="embed-shell">
         <p class="label">{{ $listingName ? $listingName : 'Shooting Sports' }} calendar</p>
         @forelse ($events as $event)
-            <a class="match-row" href="{{ route('matches.show', $event->slug) }}" target="_blank" rel="noopener">
+            <a class="match-row" href="{{ route('events.show', $event->slug) }}" target="_blank" rel="noopener">
                 <div class="m-date">
                     <span class="dow">{{ \App\Support\EventDate::weekday($event->starts_at, $event->ends_at) }}</span>
                     <b>{{ \App\Support\EventDate::dayOfMonth($event->starts_at, $event->ends_at) }}</b>

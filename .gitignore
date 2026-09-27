@@ -28,6 +28,10 @@
 /storage/*.key
 /storage/pail
 /vendor
+/database/playwright.sqlite
+/playwright-report
+/test-results
+/blob-report
 # Expo mobile scaffold — local/dev only; not part of the Laravel deploy.
 /apps/
 _ide_helper.php

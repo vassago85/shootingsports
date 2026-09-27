@@ -158,7 +158,7 @@ it('renders every venue on the public match detail page for multi-venue matches'
         ['venue_id' => $legends->id, 'day_label' => 'Day 2'],
     ]);
 
-    $this->get(route('matches.show', $event->slug))
+    $this->get(route('events.show', $event->slug))
         ->assertOk()
         ->assertSee('Papaberg')
         ->assertSee('Legends Adventure Farm')

@@ -42,7 +42,7 @@
                 </p>
                 @if (auth()->user()?->isMdPending())
                     <p style="margin-top:18px">
-                        <a class="btn ghost" href="{{ route('matches.submit') }}">Submit your match</a>
+                        <a class="btn ghost" href="{{ route('events.submit') }}">Submit your match</a>
                     </p>
                     <p style="margin-top:8px;color:var(--slate)">You also asked to publish matches. The match stays off the calendar until we approve it.</p>
                 @endif

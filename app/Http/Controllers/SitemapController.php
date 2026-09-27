@@ -121,7 +121,7 @@ class SitemapController extends Controller
             ->orderBy('starts_at')
             ->get()
             ->map(fn (Event $event) => $this->safeUrl('events sitemap', $event, fn (): array => [
-                'loc' => route('matches.show', $event->slug),
+                'loc' => route('events.show', $event->slug),
                 'lastmod' => $event->updated_at?->toAtomString(),
             ]))
             ->filter()

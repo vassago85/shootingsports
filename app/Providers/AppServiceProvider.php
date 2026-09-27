@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Enums\EventStatus;
 use App\Enums\ListingStatus;
 use App\Http\Responses\LogoutResponse as PublicHomeLogoutResponse;
+use App\Models\Article;
 use App\Models\Discipline;
 use App\Models\Enquiry;
 use App\Models\Event;
@@ -100,7 +101,7 @@ class AppServiceProvider extends ServiceProvider
             if ($target instanceof Event && $target->status !== EventStatus::Draft) {
                 $to = request()->route()?->getName() === 'api.v1.events.show'
                     ? 'api.v1.events.show'
-                    : 'matches.show';
+                    : 'events.show';
 
                 throw new HttpResponseException(redirect()->route($to, $target->slug, 301));
             }
@@ -155,6 +156,7 @@ class AppServiceProvider extends ServiceProvider
             'provider' => Provider::class,
             'user' => User::class,
             'enquiry' => Enquiry::class,
+            'article' => Article::class,
         ]);
 
         Gate::policy(Event::class, EventPolicy::class);

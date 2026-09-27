@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\EntryCollection;
+use App\Enums\EntryStatus;
+use App\Enums\EventKind;
 use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\ListingSource;
@@ -23,8 +26,8 @@ use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'slug', 'title', 'host_organisation_id', 'venue_id', 'starts_at', 'ends_at',
-    'all_day', 'level', 'status', 'confirmed_at', 'original_starts_at',
-    'entry_fee_cents', 'member_fee_cents', 'entry_url', 'capacity',
+    'all_day', 'level', 'kind', 'status', 'confirmed_at', 'original_starts_at',
+    'entry_fee_cents', 'member_fee_cents', 'entry_url', 'accepts_platform_entries', 'entry_collection', 'capacity',
     'entries_taken', 'round_count', 'target_count', 'stage_count',
     'results_url', 'banner_media_id', 'banner_path', 'description', 'created_by',
     'source', 'last_verified_at',
@@ -41,7 +44,10 @@ class Event extends Model
             'ends_at' => 'immutable_datetime',
             'all_day' => 'boolean',
             'level' => EventLevel::class,
+            'kind' => EventKind::class,
             'status' => EventStatus::class,
+            'accepts_platform_entries' => 'boolean',
+            'entry_collection' => EntryCollection::class,
             'confirmed_at' => 'immutable_datetime',
             'original_starts_at' => 'immutable_datetime',
             'entry_fee_cents' => 'integer',
@@ -59,6 +65,31 @@ class Event extends Model
     protected function slugSource(): string
     {
         return (string) $this->title;
+    }
+
+    public function entries(): HasMany
+    {
+        return $this->hasMany(EventEntry::class);
+    }
+
+    public function results(): HasMany
+    {
+        return $this->hasMany(EventResult::class);
+    }
+
+    public function openForPlatformEntries(): bool
+    {
+        return $this->accepts_platform_entries && $this->status === EventStatus::EntriesOpen;
+    }
+
+    public function enteredCount(): int
+    {
+        return $this->entries()->where('status', EntryStatus::Entered)->count();
+    }
+
+    public function isFull(): bool
+    {
+        return $this->capacity !== null && $this->capacity > 0 && $this->enteredCount() >= $this->capacity;
     }
 
     public function hostOrganisation(): BelongsTo
@@ -361,7 +392,7 @@ class Event extends Model
 
     public function publicUrl(): string
     {
-        return route('matches.show', $this->slug);
+        return route('events.show', $this->slug);
     }
 
     public function schemaId(): string

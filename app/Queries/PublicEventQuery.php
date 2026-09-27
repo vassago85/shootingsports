@@ -4,6 +4,7 @@ namespace App\Queries;
 
 use App\Enums\DisciplineFamily;
 use App\Enums\Division;
+use App\Enums\EventKind;
 use App\Enums\Province;
 use App\Models\Discipline;
 use App\Models\Event;
@@ -34,6 +35,7 @@ class PublicEventQuery
         public bool $weekend = false,
         public bool $novice = false,
         public bool $confirmedOnly = false,
+        public ?string $kind = null,
         public ?int $organisationId = null,
         public ?int $venueId = null,
         public array $disciplineIds = [],
@@ -71,6 +73,7 @@ class PublicEventQuery
             weekend: $request->boolean('weekend'),
             novice: $request->boolean('novice'),
             confirmedOnly: $request->boolean('confirmed'),
+            kind: EventKind::tryFrom($request->string('kind')->toString())?->value,
             organisationId: self::publishedOrganisationId($request),
             venueId: self::publishedVenueId($request),
             eventIds: self::shooterEventIds($request),
@@ -161,6 +164,12 @@ class PublicEventQuery
 
         if ($this->novice) {
             $query->whereHas('flags', fn (Builder $q) => $q->where('slug', 'new-shooter-friendly'));
+        }
+
+        $kind = EventKind::tryFrom((string) $this->kind);
+
+        if ($kind instanceof EventKind) {
+            $query->where('kind', $kind);
         }
 
         if ($this->limit) {

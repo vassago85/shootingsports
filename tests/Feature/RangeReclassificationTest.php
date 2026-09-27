@@ -86,7 +86,7 @@ it('a hostless event renders the venue name in place of the host', function () {
     $this->seed(MuletechRidgeRangeSeeder::class);
 
     // Event card fallback (via calendar page)
-    $this->get(route('matches.show', 'muletech-loskuil-fundraising-shoot-2026'))
+    $this->get(route('events.show', 'muletech-loskuil-fundraising-shoot-2026'))
         ->assertOk()
         ->assertSee('Muletech Ridge Range')
         ->assertDontSee(' · Bothaville · Bothaville'); // no double location

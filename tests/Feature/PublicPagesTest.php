@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Route;
 it('renders the home page instead of the Laravel welcome screen', function () {
     $this->get(route('home'))
         ->assertOk()
-        ->assertSee('Shooting matches in South Africa')
+        ->assertSee('Shooting events in South Africa')
         ->assertSee('Find your')
         ->assertDontSee('Match finder')
         ->assertDontSee('Let’s get started');
@@ -148,7 +148,7 @@ it('shows club, range, supplier and match pages by slug', function () {
 
     $this->get(route('clubs.show', $club->slug))->assertOk()->assertSee('Pretoria Precision Rifle Club');
     $this->get(route('ranges.show', $venue->slug))->assertOk()->assertSee('PPRC Range');
-    $this->get(route('matches.show', $event->slug))->assertOk()->assertSee('PPRC PRS Club Match');
+    $this->get(route('events.show', $event->slug))->assertOk()->assertSee('PPRC PRS Club Match');
     $this->get(route('suppliers.show', $provider->slug))->assertOk()->assertSee('Ridgeline Rifleworks');
 });
 
@@ -444,7 +444,7 @@ it('keeps distributor accounts off the public register', function () {
 it('binds public listing routes to the slug column', function () {
     $routes = Route::getRoutes();
 
-    expect($routes->getByName('matches.show')->bindingFields())->toBe(['event' => 'slug'])
+    expect($routes->getByName('events.show')->bindingFields())->toBe(['event' => 'slug'])
         ->and($routes->getByName('clubs.show')->bindingFields())->toBe(['organisation' => 'slug'])
         ->and($routes->getByName('federations.show')->bindingFields())->toBe(['organisation' => 'slug'])
         ->and($routes->getByName('suppliers.show')->bindingFields())->toBe(['provider' => 'slug']);
@@ -480,7 +480,7 @@ it('renders a federation-hosted match with entry url and fees', function () {
         'member_fee_cents' => 70000,
     ]);
 
-    $this->get(route('matches.show', $event->slug))
+    $this->get(route('events.show', $event->slug))
         ->assertOk()
         ->assertSee('Rimfire PR22 MP Provincial')
         ->assertSee('South African Precision Rifle Federation')
@@ -495,7 +495,7 @@ it('returns 404 for draft events and unpublished listings', function () {
         'status' => ListingStatus::Archived,
     ]);
 
-    $this->get(route('matches.show', $draft->slug))->assertNotFound();
+    $this->get(route('events.show', $draft->slug))->assertNotFound();
     $this->get(route('clubs.show', $archived->slug))->assertNotFound();
 });
 
@@ -520,7 +520,7 @@ it('serves split sitemaps and ical feeds', function () {
     $event->syncDisciplines([$discipline->id], $discipline->id);
 
     $this->get('/sitemap.xml')->assertOk()->assertHeader('content-type', 'application/xml; charset=UTF-8');
-    $this->get('/sitemaps/events.xml')->assertOk()->assertSee(route('matches.show', $event->slug), false);
+    $this->get('/sitemaps/events.xml')->assertOk()->assertSee(route('events.show', $event->slug), false);
     $this->get(route('ical.organisation', $club->slug))
         ->assertOk()
         ->assertHeader('content-type', 'text/calendar; charset=utf-8')

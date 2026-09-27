@@ -329,7 +329,7 @@ it('shows a sport advert under the division advert and keeps it off other sports
     $match = Event::factory()->create(['title' => 'Highveld PRS']);
     $match->attachDiscipline($sports->get('prs'));
 
-    $this->get(route('matches.show', $match))
+    $this->get(route('events.show', $match))
         ->assertOk()
         ->assertSee('Bolt scope')
         ->assertSee('PRS timer')

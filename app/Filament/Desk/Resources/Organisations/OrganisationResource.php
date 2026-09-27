@@ -60,6 +60,13 @@ class OrganisationResource extends Resource
         );
     }
 
+    public static function canViewAny(): bool
+    {
+        $user = Auth::user();
+
+        return (bool) ($user?->is_staff || $user?->is_match_director);
+    }
+
     public static function getPages(): array
     {
         return [

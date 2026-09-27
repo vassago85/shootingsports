@@ -34,7 +34,7 @@ it('shows published supplier partners on the match page', function () {
 
     $event->partners()->attach([$partner->id, $pending->id, $distributor->id]);
 
-    $this->get(route('matches.show', $event))
+    $this->get(route('events.show', $event))
         ->assertOk()
         ->assertSee('match-partners', false)
         ->assertSee('Feather Fur and Target', false)
@@ -47,7 +47,7 @@ it('shows published supplier partners on the match page', function () {
 it('omits the partners block when a match has none', function () {
     $event = Event::factory()->create();
 
-    $this->get(route('matches.show', $event))
+    $this->get(route('events.show', $event))
         ->assertOk()
         ->assertDontSee('match-partners', false);
 });
@@ -77,7 +77,7 @@ it('lets staff attach a supplier partner from the event form', function () {
 });
 
 it('lets a match director attach a supplier partner from the desk', function () {
-    $director = User::factory()->create(['is_staff' => false]);
+    $director = User::factory()->matchDirector()->create(['is_staff' => false]);
     $host = Organisation::factory()->create([
         'type' => OrganisationType::Club,
         'status' => ListingStatus::Published,

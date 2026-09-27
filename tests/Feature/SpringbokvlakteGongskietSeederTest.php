@@ -33,7 +33,7 @@ it('seeds Springbokvlakte Gongskiet from the 31 October 2026 poster', function (
         ->and($event->venue?->province)->toBe(Province::Limpopo)
         ->and($event->disciplines->pluck('slug')->all())->toBe(['gong-shooting']);
 
-    $this->get(route('matches.show', 'springbokvlakte-gongskiet-2026'))
+    $this->get(route('events.show', 'springbokvlakte-gongskiet-2026'))
         ->assertOk()
         ->assertSee('/media/event-banners/springbokvlakte-gongskiet-2026.png', false)
         ->assertSee('082 828 9734');

@@ -3,12 +3,16 @@
 namespace App\Filament\Resources\Events;
 
 use App\Actions\ApproveSubmittedMatch;
+use App\Enums\EntryCollection;
+use App\Enums\EventKind;
 use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\ListingSource;
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
+use App\Filament\Resources\Events\RelationManagers\EntriesRelationManager;
+use App\Filament\Resources\Events\RelationManagers\ResultsRelationManager;
 use App\Filament\Support\EventDisciplineSelect;
 use App\Filament\Support\EventFlagSelect;
 use App\Filament\Support\EventPartnerSelect;
@@ -149,6 +153,12 @@ class EventResource extends Resource
                                         ->native(false)
                                         ->default(EventLevel::Club)
                                         ->required(),
+                                    Select::make('kind')
+                                        ->label('Type')
+                                        ->options(EventKind::class)
+                                        ->native(false)
+                                        ->default(EventKind::Competition)
+                                        ->required(),
                                     Select::make('status')
                                         ->options(EventStatus::class)
                                         ->native(false)
@@ -217,6 +227,15 @@ class EventResource extends Resource
                                         Heroicon::OutlinedInformationCircle,
                                         'Link to MatchApp, TicketForms, or another entry site. Keep it current, or leave blank.',
                                     ),
+                                Toggle::make('accepts_platform_entries')
+                                    ->label('Take entries on this site')
+                                    ->inline(false),
+                                Select::make('entry_collection')
+                                    ->label('How the fee is paid')
+                                    ->options(EntryCollection::class)
+                                    ->default(EntryCollection::External)
+                                    ->required()
+                                    ->helperText('Paystack charges the public entry fee when entries are taken here.'),
                                 Grid::make(2)->schema([
                                     TextInput::make('capacity')
                                         ->label('Maximum entries')
@@ -388,7 +407,8 @@ class EventResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            EntriesRelationManager::class,
+            ResultsRelationManager::class,
         ];
     }
 

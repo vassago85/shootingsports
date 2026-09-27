@@ -2,6 +2,8 @@
 
 namespace App\Filament\Desk\Resources\Events\Schemas;
 
+use App\Enums\EntryCollection;
+use App\Enums\EventKind;
 use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\OrganisationUserRole;
@@ -112,6 +114,12 @@ class EventForm
                             ->options(EventLevel::class)
                             ->default(EventLevel::Club->value)
                             ->required(),
+                        Select::make('kind')
+                            ->label('Type')
+                            ->options(EventKind::class)
+                            ->default(EventKind::Competition->value)
+                            ->required()
+                            ->helperText('Training is a course or intro day. Competition is a match.'),
                         Select::make('status')
                             ->options([
                                 EventStatus::Draft->value => 'Draft (not public)',
@@ -174,7 +182,18 @@ class EventForm
                             ->label('External entry URL')
                             ->url()
                             ->columnSpanFull()
-                            ->helperText('Optional — link to where entries are taken. Leave blank if you do not have one.'),
+                            ->helperText('Optional link when entries are taken somewhere else.'),
+                        Toggle::make('accepts_platform_entries')
+                            ->label('Take entries on this site')
+                            ->inline(false)
+                            ->columnSpanFull(),
+                        Select::make('entry_collection')
+                            ->label('How the fee is paid')
+                            ->options(EntryCollection::class)
+                            ->default(EntryCollection::External->value)
+                            ->required()
+                            ->helperText('Paystack charges the public entry fee. Leave on “pays the club” until you want to take the money here.')
+                            ->columnSpanFull(),
                         TextInput::make('capacity')
                             ->numeric()
                             ->minValue(0),

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\OrganisationType;
+use App\Models\Article;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
@@ -84,6 +85,7 @@ class HomeController extends Controller
             'rail' => $rail,
             'railLabel' => $railLabel,
             'upcoming' => $upcoming,
+            'articles' => Article::query()->published()->with('author')->orderByDesc('published_at')->limit(3)->get(),
         ]);
     }
 }

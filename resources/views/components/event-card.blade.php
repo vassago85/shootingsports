@@ -8,7 +8,7 @@
     $usingHostLogo = $coverUrl && ! $bannerUrl;
     $discipline = $event->primaryDiscipline() ?? $event->disciplines->first();
     $family = $discipline?->family->value;
-    $matchUrl = route('matches.show', $event->slug);
+    $matchUrl = route('events.show', $event->slug);
     $venue = $event->venue;
     $venueName = $venue?->name;
     $venuePlace = collect([

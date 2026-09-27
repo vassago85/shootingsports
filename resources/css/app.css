@@ -1743,6 +1743,8 @@ footer.site li { margin-bottom: 8px; }
 footer.site a { text-decoration: none; }
 footer.site a:hover { color: #fff; }
 .foot-bottom { margin-top: 36px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.08); display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #7e8886; }
+.media-partner { color: inherit; text-decoration: none; }
+.media-partner:hover { color: #fff; }
 
 .related { display: grid; grid-template-columns: repeat(auto-fit, minmax(224px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
 .rel { background: var(--surface); padding: 18px; text-decoration: none; display: flex; flex-direction: column; gap: 8px; }
@@ -2233,6 +2235,7 @@ footer.site a:hover { color: #fff; }
     gap: 12px;
     flex-wrap: wrap;
 }
+.cs-foot .media-partner:hover { color: #fff; }
 
 @media (max-width: 560px) {
     .cs-nav { padding: 18px 20px; }

@@ -51,7 +51,7 @@ it('month grid shows upcoming matches in the visible month only', function () {
 
     expect($html)
         ->toContain('October Gong Shoot')
-        ->toContain(route('matches.show', $inMonth->slug))
+        ->toContain(route('events.show', $inMonth->slug))
         ->not->toContain('Past Winter Match');
 });
 
@@ -80,7 +80,7 @@ it('places a multi-day match on every day it runs', function () {
 
     expect(substr_count($html, 'CentreFire WC 2-Day National'))->toBe(4);
 
-    $this->get(route('matches.show', $event->slug))
+    $this->get(route('events.show', $event->slug))
         ->assertOk()
         ->assertSee('Saturday 24 – Sunday 25 October 2026', false)
         ->assertSee('Sat 24 – Sun 25 Oct 2026', false);

@@ -62,6 +62,7 @@ class DeskPanelProvider extends PanelProvider
             ->navigationGroups([
                 'Your listings',
                 'Calendar',
+                'Stories',
             ])
             ->discoverResources(in: app_path('Filament/Desk/Resources'), for: 'App\\Filament\\Desk\\Resources')
             ->discoverPages(in: app_path('Filament/Desk/Pages'), for: 'App\\Filament\\Desk\\Pages')

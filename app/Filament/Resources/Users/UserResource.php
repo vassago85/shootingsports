@@ -71,6 +71,10 @@ class UserResource extends Resource
                     ->label('Match director')
                     ->helperText('Grants /desk access. Prefer the "Approve MD request" record action so timestamps + email fire correctly — this toggle bypasses that flow.')
                     ->required(),
+                Toggle::make('is_media_partner')
+                    ->label('Media partner')
+                    ->helperText('Lets this account publish articles from /desk. They only see the article list unless they are also a match director.')
+                    ->default(false),
                 Toggle::make('is_staff')
                     ->helperText('Full admin. Trumps every other flag.')
                     ->required(),

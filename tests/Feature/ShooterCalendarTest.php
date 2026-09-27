@@ -15,7 +15,7 @@ it('lets a signed-in shooter pin matches and embed only those', function () {
     $user = User::factory()->create(['name' => 'Jane Shooter']);
 
     $this->actingAs($user)
-        ->get(route('matches.show', $mine->slug))
+        ->get(route('events.show', $mine->slug))
         ->assertOk()
         ->assertSee('Add to my calendar');
 

@@ -197,7 +197,7 @@ it('auto-fills event slug from title on admin create', function () {
 });
 
 it('creates a match from the desk with a discipline', function () {
-    $director = User::factory()->create(['is_staff' => false]);
+    $director = User::factory()->matchDirector()->create(['is_staff' => false]);
     $host = Organisation::factory()->create([
         'status' => ListingStatus::Published,
         'type' => OrganisationType::Club,
@@ -230,7 +230,7 @@ it('creates a match from the desk with a discipline', function () {
 });
 
 it('creates a club from the match director desk', function () {
-    $director = User::factory()->create(['is_staff' => false]);
+    $director = User::factory()->matchDirector()->create(['is_staff' => false]);
     Filament::setCurrentPanel(Filament::getPanel('desk'));
 
     Livewire::actingAs($director)
@@ -288,7 +288,7 @@ it('saves new-shooter-friendly from admin and desk match forms', function () {
 
     expect($adminEvent?->flags()->where('slug', 'new-shooter-friendly')->exists())->toBeTrue();
 
-    $director = User::factory()->create(['is_staff' => false]);
+    $director = User::factory()->matchDirector()->create(['is_staff' => false]);
     $deskHost = Organisation::factory()->create(['status' => ListingStatus::Published]);
     $deskHost->users()->attach($director->id, [
         'role' => OrganisationUserRole::MatchDirector,

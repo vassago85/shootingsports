@@ -166,6 +166,7 @@
 
         <footer class="cs-foot">
             <span>&copy; {{ date('Y') }} ShootingSports</span>
+            <x-media-partner />
             <span>shootingsports.co.za</span>
         </footer>
     </div>

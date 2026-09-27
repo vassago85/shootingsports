@@ -78,7 +78,7 @@
                     <p class="label">Matches</p>
                     <h2>Upcoming matches</h2>
                     @foreach ($matches as $match)
-                        <a class="listing" href="{{ route('matches.show', $match->slug) }}">
+                        <a class="listing" href="{{ route('events.show', $match->slug) }}">
                             <h3>{{ $match->title }}</h3>
                         </a>
                     @endforeach

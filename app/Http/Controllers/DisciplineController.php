@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Province;
+use App\Models\Article;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Queries\PublicEventQuery;
 use App\Services\Discovery\DiscoveryStats;
 use App\Support\JsonLd;
+use App\Support\Rankings;
 use App\Support\Seo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -78,6 +80,17 @@ class DisciplineController extends Controller
         abort_if($province !== null && $provinceEnum === null, 404);
 
         return view('public.disciplines.show', $this->pageData($discipline, $provinceEnum));
+    }
+
+    public function rankings(Discipline $discipline, Rankings $rankings): View
+    {
+        abort_unless($discipline->is_published, 404);
+
+        return view('public.disciplines.rankings', [
+            'discipline' => $discipline,
+            'year' => (int) now()->year,
+            'rows' => $rankings->forDiscipline($discipline),
+        ]);
     }
 
     public function about(Discipline $discipline): View
@@ -210,6 +223,12 @@ class DisciplineController extends Controller
             ],
             'seo' => $seo,
             'seoDescription' => $seo->description,
+            'articles' => Article::query()
+                ->published()
+                ->whereHas('disciplines', fn ($query) => $query->whereKey($discipline->id))
+                ->orderByDesc('published_at')
+                ->limit(3)
+                ->get(),
             'jsonLd' => array_values(array_filter([
                 $members !== [] ? JsonLd::itemList($members, $seo->title) : null,
                 JsonLd::breadcrumbs($crumbs),
