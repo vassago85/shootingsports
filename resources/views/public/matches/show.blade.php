@@ -141,6 +141,10 @@
                             </div>
                         @endif
 
+                        <p class="match-entry-note" style="margin-bottom:14px">
+                            <a href="{{ route('enquiries.listing', ['type' => 'event', 'id' => $event->id]) }}">Ask the organiser</a>
+                        </p>
+
                         @if ($event->entry_url)
                             <div class="match-entry-cta">
                                 <a

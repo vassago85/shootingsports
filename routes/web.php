@@ -160,7 +160,7 @@ Route::get('/go/{placement}', PlacementClickController::class)
 Route::get('/advertise', [EnquiryController::class, 'advertise'])->name('advertise');
 Route::get('/contact', [EnquiryController::class, 'create'])->name('contact');
 Route::get('/enquire/{type}/{id}', [EnquiryController::class, 'listing'])
-    ->where(['type' => 'organisation|provider|venue', 'id' => '[0-9]+'])
+    ->where(['type' => 'organisation|provider|venue|event', 'id' => '[0-9]+'])
     ->name('enquiries.listing');
 Route::post('/enquiries', [EnquiryController::class, 'store'])
     ->middleware('throttle:10,1')

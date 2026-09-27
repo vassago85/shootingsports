@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Storage;
 #[Fillable([
     'slug', 'title', 'host_organisation_id', 'venue_id', 'starts_at', 'ends_at',
     'all_day', 'level', 'kind', 'status', 'confirmed_at', 'original_starts_at',
-    'entry_fee_cents', 'member_fee_cents', 'entry_url', 'accepts_platform_entries', 'entry_collection', 'capacity',
+    'entry_fee_cents', 'member_fee_cents', 'entry_url', 'contact_email', 'accepts_platform_entries', 'entry_collection', 'capacity',
     'entries_taken', 'round_count', 'target_count', 'stage_count',
     'results_url', 'banner_media_id', 'banner_path', 'description', 'created_by',
     'source', 'last_verified_at',
@@ -246,16 +246,21 @@ class Event extends Model
         ])->save();
     }
 
+    public function scopeNotFinished(Builder $query): Builder
+    {
+        return $query->where(function (Builder $window): void {
+            $window->where('starts_at', '>=', now())
+                ->orWhere(function (Builder $stillRunning): void {
+                    $stillRunning->whereNotNull('ends_at')
+                        ->where('ends_at', '>=', now());
+                });
+        });
+    }
+
     public function scopeUpcoming(Builder $query): Builder
     {
         return $query
-            ->where(function (Builder $window): void {
-                $window->where('starts_at', '>=', now())
-                    ->orWhere(function (Builder $stillRunning): void {
-                        $stillRunning->whereNotNull('ends_at')
-                            ->where('ends_at', '>=', now());
-                    });
-            })
+            ->notFinished()
             ->whereNotIn('status', [
                 EventStatus::Draft,
                 EventStatus::Cancelled,
@@ -281,6 +286,7 @@ class Event extends Model
     public function scopeMissingOrganiser(Builder $query): Builder
     {
         return $query
+            ->notFinished()
             ->where('status', '!=', EventStatus::Draft)
             ->excludingVerificationFixtures()
             ->whereNull('host_organisation_id');

@@ -76,6 +76,7 @@ class StaffDashboard extends Page
         $pendingMatches = Event::query()
             ->where('status', EventStatus::Draft)
             ->where('source', ListingSource::Submission)
+            ->notFinished()
             ->count();
         $pendingClaims = Claim::query()->where('status', ClaimStatus::Pending)->count();
         $pendingSubmissions = Submission::query()->where('status', SubmissionStatus::Pending)->count();
@@ -344,6 +345,7 @@ class StaffDashboard extends Page
         $matches = Event::query()
             ->where('status', EventStatus::Draft)
             ->where('source', ListingSource::Submission)
+            ->notFinished()
             ->latest()
             ->limit(5)
             ->get()
@@ -417,8 +419,7 @@ class StaffDashboard extends Page
     {
         return EventResource::getUrl('index', [
             'filters' => [
-                'status' => ['value' => EventStatus::Draft->value],
-                'source' => ['value' => ListingSource::Submission->value],
+                'awaiting_approval' => ['isActive' => true],
             ],
         ]);
     }

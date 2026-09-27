@@ -42,7 +42,7 @@ class AdminPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->defaultThemeMode(ThemeMode::Dark)
             ->colors([
-                'primary' => Color::hex('#D9AE52'),
+                'primary' => Color::hex('#6B7D3A'),
                 'gray' => Color::Zinc,
                 'danger' => Color::Rose,
                 'info' => Color::Sky,

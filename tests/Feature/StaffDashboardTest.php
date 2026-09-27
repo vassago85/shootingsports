@@ -81,6 +81,12 @@ it('opens only matches missing an organiser from the attention list', function (
     Event::factory()->create([
         'title' => 'Hosted Shoot',
     ]);
+    Event::factory()->create([
+        'title' => 'Old Orphan Shoot',
+        'host_organisation_id' => null,
+        'starts_at' => now()->subDays(3),
+        'ends_at' => now()->subDays(2),
+    ]);
 
     $this->actingAs($staff)
         ->get('/admin')
@@ -94,7 +100,37 @@ it('opens only matches missing an organiser from the attention list', function (
         ->assertOk()
         ->assertSee('No Organiser Shoot')
         ->assertDontSee('Draft Orphan Shoot')
-        ->assertDontSee('Hosted Shoot');
+        ->assertDontSee('Hosted Shoot')
+        ->assertDontSee('Old Orphan Shoot');
+});
+
+it('does not flag a past submitted match on the dashboard', function () {
+    $staff = User::factory()->staff()->create();
+    Event::factory()->draft()->create([
+        'title' => 'Old Submitted Shoot',
+        'source' => ListingSource::Submission,
+        'starts_at' => now()->subWeek(),
+        'ends_at' => now()->subDays(6),
+    ]);
+    Event::factory()->draft()->create([
+        'title' => 'Upcoming Submitted Shoot',
+        'source' => ListingSource::Submission,
+        'starts_at' => now()->addWeek(),
+    ]);
+
+    $this->actingAs($staff)
+        ->get('/admin')
+        ->assertOk()
+        ->assertSee('Upcoming Submitted Shoot')
+        ->assertSee('waiting for approval');
+
+    $this->actingAs($staff)
+        ->get(EventResource::getUrl('index', [
+            'filters' => ['awaiting_approval' => ['isActive' => true]],
+        ]))
+        ->assertOk()
+        ->assertSee('Upcoming Submitted Shoot')
+        ->assertDontSee('Old Submitted Shoot');
 });
 
 it('opens only upcoming matches missing a registration link from the attention list', function () {

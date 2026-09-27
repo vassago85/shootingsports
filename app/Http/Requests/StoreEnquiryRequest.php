@@ -30,7 +30,7 @@ class StoreEnquiryRequest extends FormRequest
             // (never through this public form), but leaving it out of
             // the whitelist would let a bad actor spoof one via curl.
             'type' => ['required', 'in:general,advertise,listing,pro_waitlist'],
-            'about_type' => ['nullable', 'in:organisation,provider,venue'],
+            'about_type' => ['nullable', 'in:organisation,provider,venue,event'],
             'about_id' => ['nullable', 'integer'],
             // Advertise rate-card product key. Optional — an enquiry
             // that says "not sure, send me options" is valid.

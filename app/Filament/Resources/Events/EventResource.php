@@ -227,6 +227,10 @@ class EventResource extends Resource
                                         Heroicon::OutlinedInformationCircle,
                                         'Link to MatchApp, TicketForms, or another entry site. Keep it current, or leave blank.',
                                     ),
+                                TextInput::make('contact_email')
+                                    ->label('Organiser email')
+                                    ->email()
+                                    ->helperText('Enquiries about this event are forwarded here from Shooting Sports. The address is not shown on the public page.'),
                                 Toggle::make('accepts_platform_entries')
                                     ->label('Take entries on this site')
                                     ->inline(false),
@@ -349,6 +353,14 @@ class EventResource extends Resource
                 SelectFilter::make('status')->options(EventStatus::class),
                 SelectFilter::make('level')->options(EventLevel::class),
                 SelectFilter::make('source')->options(ListingSource::class),
+                Filter::make('awaiting_approval')
+                    ->label('Waiting for approval')
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)
+                        ? $query
+                            ->where('status', EventStatus::Draft)
+                            ->where('source', ListingSource::Submission)
+                            ->notFinished()
+                        : $query),
                 Filter::make('missing_organiser')
                     ->label('Missing an organiser')
                     ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)

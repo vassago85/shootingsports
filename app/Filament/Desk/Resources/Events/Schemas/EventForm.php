@@ -183,6 +183,11 @@ class EventForm
                             ->url()
                             ->columnSpanFull()
                             ->helperText('Optional link when entries are taken somewhere else.'),
+                        TextInput::make('contact_email')
+                            ->label('Organiser email')
+                            ->email()
+                            ->columnSpanFull()
+                            ->helperText('Enquiries about this event are forwarded here from Shooting Sports. The address is not shown on the public page.'),
                         Toggle::make('accepts_platform_entries')
                             ->label('Take entries on this site')
                             ->inline(false)

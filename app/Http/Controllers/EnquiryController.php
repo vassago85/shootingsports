@@ -6,8 +6,10 @@ use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
 use App\Http\Requests\StoreEnquiryRequest;
 use App\Http\Requests\StoreEnquiryThreadReplyRequest;
+use App\Mail\EnquiryForwardedMail;
 use App\Mail\EnquiryReceivedMail;
 use App\Models\Enquiry;
+use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\User;
@@ -76,15 +78,20 @@ class EnquiryController extends Controller
             'organisation' => Organisation::query()->findOrFail($id),
             'provider' => Provider::query()->findOrFail($id),
             'venue' => Venue::query()->findOrFail($id),
+            'event' => Event::query()->findOrFail($id),
             default => abort(404),
         };
+
+        $aboutName = $about->name ?? $about->title;
 
         return view('public.enquiries.create', [
             'type' => EnquiryType::Listing,
             'about' => $about,
             'aboutType' => $type,
-            'heading' => 'Enquire about '.$about->name,
-            'intro' => 'Your message is delivered to Shooting Sports staff. We will relay it appropriately. Listing emails are not shown publicly.',
+            'heading' => 'Enquire about '.$aboutName,
+            'intro' => $type === 'event'
+                ? 'Your message is sent through Shooting Sports and forwarded to the organiser. Their address is not shown on the event page.'
+                : 'Your message is delivered to Shooting Sports staff. We will relay it appropriately. Listing emails are not shown publicly.',
         ]);
     }
 
@@ -138,6 +145,12 @@ class EnquiryController extends Controller
 
         foreach ($staffEmails as $email) {
             Mail::to($email)->queue(new EnquiryReceivedMail($enquiry));
+        }
+
+        $about = $enquiry->about;
+
+        if ($about instanceof Event && filled($about->contact_email)) {
+            Mail::to($about->contact_email)->queue(new EnquiryForwardedMail($enquiry));
         }
 
         return redirect()

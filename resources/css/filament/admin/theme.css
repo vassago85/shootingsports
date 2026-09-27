@@ -23,11 +23,11 @@ html.fi {
     --ss-ink: #16191a;
     --ss-muted: #4d5553;
     --ss-border: rgba(22, 25, 26, 0.1);
-    --ss-rule: rgba(179, 137, 43, 0.28);
+    --ss-rule: rgba(107, 125, 58, 0.28);
     --ss-scrollbar: rgba(22, 25, 26, 0.22);
-    --ss-brass: #d9ae52;
-    --ss-brass-dk: #c49a3e;
-    --ss-brass-ink: #1a1405;
+    --ss-brass: #6B7D3A;
+    --ss-brass-dk: #879A4A;
+    --ss-brass-ink: #0B0D0E;
 }
 
 html.fi.dark {
@@ -37,12 +37,12 @@ html.fi.dark {
     --ss-surface: #12181a;
     --ss-ink: #eef0ee;
     --ss-muted: #9aa39f;
-    --ss-border: rgba(217, 174, 82, 0.12);
-    --ss-rule: rgba(217, 174, 82, 0.18);
+    --ss-border: rgba(107, 125, 58, 0.18);
+    --ss-rule: rgba(107, 125, 58, 0.28);
     --ss-scrollbar: #2a3336;
-    --ss-brass: #d9ae52;
-    --ss-brass-dk: #e4c079;
-    --ss-brass-ink: #1a1405;
+    --ss-brass: #6B7D3A;
+    --ss-brass-dk: #879A4A;
+    --ss-brass-ink: #0B0D0E;
 }
 
 .fi-body {
