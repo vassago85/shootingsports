@@ -51,17 +51,26 @@ it('labels the disciplines nav link as Sports', function () {
     // change the visible label, not the route.
     $html = $response->getContent();
 
-    expect($html)->toContain('href="'.route('disciplines.index').'">Sports</a>');
+    expect($html)
+        ->toContain('href="'.route('disciplines.index').'"')
+        ->toContain('>Sports<');
 });
 
 it('labels the calendar nav link as Events and keeps Map off the primary nav', function () {
     $html = $this->get(route('home'))->assertOk()->getContent();
 
+    // Clubs, Ranges and Events near me live under the "Find" hub
+    // now — the labels still ship in the header, the hrefs still
+    // point at the same routes, and the primary bar is smaller.
     expect($html)
-        ->toContain('href="'.route('calendar').'">Events</a>')
-        ->toContain('href="'.route('clubs.index').'">Clubs</a>')
-        ->toContain('href="'.route('ranges.index').'">Ranges</a>')
-        ->not->toContain('href="'.route('map').'">Map</a>');
+        ->toContain('href="'.route('calendar').'"')
+        ->toContain('>Events<')
+        ->toContain('href="'.route('clubs.index').'"')
+        ->toContain('>Clubs<')
+        ->toContain('href="'.route('ranges.index').'"')
+        ->toContain('>Ranges<')
+        ->toContain('>Find<')
+        ->not->toContain('>Map<');
 });
 
 it('offers This weekend shortcuts on the homepage', function () {
@@ -76,7 +85,9 @@ it('labels the suppliers footer link as Industry', function () {
     $response = $this->get(route('home'))->assertOk();
     $html = $response->getContent();
 
-    expect($html)->toContain('href="'.route('suppliers.index').'">Industry</a>');
+    expect($html)
+        ->toContain('href="'.route('suppliers.index').'"')
+        ->toContain('>Industry<');
 });
 
 it('keeps the industry directory off the home page', function () {

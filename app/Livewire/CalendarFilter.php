@@ -112,6 +112,17 @@ class CalendarFilter extends Component
         $this->province = null;
     }
 
+    /**
+     * Replace the province filter with a single province (or clear it
+     * when the value is empty). Used by the primary-bar province
+     * select — the multi-select chip UI stays in More filters and
+     * shares the same underlying `$province` string.
+     */
+    public function setProvinceOnly(?string $slug): void
+    {
+        $this->province = filled($slug) ? $slug : null;
+    }
+
     public function clearFamily(): void
     {
         $this->family = 'all';
@@ -172,6 +183,15 @@ class CalendarFilter extends Component
         $this->lng = null;
         $this->from = null;
         $this->to = null;
+        // `kind` was previously not cleared, so the Training filter
+        // survived a "Clear all" click. Reset it here so the button
+        // does what it says on every filter without exception.
+        $this->kind = null;
+    }
+
+    public function clearKind(): void
+    {
+        $this->kind = null;
     }
 
     /**
@@ -191,7 +211,8 @@ class CalendarFilter extends Component
             || filled($this->near)
             || filled($this->lat)
             || filled($this->from)
-            || filled($this->to);
+            || filled($this->to)
+            || filled($this->kind);
     }
 
     /**

@@ -17,11 +17,6 @@
                         <h1>{{ $organisation->name }}</h1>
                         <p>{{ $organisation->description }}</p>
                         <x-verification-badge :listing="$organisation" />
-                        @if ($organisation->claimed_by === null)
-                            <p style="margin:14px 0 0">
-                                <a class="btn ghost on-dark" href="{{ route('listings.claim', ['type' => 'club', 'slug' => $organisation->slug]) }}">This is my organisation</a>
-                            </p>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -67,7 +62,18 @@
                         @endforeach
                     </div>
                 @endif
-                <x-embed-snippet :organisation="$organisation->slug" />
+                <x-owner-panel title="For federation administrators">
+                    <p>Manage this listing — update information, publish federation-hosted events, or embed the calendar on your site.</p>
+                    <div class="owner-actions">
+                        @if ($organisation->claimed_by === null)
+                            <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'club', 'slug' => $organisation->slug]) }}">This is my organisation</a>
+                        @endif
+                        <a class="btn ghost" href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}">Administrator login</a>
+                    </div>
+                    <div class="owner-embed">
+                        <x-embed-snippet :organisation="$organisation->slug" />
+                    </div>
+                </x-owner-panel>
             </div>
         </section>
     </main>

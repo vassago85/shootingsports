@@ -65,6 +65,22 @@ class Register extends Component
         if (request()->boolean('supplier')) {
             $this->wants_supplier = true;
         }
+
+        // Contextual auth-gate hand-off. Same-origin redirect only —
+        // stashed in the session so redirectIntended() below picks it
+        // up after signup completes.
+        $intended = (string) request()->query('redirect', '');
+
+        if ($intended !== '' && $this->isSafeInternalUrl($intended)) {
+            redirect()->setIntendedUrl($intended);
+        }
+    }
+
+    private function isSafeInternalUrl(string $url): bool
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+
+        return $host === null || $host === request()->getHost();
     }
 
     /**

@@ -30,14 +30,13 @@
                             <a class="btn ghost" href="{{ $provider->website_url }}" rel="noopener noreferrer">Website</a>
                         @endif
                         @auth
+                            {{-- Owner shortcut stays with the primary
+                                 actions so the owner sees Edit next to
+                                 Enquire and Website — expected for the
+                                 person who just logged in to update
+                                 their listing. --}}
                             @if ($provider->claimed_by === auth()->id())
                                 <a class="btn ghost" href="{{ route('suppliers.onboard.edit', $provider) }}">Edit your listing</a>
-                            @elseif ($provider->claimed_by === null)
-                                <a class="btn ghost" href="{{ route('suppliers.claim', $provider) }}">This is my business</a>
-                            @endif
-                        @else
-                            @if ($provider->claimed_by === null)
-                                <a class="btn ghost" href="{{ route('suppliers.claim', $provider) }}">This is my business</a>
                             @endif
                         @endauth
                     </p>
@@ -97,6 +96,29 @@
                     <x-ad-slot page="suppliers" placement-slot="in_feed_native" :limit="1" hide-when-vacant />
                 </div>
             </section>
+
+            @if (($sponsoredEvents ?? collect())->isNotEmpty())
+                {{-- Matches this business sponsors or partners with —
+                     only rendered when the pivot has rows. --}}
+                <section class="supplier-block">
+                    <p class="label">On the calendar</p>
+                    <h2>Matches partnered with {{ $provider->name }}</h2>
+                    <div class="dope-grid">
+                        @foreach ($sponsoredEvents as $sponsoredEvent)
+                            <x-event-card :event="$sponsoredEvent" />
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+
+            @if ($provider->claimed_by === null)
+                <x-owner-panel title="For business owners">
+                    <p>Recognise this listing? Claim it to control the description, category, contact details and services.</p>
+                    <div class="owner-actions">
+                        <a class="btn ghost" href="{{ route('suppliers.claim', $provider) }}">This is my business</a>
+                    </div>
+                </x-owner-panel>
+            @endif
         </div>
     </main>
 </x-layouts.public>

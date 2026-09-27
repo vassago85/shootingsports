@@ -34,7 +34,7 @@ it('asks which division on the home page and links the month calendar', function
         ->toContain('href="'.route('divisions.show', 'bolt-action-rifle').'"')
         ->toContain('href="'.route('divisions.show', 'self-loading-rifle').'"')
         ->toContain('href="'.route('divisions.show', 'shotgun').'"')
-        ->toContain('href="'.route('calendar.month').'">Calendar</a>')
+        ->toContain('href="'.route('calendar.month').'"')
         ->not->toContain('page="home"')
         ->not->toContain('href="'.route('divisions.show', 'air-rifle').'"');
 });

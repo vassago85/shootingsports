@@ -31,6 +31,7 @@ use App\Models\Provider;
 use App\Models\Submission;
 use App\Models\User;
 use App\Models\Venue;
+use App\Support\PublicCounts;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Icons\Heroicon;
@@ -70,9 +71,13 @@ class StaffDashboard extends Page
      */
     protected function getViewData(): array
     {
+        // Register stats come from the same source as the public
+        // site so admin numbers can never drift from what shooters
+        // see in the header / footer / hero.
+        $publicCounts = PublicCounts::all();
         $pendingOrgs = Organisation::query()->where('status', ListingStatus::Pending)->count();
         $newEnquiries = Enquiry::query()->where('status', EnquiryStatus::New)->count();
-        $upcoming = Event::query()->upcoming()->count();
+        $upcoming = $publicCounts['matches'];
         $pendingMatches = Event::query()
             ->where('status', EventStatus::Draft)
             ->where('source', ListingSource::Submission)
@@ -95,7 +100,7 @@ class StaffDashboard extends Page
             'estimatedMrrCents' => $this->estimatedMrrCents($proSubscribers),
             'proSalesOpen' => (bool) config('plans.pro_enabled'),
             'pendingMatches' => $pendingMatches,
-            'stats' => $this->registerStats($upcoming),
+            'stats' => $this->registerStats($publicCounts),
             'summary' => $this->attentionSummary($pendingMatches, $pendingOrgs, $newEnquiries, $pendingClaims, $pendingSubmissions, $pendingProviders),
             'attention' => $this->attentionRows($pendingMatches, $pendingOrgs, $newEnquiries, $pendingClaims, $pendingSubmissions, $pendingProviders),
             'activity' => $this->upcomingActivity(),
@@ -121,15 +126,23 @@ class StaffDashboard extends Page
     }
 
     /**
+     * The public-facing register counts, mirrored into the admin
+     * dashboard so staff see the same numbers a shooter sees.
+     *
+     * The `Users` row is admin-only (not exposed publicly) and
+     * `Industry` uses the raw published Provider count so staff can
+     * see distributor listings that the public directory hides.
+     *
+     * @param  array<string, int>  $publicCounts
      * @return list<array{label: string, value: int, href: string}>
      */
-    private function registerStats(int $upcoming): array
+    private function registerStats(array $publicCounts): array
     {
         return [
-            ['label' => 'Upcoming matches', 'value' => $upcoming, 'href' => EventResource::getUrl('index')],
-            ['label' => 'Clubs', 'value' => Organisation::query()->clubs()->published()->count(), 'href' => OrganisationResource::getUrl('index')],
-            ['label' => 'Ranges', 'value' => Venue::query()->published()->count(), 'href' => VenueResource::getUrl('index')],
-            ['label' => 'Sports', 'value' => Discipline::query()->where('is_published', true)->count(), 'href' => DisciplineResource::getUrl('index')],
+            ['label' => 'Upcoming matches', 'value' => $publicCounts['matches'], 'href' => EventResource::getUrl('index')],
+            ['label' => 'Clubs', 'value' => $publicCounts['clubs'], 'href' => OrganisationResource::getUrl('index')],
+            ['label' => 'Ranges', 'value' => $publicCounts['ranges'], 'href' => VenueResource::getUrl('index')],
+            ['label' => 'Sports', 'value' => $publicCounts['disciplines'], 'href' => DisciplineResource::getUrl('index')],
             ['label' => 'Industry', 'value' => Provider::query()->published()->count(), 'href' => ProviderResource::getUrl('index')],
             ['label' => 'Users', 'value' => User::query()->count(), 'href' => UserResource::getUrl('index')],
         ];

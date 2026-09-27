@@ -238,6 +238,24 @@ class Event extends Model
         return $this->status === EventStatus::Planned;
     }
 
+    /**
+     * Whether the event has already run to completion. Uses `ends_at`
+     * when set (multi-day matches finish on the last day), otherwise
+     * `starts_at`. Cancelled and Completed statuses count as past so
+     * the detail page can demote Enter after the fact regardless of
+     * date drift on the way to Completion.
+     */
+    public function hasPassed(): bool
+    {
+        if (in_array($this->status, [EventStatus::Cancelled, EventStatus::Completed], true)) {
+            return true;
+        }
+
+        $end = $this->ends_at ?? $this->starts_at;
+
+        return $end !== null && $end->isPast();
+    }
+
     public function confirm(): void
     {
         $this->forceFill([

@@ -40,9 +40,6 @@
                 @endif
                 <p style="margin:14px 0 0; display:flex; gap:10px; flex-wrap:wrap">
                     <a class="btn" href="{{ route('enquiries.listing', ['type' => 'organisation', 'id' => $organisation->id]) }}">Enquire via platform</a>
-                    @if ($organisation->claimed_by === null)
-                        <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'club', 'slug' => $organisation->slug]) }}">This is my club</a>
-                    @endif
                     <livewire:follow-button
                         type="organisation"
                         :id="$organisation->id"
@@ -90,7 +87,21 @@
                     </ul>
                 @endif
 
-                <x-embed-snippet :club="$organisation->slug" />
+                {{-- Owner / director tools live at the bottom so
+                     shooter-facing content stays on top. Only the
+                     controls that are actually available render. --}}
+                <x-owner-panel title="For club administrators">
+                    <p>Manage this club — update information, publish events, or embed the calendar on your site.</p>
+                    <div class="owner-actions">
+                        @if ($organisation->claimed_by === null)
+                            <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'club', 'slug' => $organisation->slug]) }}">This is my club</a>
+                        @endif
+                        <a class="btn ghost" href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}">Director login</a>
+                    </div>
+                    <div class="owner-embed">
+                        <x-embed-snippet :club="$organisation->slug" />
+                    </div>
+                </x-owner-panel>
             </div>
         </section>
     </main>

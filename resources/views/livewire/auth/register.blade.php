@@ -10,27 +10,36 @@
         <section class="block">
             <div class="wrap" style="max-width:560px">
                 <form wire:submit="register" class="enquiry-form" novalidate>
-                    <label class="field">
-                        <span>Your name</span>
-                        <input type="text" wire:model="name" required autofocus autocomplete="name" maxlength="120">
-                        @error('name') <span class="err">{{ $message }}</span> @enderror
-                    </label>
-                    <label class="field">
-                        <span>Email</span>
-                        <input type="email" wire:model="email" required autocomplete="email" maxlength="255">
-                        @error('email') <span class="err">{{ $message }}</span> @enderror
-                    </label>
-                    <label class="field">
-                        <span>Password (min 8 characters)</span>
-                        <input type="password" wire:model="password" required autocomplete="new-password" maxlength="255">
-                        @error('password') <span class="err">{{ $message }}</span> @enderror
-                    </label>
-                    <label class="field">
-                        <span>Confirm password</span>
-                        <input type="password" wire:model="password_confirmation" required autocomplete="new-password" maxlength="255">
-                    </label>
+                    {{-- Basics first: name, email and password are all
+                         a shooter needs. Anything beyond that is a
+                         role choice on the step below. --}}
+                    <div class="reg-step">
+                        <p class="reg-step-label"><span class="reg-step-num">1</span> Your account</p>
+                        <label class="field">
+                            <span>Your name</span>
+                            <input type="text" wire:model="name" required autofocus autocomplete="name" maxlength="120">
+                            @error('name') <span class="err">{{ $message }}</span> @enderror
+                        </label>
+                        <label class="field">
+                            <span>Email</span>
+                            <input type="email" wire:model="email" required autocomplete="email" maxlength="255">
+                            @error('email') <span class="err">{{ $message }}</span> @enderror
+                        </label>
+                        <label class="field">
+                            <span>Password (min 8 characters)</span>
+                            <input type="password" wire:model="password" required autocomplete="new-password" maxlength="255">
+                            @error('password') <span class="err">{{ $message }}</span> @enderror
+                        </label>
+                        <label class="field">
+                            <span>Confirm password</span>
+                            <input type="password" wire:model="password_confirmation" required autocomplete="new-password" maxlength="255">
+                        </label>
+                    </div>
 
-                    <p class="label" style="margin:22px 0 6px">Also register me as a (optional)</p>
+                    {{-- Roles are optional. A plain shooter never
+                         touches this section. --}}
+                    <div class="reg-step">
+                        <p class="reg-step-label"><span class="reg-step-num">2</span> What do you plan to do? <span class="reg-step-optional">(optional)</span></p>
 
                     <div class="prefs-form">
                         <div class="prefs-row">
@@ -71,6 +80,7 @@
                                 @error('business_name') <span class="err">{{ $message }}</span> @enderror
                             </label>
                         @endif
+                    </div>
                     </div>
 
                     <p style="margin-top:18px;color:var(--slate);font-size:0.92rem">

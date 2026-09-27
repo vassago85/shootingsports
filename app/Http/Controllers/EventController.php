@@ -6,6 +6,7 @@ use App\Enums\EventKind;
 use App\Enums\EventStatus;
 use App\Models\Article;
 use App\Models\Event;
+use App\Queries\PublicEventQuery;
 use App\Support\EventSpecRows;
 use App\Support\JsonLd;
 use App\Support\Seo;
@@ -64,9 +65,26 @@ class EventController extends Controller
             'url' => $event->publicUrl(),
         ];
 
+        // Related upcoming matches in any of this event's disciplines
+        // — helps a shooter who missed the entry cut find the next
+        // one. Reuses the same public query so filters and ordering
+        // stay consistent with the calendar.
+        $relatedEvents = collect();
+
+        if ($disciplineIds->isNotEmpty()) {
+            $relatedEvents = (new PublicEventQuery(
+                disciplineIds: $disciplineIds->all(),
+                limit: 6,
+            ))->get()
+                ->reject(fn (Event $candidate): bool => $candidate->id === $event->id)
+                ->take(4)
+                ->values();
+        }
+
         return view('public.matches.show', [
             'event' => $event,
             'articles' => $articles,
+            'relatedEvents' => $relatedEvents,
             'specs' => EventSpecRows::for($event),
             'seo' => Seo::forEvent($event),
             'jsonLd' => [

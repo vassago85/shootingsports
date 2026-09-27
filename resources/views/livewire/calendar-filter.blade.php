@@ -35,15 +35,43 @@
                     <a href="{{ route('map', request()->except(['month'])) }}" aria-pressed="false">Map</a>
                 </div>
 
+                {{--
+                    Primary bar reads left-to-right as When / Sport /
+                    Location / More filters — the four questions a
+                    shooter actually asks when scanning the calendar.
+                    Training, New shooter, Confirmed only, radius and
+                    custom dates now live inside the More panel so the
+                    default view stays legible on a phone.
+                --}}
                 <div class="mb-toolbar-chips filters" role="group" aria-label="Primary match filters">
+                    <span class="mb-chip-label" aria-hidden="true">When</span>
                     <button type="button" class="mb-chip" wire:click="toggleWeekend" aria-pressed="{{ $weekend ? 'true' : 'false' }}">This weekend</button>
-                    <button type="button" class="mb-chip is-default" wire:click="setFamily('all')" aria-pressed="{{ $family === 'all' ? 'true' : 'false' }}">All disciplines</button>
-                    @foreach ($families as $item)
-                        <button type="button" class="mb-chip" wire:click="setFamily('{{ $item->value }}')" aria-pressed="{{ $family === $item->value ? 'true' : 'false' }}">{{ $item->getLabel() }}</button>
-                    @endforeach
-                    <button type="button" class="mb-chip" wire:click="setKind('training')" aria-pressed="{{ $kind === 'training' ? 'true' : 'false' }}">Training</button>
-                    <button type="button" class="mb-chip" wire:click="setKind('')" aria-pressed="{{ $kind === null || $kind === '' ? 'true' : 'false' }}">All events</button>
-                    <button type="button" class="mb-chip" wire:click="toggleNovice" aria-pressed="{{ $novice ? 'true' : 'false' }}">New shooter</button>
+
+                    <span class="mb-chip-label" aria-hidden="true">Sport</span>
+                    <label class="mb-chip-select">
+                        <span class="sr-only">Sport family</span>
+                        <select wire:model.live="family" aria-label="Sport family">
+                            <option value="all">All sports</option>
+                            @foreach ($families as $item)
+                                <option value="{{ $item->value }}">{{ $item->getLabel() }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+
+                    <span class="mb-chip-label" aria-hidden="true">Where</span>
+                    <label class="mb-chip-select">
+                        <span class="sr-only">Province</span>
+                        <select
+                            aria-label="Province"
+                            wire:change="setProvinceOnly($event.target.value)"
+                        >
+                            <option value="">Any province</option>
+                            @foreach ($provinces as $item)
+                                <option value="{{ $item->urlSlug() }}" @if (in_array($item->urlSlug(), $selectedProvinces, true)) selected @endif>{{ $item->getLabel() }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+
                     <button
                         type="button"
                         class="mb-chip"
@@ -81,6 +109,13 @@
                             <span>New shooter</span>
                             <span aria-hidden="true">×</span>
                             <span class="sr-only">. Clear new shooter filter</span>
+                        </button>
+                    @endif
+                    @if (filled($kind))
+                        <button type="button" class="chip-active" wire:click="clearKind">
+                            <span>{{ $kind === 'training' ? 'Training only' : ucfirst($kind) }}</span>
+                            <span aria-hidden="true">×</span>
+                            <span class="sr-only">. Clear event type filter</span>
                         </button>
                     @endif
                     @if ($confirmed)
@@ -169,6 +204,9 @@
                     <span x-text="locating ? 'Locating…' : 'Use my location'"></span>
                 </button>
                 <button type="button" wire:click="toggleConfirmed" aria-pressed="{{ $confirmed ? 'true' : 'false' }}">Confirmed dates only</button>
+                <button type="button" wire:click="setKind('training')" aria-pressed="{{ $kind === 'training' ? 'true' : 'false' }}">Training only</button>
+                <button type="button" wire:click="clearKind" aria-pressed="{{ $kind === null || $kind === '' ? 'true' : 'false' }}">All event types</button>
+                <button type="button" wire:click="toggleNovice" aria-pressed="{{ $novice ? 'true' : 'false' }}">New-shooter friendly</button>
                 @auth
                     <button
                         type="button"

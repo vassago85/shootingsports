@@ -141,21 +141,16 @@
                             </div>
                         @endif
 
-                        <p class="match-entry-note" style="margin-bottom:14px">
-                            <a href="{{ route('enquiries.listing', ['type' => 'event', 'id' => $event->id]) }}">Ask the organiser</a>
-                        </p>
-                        @if (($host && $host->claimed_by === null) || ($venue && $venue->claimed_by === null))
-                            <p style="margin:0 0 14px;display:flex;flex-wrap:wrap;gap:10px">
-                                @if ($host && $host->claimed_by === null)
-                                    <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'match', 'slug' => $event->slug]) }}">This is my match</a>
-                                @endif
-                                @if ($venue && $venue->claimed_by === null)
-                                    <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'range', 'slug' => $venue->slug]) }}">This is my range</a>
-                                @endif
-                            </p>
-                        @endif
+                        @php
+                            $isPast = $event->hasPassed();
+                            $hasExternalEntry = filled($event->entry_url);
+                            $hasPlatformEntry = $event->openForPlatformEntries();
+                        @endphp
 
-                        @if ($event->entry_url)
+                        {{-- Before the match, Enter is the primary action.
+                             After the date, we stop shouting "Enter here"
+                             so the personal log takes the lead below. --}}
+                        @if (! $isPast && $hasExternalEntry)
                             <div class="match-entry-cta">
                                 <a
                                     class="btn"
@@ -171,7 +166,39 @@
                             </div>
                         @endif
 
-                        <livewire:enter-event :event="$event" :key="'enter-'.$event->id" />
+                        @if (! $isPast && $hasPlatformEntry)
+                            <livewire:enter-event :event="$event" :key="'enter-'.$event->id" />
+                        @endif
+
+                        {{-- Secondary actions. Save + I shot this + Share.
+                             After the match, the personal log promotes. --}}
+                        <div class="match-secondary">
+                            @auth
+                                <livewire:save-to-calendar :event="$event" variant="button" :key="'save-match-'.$event->id" />
+                                <livewire:log-attendance :event="$event" :key="'log-match-'.$event->id" />
+                            @else
+                                <x-auth-gate action="save" :label="$isPast ? 'Add to my calendar' : 'Add to my calendar'" />
+                                <x-auth-gate action="log" label="I shot this" />
+                            @endauth
+                            <button
+                                type="button"
+                                class="btn ghost"
+                                data-share
+                                data-share-title="{{ $event->title }}"
+                                data-share-url="{{ route('events.show', $event->slug) }}"
+                            >Share</button>
+                        </div>
+
+                        @if ($isPast && $hasExternalEntry)
+                            <p class="match-entry-note" style="margin-top:12px">
+                                Entries closed. External entry page was
+                                <a href="{{ $event->entry_url }}" rel="noopener noreferrer" target="_blank">{{ parse_url($event->entry_url, PHP_URL_HOST) ?: 'the host page' }}</a>.
+                            </p>
+                        @endif
+
+                        <p class="match-entry-note" style="margin-top:14px">
+                            <a href="{{ route('enquiries.listing', ['type' => 'event', 'id' => $event->id]) }}">Ask the organiser</a>
+                        </p>
 
                         @if ($articles->isNotEmpty())
                             <div class="match-partners">
@@ -183,16 +210,6 @@
                                 </ul>
                             </div>
                         @endif
-
-                        <div class="match-secondary">
-                            @auth
-                                <livewire:save-to-calendar :event="$event" variant="button" :key="'save-match-'.$event->id" />
-                                <livewire:log-attendance :event="$event" :key="'log-match-'.$event->id" />
-                            @else
-                                <a class="btn ghost" href="{{ route('login') }}">Add to my calendar</a>
-                                <a class="btn ghost" href="{{ route('login') }}">I shot this</a>
-                            @endauth
-                        </div>
 
                         @if ($hostUrl || $rangeUrl)
                             <p class="match-named-links">
@@ -207,7 +224,63 @@
                         @endif
                     </aside>
                 </div>
+
+                @if (($relatedEvents ?? collect())->isNotEmpty())
+                    {{-- Same-discipline upcoming matches. Uses the
+                         shared calendar card so pills, dates and
+                         status match the rest of the site. --}}
+                    <section class="match-related">
+                        <div class="sec-head">
+                            <p class="label">Also on the calendar</p>
+                            <h2>Other {{ $event->primaryDiscipline()?->name ?? 'matches' }} coming up</h2>
+                        </div>
+                        <div class="dope-grid">
+                            @foreach ($relatedEvents as $related)
+                                <x-event-card :event="$related" />
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
+
+                {{-- Owner / admin panel — sits at the bottom so shooter
+                     actions above stay uncluttered. Only rendered when
+                     something is genuinely unclaimed. --}}
+                @if (($host && $host->claimed_by === null) || ($venue && $venue->claimed_by === null))
+                    <x-owner-panel title="For match directors & range operators">
+                        <p>Recognise this match or venue? Claim it and unlock director tools.</p>
+                        <div class="owner-actions">
+                            @if ($host && $host->claimed_by === null)
+                                <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'match', 'slug' => $event->slug]) }}">This is my match</a>
+                            @endif
+                            @if ($venue && $venue->claimed_by === null)
+                                <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'range', 'slug' => $venue->slug]) }}">This is my range</a>
+                            @endif
+                        </div>
+                    </x-owner-panel>
+                @endif
             </div>
         </section>
     </main>
+
+    <script>
+        document.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-share]');
+            if (! button) { return; }
+            const url = button.getAttribute('data-share-url') || window.location.href;
+            const title = button.getAttribute('data-share-title') || document.title;
+            if (navigator.share) {
+                navigator.share({ title, url }).catch(() => {});
+                return;
+            }
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(() => {
+                    const original = button.textContent;
+                    button.textContent = 'Link copied';
+                    setTimeout(() => { button.textContent = original; }, 2000);
+                }).catch(() => window.prompt('Copy link', url));
+                return;
+            }
+            window.prompt('Copy link', url);
+        });
+    </script>
 </x-layouts.public>

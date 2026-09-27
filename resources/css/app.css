@@ -151,6 +151,78 @@ header.nav {
     text-transform: uppercase; color: #c6ccc9; text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent;
 }
 .nav-links a:hover, .nav-links a.on { color: #fff; border-bottom-color: var(--brass); }
+/* Nav hub (Find). Toggle matches the plain nav link exactly so
+   the header rhythm stays intact; the panel below is a small
+   popover anchored to the toggle with the same colour tokens as
+   the header. */
+.nav-hub { position: relative; display: inline-flex; align-items: center; }
+.nav-hub-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: transparent; border: 0; cursor: pointer;
+    font-family: var(--f-display); font-size: 15px; font-weight: 500; letter-spacing: .05em;
+    text-transform: uppercase; color: #c6ccc9; padding: 4px 0;
+    border-bottom: 2px solid transparent;
+}
+.nav-hub-toggle:hover, .nav-hub-toggle.on { color: #fff; border-bottom-color: var(--brass); }
+.nav-hub-caret { flex: 0 0 auto; opacity: .8; }
+.nav-hub-panel {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 40;
+    min-width: 220px; padding: 8px; display: grid; gap: 2px;
+    background: var(--gunmetal-2); border: 1px solid rgba(255,255,255,.08);
+    border-top: 2px solid var(--brass);
+    box-shadow: 0 12px 32px rgba(0,0,0,.35);
+}
+.nav-hub-panel a {
+    display: block; padding: 10px 12px; color: #d6dad8; text-decoration: none;
+    font-family: var(--f-display); font-size: 14px; letter-spacing: .04em; text-transform: uppercase;
+    border-bottom: 0;
+}
+.nav-hub-panel a:hover, .nav-hub-panel a.on { color: #fff; background: rgba(255,255,255,.05); border-bottom: 0; }
+[x-cloak] { display: none !important; }
+
+/* Contextual auth gate. Small popover anchored to a ghost button
+   so a logged-out shooter sees *why* the action wants an account,
+   before we send them to /register or /login. */
+.auth-gate { position: relative; display: inline-block; }
+.auth-gate-panel {
+    position: absolute; z-index: 60; top: calc(100% + 8px); left: 0;
+    min-width: 280px; max-width: 320px; padding: 18px;
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--brass);
+    box-shadow: 0 18px 42px rgba(0, 0, 0, .18);
+}
+.auth-gate-panel h3 {
+    font-family: var(--f-display); font-size: 16px; letter-spacing: .04em;
+    text-transform: uppercase; margin: 0 0 6px;
+}
+.auth-gate-panel p { margin: 0 0 14px; color: var(--slate); font-size: 14px; line-height: 1.5; }
+.auth-gate-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.auth-gate-actions .btn { padding: 8px 14px; font-size: 13px; }
+.auth-gate-close {
+    position: absolute; top: 6px; right: 8px;
+    width: 28px; height: 28px; padding: 0; line-height: 1;
+    background: transparent; border: 0; color: var(--slate); cursor: pointer;
+    font-size: 22px;
+}
+.auth-gate-close:hover { color: var(--ink); }
+.auth-gate-note { margin: 10px 0 0 !important; font-size: 11px !important; color: var(--slate); }
+
+/* Owner / operator panel. Sits at the bottom of a public profile
+   for claim + manage tools. Uses the surface tone so it clearly
+   belongs to admins and does not fight with shooter actions. */
+.owner-panel {
+    margin: 36px 0 0; padding: 22px 20px;
+    background: var(--surface-2, #f2efe8);
+    border: 1px solid var(--rule); border-top: 3px solid var(--slate);
+}
+.owner-panel-head h2 {
+    font-family: var(--f-display); font-size: 15px; letter-spacing: .1em;
+    text-transform: uppercase; margin: 0 0 12px; color: var(--slate);
+}
+.owner-panel-body { display: grid; gap: 12px; }
+.owner-panel-body > p { margin: 0; color: var(--slate); }
+.owner-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .nav .btn { padding: 8px 16px; font-size: 14px; }
 .hamburger { display: none; color: #e6e9e7; padding: 8px; }
 .mobile-menu { display: none; }
@@ -159,7 +231,19 @@ header.nav {
     display: block; padding: 13px 24px; color: #d6dad8; text-decoration: none;
     font-family: var(--f-display); text-transform: uppercase; letter-spacing: .05em;
     border-bottom: 1px solid rgba(255,255,255,.06);
+    min-height: 44px;
 }
+.mobile-hub { border-bottom: 1px solid rgba(255,255,255,.06); }
+.mobile-hub-label {
+    display: block; padding: 13px 24px 6px; color: #98a19d;
+    font-family: var(--f-display); text-transform: uppercase; letter-spacing: .08em; font-size: 12px;
+}
+.mobile-hub .mobile-hub-item {
+    padding: 12px 24px 12px 40px; border-bottom: 1px solid rgba(255,255,255,.04);
+    text-transform: uppercase; letter-spacing: .04em; font-size: 14px;
+}
+.mobile-hub .mobile-hub-item:last-child { border-bottom: 0; }
+.mobile-menu a.on, .mobile-menu .mobile-hub-item.on { color: #fff; background: rgba(255,255,255,.04); }
 @media (max-width: 900px) { .nav-links, .nav-cta { display: none; } .hamburger { display: block; } }
 
 .hero { position: relative; overflow: hidden; background: var(--gunmetal); color: #eef0ee; }
@@ -655,7 +739,8 @@ section.block { padding: 72px 0; }
     border-top: 1px solid var(--mb-rule);
 }
 .mb-toolbar-chips {
-    display: flex; flex-wrap: wrap; gap: 6px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+    align-items: center;
     grid-column: 1 / -1;
     /* Hydration is handled by the shared `.filters` chip rules — do not
        add a second pointer-events gate on the container or a morph that
@@ -676,6 +761,29 @@ section.block { padding: 72px 0; }
     background: var(--mb-accent); border-color: var(--mb-accent); color: #1a1405;
 }
 .mb-chip[aria-expanded="true"] { border-color: var(--mb-accent-lt); color: var(--mb-accent-lt); }
+
+/* Small When / Sport / Where labels between chip groups so the four
+   primary questions read as headings, not free-floating controls. */
+.mb-chip-label {
+    font-family: var(--f-mono); font-size: 10px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--mb-ink-muted); padding-right: 2px;
+}
+.mb-chip-select { display: inline-flex; }
+.mb-chip-select select {
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase; padding: 6px 24px 6px 12px;
+    background: transparent; border: 1px solid var(--mb-rule-strong);
+    color: var(--mb-ink-muted); cursor: pointer;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 12px) 12px, calc(100% - 8px) 12px;
+    background-size: 4px 4px, 4px 4px;
+    background-repeat: no-repeat;
+}
+.mb-chip-select select:hover, .mb-chip-select select:focus {
+    color: var(--mb-accent-lt); border-color: var(--mb-accent-lt); outline: none;
+}
 
 /* View toggle (List / Month / Map) inside the toolbar. Dark chrome override
    for the shared `.view-toggle` — keeps the same class name so existing tests
@@ -1183,6 +1291,31 @@ section.block { padding: 72px 0; }
     transition: background .15s ease;
 }
 .dope-primary:hover, .dope-primary:focus-visible { background: var(--brass-dk); color: #fff; outline: none; }
+
+/* Registration is visually split into two steps so the shooter
+   sees "Your account" first and only meets the role choices once
+   the basics are in view. Same one-page form, less crammed. */
+.reg-step + .reg-step { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--rule); }
+.reg-step-label {
+    color: var(--slate); font-family: var(--f-mono); font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 10px;
+    display: flex; align-items: center; gap: 8px;
+}
+.reg-step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 999px;
+    background: var(--brand); color: #10251f; font-weight: 700; font-size: 12px;
+    font-family: var(--f-sans); letter-spacing: 0;
+}
+.reg-step-optional { color: var(--slate); text-transform: none; letter-spacing: 0; font-size: 12px; font-family: var(--f-sans); }
+
+/* Auth gate on cards sits above the whole-card overlay so the
+   popover fires its own click, not the card link underneath. */
+.dope-save-gate {
+    position: relative; z-index: 2; padding: 8px 10px;
+    border-top: 1px solid var(--rule); background: transparent;
+}
+.dope-save-gate .auth-gate-trigger { width: 100%; font-size: 11px; }
 
 /* Add-to-calendar is the ghost secondary — lower emphasis, still
    above the whole-card overlay so its own click fires. */

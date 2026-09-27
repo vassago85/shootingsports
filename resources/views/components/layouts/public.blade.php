@@ -37,15 +37,7 @@
             <a class="brand" href="{{ route('home') }}">
                 <x-brand-logo />
             </a>
-            <nav class="nav-links" aria-label="Primary">
-                <a href="{{ route('calendar') }}" class="{{ request()->routeIs('calendar') && ! request()->routeIs('calendar.month') ? 'on' : '' }}">Events</a>
-                <a href="{{ route('disciplines.index') }}" class="{{ request()->routeIs('disciplines.*') ? 'on' : '' }}">Sports</a>
-                <a href="{{ route('find') }}" class="{{ request()->routeIs('find') ? 'on' : '' }}">Find</a>
-                <a href="{{ route('feed') }}" class="{{ request()->routeIs('feed') ? 'on' : '' }}">Activity</a>
-                <a href="{{ route('clubs.index') }}" class="{{ request()->routeIs('clubs.*') || request()->routeIs('federations.*') ? 'on' : '' }}">Clubs</a>
-                <a href="{{ route('ranges.index') }}" class="{{ request()->routeIs('ranges.*') ? 'on' : '' }}">Ranges</a>
-                <a href="{{ route('suppliers.index') }}" class="{{ request()->routeIs('suppliers.*') ? 'on' : '' }}">Industry</a>
-            </nav>
+            <x-public-nav />
             <div class="nav-cta">
                 <a class="nav-search" href="{{ route('calendar') }}" aria-label="Search">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -76,37 +68,7 @@
             </div>
             <button class="hamburger" id="burger" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">Menu</button>
         </div>
-        <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile">
-            <a href="{{ route('calendar') }}">Events</a>
-            <a href="{{ route('calendar.month') }}">Calendar</a>
-            <a href="{{ route('disciplines.index') }}">Sports</a>
-            <a href="{{ route('find') }}">Find</a>
-            <a href="{{ route('feed') }}">Activity</a>
-            <a href="{{ route('clubs.index') }}">Clubs</a>
-            <a href="{{ route('ranges.index') }}">Ranges</a>
-            <a href="{{ route('suppliers.index') }}">Industry</a>
-            <a href="{{ route('claim') }}">For Clubs</a>
-            @auth
-                <a href="{{ route('my-calendar') }}">My calendar</a>
-                <a href="{{ route('my-log') }}">My log</a>
-                <a href="{{ route('settings.notifications') }}">Notifications</a>
-                @if (auth()->user()?->is_staff || auth()->user()?->is_match_director || auth()->user()?->is_media_partner)
-                    <a href="{{ url('/desk') }}">Desk</a>
-                @endif
-                @unless (auth()->user()->is_staff || auth()->user()->is_match_director)
-                    <a href="{{ route('events.submit') }}">Submit an event</a>
-                @endunless
-                @if (auth()->user()?->isSupplier())
-                    <a href="{{ route('suppliers.onboard') }}">My business</a>
-                @else
-                    <a href="{{ route('suppliers.start') }}">List your business</a>
-                @endif
-            @else
-                <a href="{{ route('login') }}">Sign in</a>
-                <a href="{{ route('register') }}">Create an account</a>
-            @endauth
-            <a href="{{ route('advertise') }}">Advertise</a>
-        </nav>
+        <x-public-nav-mobile />
     </header>
 
     {{ $slot }}
@@ -150,9 +112,12 @@
                     <ul>
                         <li><a href="{{ route('calendar') }}">Events</a></li>
                         <li><a href="{{ route('disciplines.index') }}">Sports</a></li>
-                        <li><a href="{{ route('clubs.index') }}">Clubs &amp; series</a></li>
+                        <li><a href="{{ route('clubs.index') }}">Clubs</a></li>
                         <li><a href="{{ route('ranges.index') }}">Ranges</a></li>
+                        <li><a href="{{ route('map') }}">Events near me</a></li>
+                        <li><a href="{{ route('find') }}">Which sport fits me</a></li>
                         <li><a href="{{ route('suppliers.index') }}">Industry</a></li>
+                        <li><a href="{{ route('feed') }}">Activity</a></li>
                     </ul>
                 </div>
                 <div>

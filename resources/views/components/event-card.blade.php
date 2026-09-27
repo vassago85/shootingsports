@@ -112,6 +112,11 @@
     @auth
         <livewire:save-to-calendar :event="$event" :key="'save-'.$event->id" />
     @else
-        <a class="dope-save" href="{{ route('login') }}">Add to my calendar</a>
+        {{-- Guest gets a contextual auth panel rather than an
+             unexplained /login redirect. Wrapped in a container that
+             overlays the whole-card link so the popover clicks fire. --}}
+        <div class="dope-save-gate">
+            <x-auth-gate action="save" label="Add to my calendar" />
+        </div>
     @endauth
 </article>

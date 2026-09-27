@@ -110,6 +110,11 @@ class CalendarMonth extends Component
         $this->province = null;
     }
 
+    public function setProvinceOnly(?string $slug): void
+    {
+        $this->province = filled($slug) ? $slug : null;
+    }
+
     public function clearFamily(): void
     {
         $this->family = 'all';

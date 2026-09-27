@@ -101,9 +101,16 @@ class VenueResource extends Resource
                     ->numeric(),
                 TextInput::make('bay_count')
                     ->numeric(),
+                // No auto-fill: "Guest by arrangement" used to be the
+                // default on every new venue, which meant the public
+                // page claimed guest access on every listing whether
+                // an operator ever confirmed it or not. Staff must
+                // pick a value explicitly; the DB column is NOT NULL
+                // so the field stays `required` here.
                 Select::make('access')
                     ->options(VenueAccess::class)
-                    ->default('guest_by_arrangement')
+                    ->native(false)
+                    ->placeholder('Pick one')
                     ->required(),
                 TextInput::make('day_fee_cents')
                     ->numeric(),

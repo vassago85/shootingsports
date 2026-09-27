@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Enums\Division;
 use App\Enums\ListingStatus;
 use App\Enums\Province;
+use App\Models\Discipline;
 use App\Models\Organisation;
 use App\Queries\PublicEventQuery;
 use App\Services\Discovery\DiscoveryStats;
 use App\Support\JsonLd;
 use App\Support\Seo;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -25,6 +27,11 @@ class OrganisationController extends Controller
         $division = Division::fromPublicQuery($request->string('division')->toString());
         $town = trim($request->string('town')->toString());
         $visitors = $request->boolean('visitors');
+        $search = trim($request->string('q')->toString());
+        $disciplineSlug = trim($request->string('discipline')->toString());
+        $selectedDiscipline = $disciplineSlug !== ''
+            ? Discipline::query()->where('slug', $disciplineSlug)->first()
+            : null;
 
         $clubs = Organisation::query()
             ->published()
@@ -34,6 +41,26 @@ class OrganisationController extends Controller
             ->when($division, fn ($q) => $q->inDivision($division))
             ->when($town !== '', fn ($q) => $q->where('town', 'like', '%'.addcslashes($town, '%_\\').'%'))
             ->when($visitors, fn ($q) => $q->where('visitors_welcome', true))
+            ->when($search !== '', function (Builder $q) use ($search): void {
+                $like = '%'.addcslashes($search, '%_\\').'%';
+                $q->where(function (Builder $inner) use ($like): void {
+                    $inner->where('name', 'like', $like)
+                        ->orWhere('tagline', 'like', $like);
+                });
+            })
+            ->when($selectedDiscipline, function (Builder $q) use ($selectedDiscipline): void {
+                // Union pivot + event history: a club that runs
+                // published matches in the discipline still qualifies
+                // even if disciplinables was never populated.
+                $treeIds = $selectedDiscipline->treeIds();
+                $q->where(function (Builder $inner) use ($treeIds): void {
+                    $inner->whereHas('disciplines', fn (Builder $d) => $d->whereIn('disciplines.id', $treeIds))
+                        ->orWhereHas('hostedEvents', function (Builder $e) use ($treeIds): void {
+                            $e->published()
+                                ->whereHas('disciplines', fn (Builder $d) => $d->whereIn('disciplines.id', $treeIds));
+                        });
+                });
+            })
             ->orderBy('name')
             ->get();
 
@@ -59,12 +86,24 @@ class OrganisationController extends Controller
             ['name' => 'Clubs & series', 'url' => route('clubs.index')],
         ]);
 
+        // Disciplines dropdown: only publish-eligible top-level
+        // disciplines, ordered by name — same UX as the ranges
+        // filter.
+        $disciplines = Discipline::query()
+            ->where('is_published', true)
+            ->whereNull('parent_id')
+            ->orderBy('name')
+            ->get();
+
         return view('public.clubs.index', [
             'clubs' => $clubs,
             'province' => $province,
             'division' => $division,
             'town' => $town,
             'visitors' => $visitors,
+            'search' => $search,
+            'selectedDiscipline' => $selectedDiscipline,
+            'disciplines' => $disciplines,
             'provinces' => Province::cases(),
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,

@@ -172,8 +172,11 @@ it('Discover renders "No matches listed yet" copy on zero-upcoming tiles', funct
 it('layout always shows the Industry footer and nav links', function () {
     $html = $this->get(route('home'))->getContent();
 
-    expect(substr_count($html, '>Industry</a>'))->toBeGreaterThanOrEqual(2)
-        ->and($html)->toContain('href="'.route('suppliers.index').'"');
+    // Nav bar + footer + mobile drawer each ship one Industry link
+    // to the same /suppliers URL. Substring count instead of markup
+    // shape so the exact tag attributes don't matter.
+    expect(substr_count($html, 'href="'.route('suppliers.index').'"'))->toBeGreaterThanOrEqual(2)
+        ->and(substr_count($html, '>Industry<'))->toBeGreaterThanOrEqual(2);
 });
 
 it('homepage hides the "Industry" hero stat when directory is not populated', function () {

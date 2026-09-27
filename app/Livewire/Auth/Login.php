@@ -31,6 +31,27 @@ class Login extends Component
 
     public bool $remember = false;
 
+    public function mount(): void
+    {
+        // Support ?redirect=<url> from the contextual auth gate so
+        // "Save to my calendar" bounces back to the page it started
+        // on. Reuses Laravel's intended-URL machinery via
+        // `redirect()->setIntendedUrl()` so `redirectIntended()`
+        // below keeps working unchanged.
+        $intended = (string) request()->query('redirect', '');
+
+        if ($intended !== '' && $this->isSafeInternalUrl($intended)) {
+            redirect()->setIntendedUrl($intended);
+        }
+    }
+
+    private function isSafeInternalUrl(string $url): bool
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+
+        return $host === null || $host === request()->getHost();
+    }
+
     public function authenticate(): void
     {
         $this->validate();

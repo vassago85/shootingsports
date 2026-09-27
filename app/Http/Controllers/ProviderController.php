@@ -17,6 +17,7 @@ class ProviderController extends Controller
     public function index(Request $request): View
     {
         $division = Division::fromPublicQuery($request->string('division')->toString());
+        $search = trim($request->string('q')->toString());
 
         $listed = Provider::query()
             ->published()
@@ -33,6 +34,40 @@ class ProviderController extends Controller
 
                 return [$category->value => $primary->concat($secondary)->values()];
             });
+
+        // In-memory search across the tier-ordered listing. Keeping
+        // the filter here means the page still renders the category
+        // grid; the search results sit above it so a shooter who
+        // just wants "Bidvest" finds them without picking a category
+        // first.
+        $matches = collect();
+
+        if ($search !== '') {
+            $needle = mb_strtolower($search);
+            $matches = $listed->filter(function (Provider $provider) use ($needle): bool {
+                $haystacks = [
+                    $provider->name,
+                    $provider->tagline,
+                    $provider->description,
+                    $provider->town,
+                    $provider->province?->getLabel(),
+                    $provider->metro?->getLabel(),
+                    $provider->category?->getLabel(),
+                ];
+
+                foreach ($provider->offeredCategories() as $offer) {
+                    $haystacks[] = $offer->getLabel();
+                }
+
+                foreach ($haystacks as $value) {
+                    if ($value !== null && str_contains(mb_strtolower((string) $value), $needle)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            })->values();
+        }
 
         $total = $listed->count();
         $countPhrase = match ($total) {
@@ -63,6 +98,8 @@ class ProviderController extends Controller
 
         return view('public.suppliers.index', [
             'grouped' => $providers,
+            'matches' => $matches,
+            'search' => $search,
             'division' => $division,
             'categories' => ProviderCategory::publicCases(),
             'seoTitle' => $seoTitle,
@@ -128,8 +165,19 @@ class ProviderController extends Controller
 
         $provider->load('disciplines');
 
+        // Sponsored / partnered matches that are still open. Only
+        // rendered when there is at least one; nothing shows for a
+        // supplier with no partnerships. Draft matches are excluded
+        // by `upcoming()` (which composes `published()`).
+        $sponsoredEvents = $provider->sponsoredEvents()
+            ->upcoming()
+            ->with(['hostOrganisation', 'venue', 'disciplines', 'flags', 'banner'])
+            ->limit(6)
+            ->get();
+
         return view('public.suppliers.show', [
             'provider' => $provider,
+            'sponsoredEvents' => $sponsoredEvents,
             'seo' => Seo::forProvider($provider),
             'jsonLd' => [
                 JsonLd::provider($provider),

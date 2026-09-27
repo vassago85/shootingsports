@@ -10,6 +10,19 @@
                     <input type="hidden" name="division" value="{{ $division->value }}">
                 @endif
                 <label class="dir-field">
+                    <span>Search</span>
+                    <input type="search" name="q" value="{{ $search }}" placeholder="Club name">
+                </label>
+                <label class="dir-field">
+                    <span>Sport</span>
+                    <select name="discipline">
+                        <option value="">Any sport</option>
+                        @foreach ($disciplines as $sport)
+                            <option value="{{ $sport->slug }}" @selected($selectedDiscipline?->is($sport))>{{ $sport->name }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label class="dir-field">
                     <span>Province</span>
                     <select name="province">
                         <option value="">Any province</option>
@@ -23,7 +36,8 @@
                     <input type="search" name="town" value="{{ $town }}" placeholder="Town or area">
                 </label>
                 <label class="dir-check">
-                    <input type="checkbox" name="visitors" value="1" @checked($visitors)> Visitors welcome
+                    <input type="checkbox" name="visitors" value="1" @checked($visitors)>
+                    <span>Only show clubs that welcome visitors</span>
                 </label>
                 <button class="btn dir-filter" type="submit">Filter</button>
             </form>
@@ -53,7 +67,17 @@
                             <span class="dir-chev" aria-hidden="true">›</span>
                         </a>
                     @empty
-                        <p class="empty">No clubs match these filters.</p>
+                        <div class="empty">
+                            <p>No clubs match these filters.</p>
+                            {{-- Useful next actions instead of a dead
+                                 end: clearing filters and browsing the
+                                 wider register both bring the shooter
+                                 back somewhere they can act. --}}
+                            <p style="margin-top:10px">
+                                <a class="btn ghost" href="{{ route('clubs.index') }}">Clear filters</a>
+                                <a class="btn ghost" href="{{ route('disciplines.index') }}">Explore shooting sports</a>
+                            </p>
+                        </div>
                     @endforelse
                 </div>
                 <aside class="dir-aside">

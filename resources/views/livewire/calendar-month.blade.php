@@ -23,12 +23,36 @@
                 <a href="{{ route('map', request()->except(['month'])) }}" aria-pressed="false">Map</a>
             </div>
 
+            {{-- Same When / Sport / Where / More filters priority as
+                 the list view so the two Events surfaces feel like
+                 one place. Month doesn't need a "This weekend" chip
+                 (the month grid already renders every weekend). --}}
             <div class="mb-toolbar-chips filters" role="group" aria-label="Primary match filters">
-                <button type="button" class="mb-chip is-default" wire:click="setFamily('all')" aria-pressed="{{ $family === 'all' ? 'true' : 'false' }}">All disciplines</button>
-                @foreach ($families as $item)
-                    <button type="button" class="mb-chip" wire:click="setFamily('{{ $item->value }}')" aria-pressed="{{ $family === $item->value ? 'true' : 'false' }}">{{ $item->getLabel() }}</button>
-                @endforeach
-                <button type="button" class="mb-chip" wire:click="toggleNovice" aria-pressed="{{ $novice ? 'true' : 'false' }}">New shooter</button>
+                <span class="mb-chip-label" aria-hidden="true">Sport</span>
+                <label class="mb-chip-select">
+                    <span class="sr-only">Sport family</span>
+                    <select wire:model.live="family" aria-label="Sport family">
+                        <option value="all">All sports</option>
+                        @foreach ($families as $item)
+                            <option value="{{ $item->value }}">{{ $item->getLabel() }}</option>
+                        @endforeach
+                    </select>
+                </label>
+
+                <span class="mb-chip-label" aria-hidden="true">Where</span>
+                <label class="mb-chip-select">
+                    <span class="sr-only">Province</span>
+                    <select
+                        aria-label="Province"
+                        wire:change="setProvinceOnly($event.target.value)"
+                    >
+                        <option value="">Any province</option>
+                        @foreach ($provinces as $item)
+                            <option value="{{ $item->urlSlug() }}" @if (in_array($item->urlSlug(), $selectedProvinces, true)) selected @endif>{{ $item->getLabel() }}</option>
+                        @endforeach
+                    </select>
+                </label>
+
                 <button
                     type="button"
                     class="mb-chip"
@@ -133,6 +157,7 @@
                 <span x-text="locating ? 'Locating…' : 'Use my location'"></span>
             </button>
             <button type="button" wire:click="toggleConfirmed" aria-pressed="{{ $confirmed ? 'true' : 'false' }}">Confirmed dates only</button>
+            <button type="button" wire:click="toggleNovice" aria-pressed="{{ $novice ? 'true' : 'false' }}">New-shooter friendly</button>
         </div>
 
         <div class="mb-more-toggles filters" role="group" aria-label="Filter matches by province">

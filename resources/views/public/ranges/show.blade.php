@@ -26,7 +26,19 @@
                         @endforeach
                     </div>
                 @endif
-                @if ($venue->max_distance_m || $venue->bay_count || $venue->access || $venue->day_fee_cents || $venue->metro)
+                @php
+                    // Access is a promise to visitors — "Guest by
+                    // arrangement" only shows when an operator has
+                    // confirmed it, not on the auto-fill of every
+                    // fresh listing.
+                    $accessIsTrusted = $venue->access
+                        && in_array(
+                            $venue->verification_state,
+                            [\App\Enums\VerificationState::Verified, \App\Enums\VerificationState::Ageing],
+                            true,
+                        );
+                @endphp
+                @if ($venue->max_distance_m || $venue->bay_count || $accessIsTrusted || $venue->day_fee_cents || $venue->metro)
                 <dl class="dope-rows" style="max-width:420px;padding:0 0 28px">
                     @if ($venue->max_distance_m)
                         <div class="r"><dt>Max distance</dt><dd>{{ number_format($venue->max_distance_m) }} m</dd></div>
@@ -34,7 +46,7 @@
                     @if ($venue->bay_count)
                         <div class="r"><dt>Bays</dt><dd>{{ $venue->bay_count }}</dd></div>
                     @endif
-                    @if ($venue->access)
+                    @if ($accessIsTrusted)
                         <div class="r"><dt>Access</dt><dd>{{ $venue->access->getLabel() }}</dd></div>
                     @endif
                     @if ($venue->day_fee_cents)
@@ -45,11 +57,28 @@
                     @endif
                 </dl>
                 @endif
-                <p style="margin:0 0 28px">
+                @php
+                    // `facilities` is a JSON list, so `filled()` alone
+                    // isn't enough — a saved [] round-trips as an empty
+                    // array. Only render when there is at least one
+                    // truthy entry.
+                    $facilities = collect($venue->facilities ?? [])
+                        ->filter(fn ($item): bool => filled($item))
+                        ->values();
+                @endphp
+                @if ($facilities->isNotEmpty())
+                    <section class="range-facilities" style="margin:0 0 24px">
+                        <p class="label">On site</p>
+                        <ul style="list-style:disc;padding-left:20px;margin:0;display:grid;gap:4px;color:var(--slate)">
+                            @foreach ($facilities as $facility)
+                                <li>{{ $facility }}</li>
+                            @endforeach
+                        </ul>
+                    </section>
+                @endif
+                <p style="margin:0 0 28px;display:flex;gap:10px;flex-wrap:wrap">
                     <a class="btn" href="{{ route('enquiries.listing', ['type' => 'venue', 'id' => $venue->id]) }}">Enquire via platform</a>
-                    @if ($venue->claimed_by === null)
-                        <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'range', 'slug' => $venue->slug]) }}">This is my range</a>
-                    @endif
+                    <a class="btn ghost" href="{{ $venue->directionsUrl() }}" rel="noopener noreferrer" target="_blank">Directions</a>
                 </p>
                 @if ($inferredDisciplines->isNotEmpty())
                     <div class="club-tags" style="margin-bottom:28px">
@@ -87,7 +116,18 @@
                     </ul>
                 @endif
 
-                <x-embed-snippet :venue="$venue->slug" />
+                <x-owner-panel title="For range operators">
+                    <p>Manage this range — update details, publish events at this venue, or embed the calendar on your site.</p>
+                    <div class="owner-actions">
+                        @if ($venue->claimed_by === null)
+                            <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'range', 'slug' => $venue->slug]) }}">This is my range</a>
+                        @endif
+                        <a class="btn ghost" href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}">Operator login</a>
+                    </div>
+                    <div class="owner-embed">
+                        <x-embed-snippet :venue="$venue->slug" />
+                    </div>
+                </x-owner-panel>
             </div>
         </section>
     </main>

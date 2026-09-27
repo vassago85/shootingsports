@@ -37,7 +37,11 @@
                     </select>
                 </label>
                 <label class="dir-field">
-                    <span>Maximum distance</span>
+                    {{-- Labelled "Minimum" because the query filters
+                         for ranges that go *at least* this far — the
+                         old "Maximum" label had shooters expecting a
+                         cap. --}}
+                    <span>Minimum range distance</span>
                     <select name="min_distance">
                         <option value="">Any</option>
                         @foreach ([100, 300, 600, 1000] as $metres)
@@ -55,7 +59,12 @@
                     </select>
                 </label>
                 <label class="dir-check">
-                    <input type="checkbox" name="visitors" value="1" @checked($visitors)> Visitors allowed
+                    {{-- Explicit checkbox instead of the ambiguous
+                         "Visitors allowed" ghost chip. Filters to
+                         ranges an operator has actually confirmed
+                         are open to visitors. --}}
+                    <input type="checkbox" name="visitors" value="1" @checked($visitors)>
+                    <span>Only show ranges that allow visitors</span>
                 </label>
                 <button class="btn dir-filter" type="submit">Filter</button>
             </form>
@@ -89,7 +98,18 @@
                                 @if ($venue->max_distance_m)
                                     <span>{{ number_format($venue->max_distance_m) }} m</span>
                                 @endif
-                                @if ($venue->access)
+                                @php
+                                    // Same rule as the range show page:
+                                    // access is only a claim we make
+                                    // to visitors once verified.
+                                    $accessIsTrusted = $venue->access
+                                        && in_array(
+                                            $venue->verification_state,
+                                            [\App\Enums\VerificationState::Verified, \App\Enums\VerificationState::Ageing],
+                                            true,
+                                        );
+                                @endphp
+                                @if ($accessIsTrusted)
                                     <span>{{ $venue->access->getLabel() }}</span>
                                 @endif
                                 @if ($venue->upcoming_matches_count > 0)
@@ -102,7 +122,16 @@
                             <x-ad-slot page="ranges" placement-slot="in_feed_native" :limit="2" class="ss-partner--tight" hide-when-vacant />
                         @endif
                     @empty
-                        <p class="empty">No ranges match these filters.</p>
+                        <div class="empty">
+                            <p>No ranges match these filters.</p>
+                            {{-- Same next-actions treatment as clubs
+                                 so a shooter with a filter mistake
+                                 lands somewhere they can move. --}}
+                            <p style="margin-top:10px">
+                                <a class="btn ghost" href="{{ route('ranges.index') }}">Clear filters</a>
+                                <a class="btn ghost" href="{{ route('clubs.index') }}">Browse clubs instead</a>
+                            </p>
+                        </div>
                     @endforelse
                 </div>
                 <div id="range-map" class="dir-map"></div>

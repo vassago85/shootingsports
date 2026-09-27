@@ -141,9 +141,13 @@ class DisciplineController extends Controller
         // real event history.
         $clubs = $this->stats->clubsForDiscipline($discipline, $province);
 
-        $ranges = $this->stats->rangesCountForDiscipline($discipline, $province);
+        // Ranges: keep both the count (drives SEO min-listing gate)
+        // and the actual list so the show view can render venues that
+        // host this discipline. Same union pivot ∪ event-history rule
+        // as clubs.
+        $ranges = $this->stats->rangesForDiscipline($discipline, $province);
 
-        $listingCount = $clubs->count() + $events->count() + $ranges;
+        $listingCount = $clubs->count() + $events->count() + $ranges->count();
         $noindex = $province !== null && $listingCount < (int) config('seo.landing_min');
 
         $familySiblings = Discipline::query()
@@ -211,6 +215,7 @@ class DisciplineController extends Controller
             'province' => $province,
             'events' => $events,
             'clubs' => $clubs,
+            'ranges' => $ranges,
             'familySiblings' => $familySiblings,
             'related' => $related,
             'sponsorDivisions' => $discipline->divisions()->take(3)->values(),
@@ -218,6 +223,7 @@ class DisciplineController extends Controller
             'figures' => [
                 'matches' => $events->count(),
                 'clubs' => $clubs->count(),
+                'ranges' => $ranges->count(),
                 'distance' => $discipline->typical_distances,
                 'provinces' => $provincesActive,
             ],

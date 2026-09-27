@@ -83,6 +83,31 @@ class DiscoveryStats
      */
     public function rangesCountForDiscipline(Discipline $discipline, ?Province $province = null): int
     {
+        return $this->rangesForDisciplineQuery($discipline, $province)->count();
+    }
+
+    /**
+     * Ranges (published venues) associated with a discipline — either
+     * via the explicit pivot or by having hosted a published match
+     * in the discipline tree. Ordered by name for stable UI output.
+     *
+     * @return EloquentCollection<int, Venue>
+     */
+    public function rangesForDiscipline(Discipline $discipline, ?Province $province = null): EloquentCollection
+    {
+        return $this->rangesForDisciplineQuery($discipline, $province)
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Shared base query used by the count and the list helpers so
+     * they never drift out of sync.
+     *
+     * @return Builder<Venue>
+     */
+    private function rangesForDisciplineQuery(Discipline $discipline, ?Province $province = null): Builder
+    {
         $treeIds = $discipline->treeIds();
 
         return Venue::query()
@@ -94,8 +119,7 @@ class DiscoveryStats
                         $e->published()
                             ->whereHas('disciplines', fn (Builder $d) => $d->whereIn('disciplines.id', $treeIds));
                     });
-            })
-            ->count();
+            });
     }
 
     /**

@@ -122,6 +122,47 @@
                     <a class="sport-link" href="{{ route('calendar', ['discipline' => $discipline->slug, 'province' => $province?->urlSlug()]) }}">Open in the calendar →</a>
                     <a class="sport-link" href="{{ route('ical.discipline', $discipline->slug) }}">iCal feed →</a>
                 </p>
+            </section>
+
+            @if (($clubs ?? collect())->isNotEmpty())
+                <section id="clubs" class="block">
+                    <div class="sec-head">
+                        <p class="label">Where to shoot</p>
+                        <h2>Clubs that run {{ $discipline->name }}@if ($province) in {{ $province->getLabel() }}@endif</h2>
+                    </div>
+                    <div class="dope-grid">
+                        @foreach ($clubs as $club)
+                            <a class="listing" href="{{ route('clubs.show', $club->slug) }}">
+                                <h3>{{ $club->name }}</h3>
+                                @if ($club->province)
+                                    <p class="meta">{{ $club->province->getLabel() }}</p>
+                                @endif
+                            </a>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+
+            @if (($ranges ?? collect())->isNotEmpty())
+                <section id="ranges" class="block">
+                    <div class="sec-head">
+                        <p class="label">Facilities</p>
+                        <h2>Ranges that host {{ $discipline->name }}@if ($province) in {{ $province->getLabel() }}@endif</h2>
+                    </div>
+                    <div class="dope-grid">
+                        @foreach ($ranges as $range)
+                            <a class="listing" href="{{ route('ranges.show', $range->slug) }}">
+                                <h3>{{ $range->name }}</h3>
+                                @if ($range->province)
+                                    <p class="meta">{{ $range->province->getLabel() }}</p>
+                                @endif
+                            </a>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+
+            <section class="block" style="padding-top:0">
                 @if (($articles ?? collect())->isNotEmpty())
                     <h2 style="margin-top:28px">Activity</h2>
                     <ul>
