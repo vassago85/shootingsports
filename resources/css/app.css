@@ -2591,7 +2591,7 @@ html[lang] body.ss-public .page-hero:not(.has-photo) h1 {
 }
 html[lang] body.ss-public .page-hero:not(.has-photo) p,
 html[lang] body.ss-public .page-hero:not(.has-photo) .label { color: #52655e; }
-html[lang] body.ss-public .page-hero:not(.has-photo) a { color: #245d3f; }
+html[lang] body.ss-public .page-hero:not(.has-photo) a:not(.btn) { color: #245d3f; }
 html[lang] body.ss-public .dir-hero {
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(260px, .9fr);
