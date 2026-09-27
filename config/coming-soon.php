@@ -107,6 +107,7 @@ return [
         '.well-known/*',
         'paystack/*',
         'email/unsubscribe/*',
+        'enquiries/thread/*',
         'mockups/apps',
     ],
 

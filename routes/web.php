@@ -166,6 +166,13 @@ Route::post('/enquiries', [EnquiryController::class, 'store'])
     ->middleware('throttle:10,1')
     ->name('enquiries.store');
 Route::get('/enquiries/thanks', [EnquiryController::class, 'thanks'])->name('enquiries.thanks');
+Route::get('/enquiries/thread/{token}', [EnquiryController::class, 'thread'])
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('enquiries.thread');
+Route::post('/enquiries/thread/{token}', [EnquiryController::class, 'reply'])
+    ->where('token', '[A-Za-z0-9]+')
+    ->middleware('throttle:10,1')
+    ->name('enquiries.thread.reply');
 Route::get('/claim', [StaticPageController::class, 'claim'])->name('claim');
 Route::get('/privacy', [StaticPageController::class, 'privacy'])->name('privacy');
 Route::get('/terms', [StaticPageController::class, 'terms'])->name('terms');

@@ -15,6 +15,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -64,6 +65,8 @@ class EnquiryResource extends Resource
                             ->options(EnquiryStatus::class)
                             ->required(),
                     ]),
+                View::make('filament.enquiries.thread')
+                    ->columnSpanFull(),
             ]);
     }
 

@@ -7,12 +7,13 @@ use App\Enums\EnquiryType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Str;
 
 #[Fillable([
     'type', 'user_id', 'name', 'email', 'phone', 'subject', 'body', 'context',
-    'about_type', 'about_id', 'status', 'ip_address', 'user_agent', 'read_at',
+    'about_type', 'about_id', 'status', 'reply_token', 'ip_address', 'user_agent', 'read_at',
     'confirmation_token', 'confirmation_sent_at', 'confirmed_at',
 ])]
 class Enquiry extends Model
@@ -39,6 +40,11 @@ class Enquiry extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function replies(): HasMany
+    {
+        return $this->hasMany(EnquiryReply::class)->orderBy('id');
     }
 
     public function markRead(): void

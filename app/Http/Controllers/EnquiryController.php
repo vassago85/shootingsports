@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
 use App\Http\Requests\StoreEnquiryRequest;
+use App\Http\Requests\StoreEnquiryThreadReplyRequest;
 use App\Mail\EnquiryReceivedMail;
 use App\Models\Enquiry;
 use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\User;
 use App\Models\Venue;
+use App\Services\Enquiries\RecordEnquiryReply;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
@@ -146,5 +148,42 @@ class EnquiryController extends Controller
     public function thanks(): View
     {
         return view('public.enquiries.thanks');
+    }
+
+    public function thread(string $token): View
+    {
+        $enquiry = $this->enquiryForToken($token);
+        $enquiry->load('replies');
+
+        return view('public.enquiries.thread', [
+            'enquiry' => $enquiry,
+        ]);
+    }
+
+    public function reply(StoreEnquiryThreadReplyRequest $request, string $token, RecordEnquiryReply $replies): RedirectResponse
+    {
+        $enquiry = $this->enquiryForToken($token);
+        $key = 'enquiry-reply:'.$token.'|'.$request->ip();
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            return back()
+                ->withInput()
+                ->withErrors(['body' => 'Too many replies from this network. Please try again later.']);
+        }
+
+        RateLimiter::hit($key, 60 * 15);
+
+        $replies->fromEnquirer($enquiry, $request->validated('body'));
+
+        return redirect()
+            ->route('enquiries.thread', $token)
+            ->with('status', 'Your reply has been sent.');
+    }
+
+    private function enquiryForToken(string $token): Enquiry
+    {
+        return Enquiry::query()
+            ->where('reply_token', $token)
+            ->firstOrFail();
     }
 }

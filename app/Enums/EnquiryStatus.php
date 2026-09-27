@@ -13,6 +13,7 @@ enum EnquiryStatus: string implements HasColor, HasLabel
     case PendingConfirmation = 'pending_confirmation';
     case New = 'new';
     case Read = 'read';
+    case Replied = 'replied';
     case Closed = 'closed';
 
     public function getLabel(): string
@@ -29,6 +30,7 @@ enum EnquiryStatus: string implements HasColor, HasLabel
             self::PendingConfirmation => 'gray',
             self::New => 'warning',
             self::Read => 'info',
+            self::Replied => 'success',
             self::Closed => 'gray',
         };
     }
