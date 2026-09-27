@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             SahuntersVaaldriehoekSeeder::class,
             DwarskloofNightShootSeeder::class,
             PmpscCombinedShootSeeder::class,
+            StagShootingClubSeeder::class,
         ]);
 
         if (! app()->environment('local')) {
