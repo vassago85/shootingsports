@@ -129,6 +129,12 @@ class StaffDashboard extends Page
      * The public-facing register counts, mirrored into the admin
      * dashboard so staff see the same numbers a shooter sees.
      *
+     * Clubs and series are summed under a single "Clubs & series"
+     * tile so the number matches the sidebar resource label and the
+     * home hero (which also collapses the two into one shooter-facing
+     * "Clubs" count). Splitting them would drift the tile away from
+     * the two places a shooter actually sees a "clubs" number.
+     *
      * The `Users` row is admin-only (not exposed publicly) and
      * `Industry` uses the raw published Provider count so staff can
      * see distributor listings that the public directory hides.
@@ -140,7 +146,7 @@ class StaffDashboard extends Page
     {
         return [
             ['label' => 'Upcoming matches', 'value' => $publicCounts['matches'], 'href' => EventResource::getUrl('index')],
-            ['label' => 'Clubs', 'value' => $publicCounts['clubs'], 'href' => OrganisationResource::getUrl('index')],
+            ['label' => 'Clubs & series', 'value' => $publicCounts['clubs'] + $publicCounts['series'], 'href' => OrganisationResource::getUrl('index')],
             ['label' => 'Ranges', 'value' => $publicCounts['ranges'], 'href' => VenueResource::getUrl('index')],
             ['label' => 'Sports', 'value' => $publicCounts['disciplines'], 'href' => DisciplineResource::getUrl('index')],
             ['label' => 'Industry', 'value' => Provider::query()->published()->count(), 'href' => ProviderResource::getUrl('index')],

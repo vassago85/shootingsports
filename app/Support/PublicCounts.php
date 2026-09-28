@@ -40,7 +40,15 @@ class PublicCounts
                 // right now. `published()` would inflate this with
                 // Completed/Cancelled rows a visitor cannot open.
                 'matches' => Event::query()->upcoming()->count(),
-                'disciplines' => Discipline::query()->where('is_published', true)->count(),
+                // Top-level sports only. `whereNull('parent_id')` mirrors
+                // the public `/disciplines` index which lists parent
+                // sports and folds sub-variants under them — counting
+                // sub-variants here would drift by 1–2 versus what the
+                // public actually browses.
+                'disciplines' => Discipline::query()
+                    ->where('is_published', true)
+                    ->whereNull('parent_id')
+                    ->count(),
                 // Provinces is a constant, not a query. Nine provinces
                 // in South Africa, none of them optional.
                 'provinces' => 9,
