@@ -60,6 +60,48 @@ it('merges duplicate venues into primary and archives losers', function () {
         ->and($primary->geocode_source)->toBe(GeocodeSource::Staff);
 });
 
+it('keeps the duplicate photos and profile when the listed range has none', function () {
+    $primary = Venue::factory()->create([
+        'slug' => 'listed-range',
+        'name' => 'Listed Range',
+        'description' => null,
+        'website_url' => null,
+        'image_paths' => null,
+        'logo_path' => null,
+        'max_distance_m' => null,
+        'facilities' => [],
+        'status' => ListingStatus::Published,
+    ]);
+
+    $duplicate = Venue::factory()->create([
+        'slug' => 'listed-range-duplicate',
+        'name' => 'Listed Range Duplicate',
+        'description' => 'On the farm Onbekend.',
+        'website_url' => 'https://wattlespring.co.za',
+        'image_paths' => ['range-images/wattlespring-restaurant.png'],
+        'logo_path' => 'range-logos/wattlespring-logo.png',
+        'max_distance_m' => 100,
+        'facilities' => ['100 m rifle range'],
+        'status' => ListingStatus::Published,
+    ]);
+
+    app(VenueMerger::class)->merge($primary, [$duplicate]);
+
+    $primary->refresh();
+    $duplicate->refresh();
+
+    expect($primary->description)->toBe('On the farm Onbekend.')
+        ->and($primary->website_url)->toBe('https://wattlespring.co.za')
+        ->and($primary->image_paths)->toBe(['range-images/wattlespring-restaurant.png'])
+        ->and($primary->logo_path)->toBe('range-logos/wattlespring-logo.png')
+        ->and($primary->max_distance_m)->toBe(100)
+        ->and($primary->facilities)->toBe(['100 m rifle range'])
+        ->and($duplicate->status)->toBe(ListingStatus::Archived);
+
+    $this->get('/ranges/listed-range-duplicate')
+        ->assertRedirect(route('ranges.show', 'listed-range'));
+});
+
 it('adopts loser pin when primary has none', function () {
     $primary = Venue::factory()->create([
         'lat' => null,

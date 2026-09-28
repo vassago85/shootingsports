@@ -94,7 +94,8 @@ class VenueMerger
     {
         $fillable = [
             'town', 'address', 'metro', 'max_distance_m', 'bay_count',
-            'day_fee_cents', 'facilities', 'notes',
+            'day_fee_cents', 'facilities', 'notes', 'description', 'website_url',
+            'image_paths', 'logo_path',
         ];
 
         $updates = [];
