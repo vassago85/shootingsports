@@ -19,5 +19,5 @@
 {!! nl2br(e($enquiry->body)) !!}
 </x-mail::panel>
 
-Reply to this email to answer {{ $enquiry->name }} directly. Their address is not shown on the public page.
+This enquiry was sent through Shooting Sports. Reply to this email and your answer comes back to Shooting Sports, not straight to {{ $enquiry->name }}. Their address is not shown on the public page.
 </x-mail::message>

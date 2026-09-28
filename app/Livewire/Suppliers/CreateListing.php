@@ -16,8 +16,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
-use Livewire\WithFileUploads;
 
 /**
  * Supplier onboarding step 2 — create the industry listing once the
@@ -38,8 +36,6 @@ use Livewire\WithFileUploads;
  */
 class CreateListing extends Component
 {
-    use WithFileUploads;
-
     #[Validate('required|string|max:160')]
     public string $name = '';
 
@@ -64,9 +60,6 @@ class CreateListing extends Component
 
     #[Validate('nullable|url|max:255')]
     public ?string $website_url = null;
-
-    #[Validate('nullable|image|mimes:jpeg,png,webp|max:3072')]
-    public ?TemporaryUploadedFile $logo = null;
 
     #[Validate('nullable|string|max:160')]
     public string $tagline = '';
@@ -138,7 +131,6 @@ class CreateListing extends Component
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:40',
             'website_url' => 'nullable|url|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,webp|max:3072',
             'tagline' => 'nullable|string|max:160',
             'description' => 'required|string|min:20|max:2000',
         ]);
@@ -157,7 +149,7 @@ class CreateListing extends Component
             ->values()
             ->all();
 
-        $provider = DB::transaction(function () use ($user, $services): ?Provider {
+        $provider = DB::transaction(function () use ($user, $services): Provider {
             User::query()->whereKey($user->id)->lockForUpdate()->first();
 
             $existing = Provider::query()->where('claimed_by', $user->id)->first();
@@ -183,21 +175,11 @@ class CreateListing extends Component
                 'claimed_by' => $user->id,
             ]);
 
-            if ($this->logo !== null && ! $provider->attachLogo($this->logo)) {
-                return null;
-            }
-
             $provider->save();
             $user->forceFill(['pending_business_name' => null])->save();
 
             return $provider;
         });
-
-        if ($provider === null) {
-            $this->addError('logo', 'The logo could not be saved. Try a smaller PNG or JPEG.');
-
-            return;
-        }
 
         if ($provider->wasRecentlyCreated) {
             $provider->setRelation('claimedBy', $user);

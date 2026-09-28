@@ -83,18 +83,10 @@
                         @error('website_url') <span class="err">{{ $message }}</span> @enderror
                     </label>
 
-                    <label class="field">
-                        <span>Logo (optional)</span>
-                        <input type="file" wire:model="logo" accept="image/jpeg,image/png,image/webp">
-                        <small style="color:var(--slate);font-size:12px;display:block;margin-top:4px">
-                            Square PNG, JPG, or WebP. Max 3 MB. Shown on your directory card and profile.
-                        </small>
-                        <span wire:loading wire:target="logo">Uploading…</span>
-                        @if ($logo && $logo->isPreviewable())
-                            <img class="supplier-logo-preview" src="{{ $logo->temporaryUrl() }}" alt="Logo preview">
-                        @endif
-                        @error('logo') <span class="err">{{ $message }}</span> @enderror
-                    </label>
+                    <p class="field" style="color:var(--slate);font-size:14px">
+                        A picture on your listing is part of an enhanced listing{{ ($price = config('advertising.products.featured.price_display')) ? ' ('.$price.')' : '' }}.
+                        <a href="{{ route('advertise') }}">See the rate card</a>.
+                    </p>
 
                     <label class="field">
                         <span>Short description</span>

@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\FromShootingSports;
 use App\Models\Enquiry;
 use App\Models\EnquiryReply;
 use Illuminate\Bus\Queueable;
@@ -13,7 +14,7 @@ use Illuminate\Queue\SerializesModels;
 
 class EnquiryReplyMail extends Mailable implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+    use FromShootingSports, Queueable, SerializesModels;
 
     public function __construct(
         public Enquiry $enquiry,
@@ -27,6 +28,7 @@ class EnquiryReplyMail extends Mailable implements ShouldQueue
             : $this->enquiry->type->getLabel();
 
         return new Envelope(
+            from: $this->shootingSportsFrom(),
             subject: 'Re: '.$subject,
         );
     }

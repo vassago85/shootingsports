@@ -23,12 +23,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'slug', 'name', 'province', 'town', 'metro', 'lat', 'lng', 'address',
     'geocode_source', 'geocoded_at',
     'max_distance_m', 'bay_count', 'access', 'day_fee_cents', 'facilities',
-    'notes', 'image_paths', 'tier', 'status', 'verification_state', 'last_verified_at',
+    'description', 'website_url', 'notes', 'image_paths', 'tier', 'status', 'verification_state', 'last_verified_at',
     'verification_token', 'claimed_by', 'source',
 ])]
 class Venue extends Model
@@ -69,6 +70,32 @@ class Venue extends Model
             ->map(fn (string $path): string => Storage::disk('media')->url($path))
             ->values()
             ->all();
+    }
+
+    public function initials(): string
+    {
+        return collect(preg_split('/\s+/', trim($this->name)) ?: [])
+            ->filter()
+            ->take(2)
+            ->map(fn (string $word): string => mb_strtoupper(mb_substr($word, 0, 1)))
+            ->implode('');
+    }
+
+    /**
+     * One line for the ranges list. The first paragraph of the public description.
+     */
+    public function cardSummary(): ?string
+    {
+        $description = trim((string) $this->description);
+
+        if ($description === '') {
+            return null;
+        }
+
+        $first = preg_split("/\n{2,}/", $description)[0] ?? $description;
+        $collapsed = preg_replace('/\s+/', ' ', trim(is_string($first) ? $first : $description));
+
+        return Str::limit(is_string($collapsed) ? $collapsed : $description, 140);
     }
 
     public function hasCoordinates(): bool

@@ -114,9 +114,18 @@ class VenueResource extends Resource
                     ->required(),
                 TextInput::make('day_fee_cents')
                     ->numeric(),
+                Textarea::make('description')
+                    ->label('About')
+                    ->helperText('Public profile on the range page. Leave contact emails in notes.')
+                    ->columnSpanFull(),
+                TextInput::make('website_url')
+                    ->label('Website')
+                    ->url()
+                    ->columnSpanFull(),
                 Textarea::make('facilities')
                     ->columnSpanFull(),
                 Textarea::make('notes')
+                    ->helperText('Staff only. Not shown on the public page.')
                     ->columnSpanFull(),
                 FileUpload::make('image_paths')
                     ->label('Photos')

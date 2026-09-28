@@ -44,22 +44,11 @@ class RecordEnquiryReply
             'read_at' => null,
         ])->save();
 
-        $listingEmail = EnquiryListingContact::address($enquiry);
-
-        if ($listingEmail !== null) {
-            Mail::to($listingEmail)->queue(new EnquiryFollowUpMail($enquiry, $reply));
-
-            return $reply;
-        }
-
-        $staffEmails = User::query()
-            ->where('is_staff', true)
-            ->whereNotNull('email')
-            ->pluck('email');
-
-        foreach ($staffEmails as $email) {
-            Mail::to($email)->queue(new EnquiryFollowUpMail($enquiry, $reply));
-        }
+        EnquiryListingContact::deliver(
+            $enquiry,
+            new EnquiryFollowUpMail($enquiry, $reply),
+            new EnquiryFollowUpMail($enquiry, $reply, forStaff: true),
+        );
 
         return $reply;
     }

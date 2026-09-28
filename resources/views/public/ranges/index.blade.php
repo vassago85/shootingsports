@@ -74,21 +74,17 @@
             <div @class(['dir-split', 'is-map' => $view === 'map'])>
                 <div class="dir-list">
                     @forelse ($venues as $index => $venue)
-                        @php
-                            $initials = collect(preg_split('/\s+/', $venue->name))
-                                ->filter()
-                                ->take(2)
-                                ->map(fn (string $word): string => mb_strtoupper(mb_substr($word, 0, 1)))
-                                ->implode('');
-                        @endphp
-                        <a class="dir-row" href="{{ route('ranges.show', $venue->slug) }}">
+                        <a class="dir-row" data-range="{{ $venue->slug }}" href="{{ route('ranges.show', $venue->slug) }}">
                             @if ($cover = $venue->imageUrls()[0] ?? null)
                                 <img class="dir-logo is-cover" src="{{ $cover }}" alt="">
                             @else
-                                <span class="dir-initials">{{ $initials }}</span>
+                                <span class="dir-initials">{{ $venue->initials() }}</span>
                             @endif
                             <span class="dir-main">
                                 <strong>{{ $venue->name }} <x-listing-tier-badge :listing="$venue" /></strong>
+                                @if ($summary = $venue->cardSummary())
+                                    <span class="dir-blurb">{{ $summary }}</span>
+                                @endif
                                 @php $rangePlace = collect([$venue->town, $venue->province?->getLabel()])->filter()->implode(' · '); @endphp
                                 @if ($rangePlace !== '')
                                     <span>{{ $rangePlace }}</span>
@@ -147,17 +143,57 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap'
         }).addTo(map);
+
+        const escapeHtml = (value) => String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;');
+
+        const markers = {};
         const layer = L.featureGroup();
+        const highlight = (slug) => {
+            document.querySelectorAll('[data-range]').forEach((row) => {
+                row.classList.toggle('is-on-map', row.dataset.range === slug);
+            });
+        };
+
         rangePins.forEach((pin) => {
-            L.circleMarker([pin.lat, pin.lng], {
-                radius: 6, color: '#34754d', fillColor: '#10251f', fillOpacity: 1, weight: 2
-            }).addTo(layer);
+            const marker = L.circleMarker([pin.lat, pin.lng], {
+                radius: 8,
+                color: '#34754d',
+                fillColor: '#10251f',
+                fillOpacity: 1,
+                weight: 2,
+            });
+            const place = pin.town ? `<br>${escapeHtml(pin.town)}` : '';
+            marker.bindPopup(
+                `<strong>${escapeHtml(pin.name)}</strong>${place}<br><a href="${escapeHtml(pin.url)}">Open range</a>`,
+            );
+            marker.on('click', () => highlight(pin.slug));
+            marker.addTo(layer);
+            markers[pin.slug] = marker;
         });
+
         if (rangePins.length) {
             layer.addTo(map);
-            map.fitBounds(layer.getBounds().pad(0.2));
+            map.fitBounds(layer.getBounds().pad(0.3), { maxZoom: 11 });
         } else {
             map.setView([-29, 25], 5);
         }
+
+        map.whenReady(() => map.invalidateSize());
+
+        document.querySelectorAll('[data-range]').forEach((row) => {
+            row.addEventListener('mouseenter', () => {
+                const marker = markers[row.dataset.range];
+                if (! marker) {
+                    return;
+                }
+                highlight(row.dataset.range);
+                map.panTo(marker.getLatLng());
+                marker.openPopup();
+            });
+        });
     </script>
 </x-layouts.public>

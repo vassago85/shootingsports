@@ -2900,7 +2900,26 @@ html[lang] body.ss-public .range-photos img {
     background: #e7efe8;
 }
 html[lang] body.ss-public .dir-hero.is-copy { grid-template-columns: 1fr; }
+html[lang] body.ss-public .dir-row .dir-main > span,
 html[lang] body.ss-public .supplier-row .dir-main > span { display: block; }
+html[lang] body.ss-public .dir-row .dir-blurb { color: #10251f; margin-top: 2px; }
+html[lang] body.ss-public .range-profile {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 200px;
+    gap: 36px;
+    align-items: start;
+}
+html[lang] body.ss-public .range-about { margin: 0 0 28px; }
+html[lang] body.ss-public .range-about h2 {
+    text-transform: none;
+    font-size: clamp(1.5rem, 2.4vw, 1.85rem);
+    margin: 6px 0 16px;
+}
+html[lang] body.ss-public .range-mark { position: sticky; top: 16px; }
+@media (max-width: 720px) {
+    html[lang] body.ss-public .range-profile { grid-template-columns: 1fr; }
+    html[lang] body.ss-public .range-mark { max-width: 200px; position: static; }
+}
 html[lang] body.ss-public .supplier-row .dir-blurb { color: #10251f; margin-top: 2px; }
 html[lang] body.ss-public .dir-secondary {
     margin: 28px 0 10px;
@@ -3073,6 +3092,8 @@ html[lang] body.ss-public .dir-map {
     background: #e7efe8;
 }
 html[lang] body.ss-public .dir-map .leaflet-container { height: 100%; width: 100%; background: #e7efe8; }
+html[lang] body.ss-public .dir-map .leaflet-interactive { cursor: pointer; }
+html[lang] body.ss-public .dir-row.is-on-map { background: #eef5f0; }
 html[lang] body.ss-public .dir-note {
     background: #e7efe8;
     border-radius: 12px;

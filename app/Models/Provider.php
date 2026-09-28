@@ -106,12 +106,21 @@ class Provider extends Model
     }
 
     /**
-     * Public URL of the uploaded logo, or null when none is set.
+     * A public picture is part of the paid enhanced listing.
+     */
+    public function allowsPublicLogo(): bool
+    {
+        return $this->tier === ProviderTier::Featured;
+    }
+
+    /**
+     * Public URL of the uploaded logo, or null when none is set
+     * or the listing is not on the enhanced tier.
      * Files live on the "media" disk, same as organisation logos.
      */
     public function logoUrl(): ?string
     {
-        if (! filled($this->logo_path)) {
+        if (! $this->allowsPublicLogo() || ! filled($this->logo_path)) {
             return null;
         }
 

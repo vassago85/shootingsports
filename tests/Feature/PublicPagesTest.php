@@ -184,7 +184,7 @@ it('lists Feather Fur and Target under reloading and as a secondary optics suppl
         ->assertSee('Feather Fur and Target')
         ->assertSee('Reloading components, equipment, and optics in Pretoria.')
         ->assertSee('Faerie Glen')
-        ->assertSee('provider-logos/feather-fur-and-target.png', false)
+        ->assertDontSee('provider-logos/feather-fur-and-target.png', false)
         ->assertSee('https://ffat.co.za', false)
         ->assertDontSee('orders@ffat.co.za');
 
@@ -205,7 +205,7 @@ it('lists MC Tactical as a dealer that also offers optics, chassis, and reloadin
         ->assertSee('MC Tactical')
         ->assertSee('Firearms, optics, chassis, and reloading supplies in Pretoria.')
         ->assertSee('Garsfontein')
-        ->assertSee('provider-logos/mc-tactical.png', false)
+        ->assertDontSee('provider-logos/mc-tactical.png', false)
         ->assertSee('https://mctactical.co.za', false)
         ->assertDontSee('sales@mctactical.co.za');
 
@@ -248,6 +248,50 @@ it('lists Blue Gum Valley Shooting Range as a public range near Bronkhorstspruit
         ->assertOk()
         ->assertSee('Blue Gum Valley Shooting Range')
         ->assertSee('Bronkhorstspruit');
+});
+
+it('lists Wattlespring as a complete Bronkhorstspruit range without a picture', function () {
+    $this->get(route('ranges.show', 'wattlespring-sports-shooting-club'))
+        ->assertOk()
+        ->assertSee('Wattlespring Sports Shooting Club')
+        ->assertSee('About Wattlespring Sports Shooting Club')
+        ->assertSee('farm Onbekend at Bapsfontein')
+        ->assertSee('398 JR Onbekend, Bapsfontein, Bronkhorstspruit, 1001')
+        ->assertSee('100 m')
+        ->assertSee('Clay pigeon')
+        ->assertSee('R125 per hour for members')
+        ->assertSee('08:00 to 16:30')
+        ->assertSee('https://wattlespring.co.za', false)
+        ->assertSee('WS')
+        ->assertSee('Pretoria')
+        ->assertDontSee('info@wattlespring.co.za')
+        ->assertDontSee('info@example.com')
+        ->assertDontSee('Brockport');
+
+    $this->get(route('ranges.index', ['province' => 'gauteng']))
+        ->assertOk()
+        ->assertSee('Wattlespring Sports Shooting Club')
+        ->assertSee('farm Onbekend at Bapsfontein');
+
+    expect(Venue::query()->where('slug', 'wattlespring-sports-shooting-club')->value('image_paths'))->toBeNull();
+});
+
+it('links a range map pin to that range', function () {
+    Venue::factory()->create([
+        'name' => 'Pinned Range',
+        'slug' => 'pinned-range',
+        'town' => 'Bronkhorstspruit',
+        'province' => Province::Gauteng,
+        'lat' => -25.8,
+        'lng' => 28.4,
+        'status' => ListingStatus::Published,
+    ]);
+
+    $this->get(route('ranges.index'))
+        ->assertOk()
+        ->assertSee('data-range="pinned-range"', false)
+        ->assertSee(route('ranges.show', 'pinned-range'), false)
+        ->assertSee('Open range', false);
 });
 
 it('lists Zimbi as a dealer that also offers ammunition, optics, reloading, and safes', function () {
@@ -302,12 +346,12 @@ it('lists each Safari Outdoor store in its own province, with shooting lines as 
         ->assertSee('Primary · Dealer');
 });
 
-it('lists every Wildman store as a dealer and shows the shared logo', function () {
+it('lists every Wildman store as a dealer without a picture', function () {
     $this->get(route('suppliers.show', 'wildman-centurion'))
         ->assertOk()
         ->assertSee('Wildman Centurion')
         ->assertSee('Centurion Gate')
-        ->assertSee('provider-logos/wildman.png', false)
+        ->assertDontSee('provider-logos/wildman.png', false)
         ->assertSee('https://wildmanhuntingandoutdoor.com', false);
 
     $this->get(route('suppliers.show', 'wildman-bethlehem'))
@@ -338,7 +382,7 @@ it('lists every Wildman store as a dealer and shows the shared logo', function (
         ->assertSee('Primary · Dealer')
         ->assertDontSee('Wildman Montana');
 
-    expect(Provider::query()->where('logo_path', 'provider-logos/wildman.png')->count())->toBe(25);
+    expect(Provider::query()->where('slug', 'like', 'wildman-%')->whereNull('logo_path')->count())->toBe(25);
 });
 
 it('lists Gun Warrior as a Centurion dealer and Axis Precision Worx under chassis', function () {
@@ -346,7 +390,7 @@ it('lists Gun Warrior as a Centurion dealer and Axis Precision Worx under chassi
         ->assertOk()
         ->assertSee('Gun Warrior')
         ->assertSee('106 Edward Avenue')
-        ->assertSee('provider-logos/gun-warrior.png', false)
+        ->assertDontSee('provider-logos/gun-warrior.png', false)
         ->assertSee('https://www.gunwarrior.co.za', false)
         ->assertDontSee('info@gunwarrior.co.za');
 
@@ -354,7 +398,7 @@ it('lists Gun Warrior as a Centurion dealer and Axis Precision Worx under chassi
         ->assertOk()
         ->assertSee('Axis Precision Worx')
         ->assertSee('Triangle Farm')
-        ->assertSee('provider-logos/axis-precision-worx.png', false)
+        ->assertDontSee('provider-logos/axis-precision-worx.png', false)
         ->assertSee('https://www.axisprecisionworx.com', false)
         ->assertDontSee('info@axisprecisionworx.com');
 
@@ -374,12 +418,12 @@ it('lists Gun Warrior as a Centurion dealer and Axis Precision Worx under chassi
         ->assertSee('Primary · Dealer');
 });
 
-it('lists both Dave Sheer Guns shops, with the Cape Town logo', function () {
+it('lists both Dave Sheer Guns shops without pictures', function () {
     $this->get(route('suppliers.show', 'dave-sheer-guns-cape-town'))
         ->assertOk()
         ->assertSee('Dave Sheer Guns Cape Town')
         ->assertSee('Groot Phesantekraal View')
-        ->assertSee('provider-logos/dave-sheer-guns-cape-town.png', false)
+        ->assertDontSee('provider-logos/dave-sheer-guns-cape-town.png', false)
         ->assertSee('https://davesheerct.com', false)
         ->assertDontSee('admin@davesheerct.com');
 
@@ -411,7 +455,7 @@ it('lists Boomsticks as a Paarl dealer with ammunition, optics, and reloading', 
         ->assertOk()
         ->assertSee('Boomsticks')
         ->assertSee('21 Station Street')
-        ->assertSee('provider-logos/boomsticks.png', false)
+        ->assertDontSee('provider-logos/boomsticks.png', false)
         ->assertSee('https://boomsticks.co.za', false)
         ->assertDontSee('onlinesales@boomsticks.co.za');
 
@@ -431,7 +475,7 @@ it('lists Lock n Load and Gunslinger as Pretoria dealers', function () {
         ->assertOk()
         ->assertSee("Lock 'n Load")
         ->assertSee('461 Lois Avenue')
-        ->assertSee('provider-logos/lock-n-load.png', false)
+        ->assertDontSee('provider-logos/lock-n-load.png', false)
         ->assertSee('https://locknload.pro', false)
         ->assertDontSee('info@locknload.pro');
 
@@ -439,7 +483,7 @@ it('lists Lock n Load and Gunslinger as Pretoria dealers', function () {
         ->assertOk()
         ->assertSee('Gunslinger')
         ->assertSee('Erasmuskloof')
-        ->assertSee('provider-logos/gunslinger.png', false)
+        ->assertDontSee('provider-logos/gunslinger.png', false)
         ->assertSee('https://gunslinger.bz', false)
         ->assertDontSee('sales@gunslinger.bz');
 

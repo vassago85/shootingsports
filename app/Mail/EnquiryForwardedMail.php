@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\FromShootingSports;
 use App\Models\Enquiry;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,7 +13,7 @@ use Illuminate\Queue\SerializesModels;
 
 class EnquiryForwardedMail extends Mailable implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+    use FromShootingSports, Queueable, SerializesModels;
 
     public function __construct(public Enquiry $enquiry) {}
 
@@ -22,8 +23,8 @@ class EnquiryForwardedMail extends Mailable implements ShouldQueue
         $label = $about->title ?? $about->name ?? $this->enquiry->type->getLabel();
 
         return new Envelope(
+            from: $this->shootingSportsFrom(),
             subject: '[Enquiry] '.$label.' — '.$this->enquiry->name,
-            replyTo: [$this->enquiry->email],
         );
     }
 

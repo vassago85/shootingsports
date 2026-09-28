@@ -19,12 +19,28 @@
         </section>
         <section class="block">
             <div class="wrap">
-                @if ($photos = $venue->imageUrls())
+                @php $photos = $venue->imageUrls(); @endphp
+                <div class="range-profile">
+                    <div>
+                @if ($photos !== [])
                     <div class="range-photos">
                         @foreach ($photos as $photo)
                             <img src="{{ $photo }}" alt="{{ $venue->name }}">
                         @endforeach
                     </div>
+                @endif
+                @if (filled($venue->description))
+                    <section class="range-about">
+                        <p class="label">Profile</p>
+                        <h2>About {{ $venue->name }}</h2>
+                        <div class="supplier-prose">
+                            @foreach (preg_split("/\n{2,}/", trim($venue->description)) ?: [] as $paragraph)
+                                @if (filled(trim($paragraph)))
+                                    <p>{{ trim($paragraph) }}</p>
+                                @endif
+                            @endforeach
+                        </div>
+                    </section>
                 @endif
                 @php
                     // Access is a promise to visitors — "Guest by
@@ -78,8 +94,18 @@
                 @endif
                 <p style="margin:0 0 28px;display:flex;gap:10px;flex-wrap:wrap">
                     <a class="btn" href="{{ route('enquiries.listing', ['type' => 'venue', 'id' => $venue->id]) }}">Enquire via platform</a>
+                    @if ($venue->website_url)
+                        <a class="btn ghost" href="{{ $venue->website_url }}" rel="noopener noreferrer">Website</a>
+                    @endif
                     <a class="btn ghost" href="{{ $venue->directionsUrl() }}" rel="noopener noreferrer" target="_blank">Directions</a>
                 </p>
+                    </div>
+                    @if ($photos === [])
+                        <div class="supplier-logo-card range-mark">
+                            <span class="supplier-initials" aria-hidden="true">{{ $venue->initials() }}</span>
+                        </div>
+                    @endif
+                </div>
                 @if ($inferredDisciplines->isNotEmpty())
                     <div class="club-tags" style="margin-bottom:28px">
                         @foreach ($inferredDisciplines as $discipline)

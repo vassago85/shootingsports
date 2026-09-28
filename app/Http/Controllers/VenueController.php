@@ -82,6 +82,9 @@ class VenueController extends Controller
                 && Geo::isInsideSouthAfrica((float) $venue->lat, (float) $venue->lng))
             ->map(fn (Venue $venue): array => [
                 'slug' => $venue->slug,
+                'name' => $venue->name,
+                'town' => $venue->town,
+                'url' => route('ranges.show', $venue->slug),
                 'lat' => (float) $venue->lat,
                 'lng' => (float) $venue->lng,
             ])

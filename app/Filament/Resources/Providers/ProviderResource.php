@@ -28,6 +28,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
@@ -110,6 +111,12 @@ class ProviderResource extends Resource
                     ->imageResizeTargetHeight(512)
                     ->maxSize(3072)
                     ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                    ->visible(function (Get $get): bool {
+                        $tier = $get('tier');
+
+                        return $tier === ProviderTier::Featured || $tier === ProviderTier::Featured->value;
+                    })
+                    ->helperText('Pictures are part of an enhanced listing. This logo is shown on the public directory only while the tier is Enhanced.')
                     ->columnSpanFull(),
                 Select::make('tier')
                     ->options(ProviderTier::class)

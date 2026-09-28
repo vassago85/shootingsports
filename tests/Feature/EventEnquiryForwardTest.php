@@ -17,7 +17,7 @@ beforeEach(function () {
     $this->withoutVite();
 });
 
-it('forwards an event enquiry to the organiser and does not copy staff', function () {
+it('forwards an event enquiry to the organiser from shooting sports and keeps a staff copy', function () {
     Mail::fake();
 
     User::factory()->staff()->create(['email' => 'staff@shootingsports.test']);
@@ -40,12 +40,14 @@ it('forwards an event enquiry to the organiser and does not copy staff', functio
         'form_loaded_at' => time() - 10,
     ])->assertRedirect(route('enquiries.thanks'));
 
-    Mail::assertNotQueued(EnquiryReceivedMail::class);
+    Mail::assertQueued(EnquiryReceivedMail::class, fn (EnquiryReceivedMail $mail): bool => $mail->hasTo('staff@shootingsports.test'));
 
     Mail::assertQueued(EnquiryForwardedMail::class, function (EnquiryForwardedMail $mail): bool {
         return $mail->hasTo('organiser@club.test')
-            && $mail->hasReplyTo('mark@example.test')
-            && str_contains($mail->render(), 'Can you send me a link for the entry please.');
+            && $mail->envelope()->from->address === config('mail.from.address')
+            && $mail->envelope()->replyTo === []
+            && str_contains($mail->render(), 'Can you send me a link for the entry please.')
+            && str_contains($mail->render(), 'sent through Shooting Sports');
     });
 });
 
@@ -67,7 +69,7 @@ it('sends an event enquiry to the host club when the match has no email', functi
         'about_id' => $event->id,
     ]))->assertRedirect(route('enquiries.thanks'));
 
-    Mail::assertNotQueued(EnquiryReceivedMail::class);
+    Mail::assertQueued(EnquiryReceivedMail::class, fn (EnquiryReceivedMail $mail): bool => $mail->hasTo('staff@shootingsports.test'));
     Mail::assertQueued(EnquiryForwardedMail::class, fn (EnquiryForwardedMail $mail): bool => $mail->hasTo('club@example.test'));
 });
 
@@ -106,7 +108,7 @@ it('sends a club enquiry only to the club', function () {
         'about_id' => $club->id,
     ]))->assertRedirect(route('enquiries.thanks'));
 
-    Mail::assertNotQueued(EnquiryReceivedMail::class);
+    Mail::assertQueued(EnquiryReceivedMail::class, fn (EnquiryReceivedMail $mail): bool => $mail->hasTo('staff@shootingsports.test'));
     Mail::assertQueued(EnquiryForwardedMail::class, fn (EnquiryForwardedMail $mail): bool => $mail->hasTo('secretary@club.test'));
 });
 
@@ -140,11 +142,11 @@ it('sends a business enquiry only to the business', function () {
         'about_id' => $provider->id,
     ]))->assertRedirect(route('enquiries.thanks'));
 
-    Mail::assertNotQueued(EnquiryReceivedMail::class);
+    Mail::assertQueued(EnquiryReceivedMail::class, fn (EnquiryReceivedMail $mail): bool => $mail->hasTo('staff@shootingsports.test'));
     Mail::assertQueued(EnquiryForwardedMail::class, fn (EnquiryForwardedMail $mail): bool => $mail->hasTo('shop@example.test'));
 });
 
-it('sends a later reply to the club and not to staff', function () {
+it('sends a later reply to the club and back through shooting sports', function () {
     Mail::fake();
 
     User::factory()->staff()->create(['email' => 'staff@shootingsports.test']);
@@ -163,8 +165,14 @@ it('sends a later reply to the club and not to staff', function () {
 
     app(RecordEnquiryReply::class)->fromEnquirer($enquiry, 'Here is the extra detail you asked for.');
 
-    Mail::assertNotQueued(EnquiryReceivedMail::class);
-    Mail::assertQueued(EnquiryFollowUpMail::class, fn (EnquiryFollowUpMail $mail): bool => $mail->hasTo('secretary@club.test'));
+    Mail::assertQueued(EnquiryFollowUpMail::class, function (EnquiryFollowUpMail $mail): bool {
+        return $mail->hasTo('secretary@club.test')
+            && $mail->forStaff === false
+            && $mail->envelope()->replyTo === [];
+    });
+    Mail::assertQueued(EnquiryFollowUpMail::class, function (EnquiryFollowUpMail $mail): bool {
+        return $mail->hasTo('staff@shootingsports.test') && $mail->forStaff;
+    });
 });
 
 it('lists an ask link on the event page and hides the organiser email', function () {

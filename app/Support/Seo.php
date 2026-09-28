@@ -99,7 +99,9 @@ final readonly class Seo
             $sentence .= ' '.$venue->address.'.';
         }
 
-        if (filled($venue->notes)) {
+        if (filled($venue->description)) {
+            $sentence .= ' '.$venue->description;
+        } elseif (filled($venue->notes)) {
             $sentence .= ' '.$venue->notes;
         }
 

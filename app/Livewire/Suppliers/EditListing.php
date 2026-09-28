@@ -74,7 +74,9 @@ class EditListing extends Component
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:40',
             'website_url' => 'nullable|url|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,webp|max:3072',
+            'logo' => $this->provider->allowsPublicLogo()
+                ? 'nullable|image|mimes:jpeg,png,webp|max:3072'
+                : 'prohibited',
             'tagline' => 'nullable|string|max:160',
             'description' => 'required|string|min:20|max:2000',
         ]);
@@ -94,10 +96,18 @@ class EditListing extends Component
         $this->provider->tagline = filled($this->tagline) ? trim($this->tagline) : null;
         $this->provider->description = trim($this->description);
 
-        if ($this->logo !== null && ! $this->provider->attachLogo($this->logo)) {
-            $this->addError('logo', 'The logo could not be saved. Try a smaller PNG or JPEG.');
+        if ($this->logo !== null) {
+            if (! $this->provider->allowsPublicLogo()) {
+                $this->addError('logo', 'A picture on your listing is part of an enhanced listing.');
 
-            return;
+                return;
+            }
+
+            if (! $this->provider->attachLogo($this->logo)) {
+                $this->addError('logo', 'The logo could not be saved. Try a smaller PNG or JPEG.');
+
+                return;
+            }
         }
 
         $this->provider->save();

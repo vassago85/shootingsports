@@ -12,12 +12,10 @@ use App\Models\Enquiry;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Provider;
-use App\Models\User;
 use App\Models\Venue;
 use App\Services\Enquiries\RecordEnquiryReply;
 use App\Support\EnquiryListingContact;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 
@@ -90,7 +88,7 @@ class EnquiryController extends Controller
             'about' => $about,
             'aboutType' => $type,
             'heading' => 'Enquire about '.$aboutName,
-            'intro' => 'Your message is sent through Shooting Sports. If this listing has a contact email, it goes straight to them. Otherwise staff receive it. The address is not shown on the page.',
+            'intro' => 'Your message is sent through Shooting Sports. We keep a copy, and we forward one from Shooting Sports when this listing has a contact email. That address is not shown on the page.',
         ]);
     }
 
@@ -136,20 +134,11 @@ class EnquiryController extends Controller
             'user_agent' => substr((string) $request->userAgent(), 0, 500),
         ]);
 
-        $listingEmail = EnquiryListingContact::address($enquiry);
-
-        if ($listingEmail !== null) {
-            Mail::to($listingEmail)->queue(new EnquiryForwardedMail($enquiry));
-        } else {
-            $staffEmails = User::query()
-                ->where('is_staff', true)
-                ->whereNotNull('email')
-                ->pluck('email');
-
-            foreach ($staffEmails as $email) {
-                Mail::to($email)->queue(new EnquiryReceivedMail($enquiry));
-            }
-        }
+        EnquiryListingContact::deliver(
+            $enquiry,
+            new EnquiryForwardedMail($enquiry),
+            new EnquiryReceivedMail($enquiry),
+        );
 
         return redirect()
             ->route('enquiries.thanks')

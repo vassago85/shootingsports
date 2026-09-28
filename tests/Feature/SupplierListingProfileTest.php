@@ -3,6 +3,7 @@
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
 use App\Enums\ProviderCategory;
+use App\Enums\ProviderTier;
 use App\Enums\Province;
 use App\Livewire\Suppliers\CreateListing;
 use App\Livewire\Suppliers\EditListing;
@@ -28,6 +29,7 @@ it('shows the short description, services, and logo on a supplier profile', func
         'tagline' => 'Long-range coaching and everyday stock.',
         'description' => 'A longer profile of the academy, the range days, and what a new shooter should expect.',
         'logo_path' => 'provider-logos/tuneup.png',
+        'tier' => ProviderTier::Featured,
         'website_url' => 'https://tuneup.example',
         'email' => 'secret@tuneup.example',
         'status' => ListingStatus::Published,
@@ -45,6 +47,22 @@ it('shows the short description, services, and logo on a supplier profile', func
         ->assertSee('provider-logos/tuneup.png', false)
         ->assertSee('Enquire via platform')
         ->assertDontSee('secret@tuneup.example');
+});
+
+it('hides a stored picture until the listing is enhanced', function () {
+    $provider = Provider::factory()->create([
+        'slug' => 'free-with-file',
+        'name' => 'Free With File',
+        'logo_path' => 'provider-logos/hidden.png',
+        'tier' => ProviderTier::Free,
+        'status' => ListingStatus::Published,
+    ]);
+
+    $this->get(route('suppliers.show', $provider->slug))
+        ->assertOk()
+        ->assertDontSee('provider-logos/hidden.png', false)
+        ->assertSee('FW')
+        ->assertSee('Business logo');
 });
 
 it('shows the short description on the category listing', function () {
@@ -123,12 +141,12 @@ it('lists a supplier under each secondary industry category after the primary li
         ->assertSee(route('suppliers.category', 'optics'), false);
 });
 
-it('stores an optional logo and short description when a supplier registers', function () {
-    Storage::fake('media');
+it('stores a short description without a picture when a supplier registers', function () {
     $user = User::factory()->create();
 
     Livewire::actingAs($user)
         ->test(CreateListing::class)
+        ->assertSee('A picture on your listing is part of an enhanced listing')
         ->set('name', 'Tuneup Long Range Precision')
         ->set('category', ProviderCategory::Instructor->value)
         ->set('services', [ProviderCategory::Optics->value])
@@ -136,20 +154,18 @@ it('stores an optional logo and short description when a supplier registers', fu
         ->set('town', 'Pretoria')
         ->set('tagline', 'Long-range coaching and everyday stock.')
         ->set('description', 'A longer profile of the academy and what a new shooter should expect.')
-        ->set('logo', UploadedFile::fake()->image('logo.png', 400, 400))
         ->call('submit')
         ->assertRedirect();
 
     $provider = Provider::query()->where('claimed_by', $user->id)->firstOrFail();
 
     expect($provider->tagline)->toBe('Long-range coaching and everyday stock.')
-        ->and($provider->logo_path)->toStartWith('provider-logos/')
+        ->and($provider->logo_path)->toBeNull()
+        ->and($provider->tier)->toBe(ProviderTier::Free)
         ->and($provider->source)->toBe(ListingSource::Claimed);
-
-    Storage::disk('media')->assertExists($provider->logo_path);
 });
 
-it('rejects a non-image logo and a short description over 160 characters', function () {
+it('rejects a short description over 160 characters', function () {
     $user = User::factory()->create();
 
     Livewire::actingAs($user)
@@ -160,17 +176,17 @@ it('rejects a non-image logo and a short description over 160 characters', funct
         ->set('town', 'Pretoria')
         ->set('description', 'A longer profile of the academy and what a new shooter should expect.')
         ->set('tagline', str_repeat('a', 161))
-        ->set('logo', UploadedFile::fake()->create('notes.pdf', 20, 'application/pdf'))
         ->call('submit')
-        ->assertHasErrors(['tagline', 'logo']);
+        ->assertHasErrors(['tagline']);
 });
 
-it('lets the owner update the logo and short description', function () {
+it('lets an enhanced listing owner update the logo and short description', function () {
     Storage::fake('media');
     $owner = User::factory()->create();
     $provider = Provider::factory()->create([
         'claimed_by' => $owner->id,
         'status' => ListingStatus::Pending,
+        'tier' => ProviderTier::Featured,
         'description' => 'A longer profile of the academy and what a new shooter should expect.',
         'tagline' => null,
         'logo_path' => null,
@@ -189,6 +205,27 @@ it('lets the owner update the logo and short description', function () {
         ->and($provider->logo_path)->toStartWith('provider-logos/');
 
     Storage::disk('media')->assertExists($provider->logo_path);
+});
+
+it('refuses a picture on a free listing', function () {
+    Storage::fake('media');
+    $owner = User::factory()->create();
+    $provider = Provider::factory()->create([
+        'claimed_by' => $owner->id,
+        'status' => ListingStatus::Pending,
+        'tier' => ProviderTier::Free,
+        'description' => 'A longer profile of the academy and what a new shooter should expect.',
+        'logo_path' => null,
+    ]);
+
+    Livewire::actingAs($owner)
+        ->test(EditListing::class, ['provider' => $provider])
+        ->assertSee('A picture on your listing is part of an enhanced listing')
+        ->set('logo', UploadedFile::fake()->image('logo.png'))
+        ->call('save')
+        ->assertHasErrors(['logo']);
+
+    expect($provider->refresh()->logo_path)->toBeNull();
 });
 
 it('lets the owner update contact details and extra services without changing the public address', function () {
