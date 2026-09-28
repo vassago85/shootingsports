@@ -21,10 +21,14 @@ class SupplierDirectorySeeder extends Seeder
     public function run(): void
     {
         foreach ($this->listings() as $listing) {
-            Provider::query()->updateOrCreate(
+            $provider = Provider::withTrashed()->updateOrCreate(
                 ['slug' => $listing['slug']],
                 array_merge($this->defaults(), $listing, ['logo_path' => null]),
             );
+
+            if ($provider->trashed()) {
+                $provider->restore();
+            }
         }
     }
 
