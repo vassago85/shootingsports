@@ -250,7 +250,9 @@ it('lists Blue Gum Valley Shooting Range as a public range near Bronkhorstspruit
         ->assertSee('Bronkhorstspruit');
 });
 
-it('lists Wattlespring as a complete Bronkhorstspruit range without a picture', function () {
+it('lists Wattlespring with restaurant, shotgun, rifle range photos and its logo', function () {
+    $venue = Venue::query()->where('slug', 'wattlespring-sports-shooting-club')->firstOrFail();
+
     $this->get(route('ranges.show', 'wattlespring-sports-shooting-club'))
         ->assertOk()
         ->assertSee('Wattlespring Sports Shooting Club')
@@ -262,7 +264,14 @@ it('lists Wattlespring as a complete Bronkhorstspruit range without a picture', 
         ->assertSee('R125 per hour for members')
         ->assertSee('08:00 to 16:30')
         ->assertSee('https://wattlespring.co.za', false)
-        ->assertSee('WS')
+        ->assertSee('Restaurant at Wattlespring Sports Shooting Club')
+        ->assertSee('Shotgun shooting at Wattlespring Sports Shooting Club')
+        ->assertSee('Rifle range at Wattlespring Sports Shooting Club')
+        ->assertSee('range-images/wattlespring-restaurant.png', false)
+        ->assertSee('range-images/wattlespring-shotgun-line.png', false)
+        ->assertSee('range-images/wattlespring-rifle-range.png', false)
+        ->assertSee('range-logos/wattlespring-logo.png', false)
+        ->assertSee('Wattlespring Sports Shooting Club logo')
         ->assertSee('Pretoria')
         ->assertDontSee('info@wattlespring.co.za')
         ->assertDontSee('info@example.com')
@@ -271,9 +280,17 @@ it('lists Wattlespring as a complete Bronkhorstspruit range without a picture', 
     $this->get(route('ranges.index', ['province' => 'gauteng']))
         ->assertOk()
         ->assertSee('Wattlespring Sports Shooting Club')
-        ->assertSee('farm Onbekend at Bapsfontein');
+        ->assertSee('farm Onbekend at Bapsfontein')
+        ->assertSee('range-images/wattlespring-restaurant.png', false);
 
-    expect(Venue::query()->where('slug', 'wattlespring-sports-shooting-club')->value('image_paths'))->toBeNull();
+    expect($venue->image_paths)->toBe([
+        'range-images/wattlespring-restaurant.png',
+        'range-images/wattlespring-restaurant-patio.png',
+        'range-images/wattlespring-restaurant-oven.png',
+        'range-images/wattlespring-shotgun-line.png',
+        'range-images/wattlespring-shotgun.png',
+        'range-images/wattlespring-rifle-range.png',
+    ])->and($venue->logo_path)->toBe('range-logos/wattlespring-logo.png');
 });
 
 it('links a range map pin to that range', function () {

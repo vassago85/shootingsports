@@ -29,7 +29,7 @@ use Illuminate\Support\Str;
     'slug', 'name', 'province', 'town', 'metro', 'lat', 'lng', 'address',
     'geocode_source', 'geocoded_at',
     'max_distance_m', 'bay_count', 'access', 'day_fee_cents', 'facilities',
-    'description', 'website_url', 'notes', 'image_paths', 'tier', 'status', 'verification_state', 'last_verified_at',
+    'description', 'website_url', 'notes', 'image_paths', 'logo_path', 'tier', 'status', 'verification_state', 'last_verified_at',
     'verification_token', 'claimed_by', 'source',
 ])]
 class Venue extends Model
@@ -70,6 +70,37 @@ class Venue extends Model
             ->map(fn (string $path): string => Storage::disk('media')->url($path))
             ->values()
             ->all();
+    }
+
+    public function logoUrl(): ?string
+    {
+        if (! filled($this->logo_path)) {
+            return null;
+        }
+
+        return Storage::disk('media')->url($this->logo_path);
+    }
+
+    /**
+     * Short label for a gallery photo, taken from a known filename.
+     */
+    public function photoCaption(string $url): ?string
+    {
+        $path = strtolower($url);
+
+        return match (true) {
+            str_contains($path, 'restaurant') => 'Restaurant',
+            str_contains($path, 'shotgun') => 'Shotgun shooting',
+            str_contains($path, 'rifle-range') => 'Rifle range',
+            default => null,
+        };
+    }
+
+    public function photoAlt(string $url): string
+    {
+        $caption = $this->photoCaption($url);
+
+        return $caption === null ? $this->name : $caption.' at '.$this->name;
     }
 
     public function initials(): string

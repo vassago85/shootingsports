@@ -2899,6 +2899,14 @@ html[lang] body.ss-public .range-photos img {
     border-radius: 10px;
     background: #e7efe8;
 }
+html[lang] body.ss-public .range-photo { margin: 0; }
+html[lang] body.ss-public .range-photo figcaption {
+    margin-top: 6px;
+    font-family: var(--f-mono);
+    font-size: 12px;
+    letter-spacing: .04em;
+    color: #52655e;
+}
 html[lang] body.ss-public .dir-hero.is-copy { grid-template-columns: 1fr; }
 html[lang] body.ss-public .dir-row .dir-main > span,
 html[lang] body.ss-public .supplier-row .dir-main > span { display: block; }

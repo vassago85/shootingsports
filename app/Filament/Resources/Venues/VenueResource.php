@@ -127,6 +127,16 @@ class VenueResource extends Resource
                 Textarea::make('notes')
                     ->helperText('Staff only. Not shown on the public page.')
                     ->columnSpanFull(),
+                FileUpload::make('logo_path')
+                    ->label('Logo')
+                    ->disk('media')
+                    ->directory('range-logos')
+                    ->visibility('public')
+                    ->image()
+                    ->maxSize(2048)
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                    ->helperText('Club or range mark, shown beside the profile.')
+                    ->columnSpanFull(),
                 FileUpload::make('image_paths')
                     ->label('Photos')
                     ->disk('media')

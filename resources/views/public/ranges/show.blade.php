@@ -25,7 +25,12 @@
                 @if ($photos !== [])
                     <div class="range-photos">
                         @foreach ($photos as $photo)
-                            <img src="{{ $photo }}" alt="{{ $venue->name }}">
+                            <figure class="range-photo">
+                                <img src="{{ $photo }}" alt="{{ $venue->photoAlt($photo) }}">
+                                @if ($caption = $venue->photoCaption($photo))
+                                    <figcaption>{{ $caption }}</figcaption>
+                                @endif
+                            </figure>
                         @endforeach
                     </div>
                 @endif
@@ -100,7 +105,11 @@
                     <a class="btn ghost" href="{{ $venue->directionsUrl() }}" rel="noopener noreferrer" target="_blank">Directions</a>
                 </p>
                     </div>
-                    @if ($photos === [])
+                    @if ($venue->logoUrl())
+                        <div class="supplier-logo-card range-mark">
+                            <img src="{{ $venue->logoUrl() }}" alt="{{ $venue->name }} logo">
+                        </div>
+                    @elseif ($photos === [])
                         <div class="supplier-logo-card range-mark">
                             <span class="supplier-initials" aria-hidden="true">{{ $venue->initials() }}</span>
                         </div>
