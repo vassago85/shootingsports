@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\EmailCategory;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
@@ -18,19 +17,14 @@ class AppMockupController extends Controller
     public function __invoke(Request $request): View
     {
         $journey = $this->journey();
-        $allowed = collect($journey)->flatMap(fn (array $group): array => array_column($group['screens'], 'key'))->all();
+        $allowed = array_column($journey, 'key');
         $screen = $request->string('screen')->toString();
 
         if (! in_array($screen, $allowed, true)) {
-            $screen = 'login';
+            $screen = 'home';
         }
 
         $matches = $this->matches();
-        $clubs = $this->clubs();
-        $ranges = $this->ranges();
-        $sports = $this->sports();
-        $suppliers = $this->suppliers();
-
         $slug = $request->string('slug')->toString();
 
         return view('mockups.apps', [
@@ -38,55 +32,29 @@ class AppMockupController extends Controller
             'journey' => $journey,
             'matches' => $matches,
             'match' => $this->find($matches, $slug) ?? ($matches[0] ?? null),
-            'clubs' => $clubs,
-            'club' => $this->find($clubs, $slug) ?? ($clubs[0] ?? null),
-            'ranges' => $ranges,
-            'range' => $this->find($ranges, $slug) ?? ($ranges[0] ?? null),
-            'sports' => $sports,
-            'sport' => $this->find($sports, $slug) ?? ($sports[0] ?? null),
-            'suppliers' => $suppliers,
-            'supplier' => $this->find($suppliers, $slug) ?? ($suppliers[0] ?? null),
-            'emailCategories' => collect(EmailCategory::cases())
-                ->reject(fn (EmailCategory $category): bool => $category === EmailCategory::Transactional)
-                ->all(),
+            'clubs' => $this->clubs(),
+            'ranges' => $this->ranges(),
+            'sports' => $this->sports(),
+            'suppliers' => $this->suppliers(),
         ]);
     }
 
     /**
-     * @return array<int, array{group: string, screens: array<int, array{key: string, label: string}>}>
+     * @return array<int, array{key: string, label: string}>
      */
     private function journey(): array
     {
         return [
-            ['group' => '01 · Sign in', 'screens' => [
-                ['key' => 'login', 'label' => 'Log in'],
-                ['key' => 'register', 'label' => 'Create account'],
-            ]],
-            ['group' => '02 · Shooting', 'screens' => [
-                ['key' => 'home', 'label' => 'Home'],
-                ['key' => 'matches', 'label' => 'Matches'],
-                ['key' => 'match', 'label' => 'Match'],
-                ['key' => 'calendar', 'label' => 'Calendar'],
-                ['key' => 'map', 'label' => 'Map'],
-            ]],
-            ['group' => '03 · Your account', 'screens' => [
-                ['key' => 'my-calendar', 'label' => 'My calendar'],
-                ['key' => 'log', 'label' => 'My log'],
-                ['key' => 'notifications', 'label' => 'Notifications'],
-                ['key' => 'upgrade', 'label' => 'Go Pro'],
-                ['key' => 'you', 'label' => 'You'],
-            ]],
-            ['group' => '04 · Find', 'screens' => [
-                ['key' => 'find', 'label' => 'Find'],
-                ['key' => 'clubs', 'label' => 'Clubs'],
-                ['key' => 'club', 'label' => 'Club'],
-                ['key' => 'ranges', 'label' => 'Ranges'],
-                ['key' => 'range', 'label' => 'Range'],
-                ['key' => 'sports', 'label' => 'Sports'],
-                ['key' => 'sport', 'label' => 'Sport'],
-                ['key' => 'industry', 'label' => 'Industry'],
-                ['key' => 'supplier', 'label' => 'Supplier'],
-            ]],
+            ['key' => 'onboarding', 'label' => 'Onboarding'],
+            ['key' => 'home', 'label' => 'Home'],
+            ['key' => 'events', 'label' => 'Events'],
+            ['key' => 'detail', 'label' => 'Event detail'],
+            ['key' => 'find', 'label' => 'Find'],
+            ['key' => 'sports', 'label' => 'Sports'],
+            ['key' => 'following', 'label' => 'Following'],
+            ['key' => 'activity', 'label' => 'Activity'],
+            ['key' => 'profile', 'label' => 'Profile'],
+            ['key' => 'organiser', 'label' => 'Organiser'],
         ];
     }
 

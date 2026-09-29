@@ -4,35 +4,33 @@ beforeEach(function () {
     $this->withoutVite();
 });
 
-it('opens the app mockup on the login screen', function () {
+it('opens the app mockup on the Home screen by default', function () {
     $this->get(route('mockups.apps'))
         ->assertOk()
-        ->assertSee('Log in')
-        ->assertSee('Create an account')
-        ->assertSee('Keep me signed in on this device');
+        ->assertSee('Recommended next')
+        ->assertSee('Following activity');
 });
 
-it('renders each signed-in function', function (string $screen, string $text) {
+it('renders each companion-app screen', function (string $screen, string $text) {
     $this->get(route('mockups.apps', ['screen' => $screen]))
         ->assertOk()
         ->assertSee($text);
 })->with([
-    'home' => ['home', 'Your shooting'],
-    'matches' => ['matches', 'Matches'],
-    'calendar' => ['calendar', 'Calendar'],
-    'map' => ['map', 'Map'],
-    'my calendar' => ['my-calendar', 'My calendar'],
-    'log' => ['log', 'Attendance record'],
-    'notifications' => ['notifications', 'Email preferences'],
-    'upgrade' => ['upgrade', 'Go Pro'],
-    'you' => ['you', 'Sign out'],
-    'find' => ['find', 'Clubs & series'],
-    'register' => ['register', 'Create your account'],
+    'onboarding' => ['onboarding', 'Follow sports'],
+    'home' => ['home', 'Recommended next'],
+    'events' => ['events', 'Filters'],
+    'detail' => ['detail', 'Event detail'],
+    'find' => ['find', 'Map and list'],
+    'sports' => ['sports', 'Discover disciplines'],
+    'following' => ['following', 'Your weekend'],
+    'activity' => ['activity', 'Notification settings'],
+    'profile' => ['profile', 'Account state'],
+    'organiser' => ['organiser', 'Submit event'],
 ]);
 
-it('sends an unknown app screen back to login', function () {
+it('sends an unknown screen back to Home', function () {
     $this->get(route('mockups.apps', ['screen' => 'not-a-screen']))
         ->assertOk()
-        ->assertSee('Log in')
-        ->assertDontSee('Your shooting');
+        ->assertSee('Recommended next')
+        ->assertDontSee('Submit event');
 });
