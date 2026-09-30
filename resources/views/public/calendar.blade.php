@@ -6,8 +6,8 @@
 >
     <main id="main">
         <div class="wrap dir-page">
-            <x-dir-hero page="matches" kicker="Events" title="Find an event">
-                Discover shooting matches across South Africa. The list is the main view. Calendar and map are other ways to explore.
+            <x-dir-hero page="matches" kicker="South Africa" title="Shooting events">
+                Every listed match on one calendar. Filter by sport, province and date.
             </x-dir-hero>
 
             @if (auth()->user()?->is_staff && filled(config('product-backlog.items')))

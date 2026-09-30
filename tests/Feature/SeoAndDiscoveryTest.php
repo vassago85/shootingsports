@@ -411,9 +411,14 @@ it('the suppliers index emits an ItemList of categories', function () {
 // ================================================================
 
 it('/calendar defaults to the static match calendar title when no filter is set', function () {
+    Event::factory()->confirmed()->create(['title' => 'Listed Club Shoot']);
+
     $this->get(route('calendar'))
         ->assertOk()
-        ->assertSee('<title>Shooting competitions calendar', false)
+        ->assertSee('<title>Shooting events in South Africa', false)
+        ->assertSee('>Shooting events<', false)
+        ->assertSee('Listed Club Shoot', false)
+        ->assertSee('"@type":"ItemList"', false)
         ->assertSee('"@type":"BreadcrumbList"', false);
 });
 

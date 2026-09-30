@@ -46,7 +46,7 @@ class JsonLd
                     '@id' => $siteUrl.'#organization',
                     'url' => $siteUrl,
                     'name' => 'Shooting Sports',
-                    'description' => 'The independent national register of South African shooting sport: clubs, ranges, suppliers and every match on the calendar.',
+                    'description' => 'Shooting sports in South Africa. The independent national register of clubs, ranges, suppliers and every match on the calendar.',
                     'logo' => asset('images/og-default.png'),
                     'sport' => 'Shooting sport',
                     'areaServed' => [

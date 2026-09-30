@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\Province;
 use App\Models\Discipline;
+use App\Models\Event;
 use App\Queries\PublicEventQuery;
 use App\Support\JsonLd;
 use Illuminate\Http\Request;
@@ -42,7 +43,7 @@ class CalendarController extends Controller
         // a SERP where breadcrumbs render as a single line.
         $crumbs = [
             ['name' => 'Home', 'url' => route('home')],
-            ['name' => 'Matches', 'url' => route('calendar')],
+            ['name' => 'Shooting events', 'url' => route('calendar')],
         ];
 
         if ($discipline instanceof Discipline) {
@@ -57,6 +58,24 @@ class CalendarController extends Controller
                 'name' => $province->getLabel(),
                 'url' => route('calendar', ['province' => $province->urlSlug()]),
             ];
+        }
+
+        $listed = (new PublicEventQuery(
+            disciplineSlug: $discipline?->slug,
+            provinceSlug: $province?->urlSlug(),
+        ))->builder()->limit(24)->get();
+
+        $jsonLd = [JsonLd::breadcrumbs($crumbs)];
+
+        if ($listed->isNotEmpty()) {
+            array_unshift($jsonLd, JsonLd::itemList(
+                $listed->map(fn (Event $event): array => [
+                    'name' => $event->title,
+                    'url' => $event->publicUrl(),
+                    'id' => $event->schemaId(),
+                ])->all(),
+                $seoTitle,
+            ));
         }
 
         return view('public.calendar', [
@@ -75,13 +94,13 @@ class CalendarController extends Controller
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,
             'canonical' => $this->canonical($discipline, $province),
-            'jsonLd' => [JsonLd::breadcrumbs($crumbs)],
+            'jsonLd' => $jsonLd,
         ]);
     }
 
     /**
      * Filter-aware SEO copy. Rules:
-     *   - No filters: static site-wide message.
+     *   - No filters: the head query, "Shooting events in South Africa".
      *   - Discipline only: "{Discipline} matches in South Africa. {N} upcoming."
      *   - Province only: "Shooting matches in {Province}. {N} upcoming."
      *   - Both: "{Discipline} matches in {Province}. {N} upcoming."
@@ -95,8 +114,8 @@ class CalendarController extends Controller
     {
         if ($discipline === null && $province === null) {
             return [
-                'Shooting competitions calendar',
-                'Every listed match in South African shooting sport, filterable by discipline, province, and how far you will drive.',
+                'Shooting events in South Africa',
+                'Shooting events in South Africa. Every listed match on one calendar, filterable by sport, province and date.',
             ];
         }
 

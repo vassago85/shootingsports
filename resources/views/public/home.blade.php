@@ -1,11 +1,15 @@
-<x-layouts.public title="Shooting events in South Africa">
+<x-layouts.public
+    title="Shooting Sports in South Africa"
+    description="Shooting sports in South Africa. Find your sport, your club and your event. Clubs, ranges and every match on one calendar."
+    :branded="false"
+>
     <main id="main">
         <x-page-photo page="home" class="hero home-hero" style="padding:0">
             <div class="hero-in">
                 <div>
-                    <p class="label">The national register of South African shooting sport</p>
+                    <p class="label">Shooting Sports</p>
                     <h1>Find your <em>sport</em>.<br>Find your <em>club</em>.<br>Find your <em>event</em>.</h1>
-                    <p class="lede">Every discipline, every province, one calendar. South African shooting sport in one place.</p>
+                    <p class="lede">Shooting events in South Africa. Every discipline, every province, one calendar.</p>
                     <p class="hero-weekend">
                         <a class="btn lime" href="{{ route('calendar', ['weekend' => 1]) }}">What's shooting this weekend?</a>
                     </p>
@@ -106,7 +110,7 @@
                         <p class="label">Next 30 days</p>
                         <h2>Coming up</h2>
                     </div>
-                    <a href="{{ route('calendar') }}">View all matches</a>
+                    <a href="{{ route('calendar') }}">All shooting events</a>
                 </div>
                 <div class="dir-list">
                     @forelse ($upcoming as $event)

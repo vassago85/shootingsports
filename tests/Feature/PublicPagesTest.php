@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 it('renders the home page instead of the Laravel welcome screen', function () {
     $this->get(route('home'))
         ->assertOk()
+        ->assertSee('<title>Shooting Sports in South Africa</title>', false)
         ->assertSee('Shooting events in South Africa')
         ->assertSee('Find your')
         ->assertDontSee('Match finder')

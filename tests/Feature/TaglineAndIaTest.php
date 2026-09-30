@@ -41,7 +41,8 @@ it('renders the new tagline on the home hero', function () {
 it('emits the tagline as the default meta description', function () {
     $this->get(route('home'))
         ->assertOk()
-        ->assertSee('name="description" content="Find your sport. Find your club. Find your match.', false);
+        ->assertSee('<title>Shooting Sports in South Africa</title>', false)
+        ->assertSee('name="description" content="Shooting sports in South Africa. Find your sport, your club and your event.', false);
 });
 
 it('labels the disciplines nav link as Sports', function () {

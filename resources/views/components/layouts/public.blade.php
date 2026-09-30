@@ -5,6 +5,7 @@
     'robots' => null,
     'image' => null,
     'jsonLd' => null,
+    'branded' => true,
 ])
 <!DOCTYPE html>
 <html lang="en-ZA">
@@ -18,6 +19,7 @@
         :robots="$robots"
         :image="$image"
         :json-ld="$jsonLd"
+        :branded="$branded"
     />
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16.png') }}">

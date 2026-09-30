@@ -14,13 +14,16 @@
     'image' => null,
     'type' => 'website',
     'jsonLd' => null,
+    'branded' => true,
 ])
 @php
     use App\Support\JsonLd;
 
     $siteName = 'Shooting Sports';
     $tagline = 'Find your sport, your club, your match';
-    $fullTitle = $title ? $title.' · '.$siteName : $siteName.' — '.$tagline;
+    $fullTitle = $title
+        ? ($branded ? $title.' · '.$siteName : $title)
+        : $siteName.' — '.$tagline;
     $description = $description
         ?: 'Find your sport. Find your club. Find your match. Every discipline, every province, every South African shooting match on one calendar.';
     $canonical = $canonical ?: url()->current();
