@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Models\MagazineIssue;
+
 /**
  * Single source of truth for the public site navigation.
  *
@@ -23,7 +25,7 @@ final class PublicNav
      */
     public static function items(): array
     {
-        return [
+        $items = [
             [
                 'label' => 'Events',
                 'route' => 'calendar',
@@ -71,6 +73,20 @@ final class PublicNav
                 'active' => ['suppliers.*'],
             ],
         ];
+
+        // Magazine stays hidden during the private pilot. The nav item
+        // only shows once at least one issue has gone public, so draft
+        // uploads and signed-preview reviews do not leak the surface
+        // to every visitor.
+        if (MagazineIssue::query()->published()->exists()) {
+            $items[] = [
+                'label' => 'Magazine',
+                'route' => 'magazines.index',
+                'active' => ['magazines.*'],
+            ];
+        }
+
+        return $items;
     }
 
     /**

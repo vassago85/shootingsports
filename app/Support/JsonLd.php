@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Enums\EventStatus;
 use App\Models\Event;
+use App\Models\MagazineIssue;
 use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\Venue;
@@ -284,6 +285,62 @@ class JsonLd
             'numberOfItems' => count($elements),
             'itemListElement' => $elements,
         ];
+    }
+
+    /**
+     * PublicationIssue schema for a single magazine issue, nested in
+     * the "Targets" Periodical so Google understands the series.
+     *
+     * @return array<string, mixed>
+     */
+    public static function magazineIssue(MagazineIssue $issue): array
+    {
+        $periodical = [
+            '@type' => 'Periodical',
+            'name' => $issue->publication,
+            'inLanguage' => $issue->language,
+            'url' => route('magazines.index'),
+        ];
+
+        $payload = [
+            '@context' => 'https://schema.org',
+            '@type' => 'PublicationIssue',
+            '@id' => route('magazines.show', $issue->slug).'#issue',
+            'name' => $issue->title,
+            'url' => route('magazines.show', $issue->slug),
+            'inLanguage' => $issue->language,
+            'isPartOf' => $periodical,
+            'issueNumber' => $issue->issue_label,
+            'numberOfPages' => $issue->page_count,
+            'datePublished' => self::iso($issue->published_at),
+            'description' => $issue->description,
+            'image' => $issue->coverUrl(),
+            'thumbnailUrl' => $issue->coverUrl(),
+            'author' => $issue->author?->name !== null
+                ? ['@type' => 'Person', 'name' => $issue->author->name]
+                : null,
+        ];
+
+        return array_filter($payload, fn (mixed $value): bool => $value !== null && $value !== '');
+    }
+
+    /**
+     * ItemList of the published magazine issues on the index page.
+     *
+     * @param  list<MagazineIssue>  $issues
+     * @return array<string, mixed>
+     */
+    public static function magazineIndex(array $issues): array
+    {
+        $items = array_map(
+            fn (MagazineIssue $issue): array => [
+                'url' => route('magazines.show', $issue->slug),
+                'name' => $issue->title,
+            ],
+            $issues,
+        );
+
+        return self::itemList($items, 'Targets magazine issues');
     }
 
     private static function offerAvailability(Event $event): string

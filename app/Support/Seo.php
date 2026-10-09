@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Enums\Province;
 use App\Models\Discipline;
 use App\Models\Event;
+use App\Models\MagazineIssue;
 use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\Venue;
@@ -182,6 +183,30 @@ final readonly class Seo
             title: $discipline->name,
             description: self::clip($description),
             canonical: route('disciplines.show', $discipline->slug),
+        );
+    }
+
+    public static function forMagazineIndex(): self
+    {
+        return new self(
+            title: 'Targets magazine — read every issue online',
+            description: self::clip('Every issue of Targets magazine online, in a flip-book reader with search-engine-friendly text and browser translation.'),
+            canonical: route('magazines.index'),
+        );
+    }
+
+    public static function forMagazineIssue(MagazineIssue $issue, bool $previewing = false): self
+    {
+        $title = $issue->title;
+        $description = filled($issue->description)
+            ? (string) $issue->description
+            : $issue->publication.' — '.$issue->title;
+
+        return new self(
+            title: $title,
+            description: self::clip($description),
+            canonical: route('magazines.show', $issue->slug),
+            robots: $previewing ? 'noindex,nofollow' : null,
         );
     }
 

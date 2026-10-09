@@ -9,6 +9,7 @@ use App\Models\Article;
 use App\Models\Discipline;
 use App\Models\Enquiry;
 use App\Models\Event;
+use App\Models\MagazineIssue;
 use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\SlugRedirect;
@@ -157,6 +158,7 @@ class AppServiceProvider extends ServiceProvider
             'user' => User::class,
             'enquiry' => Enquiry::class,
             'article' => Article::class,
+            'magazine_issue' => MagazineIssue::class,
         ]);
 
         Gate::policy(Event::class, EventPolicy::class);
@@ -180,7 +182,7 @@ class AppServiceProvider extends ServiceProvider
 
         $bumpPublic = static fn () => PublicCache::bump();
 
-        foreach ([Event::class, Organisation::class, Venue::class, Provider::class, Discipline::class] as $model) {
+        foreach ([Event::class, Organisation::class, Venue::class, Provider::class, Discipline::class, MagazineIssue::class] as $model) {
             $model::saved($bumpPublic);
             $model::deleted($bumpPublic);
         }

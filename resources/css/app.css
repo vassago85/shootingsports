@@ -3446,3 +3446,8 @@ html[lang] body.ss-public .fmt-top h3 {
     html[lang] body.ss-public .mb-row:focus-within { padding-left: 12px; }
     html[lang] body.ss-public .mb-meta { grid-column: 2; }
 }
+
+/* Targets magazine flipbook. */
+.magazine-flipbook { min-height: 420px; display: block; width: 100%; }
+.magazine-flipbook__loading { padding: 24px; text-align: center; color: var(--muted, #8a8a8a); }
+.magazine-flipbook:focus { outline: 2px solid var(--brass, #c7a35b); outline-offset: 4px; }

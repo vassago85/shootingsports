@@ -6,6 +6,7 @@ use App\Enums\ProviderCategory;
 use App\Enums\Province;
 use App\Models\Discipline;
 use App\Models\Event;
+use App\Models\MagazineIssue;
 use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\Venue;
@@ -27,6 +28,7 @@ class SitemapController extends Controller
             $this->locs('venues', $this->venueUrls()->count()),
             $this->locs('disciplines', $this->disciplineUrls()->count()),
             $this->locs('providers', $this->providerUrls()->count()),
+            $this->locs('magazines', $this->magazineUrls()->count()),
         );
 
         return $this->cached('index', 'public.sitemaps.index', ['sitemaps' => $sitemaps]);
@@ -62,6 +64,11 @@ class SitemapController extends Controller
         return $this->urlset('providers', $this->providerUrls());
     }
 
+    public function magazines(): Response
+    {
+        return $this->urlset('magazines', $this->magazineUrls());
+    }
+
     public function chunk(string $type, int $page): Response
     {
         $urls = match ($type) {
@@ -71,6 +78,7 @@ class SitemapController extends Controller
             'venues' => $this->venueUrls(),
             'disciplines' => $this->disciplineUrls(),
             'providers' => $this->providerUrls(),
+            'magazines' => $this->magazineUrls(),
             default => abort(404),
         };
 
@@ -88,7 +96,7 @@ class SitemapController extends Controller
 
         $now = now()->toAtomString();
 
-        return collect([
+        $pages = [
             'home',
             'calendar',
             'calendar.month',
@@ -101,7 +109,13 @@ class SitemapController extends Controller
             'contact',
             'privacy',
             'terms',
-        ])->map(fn (string $name): array => [
+        ];
+
+        if (MagazineIssue::query()->published()->exists()) {
+            $pages[] = 'magazines.index';
+        }
+
+        return collect($pages)->map(fn (string $name): array => [
             'loc' => route($name),
             'lastmod' => $now,
         ]);
@@ -291,6 +305,27 @@ class SitemapController extends Controller
             });
 
         return $urls;
+    }
+
+    /**
+     * @return Collection<int, array{loc: string, lastmod: string|null}>
+     */
+    private function magazineUrls(): Collection
+    {
+        if (! config('seo.indexable')) {
+            return collect();
+        }
+
+        return MagazineIssue::query()
+            ->published()
+            ->orderByDesc('published_at')
+            ->get()
+            ->map(fn (MagazineIssue $issue) => $this->safeUrl('magazines sitemap', $issue, fn (): array => [
+                'loc' => route('magazines.show', $issue->slug),
+                'lastmod' => $issue->updated_at?->toAtomString(),
+            ]))
+            ->filter()
+            ->values();
     }
 
     /**

@@ -1,0 +1,45 @@
+<x-layouts.public
+    :title="$seo->title"
+    :description="$seo->description"
+    :canonical="$seo->canonical"
+    :robots="$seo->robots"
+    :json-ld="$jsonLd"
+>
+    <main id="main">
+        <section class="page-hero">
+            <div class="wrap">
+                <p class="label">Magazine</p>
+                <h1>Targets magazine</h1>
+                <p>Read every issue of Targets online. Flip through the pages, download the PDF, or switch to the text view and let your browser translate it.</p>
+            </div>
+        </section>
+
+        <section class="block">
+            <div class="wrap" style="max-width:960px">
+                @forelse ($issues as $issue)
+                    <article class="club-card" style="margin-top:16px;display:grid;grid-template-columns:120px 1fr;gap:20px;align-items:start">
+                        @if ($issue->coverUrl())
+                            <a href="{{ route('magazines.show', $issue->slug) }}" aria-hidden="true" tabindex="-1">
+                                <img src="{{ $issue->coverUrl() }}" alt="" style="width:120px;height:auto;border-radius:6px">
+                            </a>
+                        @else
+                            <div aria-hidden="true" style="width:120px;height:160px;background:var(--panel,#1b1b1b);border-radius:6px"></div>
+                        @endif
+                        <div>
+                            <p class="label">{{ $issue->publication }} · {{ $issue->issue_label ?? $issue->published_at?->format('F Y') }}</p>
+                            <h2><a href="{{ route('magazines.show', $issue->slug) }}">{{ $issue->title }}</a></h2>
+                            @if ($issue->description)
+                                <p>{{ $issue->description }}</p>
+                            @endif
+                            <p style="margin-top:12px">
+                                <a class="btn" href="{{ route('magazines.show', $issue->slug) }}">Read this issue</a>
+                            </p>
+                        </div>
+                    </article>
+                @empty
+                    <p class="empty">The first issue is on its way.</p>
+                @endforelse
+            </div>
+        </section>
+    </main>
+</x-layouts.public>

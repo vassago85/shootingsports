@@ -8,6 +8,7 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
+                'resources/js/flipbook.js',
                 'resources/css/filament/admin/theme.css',
                 'resources/css/filament/desk/theme.css',
             ],

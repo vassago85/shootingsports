@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MagazineIssue;
 use Illuminate\Http\Response;
 
 /**
@@ -31,6 +32,13 @@ class LlmsTxtController extends Controller
             '- '.route('clubs.index').' — Clubs',
             '- '.route('ranges.index').' — Ranges',
             '- '.route('suppliers.index').' — Suppliers',
+        ];
+
+        if (MagazineIssue::query()->published()->exists()) {
+            $lines[] = '- '.route('magazines.index').' — Targets magazine';
+        }
+
+        $lines = array_merge($lines, [
             '- '.route('claim').' — For clubs',
             '- '.route('embed.docs').' — Embed the calendar',
             '- '.route('advertise').' — Advertise',
@@ -48,7 +56,7 @@ class LlmsTxtController extends Controller
             '- Member names, emails and personal contact information are never shown beyond',
             '  what is already on the linked HTML pages.',
             '',
-        ];
+        ]);
 
         return response(implode("\n", $lines), 200, [
             'Content-Type' => 'text/plain; charset=UTF-8',

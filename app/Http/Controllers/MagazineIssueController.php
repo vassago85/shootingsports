@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\MagazineIssue;
+use App\Support\JsonLd;
+use App\Support\Seo;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+class MagazineIssueController extends Controller
+{
+    public function index(): View
+    {
+        $issues = MagazineIssue::query()
+            ->published()
+            ->orderByDesc('published_at')
+            ->get();
+
+        return view('public.magazines.index', [
+            'issues' => $issues,
+            'seo' => Seo::forMagazineIndex(),
+            'jsonLd' => JsonLd::magazineIndex($issues->all()),
+        ]);
+    }
+
+    public function show(Request $request, string $issue): View
+    {
+        $record = MagazineIssue::query()
+            ->where('slug', $issue)
+            ->firstOrFail();
+
+        // Drafts are 404 to the public. A valid signed preview URL from
+        // the Desk unlocks the page for the publisher without
+        // publishing it. Previews always render noindex and skip the
+        // read beacon.
+        $preview = $request->hasValidSignature() && ! $record->isPublished();
+
+        if (! $record->isPublished() && ! $preview) {
+            abort(404);
+        }
+
+        return view('public.magazines.show', [
+            'issue' => $record,
+            'preview' => $preview,
+            'seo' => Seo::forMagazineIssue($record, previewing: $preview),
+            'jsonLd' => $preview ? null : JsonLd::magazineIssue($record),
+        ]);
+    }
+}

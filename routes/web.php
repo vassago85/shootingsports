@@ -15,6 +15,8 @@ use App\Http\Controllers\FeedController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IcalController;
 use App\Http\Controllers\LlmsTxtController;
+use App\Http\Controllers\MagazineIssueController;
+use App\Http\Controllers\MagazineReadController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\PaystackController;
@@ -123,6 +125,16 @@ Route::get('/supplier/{provider:slug}/claim', SupplierClaimListing::class)->name
 Route::get('/find', FindYourDiscipline::class)->name('find');
 Route::get('/feed', FeedController::class)->name('feed');
 
+// Targets magazine flipbook. Index lists published issues; show
+// renders the page-flip reader plus a translate-friendly text view.
+// Drafts 404 to the public, unless the request carries a signed
+// preview link generated from the Desk resource.
+Route::get('/magazines', [MagazineIssueController::class, 'index'])->name('magazines.index');
+Route::get('/magazines/{issue}', [MagazineIssueController::class, 'show'])->name('magazines.show');
+Route::post('/magazines/{issue}/read', [MagazineReadController::class, 'store'])
+    ->middleware('throttle:60,1')
+    ->name('magazines.read');
+
 // Bare /matches and /events are not listing surfaces — /calendar is.
 Route::redirect('/matches', '/calendar', 301);
 Route::redirect('/events', '/calendar', 301);
@@ -185,7 +197,7 @@ Route::get('/terms', [StaticPageController::class, 'terms'])->name('terms');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/sitemaps/{type}-{page}.xml', [SitemapController::class, 'chunk'])
     ->where([
-        'type' => 'pages|events|organisations|venues|disciplines|providers',
+        'type' => 'pages|events|organisations|venues|disciplines|providers|magazines',
         'page' => '[1-9][0-9]*',
     ])
     ->name('sitemap.chunk');
@@ -195,6 +207,7 @@ Route::get('/sitemaps/organisations.xml', [SitemapController::class, 'organisati
 Route::get('/sitemaps/venues.xml', [SitemapController::class, 'venues'])->name('sitemap.venues');
 Route::get('/sitemaps/disciplines.xml', [SitemapController::class, 'disciplines'])->name('sitemap.disciplines');
 Route::get('/sitemaps/providers.xml', [SitemapController::class, 'providers'])->name('sitemap.providers');
+Route::get('/sitemaps/magazines.xml', [SitemapController::class, 'magazines'])->name('sitemap.magazines');
 
 Route::get('/llms.txt', LlmsTxtController::class)->name('llms');
 Route::get('/robots.txt', RobotsController::class)->name('robots');

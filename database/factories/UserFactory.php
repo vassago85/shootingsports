@@ -59,4 +59,11 @@ class UserFactory extends Factory
             'is_match_director' => true,
         ]);
     }
+
+    public function mediaPartner(): static
+    {
+        return $this->state(fn (): array => [
+            'is_media_partner' => true,
+        ]);
+    }
 }
