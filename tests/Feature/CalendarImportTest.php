@@ -118,6 +118,62 @@ it('updates an existing SAPRF listing by entry URL instead of creating a second 
         ->and($existing->fresh()->status)->toBe(EventStatus::EntriesOpen);
 });
 
+it('cancels an upcoming SAPRF match that drops off the table when its detail page says cancelled', function () {
+    $this->travelTo('2026-10-11 12:00:00');
+    Discipline::factory()->create(['slug' => 'pr22-rimfire', 'name' => 'PR22']);
+
+    $cancelled = Event::factory()->create([
+        'title' => 'Rimfire PR22 MP Provincial',
+        'entry_url' => 'https://saprf.co.za/events/111',
+        'starts_at' => '2026-10-17 08:00:00',
+        'status' => EventStatus::EntriesOpen,
+        'source' => ListingSource::Import,
+    ]);
+
+    $stillListed = Event::factory()->create([
+        'title' => 'PR 22 GP Provincial',
+        'entry_url' => 'https://saprf.co.za/events/122',
+        'starts_at' => '2026-10-17 08:00:00',
+        'status' => EventStatus::EntriesOpen,
+        'source' => ListingSource::Import,
+    ]);
+
+    Http::fake([
+        'saprf.co.za/events?view=table' => Http::response(<<<'HTML'
+            <table>
+                <tbody>
+                    <tr>
+                        <td>17 Oct 2026</td>
+                        <td><a href="https://saprf.co.za/events/122">PR 22 GP Provincial</a></td>
+                        <td>PR22</td>
+                        <td>provincial</td>
+                        <td>GP</td>
+                        <td>Danielsrust</td>
+                        <td>-</td>
+                        <td>Open</td>
+                    </tr>
+                </tbody>
+            </table>
+            HTML, 200),
+        'saprf.co.za/events/111' => Http::response(<<<'HTML'
+            <a href="/events">Back to Events</a>
+            <div>
+                <span>PR22</span>
+                <span>Provincial</span>
+                <span>Cancelled</span>
+            </div>
+            <h1>Rimfire PR22 MP Provincial</h1>
+            HTML, 200),
+    ]);
+
+    $this->artisan('calendar:import saprf')->assertSuccessful();
+
+    expect($cancelled->fresh()->status)->toBe(EventStatus::Cancelled)
+        ->and($stillListed->fresh()->status)->toBe(EventStatus::EntriesOpen);
+
+    Http::assertNotSent(fn ($request): bool => $request->url() === 'https://saprf.co.za/events/122');
+});
+
 it('parses MPSA season dates that wrap a month', function () {
     Discipline::factory()->create(['slug' => 'ipsc-practical', 'name' => 'IPSC']);
 

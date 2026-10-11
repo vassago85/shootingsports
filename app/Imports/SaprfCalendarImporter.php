@@ -4,7 +4,9 @@ namespace App\Imports;
 
 use App\Enums\EventLevel;
 use App\Enums\EventStatus;
+use App\Enums\ListingSource;
 use App\Enums\Province;
+use App\Models\Event;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
@@ -33,7 +35,76 @@ class SaprfCalendarImporter
             'https://saprf.co.za',
         );
 
-        return $this->importer->persist($host, $this->parse($html));
+        $matches = $this->parse($html);
+        $result = $this->importer->persist($host, $matches);
+        $result['updated'] += $this->refreshDelisted(array_map(fn (ImportedMatch $match): string => $match->entryUrl, $matches));
+
+        return $result;
+    }
+
+    /**
+     * SAPRF drops cancelled and postponed matches from the events table
+     * instead of flagging them, so any upcoming imported match missing
+     * from the table gets its status re-read from its own detail page.
+     *
+     * @param  list<string>  $listedUrls
+     */
+    private function refreshDelisted(array $listedUrls): int
+    {
+        $refreshed = 0;
+
+        $delisted = Event::query()
+            ->where('source', ListingSource::Import)
+            ->where('entry_url', 'like', 'https://saprf.co.za/events/%')
+            ->whereNotIn('entry_url', $listedUrls)
+            ->whereNotIn('status', [EventStatus::Cancelled, EventStatus::Postponed, EventStatus::Completed])
+            ->where('starts_at', '>=', now()->startOfDay())
+            ->get();
+
+        foreach ($delisted as $event) {
+            $response = Http::timeout(20)
+                ->withUserAgent('ShootingSportsBot/1.0 (+https://shootingsports.co.za)')
+                ->get($event->entry_url);
+
+            if (! $response->successful()) {
+                continue;
+            }
+
+            $status = $this->detailStatus($response->body());
+
+            if ($status === null) {
+                continue;
+            }
+
+            $event->forceFill([
+                'status' => $status,
+                'last_verified_at' => now(),
+            ])->save();
+            $refreshed++;
+        }
+
+        return $refreshed;
+    }
+
+    public function detailStatus(string $html): ?EventStatus
+    {
+        $dom = new DOMDocument;
+        @$dom->loadHTML($html);
+        $badges = (new DOMXPath($dom))->query('(//h1)[1]/preceding::span');
+
+        if ($badges === false) {
+            return null;
+        }
+
+        foreach ($badges as $badge) {
+            $label = strtolower(trim($badge->textContent));
+
+            if ($label === 'cancelled' || $label === 'postponed') {
+                return $this->status($label);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -109,9 +180,7 @@ class SaprfCalendarImporter
             startsAt: $startsAt,
             endsAt: $endsAt,
             level: $level,
-            status: str_contains(strtolower($cells[7] ?? $cells[6] ?? ''), 'open')
-                ? EventStatus::EntriesOpen
-                : EventStatus::Confirmed,
+            status: $this->status($cells[7] ?? $cells[6] ?? ''),
             province: $province,
             venueName: filled($cells[5] ?? null) ? $cells[5] : null,
             disciplineSlug: $discipline,
@@ -139,6 +208,19 @@ class SaprfCalendarImporter
         }
 
         return [$start, null];
+    }
+
+    private function status(string $label): EventStatus
+    {
+        $label = strtolower($label);
+
+        return match (true) {
+            str_contains($label, 'cancel') => EventStatus::Cancelled,
+            str_contains($label, 'postpone') => EventStatus::Postponed,
+            str_contains($label, 'full') => EventStatus::Full,
+            str_contains($label, 'open') => EventStatus::EntriesOpen,
+            default => EventStatus::Confirmed,
+        };
     }
 
     private function discipline(string $label): ?string
