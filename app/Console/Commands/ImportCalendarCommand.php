@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Imports\CalendarImportRunner;
 use Illuminate\Console\Command;
 
 class ImportCalendarCommand extends Command
@@ -10,7 +11,7 @@ class ImportCalendarCommand extends Command
 
     protected $description = 'Import matches from federation sites that publish a structured calendar, or list which bodies should be sold the embed.';
 
-    public function handle(): int
+    public function handle(CalendarImportRunner $runner): int
     {
         $sources = collect(config('calendar_sources'));
 
@@ -47,14 +48,20 @@ class ImportCalendarCommand extends Command
             return self::SUCCESS;
         }
 
-        $result = app($source['importer'])->import();
+        $run = $runner->run($key);
+
+        if ($run->failed()) {
+            $this->error($source['name'].': '.$run->error);
+
+            return self::FAILURE;
+        }
 
         $this->info(sprintf(
             '%s: %d created, %d updated, %d staff rows left alone.',
             $source['name'],
-            $result['created'],
-            $result['updated'],
-            $result['skipped'],
+            $run->created_count,
+            $run->updated_count,
+            $run->skipped_count,
         ));
 
         return self::SUCCESS;
