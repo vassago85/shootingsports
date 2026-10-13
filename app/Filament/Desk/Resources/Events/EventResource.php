@@ -9,6 +9,7 @@ use App\Filament\Desk\Resources\Events\Schemas\EventForm;
 use App\Filament\Desk\Resources\Events\Tables\EventsTable;
 use App\Filament\Resources\Events\RelationManagers\EntriesRelationManager;
 use App\Filament\Resources\Events\RelationManagers\ResultsRelationManager;
+use App\Filament\Resources\Events\RelationManagers\TeamEntriesRelationManager;
 use App\Models\Event;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -72,6 +73,7 @@ class EventResource extends Resource
     {
         return [
             EntriesRelationManager::class,
+            TeamEntriesRelationManager::class,
             ResultsRelationManager::class,
         ];
     }

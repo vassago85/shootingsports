@@ -24,7 +24,7 @@ final class EnquiryListingContact
         $email = match (true) {
             $about instanceof Organisation => $about->email,
             $about instanceof Provider => $about->email,
-            $about instanceof Event => $about->contact_email ?: $about->hostOrganisation?->email,
+            $about instanceof Event => $about->organiserEmail(),
             default => null,
         };
 

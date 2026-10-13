@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Storage;
 #[Fillable([
     'slug', 'title', 'host_organisation_id', 'venue_id', 'starts_at', 'ends_at',
     'all_day', 'level', 'kind', 'status', 'confirmed_at', 'original_starts_at',
-    'entry_fee_cents', 'member_fee_cents', 'entry_url', 'contact_email', 'accepts_platform_entries', 'entry_collection', 'capacity',
+    'entry_fee_cents', 'member_fee_cents', 'entry_url', 'contact_email', 'accepts_platform_entries', 'entry_collection', 'accepts_team_entries', 'team_size', 'entry_payment_instructions', 'capacity',
     'entries_taken', 'round_count', 'target_count', 'stage_count',
     'results_url', 'banner_media_id', 'banner_path', 'description', 'created_by',
     'source', 'last_verified_at',
@@ -48,6 +48,8 @@ class Event extends Model
             'status' => EventStatus::class,
             'accepts_platform_entries' => 'boolean',
             'entry_collection' => EntryCollection::class,
+            'accepts_team_entries' => 'boolean',
+            'team_size' => 'integer',
             'confirmed_at' => 'immutable_datetime',
             'original_starts_at' => 'immutable_datetime',
             'entry_fee_cents' => 'integer',
@@ -77,9 +79,33 @@ class Event extends Model
         return $this->hasMany(EventResult::class);
     }
 
+    public function teamEntries(): HasMany
+    {
+        return $this->hasMany(TeamEntry::class);
+    }
+
     public function openForPlatformEntries(): bool
     {
         return $this->accepts_platform_entries && $this->status === EventStatus::EntriesOpen;
+    }
+
+    public function openForTeamEntries(): bool
+    {
+        return $this->accepts_team_entries
+            && $this->team_size !== null
+            && $this->team_size > 0
+            && $this->status === EventStatus::EntriesOpen
+            && ! $this->hasPassed();
+    }
+
+    /**
+     * Where enquiries and team entries for this match are forwarded.
+     */
+    public function organiserEmail(): ?string
+    {
+        $email = trim((string) ($this->contact_email ?: $this->hostOrganisation?->email));
+
+        return $email !== '' ? $email : null;
     }
 
     public function enteredCount(): int

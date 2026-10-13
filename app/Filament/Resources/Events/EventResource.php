@@ -13,6 +13,7 @@ use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\RelationManagers\EntriesRelationManager;
 use App\Filament\Resources\Events\RelationManagers\ResultsRelationManager;
+use App\Filament\Resources\Events\RelationManagers\TeamEntriesRelationManager;
 use App\Filament\Support\EventDisciplineSelect;
 use App\Filament\Support\EventFlagSelect;
 use App\Filament\Support\EventPartnerSelect;
@@ -38,6 +39,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -241,6 +243,24 @@ class EventResource extends Resource
                                     ->required()
                                     ->helperText('Paystack charges the public entry fee when entries are taken here.'),
                                 Grid::make(2)->schema([
+                                    Toggle::make('accepts_team_entries')
+                                        ->label('Take team entries on this site')
+                                        ->helperText('Shows a team entry form on the match page. Entries are emailed to the organiser email.')
+                                        ->live()
+                                        ->inline(false),
+                                    TextInput::make('team_size')
+                                        ->label('Shooters per team')
+                                        ->numeric()
+                                        ->minValue(1)
+                                        ->maxValue(12)
+                                        ->required(fn (Get $get): bool => (bool) $get('accepts_team_entries')),
+                                ]),
+                                Textarea::make('entry_payment_instructions')
+                                    ->label('Payment instructions for entrants')
+                                    ->rows(4)
+                                    ->maxLength(2000)
+                                    ->helperText('Bank details, reference and closing date. Sent to the team captain with their entry confirmation.'),
+                                Grid::make(2)->schema([
                                     TextInput::make('capacity')
                                         ->label('Maximum entries')
                                         ->numeric()
@@ -420,6 +440,7 @@ class EventResource extends Resource
     {
         return [
             EntriesRelationManager::class,
+            TeamEntriesRelationManager::class,
             ResultsRelationManager::class,
         ];
     }

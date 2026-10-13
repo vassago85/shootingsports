@@ -74,6 +74,9 @@
                         @if ($event->description)
                             <div class="prose">{!! nl2br(e($event->description)) !!}</div>
                         @endif
+                        @if ($event->openForTeamEntries())
+                            <livewire:submit-team-entry :event="$event" :key="'team-entry-'.$event->id" />
+                        @endif
                     </div>
 
                     <aside class="match-facts">
@@ -145,12 +148,25 @@
                             $isPast = $event->hasPassed();
                             $hasExternalEntry = filled($event->entry_url);
                             $hasPlatformEntry = $event->openForPlatformEntries();
+                            $hasTeamEntry = $event->openForTeamEntries();
                         @endphp
+
+                        @if ($hasTeamEntry)
+                            <div class="match-entry-cta">
+                                <a class="btn" href="#team-entry">Enter your team →</a>
+                                <p class="match-entry-note">
+                                    Teams of {{ $event->team_size }}. Your entry goes straight to the organiser.
+                                    @if ($hasExternalEntry)
+                                        Prefer paper? <a href="{{ $event->entry_url }}" rel="noopener noreferrer" target="_blank">Open the entry form</a>.
+                                    @endif
+                                </p>
+                            </div>
+                        @endif
 
                         {{-- Before the match, Enter is the primary action.
                              After the date, we stop shouting "Enter here"
                              so the personal log takes the lead below. --}}
-                        @if (! $isPast && $hasExternalEntry)
+                        @if (! $isPast && $hasExternalEntry && ! $hasTeamEntry)
                             <div class="match-entry-cta">
                                 <a
                                     class="btn"

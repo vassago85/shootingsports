@@ -10,6 +10,7 @@ use Database\Seeders\DisciplineSeeder;
 use Database\Seeders\SpringbokvlakteGongskietSeeder;
 
 it('seeds Springbokvlakte Gongskiet from the 31 October 2026 poster', function () {
+    $this->travelTo('2026-10-14 09:00:00');
     $this->seed(DisciplineSeeder::class);
     $this->seed(SpringbokvlakteGongskietSeeder::class);
 
@@ -28,6 +29,10 @@ it('seeds Springbokvlakte Gongskiet from the 31 October 2026 poster', function (
         ->and($event->level)->toBe(EventLevel::Series)
         ->and($event->entry_fee_cents)->toBe(300000)
         ->and($event->banner_path)->toBe('event-banners/springbokvlakte-gongskiet-2026.png')
+        ->and($event->entry_url)->toEndWith('/media/event-entry-forms/springbokvlakte-gongskiet-2026-entry-form.png')
+        ->and($event->openForTeamEntries())->toBeTrue()
+        ->and($event->team_size)->toBe(4)
+        ->and($event->entry_payment_instructions)->toContain('62310133632')
         ->and($event->venue?->name)->toBe('Plaas Middeldoorn')
         ->and($event->venue?->town)->toBe('Mookgophong')
         ->and($event->venue?->province)->toBe(Province::Limpopo)
@@ -36,5 +41,8 @@ it('seeds Springbokvlakte Gongskiet from the 31 October 2026 poster', function (
     $this->get(route('events.show', 'springbokvlakte-gongskiet-2026'))
         ->assertOk()
         ->assertSee('/media/event-banners/springbokvlakte-gongskiet-2026.png', false)
-        ->assertSee('082 828 9734');
+        ->assertSee('/media/event-entry-forms/springbokvlakte-gongskiet-2026-entry-form.png', false)
+        ->assertSee('Enter your team')
+        ->assertSee('082 828 9734')
+        ->assertDontSee('@gmail.com');
 });

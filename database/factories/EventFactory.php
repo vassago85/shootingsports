@@ -60,6 +60,17 @@ class EventFactory extends Factory
         ]);
     }
 
+    public function teamEntriesOpen(int $teamSize = 4): static
+    {
+        return $this->state(fn (): array => [
+            'status' => EventStatus::EntriesOpen,
+            'confirmed_at' => now(),
+            'accepts_team_entries' => true,
+            'team_size' => $teamSize,
+            'contact_email' => fake()->safeEmail(),
+        ]);
+    }
+
     public function cancelled(): static
     {
         return $this->state(fn (): array => [

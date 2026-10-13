@@ -19,6 +19,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
@@ -199,6 +200,23 @@ class EventForm
                             ->required()
                             ->helperText('Paystack charges the public entry fee. Leave on “pays the club” until you want to take the money here.')
                             ->columnSpanFull(),
+                        Toggle::make('accepts_team_entries')
+                            ->label('Take team entries on this site')
+                            ->helperText('Shows a team entry form on the match page. Entries are emailed to the organiser email.')
+                            ->live()
+                            ->inline(false),
+                        TextInput::make('team_size')
+                            ->label('Shooters per team')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(12)
+                            ->required(fn (Get $get): bool => (bool) $get('accepts_team_entries')),
+                        Textarea::make('entry_payment_instructions')
+                            ->label('Payment instructions for entrants')
+                            ->rows(4)
+                            ->maxLength(2000)
+                            ->columnSpanFull()
+                            ->helperText('Bank details, reference and closing date. Sent to the team captain with their entry confirmation.'),
                         TextInput::make('capacity')
                             ->numeric()
                             ->minValue(0),
