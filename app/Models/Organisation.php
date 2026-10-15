@@ -24,7 +24,9 @@ use Illuminate\Support\Facades\Storage;
 #[Fillable([
     'slug', 'name', 'short_name', 'type', 'parent_id', 'province', 'town',
     'email', 'phone', 'website_url', 'facebook_url', 'description',
-    'logo_path', 'accredited', 'visitors_welcome', 'status',
+    'logo_path', 'accredited', 'visitors_welcome',
+    'membership_enabled', 'accepts_applications',
+    'status',
     'verification_state', 'last_verified_at', 'verification_token',
     'claimed_by', 'source',
 ])]
@@ -40,6 +42,8 @@ class Organisation extends Model
             'province' => Province::class,
             'accredited' => 'boolean',
             'visitors_welcome' => 'boolean',
+            'membership_enabled' => 'boolean',
+            'accepts_applications' => 'boolean',
             'status' => ListingStatus::class,
             'verification_state' => VerificationState::class,
             'last_verified_at' => 'immutable_datetime',
@@ -78,6 +82,20 @@ class Organisation extends Model
     public function hostedEvents(): HasMany
     {
         return $this->hasMany(Event::class, 'host_organisation_id');
+    }
+
+    public function clubMembers(): HasMany
+    {
+        return $this->hasMany(ClubMember::class);
+    }
+
+    /**
+     * Both toggles must be on — a club can keep its register private
+     * while still being published publicly.
+     */
+    public function acceptsMembershipApplications(): bool
+    {
+        return $this->membership_enabled && $this->accepts_applications;
     }
 
     public function federatedDisciplines(): HasMany

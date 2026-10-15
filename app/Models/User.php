@@ -234,10 +234,54 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return match ($panel->getId()) {
             'admin' => $this->is_staff,
             // Staff can access desk unconditionally (staff > MD > shooter).
-            // Everyone else must have opted into the MD signup path.
-            'desk' => $this->is_staff || $this->is_match_director || $this->is_media_partner,
+            // Everyone else must have opted into the MD signup path,
+            // own a hunting farm, or hold an Admin / Secretary seat on
+            // at least one club's register.
+            'desk' => $this->is_staff
+                || $this->is_match_director
+                || $this->is_media_partner
+                || $this->ownsHuntingBusiness()
+                || $this->holdsAnyMemberManagingRole(),
             default => false,
         };
+    }
+
+    /**
+     * True when the user has an Admin or Secretary seat on any club.
+     * Used both for Desk panel access and for `defaultRedirectPath()`
+     * so a pure club secretary lands on `/desk` after login.
+     */
+    public function holdsAnyMemberManagingRole(): bool
+    {
+        return $this->organisationMemberships()
+            ->whereIn('role', array_map(
+                fn (OrganisationUserRole $role): string => $role->value,
+                OrganisationUserRole::canManageMembers(),
+            ))
+            ->exists();
+    }
+
+    public function huntingProperties(): HasMany
+    {
+        return $this->hasMany(HuntingProperty::class, 'claimed_by');
+    }
+
+    public function ownsHuntingProperties(): bool
+    {
+        return $this->huntingProperties()->exists();
+    }
+
+    public function outfitters(): HasMany
+    {
+        return $this->hasMany(Outfitter::class, 'claimed_by');
+    }
+
+    /**
+     * Runs a hunting farm or a safari outfitter on Hunting or Big Game.
+     */
+    public function ownsHuntingBusiness(): bool
+    {
+        return $this->ownsHuntingProperties() || $this->outfitters()->exists();
     }
 
     /**
@@ -250,7 +294,10 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     {
         return match (true) {
             $this->is_staff => '/admin',
-            $this->is_match_director || $this->is_media_partner => '/desk',
+            $this->is_match_director,
+            $this->is_media_partner,
+            $this->ownsHuntingBusiness(),
+            $this->holdsAnyMemberManagingRole() => '/desk',
             default => '/my-calendar',
         };
     }
@@ -295,6 +342,20 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         }
 
         return $this->holdsOrganisationRole($organisation, OrganisationUserRole::canManageEvents());
+    }
+
+    public function canManageClubMembers(Organisation $organisation): bool
+    {
+        if ($this->is_staff) {
+            return true;
+        }
+
+        return $this->holdsOrganisationRole($organisation, OrganisationUserRole::canManageMembers());
+    }
+
+    public function clubMemberships(): HasMany
+    {
+        return $this->hasMany(ClubMember::class);
     }
 
     public function savedEvents(): BelongsToMany

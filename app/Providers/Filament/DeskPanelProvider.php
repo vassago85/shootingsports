@@ -61,7 +61,10 @@ class DeskPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->navigationGroups([
                 'Your listings',
+                'Hunting',
+                'Big Game',
                 'Calendar',
+                'Club',
                 'Stories',
             ])
             ->discoverResources(in: app_path('Filament/Desk/Resources'), for: 'App\\Filament\\Desk\\Resources')

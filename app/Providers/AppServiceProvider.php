@@ -5,16 +5,25 @@ namespace App\Providers;
 use App\Enums\EventStatus;
 use App\Enums\ListingStatus;
 use App\Http\Responses\LogoutResponse as PublicHomeLogoutResponse;
+use App\Listeners\LinkClubMembersOnVerified;
 use App\Models\Article;
+use App\Models\BookingRequest;
+use App\Models\ClubMember;
 use App\Models\Discipline;
 use App\Models\Enquiry;
 use App\Models\Event;
+use App\Models\HuntingProperty;
+use App\Models\Listing;
 use App\Models\MagazineIssue;
 use App\Models\Organisation;
+use App\Models\Outfitter;
 use App\Models\Provider;
+use App\Models\QuoteRequest;
 use App\Models\SlugRedirect;
+use App\Models\Species;
 use App\Models\User;
 use App\Models\Venue;
+use App\Policies\ClubMemberPolicy;
 use App\Policies\EventPolicy;
 use App\Policies\OrganisationPolicy;
 use App\Services\Geocoding\Geocoder;
@@ -24,6 +33,7 @@ use App\Support\PublicCache;
 use App\Support\TurnstileSettings;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as FilamentLogoutResponse;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -82,6 +92,7 @@ class AppServiceProvider extends ServiceProvider
         // shooter / MD flows keep working unverified for now so we do
         // not regress existing accounts, but the email still lands.
         EventDispatcher::listen(Registered::class, SendEmailVerificationNotification::class);
+        EventDispatcher::listen(Verified::class, LinkClubMembersOnVerified::class);
 
         // Binders live here, not in routes/web.php: `route:cache` (used in
         // the Docker entrypoint) never loads web.php, so slug lookups would
@@ -159,8 +170,15 @@ class AppServiceProvider extends ServiceProvider
             'enquiry' => Enquiry::class,
             'article' => Article::class,
             'magazine_issue' => MagazineIssue::class,
+            'hunting_property' => HuntingProperty::class,
+            'listing' => Listing::class,
+            'species' => Species::class,
+            'booking_request' => BookingRequest::class,
+            'outfitter' => Outfitter::class,
+            'quote_request' => QuoteRequest::class,
         ]);
 
+        Gate::policy(ClubMember::class, ClubMemberPolicy::class);
         Gate::policy(Event::class, EventPolicy::class);
         Gate::policy(Organisation::class, OrganisationPolicy::class);
 
@@ -179,6 +197,7 @@ class AppServiceProvider extends ServiceProvider
         // the plan lookup.
         Gate::define('log-attendance', fn (?User $user): bool => $user !== null);
         Gate::define('export-attendance-log', fn (?User $user): bool => (bool) $user?->allows('export'));
+        Gate::define('custom-calendar', fn (?User $user): bool => (bool) $user?->allows('custom_calendar'));
 
         $bumpPublic = static fn () => PublicCache::bump();
 

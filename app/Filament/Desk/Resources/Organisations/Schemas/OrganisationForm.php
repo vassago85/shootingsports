@@ -4,6 +4,8 @@ namespace App\Filament\Desk\Resources\Organisations\Schemas;
 
 use App\Enums\OrganisationType;
 use App\Enums\Province;
+use App\Models\Organisation;
+use App\Models\User;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -11,8 +13,10 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class OrganisationForm
@@ -75,6 +79,39 @@ class OrganisationForm
                         TextInput::make('facebook_url')
                             ->url()
                             ->columnSpanFull(),
+                    ]),
+
+                Section::make('Membership register')
+                    ->description('Turn on to manage members for this club in Desk. Applications only open when both switches are on.')
+                    ->columns(2)
+                    ->visible(function (?Organisation $record): bool {
+                        $user = Auth::user();
+
+                        if (! $user instanceof User) {
+                            return false;
+                        }
+
+                        // On create the section is visible to any user
+                        // who could manage a members register anywhere.
+                        // On edit it is only shown for clubs the user
+                        // actually manages, so a match director without
+                        // the member-admin role never sees these toggles.
+                        return $record === null
+                            ? ($user->is_staff || $user->holdsAnyMemberManagingRole())
+                            : $user->canManageClubMembers($record);
+                    })
+                    ->schema([
+                        Toggle::make('membership_enabled')
+                            ->label('Enable member register')
+                            ->inline(false)
+                            ->live()
+                            ->default(false),
+                        Toggle::make('accepts_applications')
+                            ->label('Accept online applications')
+                            ->helperText('Shows an Apply to join button on the public club page.')
+                            ->inline(false)
+                            ->disabled(fn (Get $get): bool => ! (bool) $get('membership_enabled'))
+                            ->default(false),
                     ]),
 
                 Section::make('Logo')

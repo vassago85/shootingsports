@@ -47,6 +47,12 @@
                         :key="'follow-org-'.$organisation->id"
                     />
                 </p>
+                @if ($organisation->acceptsMembershipApplications())
+                    <livewire:apply-for-membership
+                        :organisation="$organisation"
+                        :key="'apply-'.$organisation->id"
+                    />
+                @endif
                 @if ($inferredDisciplines->isNotEmpty())
                     <div class="club-tags" style="margin:16px 0 28px">
                         @foreach ($inferredDisciplines as $discipline)

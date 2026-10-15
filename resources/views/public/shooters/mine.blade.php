@@ -7,7 +7,14 @@
             <div class="wrap">
                 <p class="label">Shooter calendar</p>
                 <h1>My calendar</h1>
-                <p>Add matches from the public calendar. Subscribe once and they land on your phone calendar when you add or remove them.</p>
+                @if ($user->can('custom-calendar'))
+                    <p>Add matches from the public calendar. Subscribe once and they land on your phone calendar when you add or remove them.</p>
+                @else
+                    <p>A personal calendar is a Pro feature. Browsing every public match stays free.</p>
+                    @if (config('plans.pro_enabled'))
+                        <p style="margin-top:14px"><a class="btn" href="{{ route('upgrade') }}">See Pro</a></p>
+                    @endif
+                @endif
             </div>
         </section>
         <section class="block">
@@ -15,6 +22,32 @@
                 <livewire:manage-equipment />
             </div>
         </section>
+        @if ($clubMemberships->isNotEmpty())
+            <section class="block">
+                <div class="wrap">
+                    <h2 class="section-title">My clubs</h2>
+                    <ul class="my-clubs" style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
+                        @foreach ($clubMemberships as $membership)
+                            @php($effective = $membership->effectiveStatus())
+                            <li style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px;border:1px solid var(--line);border-radius:8px">
+                                <div>
+                                    <a class="label" href="{{ route('clubs.show', $membership->organisation->slug) }}" style="text-decoration:none;border-bottom:1px solid var(--brass)">{{ $membership->organisation->name }}</a>
+                                    @if ($membership->member_number)
+                                        <p style="margin:4px 0 0;font-family:var(--f-mono);font-size:13px;color:var(--slate)">Member no. {{ $membership->member_number }}</p>
+                                    @endif
+                                </div>
+                                <div style="text-align:right">
+                                    <span class="tag" style="background:transparent;border:1px solid var(--line)">{{ $effective->getLabel() }}</span>
+                                    @if ($membership->expires_at)
+                                        <p style="margin:4px 0 0;font-family:var(--f-mono);font-size:13px;color:var(--slate)">Expires {{ $membership->expires_at->format('j M Y') }}</p>
+                                    @endif
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </section>
+        @endif
         <section class="block">
             <div class="wrap">
                 {{-- Post-signup / persistent flash for match director
@@ -29,7 +62,7 @@
                 @elseif ($user->isMdPending())
                     <div class="pending-banner" role="status">
                         <b>Match director access pending.</b>
-                        Your request is with staff for review. It is usually approved within one working day. We will email you as soon as it is done. Your shooter calendar (below) works as normal.
+                        Your request is with staff for review. It is usually approved within one working day. We will email you as soon as it is done.
                     </div>
                 @elseif ($user->isMdRejected())
                     <div class="pending-banner" role="status" style="border-color:#f0776b">
@@ -56,8 +89,10 @@
                 @endif
 
                 @if ($events->isEmpty() && $past->isEmpty())
-                    <p class="empty">Nothing on your calendar yet. Open a match and tap Add to my calendar.</p>
-                    <p><a class="btn" href="{{ route('calendar') }}">Browse the calendar</a></p>
+                    @if ($user->can('custom-calendar'))
+                        <p class="empty">Nothing on your calendar yet. Open a match and tap Add to my calendar.</p>
+                        <p><a class="btn" href="{{ route('calendar') }}">Browse the calendar</a></p>
+                    @endif
                 @else
                     @if ($events->isNotEmpty())
                         <h2 class="section-title">Upcoming</h2>
@@ -89,8 +124,10 @@
                         @endif
                     @endif
                 @endif
-                <x-calendar-subscribe :ics="route('ical.shooter', $user->calendar_slug)" />
-                <x-embed-snippet :shooter="$user->calendar_slug" />
+                @if ($user->can('custom-calendar'))
+                    <x-calendar-subscribe :ics="route('ical.shooter', $user->calendar_slug)" />
+                    <x-embed-snippet :shooter="$user->calendar_slug" />
+                @endif
             </div>
         </section>
     </main>
