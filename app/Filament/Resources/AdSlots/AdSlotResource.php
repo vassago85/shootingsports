@@ -30,11 +30,19 @@ class AdSlotResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleGroup;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Advertising';
-
-    protected static ?int $navigationSort = 10;
+    protected static string|UnitEnum|null $navigationGroup = null;
 
     protected static ?string $navigationLabel = 'Ad slots';
+
+    /**
+     * Ad slots are the catalog behind Advertising placements. Accessed
+     * from a header action on the Advertising list, not the top-level
+     * nav — the operational page is Placements.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 
     protected static ?string $modelLabel = 'ad slot';
 

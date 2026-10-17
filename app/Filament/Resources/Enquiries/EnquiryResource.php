@@ -29,11 +29,19 @@ class EnquiryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedInbox;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Moderation';
-
-    protected static ?int $navigationSort = 5;
+    protected static string|UnitEnum|null $navigationGroup = null;
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    /**
+     * Enquiries are reached through the Inbox tab now, not the top-level
+     * nav. The resource routes (/admin/enquiries, …/edit) still work so
+     * deep links from mail and the dashboard keep resolving.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 
     public static function form(Schema $schema): Schema
     {

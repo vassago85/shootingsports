@@ -33,11 +33,15 @@ class PlacementResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMegaphone;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Advertising';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 20;
+    protected static ?int $navigationSort = 30;
 
-    protected static ?string $navigationLabel = 'Placements';
+    protected static ?string $navigationLabel = 'Advertising';
+
+    protected static ?string $pluralModelLabel = 'advertising placements';
+
+    protected static ?string $modelLabel = 'placement';
 
     public static function form(Schema $schema): Schema
     {

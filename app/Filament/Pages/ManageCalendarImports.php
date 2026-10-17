@@ -25,11 +25,13 @@ class ManageCalendarImports extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowPathRoundedSquare;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Calendar';
+    protected static string|UnitEnum|null $navigationGroup = 'System';
 
-    protected static ?string $navigationLabel = 'Calendar imports';
+    protected static ?int $navigationSort = 10;
 
-    protected static ?string $title = 'Calendar imports';
+    protected static ?string $navigationLabel = 'Imports';
+
+    protected static ?string $title = 'Imports';
 
     /**
      * @var array<string, mixed>|null

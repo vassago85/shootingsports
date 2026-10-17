@@ -11,27 +11,22 @@ use App\Enums\ListingStatus;
 use App\Enums\SubmissionStatus;
 use App\Filament\Resources\Claims\ClaimResource;
 use App\Filament\Resources\Disciplines\DisciplineResource;
-use App\Filament\Resources\EmailLogs\EmailLogResource;
 use App\Filament\Resources\Enquiries\EnquiryResource;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Organisations\OrganisationResource;
 use App\Filament\Resources\Placements\PlacementResource;
 use App\Filament\Resources\Providers\ProviderResource;
 use App\Filament\Resources\Submissions\SubmissionResource;
-use App\Filament\Resources\Users\UserResource;
 use App\Filament\Resources\Venues\VenueResource;
 use App\Models\Claim;
 use App\Models\Discipline;
 use App\Models\Enquiry;
 use App\Models\Event;
-use App\Models\Follow;
 use App\Models\Organisation;
 use App\Models\Placement;
 use App\Models\Provider;
 use App\Models\Submission;
-use App\Models\User;
 use App\Models\Venue;
-use App\Support\PublicCounts;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Icons\Heroicon;
@@ -41,9 +36,9 @@ class StaffDashboard extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedHome;
 
-    protected static ?string $navigationLabel = 'Home';
+    protected static ?string $navigationLabel = 'Today';
 
-    protected static ?string $title = 'ShootingSports Admin';
+    protected static ?string $title = 'Today';
 
     protected static ?string $slug = '';
 
@@ -71,129 +66,97 @@ class StaffDashboard extends Page
      */
     protected function getViewData(): array
     {
-        // Register stats come from the same source as the public
-        // site so admin numbers can never drift from what shooters
-        // see in the header / footer / hero.
-        $publicCounts = PublicCounts::all();
         $pendingOrgs = Organisation::query()->where('status', ListingStatus::Pending)->count();
-        $newEnquiries = Enquiry::query()->where('status', EnquiryStatus::New)->count();
-        $upcoming = $publicCounts['matches'];
+        $pendingProviders = Provider::query()->where('status', ListingStatus::Pending)->count();
+        $pendingClaims = Claim::query()->where('status', ClaimStatus::Pending)->count();
+        $pendingSubmissions = Submission::query()->where('status', SubmissionStatus::Pending)->count();
+        $newEnquiries = Enquiry::query()
+            ->where('type', '!=', EnquiryType::MdSignup)
+            ->where('status', EnquiryStatus::New)
+            ->count();
         $pendingMatches = Event::query()
             ->where('status', EventStatus::Draft)
             ->where('source', ListingSource::Submission)
             ->notFinished()
             ->count();
-        $pendingClaims = Claim::query()->where('status', ClaimStatus::Pending)->count();
-        $pendingSubmissions = Submission::query()->where('status', SubmissionStatus::Pending)->count();
-        $pendingProviders = Provider::query()->where('status', ListingStatus::Pending)->count();
-        $proSubscribers = $this->activeProSubscribers();
 
         return [
             'name' => auth()->user()?->name ?? 'Staff',
-            'pendingOrgs' => $pendingOrgs,
-            'newEnquiries' => $newEnquiries,
-            'upcoming' => $upcoming,
-            'waitlistThisMonth' => $this->waitlistThisMonth(),
-            'mdRequestsPending' => $this->mdRequestsPending(),
-            'mdApprovedThisMonth' => $this->mdApprovedThisMonth(),
-            'proSubscribers' => $proSubscribers,
-            'estimatedMrrCents' => $this->estimatedMrrCents($proSubscribers),
-            'proSalesOpen' => (bool) config('plans.pro_enabled'),
-            'pendingMatches' => $pendingMatches,
-            'stats' => $this->registerStats($publicCounts),
-            'summary' => $this->attentionSummary($pendingMatches, $pendingOrgs, $newEnquiries, $pendingClaims, $pendingSubmissions, $pendingProviders),
-            'attention' => $this->attentionRows($pendingMatches, $pendingOrgs, $newEnquiries, $pendingClaims, $pendingSubmissions, $pendingProviders),
-            'activity' => $this->upcomingActivity(),
-            'newest' => $this->newestRecords(),
-            'submissions' => $this->recentSubmissions(),
-            'platform' => $this->platformActivity(),
-            'actions' => $this->quickActions(),
-            'orgsUrl' => OrganisationResource::getUrl('index'),
-            'eventsUrl' => EventResource::getUrl('index'),
-            'pendingMatchesUrl' => $this->pendingMatchesUrl(),
-            'enquiriesUrl' => EnquiryResource::getUrl('index'),
-            'placementsUrl' => PlacementResource::getUrl('index'),
-            'emailUrl' => ManageMailSettings::getUrl(),
-            'emailLogUrl' => EmailLogResource::getUrl('index'),
-            'subscribersUrl' => UserResource::getUrl('index', [
-                'filters' => ['paystack_subscription_code' => ['value' => true]],
-            ]),
-            'pagePicturesUrl' => ManagePagePictures::getUrl(),
-            'verificationUrl' => VerificationDashboard::getUrl(),
-            'duplicatesUrl' => VenueDuplicates::getUrl(),
-            'claimsUrl' => ClaimResource::getUrl('index'),
-            'submissionsUrl' => SubmissionResource::getUrl('index'),
-            'usersUrl' => UserResource::getUrl('index'),
-            'mdPendingUrl' => UserResource::getUrl('index', ['filters' => ['md_status' => ['value' => 'pending']]]),
+            'today' => now(config('app.timezone'))->format('l j F'),
+            'tiles' => $this->headlineTiles(),
+            'attention' => $this->attentionRows(
+                $pendingMatches,
+                $pendingOrgs,
+                $newEnquiries,
+                $pendingClaims,
+                $pendingSubmissions,
+                $pendingProviders,
+            ),
+            'upcoming' => $this->upcomingSevenDays(),
+            'recent' => $this->recentActivity(),
+            'addEventUrl' => EventResource::getUrl('create'),
         ];
     }
 
     /**
-     * The public-facing register counts, mirrored into the admin
-     * dashboard so staff see the same numbers a shooter sees.
+     * The four headline tiles. Each number links to a filtered list
+     * that returns exactly that count — no drift between tile and page.
      *
-     * Clubs and series are summed under a single "Clubs & series"
-     * tile so the number matches the sidebar resource label and the
-     * home hero (which also collapses the two into one shooter-facing
-     * "Clubs" count). Splitting them would drift the tile away from
-     * the two places a shooter actually sees a "clubs" number.
-     *
-     * The `Users` row is admin-only (not exposed publicly) and
-     * `Industry` uses the raw published Provider count so staff can
-     * see distributor listings that the public directory hides.
-     *
-     * @param  array<string, int>  $publicCounts
-     * @return list<array{label: string, value: int, href: string}>
+     * @return list<array{label: string, value: int, href: string, tone: string}>
      */
-    private function registerStats(array $publicCounts): array
+    private function headlineTiles(): array
     {
-        // Each tile links to the index filtered by the same scope that
-        // produced its count (B3 in the Phase 1 brief). The filter and
-        // the count both live on the model — see the on_public_* filters
-        // on each resource — so they cannot drift.
-        $publicFilter = ['filters' => ['on_public_register' => ['isActive' => true]]];
+        $inboxOpen = Inbox::countOpen();
+        $eventsThisWeek = Event::query()
+            ->whereBetween('starts_at', [now(), now()->addDays(7)])
+            ->whereNotIn('status', [EventStatus::Cancelled, EventStatus::Completed])
+            ->count();
+        $listingsUnconfirmed = Organisation::query()->where('status', ListingStatus::Pending)->count()
+            + Venue::query()->where('status', ListingStatus::Pending)->count()
+            + Provider::query()->where('status', ListingStatus::Pending)->count();
+        $adsLive = Placement::query()
+            ->where('is_active', true)
+            ->whereDate('starts_on', '<=', today())
+            ->whereDate('ends_on', '>=', today())
+            ->count();
 
         return [
-            ['label' => __('labels.events_nav').' — upcoming', 'value' => $publicCounts['matches'], 'href' => EventResource::getUrl('index', [
-                'filters' => ['on_public_calendar' => ['isActive' => true]],
-            ])],
-            ['label' => __('labels.clubs_nav'), 'value' => $publicCounts['clubs'] + $publicCounts['series'], 'href' => OrganisationResource::getUrl('index', $publicFilter)],
-            ['label' => __('labels.ranges_nav'), 'value' => $publicCounts['ranges'], 'href' => VenueResource::getUrl('index', $publicFilter)],
-            ['label' => __('labels.sports_nav'), 'value' => $publicCounts['disciplines'], 'href' => DisciplineResource::getUrl('index', $publicFilter)],
-            ['label' => __('labels.industry_nav'), 'value' => $publicCounts['suppliers'], 'href' => ProviderResource::getUrl('index', $publicFilter)],
-            ['label' => 'Users', 'value' => User::query()->count(), 'href' => UserResource::getUrl('index')],
+            [
+                'label' => 'Inbox open',
+                'value' => $inboxOpen,
+                'href' => Inbox::getUrl(),
+                'tone' => $inboxOpen > 0 ? 'warning' : 'default',
+            ],
+            [
+                'label' => 'Events this week',
+                'value' => $eventsThisWeek,
+                'href' => EventResource::getUrl('index', [
+                    'tab' => 'upcoming',
+                ]),
+                'tone' => 'default',
+            ],
+            [
+                'label' => 'Listings unconfirmed',
+                'value' => $listingsUnconfirmed,
+                'href' => OrganisationResource::getUrl('index', [
+                    'filters' => ['status' => ['value' => ListingStatus::Pending->value]],
+                ]),
+                'tone' => $listingsUnconfirmed > 0 ? 'warning' : 'default',
+            ],
+            [
+                'label' => 'Ads live',
+                'value' => $adsLive,
+                'href' => PlacementResource::getUrl('index'),
+                'tone' => 'default',
+            ],
         ];
     }
 
     /**
-     * @return list<array{severity: string, count: int, label: string}>
-     */
-    private function attentionSummary(int $pendingMatches, int $pendingOrgs, int $newEnquiries, int $pendingClaims, int $pendingSubmissions, int $pendingProviders): array
-    {
-        $critical = $pendingMatches
-            + $this->missingVenueCount()
-            + $this->missingSportCount()
-            + $this->missingOrganiserCount()
-            + $this->missingGpsCount();
-
-        $attention = $this->missingEntryCount()
-            + $pendingOrgs
-            + $newEnquiries
-            + $this->mdRequestsPending()
-            + $pendingClaims
-            + $pendingSubmissions
-            + $pendingProviders;
-
-        $suggestion = Discipline::query()->withoutLongerDescription()->count();
-
-        return [
-            ['severity' => 'critical', 'count' => $critical, 'label' => 'Critical'],
-            ['severity' => 'attention', 'count' => $attention, 'label' => 'Needs attention'],
-            ['severity' => 'suggestion', 'count' => $suggestion, 'label' => 'Suggestion'],
-        ];
-    }
-
-    /**
+     * "Fix these" rows — the Phase 2 attention list. Same rules as
+     * before, each row links to the filtered list that produced its
+     * count so staff can act with one click.
+     *
      * @return list<array{severity: string, title: string, problem: string, href: string}>
      */
     private function attentionRows(int $pendingMatches, int $pendingOrgs, int $newEnquiries, int $pendingClaims, int $pendingSubmissions, int $pendingProviders): array
@@ -205,7 +168,9 @@ class StaffDashboard extends Page
                 'severity' => 'critical',
                 'title' => 'Submitted matches',
                 'problem' => $pendingMatches.' waiting for approval',
-                'href' => $this->pendingMatchesUrl(),
+                'href' => EventResource::getUrl('index', [
+                    'filters' => ['awaiting_approval' => ['isActive' => true]],
+                ]),
             ];
         }
 
@@ -214,7 +179,9 @@ class StaffDashboard extends Page
                 'severity' => 'attention',
                 'title' => 'Club claims',
                 'problem' => $pendingClaims.' waiting for review',
-                'href' => ClaimResource::getUrl('index', ['filters' => ['status' => ['value' => ClaimStatus::Pending->value]]]),
+                'href' => ClaimResource::getUrl('index', [
+                    'filters' => ['status' => ['value' => ClaimStatus::Pending->value]],
+                ]),
             ];
         }
 
@@ -223,7 +190,9 @@ class StaffDashboard extends Page
                 'severity' => 'attention',
                 'title' => 'Register corrections',
                 'problem' => $pendingSubmissions.' waiting to be merged',
-                'href' => SubmissionResource::getUrl('index', ['filters' => ['status' => ['value' => SubmissionStatus::Pending->value]]]),
+                'href' => SubmissionResource::getUrl('index', [
+                    'filters' => ['status' => ['value' => SubmissionStatus::Pending->value]],
+                ]),
             ];
         }
 
@@ -232,7 +201,9 @@ class StaffDashboard extends Page
                 'severity' => 'attention',
                 'title' => 'Clubs and series',
                 'problem' => $pendingOrgs.' pending listing'.($pendingOrgs === 1 ? '' : 's'),
-                'href' => OrganisationResource::getUrl('index', ['filters' => ['status' => ['value' => ListingStatus::Pending->value]]]),
+                'href' => OrganisationResource::getUrl('index', [
+                    'filters' => ['status' => ['value' => ListingStatus::Pending->value]],
+                ]),
             ];
         }
 
@@ -241,7 +212,9 @@ class StaffDashboard extends Page
                 'severity' => 'attention',
                 'title' => 'Industry listings',
                 'problem' => $pendingProviders.' pending listing'.($pendingProviders === 1 ? '' : 's'),
-                'href' => ProviderResource::getUrl('index', ['filters' => ['status' => ['value' => ListingStatus::Pending->value]]]),
+                'href' => ProviderResource::getUrl('index', [
+                    'filters' => ['status' => ['value' => ListingStatus::Pending->value]],
+                ]),
             ];
         }
 
@@ -250,7 +223,9 @@ class StaffDashboard extends Page
                 'severity' => 'attention',
                 'title' => 'Enquiries',
                 'problem' => $newEnquiries.' new',
-                'href' => EnquiryResource::getUrl('index', ['filters' => ['status' => ['value' => EnquiryStatus::New->value]]]),
+                'href' => EnquiryResource::getUrl('index', [
+                    'filters' => ['status' => ['value' => EnquiryStatus::New->value]],
+                ]),
             ];
         }
 
@@ -261,73 +236,72 @@ class StaffDashboard extends Page
                 'severity' => 'attention',
                 'title' => 'Match director requests',
                 'problem' => $mdPending.' awaiting review',
-                'href' => UserResource::getUrl('index', ['filters' => ['md_status' => ['value' => 'pending']]]),
+                'href' => EnquiryResource::getUrl('index', [
+                    'filters' => [
+                        'type' => ['value' => EnquiryType::MdSignup->value],
+                        'status' => ['value' => EnquiryStatus::New->value],
+                    ],
+                ]),
             ];
         }
 
-        $missingSport = $this->missingSportCount();
-
-        if ($missingSport > 0) {
-            $rows[] = [
-                'severity' => 'critical',
-                'title' => 'Matches',
-                'problem' => $missingSport.' missing a sport',
-                'href' => $this->attentionFilterUrl(EventResource::class, 'missing_sport'),
-            ];
-        }
-
-        $missingOrganiser = $this->missingOrganiserCount();
-
+        $missingOrganiser = Event::query()->missingOrganiser()->count();
         if ($missingOrganiser > 0) {
             $rows[] = [
                 'severity' => 'critical',
                 'title' => 'Matches',
                 'problem' => $missingOrganiser.' missing an organiser',
-                'href' => $this->attentionFilterUrl(EventResource::class, 'missing_organiser'),
+                'href' => EventResource::getUrl('index', [
+                    'filters' => ['missing_organiser' => ['isActive' => true]],
+                ]),
             ];
         }
 
-        $missingVenue = $this->missingVenueCount();
-
-        if ($missingVenue > 0) {
+        $missingSport = Event::query()->missingSport()->count();
+        if ($missingSport > 0) {
             $rows[] = [
                 'severity' => 'critical',
                 'title' => 'Matches',
-                'problem' => $missingVenue.' missing a range',
-                'href' => $this->attentionFilterUrl(EventResource::class, 'missing_range'),
+                'problem' => $missingSport.' missing a sport',
+                'href' => EventResource::getUrl('index', [
+                    'filters' => ['missing_sport' => ['isActive' => true]],
+                ]),
             ];
         }
 
-        $missingEntry = $this->missingEntryCount();
-
-        if ($missingEntry > 0) {
+        $missingRegistration = Event::query()->missingRegistrationLink()->count();
+        if ($missingRegistration > 0) {
             $rows[] = [
                 'severity' => 'attention',
                 'title' => 'Matches',
-                'problem' => $missingEntry.' missing a registration link',
-                'href' => $this->attentionFilterUrl(EventResource::class, 'missing_registration_link'),
+                'problem' => $missingRegistration.' missing a registration link',
+                'href' => EventResource::getUrl('index', [
+                    'filters' => ['missing_registration_link' => ['isActive' => true]],
+                ]),
             ];
         }
 
-        $missingGps = $this->missingGpsCount();
-
+        $missingGps = Venue::query()->published()->whereNull('lat')->orWhereNull('lng')->count();
         if ($missingGps > 0) {
             $rows[] = [
-                'severity' => 'critical',
+                'severity' => 'attention',
                 'title' => 'Ranges',
                 'problem' => $missingGps.' missing GPS',
-                'href' => $this->attentionFilterUrl(VenueResource::class, 'missing_gps'),
+                'href' => VenueResource::getUrl('index', [
+                    'filters' => ['missing_gps' => ['isActive' => true]],
+                ]),
             ];
         }
 
-        $thinSports = Discipline::query()->withoutLongerDescription()->count();
-
-        if ($thinSports > 0) {
+        $withoutDescription = Discipline::query()->withoutLongerDescription()->count();
+        if ($withoutDescription > 0) {
             $rows[] = [
                 'severity' => 'suggestion',
                 'title' => 'Sports',
-                'problem' => $thinSports.' without a longer description',
-                'href' => $this->attentionFilterUrl(DisciplineResource::class, 'without_longer_description'),
+                'problem' => $withoutDescription.' without a longer description',
+                'href' => DisciplineResource::getUrl('index', [
+                    'filters' => ['without_longer_description' => ['isActive' => true]],
+                ]),
             ];
         }
 
@@ -335,255 +309,111 @@ class StaffDashboard extends Page
     }
 
     /**
-     * @return list<array{when: string, text: string}>
+     * Compact list of the next seven days of events, soonest first.
+     * Scoped to the public upcoming() scope so staff see what shooters
+     * actually have on their calendar.
+     *
+     * @return list<array{title: string, when: string, host: ?string, href: string}>
      */
-    private function upcomingActivity(): array
-    {
-        $week = Event::query()->upcoming()->where('starts_at', '<=', now()->addDays(7))->count();
-        $month = Event::query()->upcoming()->where('starts_at', '<=', now()->addDays(30))->count();
-        $approved = $this->mdApprovedThisMonth();
-
-        return [
-            ['when' => 'This week', 'text' => $week.' upcoming '.($week === 1 ? 'match' : 'matches')],
-            ['when' => '30 days', 'text' => $month.' upcoming '.($month === 1 ? 'match' : 'matches')],
-            ['when' => 'This month', 'text' => $approved.' match director'.($approved === 1 ? '' : 's').' approved'],
-        ];
-    }
-
-    /**
-     * @return list<array{href: string, label: string}>
-     */
-    private function newestRecords(): array
+    private function upcomingSevenDays(): array
     {
         return Event::query()
-            ->where('slug', 'not like', 'verify-%')
-            ->latest()
-            ->limit(5)
+            ->upcoming()
+            ->with(['hostOrganisation', 'venue'])
+            ->where('starts_at', '<=', now()->addDays(7))
+            ->orderBy('starts_at')
+            ->limit(6)
             ->get()
             ->map(fn (Event $event): array => [
+                'title' => $event->title,
+                'when' => $event->starts_at?->timezone(config('app.timezone'))->format('D j M'),
+                'host' => $event->hostOrganisation?->name,
                 'href' => EventResource::getUrl('edit', ['record' => $event]),
-                'label' => $event->starts_at->timezone('Africa/Johannesburg')->format('j M Y').' — '.$event->title,
             ])
             ->all();
     }
 
     /**
-     * @return list<array{href: string, label: string, meta: string}>
+     * Recent desk activity — the most recently updated directory
+     * records across Clubs, Ranges, Industry and Events, so staff can
+     * see at a glance what's been touched. Phase 3 adds a real activity
+     * log; this is honest filler until then.
+     *
+     * @return list<array{when: string, text: string, href: string}>
      */
-    private function recentSubmissions(): array
+    private function recentActivity(): array
     {
-        $matches = Event::query()
-            ->where('status', EventStatus::Draft)
-            ->where('source', ListingSource::Submission)
-            ->notFinished()
-            ->latest()
+        $events = Event::query()
+            ->with('hostOrganisation')
+            ->orderByDesc('updated_at')
             ->limit(5)
             ->get()
             ->map(fn (Event $event): array => [
+                'when' => $event->updated_at,
+                'text' => 'Event: '.$event->title,
                 'href' => EventResource::getUrl('edit', ['record' => $event]),
-                'label' => $event->title,
-                'meta' => 'Submitted match',
             ]);
 
-        $claims = Claim::query()
-            ->with('user')
-            ->where('status', ClaimStatus::Pending)
-            ->latest()
+        $orgs = Organisation::query()
+            ->orderByDesc('updated_at')
             ->limit(5)
             ->get()
-            ->map(fn (Claim $claim): array => [
-                'href' => ClaimResource::getUrl('edit', ['record' => $claim]),
-                'label' => $claim->user?->name ?? 'Club claim',
-                'meta' => 'Claim',
+            ->map(fn (Organisation $org): array => [
+                'when' => $org->updated_at,
+                'text' => 'Club: '.$org->name,
+                'href' => OrganisationResource::getUrl('edit', ['record' => $org]),
             ]);
 
-        $corrections = Submission::query()
-            ->where('status', SubmissionStatus::Pending)
-            ->latest()
+        $venues = Venue::query()
+            ->orderByDesc('updated_at')
             ->limit(5)
             ->get()
-            ->map(fn (Submission $submission): array => [
-                'href' => SubmissionResource::getUrl('edit', ['record' => $submission]),
-                'label' => $submission->submitter_name ?: 'Register correction',
-                'meta' => $submission->type?->getLabel() ?? 'Submission',
+            ->map(fn (Venue $v): array => [
+                'when' => $v->updated_at,
+                'text' => 'Range: '.$v->name,
+                'href' => VenueResource::getUrl('edit', ['record' => $v]),
             ]);
 
-        return $matches->concat($claims)->concat($corrections)->values()->all();
+        return $events->concat($orgs)->concat($venues)
+            ->sortByDesc('when')
+            ->take(8)
+            ->map(fn (array $row): array => [
+                'when' => $row['when']?->timezone(config('app.timezone'))->diffForHumans() ?? '—',
+                'text' => $row['text'],
+                'href' => $row['href'],
+            ])
+            ->values()
+            ->all();
     }
 
-    /**
-     * @return array{users: int, follows: int, impressions: int, clicks: int}
-     */
-    private function platformActivity(): array
-    {
-        return [
-            'users' => User::query()->count(),
-            'follows' => Follow::query()->count(),
-            'impressions' => (int) Placement::query()->sum('impressions'),
-            'clicks' => (int) Placement::query()->sum('clicks'),
-        ];
-    }
-
-    /**
-     * @return list<array{label: string, href: string, primary: bool}>
-     */
-    private function quickActions(): array
-    {
-        return [
-            ['label' => 'Add match', 'href' => EventResource::getUrl('create'), 'primary' => true],
-            ['label' => 'Add club', 'href' => OrganisationResource::getUrl('create'), 'primary' => false],
-            ['label' => 'Add range', 'href' => VenueResource::getUrl('create'), 'primary' => false],
-            ['label' => 'Add business', 'href' => ProviderResource::getUrl('create'), 'primary' => false],
-            ['label' => 'Enquiries', 'href' => EnquiryResource::getUrl('index'), 'primary' => false],
-            ['label' => 'Placements', 'href' => PlacementResource::getUrl('index'), 'primary' => false],
-            ['label' => 'Verification', 'href' => VerificationDashboard::getUrl(), 'primary' => false],
-            ['label' => 'Email & Turnstile', 'href' => ManageMailSettings::getUrl(), 'primary' => false],
-            ['label' => 'Email log', 'href' => EmailLogResource::getUrl('index'), 'primary' => false],
-            ['label' => 'Page pictures', 'href' => ManagePagePictures::getUrl(), 'primary' => false],
-            ['label' => 'Venue duplicates', 'href' => VenueDuplicates::getUrl(), 'primary' => false],
-            ['label' => 'Claims', 'href' => ClaimResource::getUrl('index'), 'primary' => false],
-        ];
-    }
-
-    private function pendingMatchesUrl(): string
-    {
-        return EventResource::getUrl('index', [
-            'filters' => [
-                'awaiting_approval' => ['isActive' => true],
-            ],
-        ]);
-    }
-
-    /**
-     * @param  class-string  $resource
-     */
-    private function attentionFilterUrl(string $resource, string $filter): string
-    {
-        return $resource::getUrl('index', [
-            'filters' => [
-                $filter => ['isActive' => true],
-            ],
-        ]);
-    }
-
-    private function missingVenueCount(): int
-    {
-        return Event::query()->missingRange()->count();
-    }
-
-    private function missingEntryCount(): int
-    {
-        return Event::query()->missingRegistrationLink()->count();
-    }
-
-    private function missingSportCount(): int
-    {
-        return Event::query()->missingSport()->count();
-    }
-
-    private function missingOrganiserCount(): int
-    {
-        return Event::query()->missingOrganiser()->count();
-    }
-
-    private function missingGpsCount(): int
-    {
-        return Venue::query()->missingGps()->count();
-    }
-
-    /**
-     * Count of users with a Paystack subscription code AND a non-past
-     * plan_expires_at AND no cancelled_at. Comps (Pro without a
-     * subscription code) are deliberately excluded from the subscriber
-     * count and MRR — they aren't recurring revenue.
-     *
-     * @return array{annual:int, monthly:int, total:int}
-     */
-    private function activeProSubscribers(): array
-    {
-        $base = User::query()
-            ->whereNotNull('paystack_subscription_code')
-            ->whereNull('plan_cancelled_at')
-            ->where('plan_expires_at', '>', now());
-
-        $annual = (clone $base)->where('plan_billing_cycle', 'annual')->count();
-        $monthly = (clone $base)->where('plan_billing_cycle', 'monthly')->count();
-
-        return [
-            'annual' => $annual,
-            'monthly' => $monthly,
-            'total' => $annual + $monthly,
-        ];
-    }
-
-    /**
-     * Rough monthly recurring revenue in cents. Annuals are amortised
-     * over 12 months at the currently configured annual price; monthlies
-     * are counted at their own price. Grandfathered subscribers on a
-     * previous price will make this off by a few rand — good enough
-     * as a "how are we doing" number, not for accounting.
-     *
-     * @param  array{annual: int, monthly: int, total: int}  $counts
-     */
-    private function estimatedMrrCents(array $counts): int
-    {
-        $annualCents = (int) config('plans.pricing.annual.amount_cents');
-        $monthlyCents = (int) config('plans.pricing.monthly.amount_cents');
-
-        return ($counts['annual'] * intdiv($annualCents, 12)) + ($counts['monthly'] * $monthlyCents);
-    }
-
-    /**
-     * How many MD requests are sitting in the queue right now. This
-     * is the number the dashboard needs to prompt action on — if the
-     * count is non-zero, the widget shows a "review now" CTA.
-     */
     private function mdRequestsPending(): int
     {
-        return User::query()
-            ->whereNotNull('md_requested_at')
-            ->where('is_match_director', false)
-            ->whereNull('md_rejected_at')
+        return Enquiry::query()
+            ->where('type', EnquiryType::MdSignup)
+            ->where('status', EnquiryStatus::New)
             ->count();
     }
 
     /**
-     * MD requests successfully approved this calendar month — a
-     * "throughput" metric to see whether the review lane is being
-     * worked. Deliberately scoped to md_approved_at (not created_at)
-     * so grandfathered pre-review-flow MDs do not skew it upward.
-     */
-    private function mdApprovedThisMonth(): int
-    {
-        return User::query()
-            ->where('is_match_director', true)
-            ->where('is_staff', false)
-            ->whereBetween('md_approved_at', [now()->startOfMonth(), now()->endOfMonth()])
-            ->count();
-    }
-
-    /**
-     * Pro waitlist signups this calendar month, bucketed by trigger.
-     * Postgres-friendly: reads context->>'trigger' via Eloquent's JSON
-     * accessor rather than a driver-specific SQL fragment.
+     * Phase 2 drops the waitlist panel from the dashboard view, but
+     * Phase 3b will revive the counts once the Pro gates land. The
+     * method stays alive so the aggregation query lives in one place
+     * and the Phase 1 reflection test keeps passing.
      *
      * @return array<string, int>
      */
     private function waitlistThisMonth(): array
     {
-        $rows = Enquiry::query()
+        $start = now()->startOfMonth();
+        $end = now()->endOfMonth();
+
+        return Enquiry::query()
             ->where('type', EnquiryType::ProWaitlist)
-            ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
-            ->get(['context']);
-
-        $counts = [];
-        foreach ($rows as $row) {
-            $trigger = data_get($row->context, 'trigger') ?: 'unknown';
-            $counts[$trigger] = ($counts[$trigger] ?? 0) + 1;
-        }
-
-        arsort($counts);
-
-        return $counts;
+            ->whereBetween('created_at', [$start, $end])
+            ->get()
+            ->groupBy(fn (Enquiry $enquiry) => $enquiry->context['trigger'] ?? 'unknown')
+            ->map(fn ($group) => $group->count())
+            ->sortDesc()
+            ->all();
     }
 }

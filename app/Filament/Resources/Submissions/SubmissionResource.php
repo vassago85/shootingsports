@@ -33,9 +33,16 @@ class SubmissionResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedInbox;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Moderation';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 10;
+    /**
+     * Submissions are reached through the Inbox tab now, not the top-level
+     * nav. The resource routes still resolve for deep links.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 
     public static function canCreate(): bool
     {

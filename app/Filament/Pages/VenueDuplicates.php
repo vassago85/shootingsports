@@ -17,15 +17,23 @@ class VenueDuplicates extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleGroup;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Directory';
-
-    protected static ?int $navigationSort = 21;
+    protected static string|UnitEnum|null $navigationGroup = null;
 
     protected static ?string $navigationLabel = 'Venue duplicates';
 
     protected static ?string $title = 'Likely venue duplicates';
 
     protected string $view = 'filament.pages.venue-duplicates';
+
+    /**
+     * Phase 2 reaches this page from the "Find duplicates" header
+     * action on the Ranges list, not the top-level nav. The route
+     * stays live so bookmarks and the header action's URL both work.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 
     /**
      * @return list<array{key: string, venues: Collection<int, Venue>}>

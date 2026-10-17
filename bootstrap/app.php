@@ -3,6 +3,7 @@
 use App\Http\Middleware\ApplySecurityHeaders;
 use App\Http\Middleware\CanonicalHost;
 use App\Http\Middleware\EnsureComingSoonAccess;
+use App\Http\Middleware\RedirectRetiredAdminUrls;
 use App\Http\Middleware\RestrictHealthEndpoint;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -37,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             CanonicalHost::class,
             EnsureComingSoonAccess::class,
+            RedirectRetiredAdminUrls::class,
             ApplySecurityHeaders::class,
         ]);
 

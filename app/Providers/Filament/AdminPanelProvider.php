@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Http\Middleware\ApplySecurityHeaders;
+use App\Http\Middleware\RedirectRetiredAdminUrls;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -56,11 +57,11 @@ class AdminPanelProvider extends PanelProvider
             ->themeSwitcher(false)
             ->sidebarCollapsibleOnDesktop()
             ->navigationGroups([
-                'Moderation',
+                // Phase 2: Home, Inbox, Advertising and Users are
+                // top-level (null group). The two groups below hold
+                // everything that lives behind one entry point.
                 'Directory',
-                'Calendar',
-                'Advertising',
-                'Settings',
+                'System',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
@@ -77,6 +78,7 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
                 ApplySecurityHeaders::class,
+                RedirectRetiredAdminUrls::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

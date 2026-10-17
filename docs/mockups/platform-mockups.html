@@ -89,6 +89,22 @@ td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
 .flow .card{text-align:center}
 .arrow{color:var(--accent-hi);font:600 18px "IBM Plex Mono"}
 .diff del{color:var(--danger);text-decoration:line-through}.diff ins{color:var(--ok);text-decoration:none}
+.pubnav{display:flex;gap:18px;align-items:center;font-size:13.5px;color:var(--muted);flex-wrap:wrap}
+.pubnav b{color:var(--text);font-weight:500}
+.mesub{display:flex;gap:4px;padding:0 24px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.mesub span{padding:10px 12px;color:var(--muted);font-size:13px;border-bottom:2px solid transparent}
+.mesub span.on{color:var(--text);border-color:var(--accent-hi)}
+.ev{display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.ev:first-of-type{border-top:0}
+.date{text-align:center;border:1px solid var(--line);border-radius:6px;padding:4px 0;font:600 11px "IBM Plex Mono";color:var(--muted)}
+.date b{display:block;font:700 22px "Saira Condensed";color:var(--text);line-height:1}
+.locked{position:relative;border-style:dashed}
+.locked .lk{font:500 11px "IBM Plex Mono";color:var(--warn);letter-spacing:.08em}
+.bars{display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:8px}
+.bars div{flex:1;background:var(--accent);border-radius:3px 3px 0 0;position:relative}
+.bars div.hi{background:var(--accent-hi)}
+.bars span{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font:500 10px "IBM Plex Mono";color:var(--muted)}
+.big{font:700 44px "Saira Condensed";line-height:1}
 @media (max-width:900px){
   .app{grid-template-columns:1fr}.side{display:none}
   .grid4,.grid3{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}
@@ -114,6 +130,8 @@ td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
     <button data-s="s5">5 · Desk home (industry)</button>
     <button data-s="s6">6 · No desk access yet</button>
     <button data-s="s7">7 · Access map</button>
+    <button data-s="s8">8 · Shooter (free)</button>
+    <button data-s="s9">9 · Shooter (Pro)</button>
   </div>
 
   <!-- 1 ADMIN TODAY -->
@@ -330,7 +348,7 @@ td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
         <div class="arrow">→</div>
         <div class="card">Check capabilities<br><span class="muted">role · approved memberships · media partner</span></div>
         <div class="arrow">→</div>
-        <div class="card">Staff → /admin<br>Desk user → /desk<br>Shooter → /my-calendar</div>
+        <div class="card">Staff → /admin<br>Everyone else → /me<br><span class="muted">Desk users open /desk from /me</span></div>
       </div>
     </div>
     <div class="card" style="margin-top:14px">
@@ -343,7 +361,8 @@ td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
         <tr><td>Desk · My business, Adverts</td><td>—</td><td>—</td><td class="y">own listing</td><td>—</td><td class="muted">own listing</td></tr>
         <tr><td>Desk · Articles, Magazine</td><td>—</td><td>—</td><td>—</td><td class="y">own content</td><td class="muted">own content</td></tr>
         <tr><td>Publish without review</td><td>—</td><td class="muted">trusted clubs</td><td class="muted">description, photos</td><td>—</td><td class="y">yes</td></tr>
-        <tr><td>Public account pages</td><td class="y">yes</td><td class="y">yes</td><td class="y">yes</td><td class="y">yes</td><td class="y">yes</td></tr>
+        <tr><td>/me shooter dashboard</td><td class="y">yes</td><td class="y">yes + Open desk</td><td class="y">yes + Open desk</td><td class="y">yes + Open desk</td><td class="y">yes</td></tr>
+        <tr><td>Pro features on /me</td><td class="muted">Pro or trial</td><td class="muted">Pro or trial</td><td class="muted">Pro or trial</td><td class="muted">Pro or trial</td><td class="muted">Pro or trial</td></tr>
       </table>
     </div>
     <div class="card" style="margin-top:14px">
@@ -356,6 +375,111 @@ td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
         <tr><td>events.publication</td><td>draft · pending_review · published · rejected</td><td class="muted">mixed into status today</td></tr>
         <tr><td>organisations.trusted</td><td>boolean, staff-only</td><td class="muted">new</td></tr>
       </table>
+    </div>
+  </section>
+
+  <!-- 8 SHOOTER FREE -->
+  <section class="screen" id="s8">
+    <div class="note"><b>Phase 3b.</b> Public layout, not a panel. /me pulls together My calendar, My log, follows and settings. Free stays useful: calendar, near-you discovery, iCal, digest. One locked Pro card only. Event names, ranges and the shooter's numbers are placeholders.</div>
+    <div class="frame">
+      <div class="topbar"><div class="logo">SHOOTING<span>SPORTS</span></div><div class="pubnav"><span>Events</span><span>Sports</span><span>Clubs</span><span>Ranges</span><span>Industry</span><b>My dashboard ▾</b></div></div>
+      <div class="mesub"><span class="on">Home</span><span>Calendar</span><span>Log</span><span>Following</span><span>Settings</span></div>
+      <main class="main">
+        <div class="hdr"><div><div class="eyebrow">Gauteng · 200 km radius · <a href="#" style="color:var(--accent-hi)">edit</a></div><h2>Hi Sam</h2></div><div style="display:flex;gap:8px;align-items:center"><span class="pill">FREE</span><button class="btn ghost">Find events</button></div></div>
+        <div class="grid2">
+          <div class="card"><h3>Next up</h3>
+            <div class="ev"><div class="date">SAT<b>24</b>OCT</div><div>Club monthly shoot<br><span class="muted">Example Range · 45 km</span></div><span class="sev okk">ENTRIES OPEN</span></div>
+            <div class="ev"><div class="date">SAT<b>07</b>NOV</div><div>Provincial round 5<br><span class="muted">Example Farm · 160 km</span></div><span class="sev s">CONFIRMED</span></div>
+            <div class="ev"><div class="date">SAT<b>21</b>NOV</div><div>Steel challenge<br><span class="muted">Example Range · 80 km</span></div><span class="sev w">POSTPONED</span></div>
+            <div class="row"><span class="muted">Calendar feed for your phone</span><button class="btn sm ghost">Copy iCal link</button></div>
+          </div>
+          <div class="card"><h3>Open near you</h3>
+            <p class="muted" style="margin:-4px 0 6px;font-size:12.5px">Your sports, within 200 km, soonest first</p>
+            <div class="row"><span>Sat 31 Oct · Rimfire league<br><span class="muted">PR22 Rimfire · 60 km</span></span><button class="btn sm ghost">+ Calendar</button></div>
+            <div class="row"><span>Sun 1 Nov · Practice day<br><span class="muted">Precision Rifle · 35 km · new shooter friendly</span></span><button class="btn sm ghost">+ Calendar</button></div>
+            <div class="row"><span>Sat 14 Nov · Club match<br><span class="muted">Precision Rifle · 120 km</span></span><button class="btn sm ghost">+ Calendar</button></div>
+            <div class="row"><a href="#" style="color:var(--accent-hi);font-size:13px">See all on the calendar →</a><span></span></div>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:14px">
+          <div class="card"><h3>Log this season</h3>
+            <div class="big">2 <span class="muted" style="font-size:20px">of 3 free</span></div>
+            <div class="bar"><b style="width:66%"></b></div>
+            <div class="row" style="margin-top:8px"><span>Shot Club monthly shoot on 3 Oct?</span><button class="btn sm">I shot this</button></div>
+          </div>
+          <div class="card"><h3>Following</h3>
+            <div class="chips" style="margin-bottom:10px"><span class="chip on">Precision Rifle · 12</span><span class="chip on">PR22 Rimfire · 6</span><span class="chip on">Example Club · 3</span></div>
+            <div class="row"><span class="muted">Follows</span><span>3 of limit</span></div>
+            <div class="row"><span class="muted">Saved searches</span><span>1 of limit</span></div>
+            <p class="hint">Limits come from config/plans.php, not hardcoded.</p>
+          </div>
+          <div class="card locked"><div class="lk">PRO</div><h3 style="margin-top:4px">Dedicated status tracker</h3>
+            <p class="muted" style="margin:0 0 12px">Track qualifying matches against your renewal date and export proof for your association in one click.</p>
+            <button class="btn">Join the Pro waitlist</button>
+            <p class="hint">Becomes "Start 30-day free trial" when pro_sales_open is true.</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <!-- 9 SHOOTER PRO -->
+  <section class="screen" id="s9">
+    <div class="note"><b>Phase 3b.</b> Same page, Pro blocks unlocked through &lt;x-pro-gate&gt;. The tracker uses the shooter's own renewal date and required count, never hardcoded association rules. "Open desk" shows because this user also runs a club. All figures are placeholders.</div>
+    <div class="frame">
+      <div class="topbar"><div class="logo">SHOOTING<span>SPORTS</span></div><div class="pubnav"><span>Events</span><span>Sports</span><span>Clubs</span><span>Ranges</span><span>Industry</span><b>My dashboard ▾</b></div></div>
+      <div class="mesub"><span class="on">Home</span><span>Calendar</span><span>Log</span><span>Following</span><span>Alerts</span><span>Settings</span></div>
+      <main class="main">
+        <div class="hdr"><div><div class="eyebrow">Gauteng · 200 km radius</div><h2>Hi Paul</h2></div><div style="display:flex;gap:8px;align-items:center"><span class="pill" style="color:var(--accent-hi);border-color:var(--accent)">PRO</span><button class="btn ghost">Open desk</button><button class="btn">Log a match</button></div></div>
+        <div class="grid2">
+          <div class="card"><h3>Dedicated status</h3>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap">
+              <div><div class="big">5 <span class="muted" style="font-size:20px">of 6 qualifying</span></div><div class="muted" style="font-size:12.5px">Example Association · renews 30 Jan 2027 · 105 days</div></div>
+              <button class="btn sm ghost">Export PDF</button>
+            </div>
+            <div class="bar" style="height:10px"><b style="width:83%"></b></div>
+            <p class="hint">Counts logged matches flagged "Counts toward activity requirements" since your last renewal. Target set by you in Settings.</p>
+          </div>
+          <div class="card"><h3>Entry alerts</h3>
+            <div class="row"><span>Provincial final<br><span class="muted">Watching since 2 Oct</span></span><span class="sev okk">ENTRIES OPEN</span></div>
+            <div class="row"><span>Nationals 2027<br><span class="muted">Watching since 10 Oct</span></span><span class="sev s">NOT YET</span></div>
+            <div class="row"><span class="muted">Emailed the moment status changes to entries open</span><span></span></div>
+          </div>
+        </div>
+        <div class="grid2" style="margin-top:14px">
+          <div class="card"><h3>Season 2026</h3>
+            <div class="grid3" style="gap:8px">
+              <div><div class="big" style="font-size:30px">14</div><div class="muted" style="font-size:12px">matches logged</div></div>
+              <div><div class="big" style="font-size:30px">3</div><div class="muted" style="font-size:12px">provinces</div></div>
+              <div><div class="big" style="font-size:30px">19</div><div class="muted" style="font-size:12px">days on the range</div></div>
+            </div>
+            <div class="bars" style="margin-bottom:20px">
+              <div style="height:30%"><span>J</span></div><div style="height:50%"><span>F</span></div><div style="height:40%"><span>M</span></div><div style="height:70%"><span>A</span></div><div style="height:20%"><span>M</span></div><div style="height:60%"><span>J</span></div><div style="height:30%"><span>J</span></div><div style="height:80%"><span>A</span></div><div style="height:50%"><span>S</span></div><div class="hi" style="height:100%"><span>O</span></div><div style="height:4%"><span>N</span></div><div style="height:4%"><span>D</span></div>
+            </div>
+          </div>
+          <div class="card"><h3>Recent log</h3>
+            <table><tr><th>Date</th><th>Match</th><th>Result</th><th></th></tr>
+              <tr><td>10 Oct</td><td>Club monthly<br><span class="muted">Precision Rifle · Open</span></td><td>4th / 38</td><td><span class="sev okk">QUALIFIES</span></td></tr>
+              <tr><td>26 Sep</td><td>Rimfire league<br><span class="muted">PR22 · Open</span></td><td>11th / 52</td><td><span class="sev okk">QUALIFIES</span></td></tr>
+              <tr><td>12 Sep</td><td>Practice day<br><span class="muted">Training</span></td><td>—</td><td><span class="sev s">NOT FLAGGED</span></td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px"><h3>Free vs Pro</h3>
+          <table class="matrix">
+            <tr><th>Feature</th><th>Free</th><th>Pro</th></tr>
+            <tr><td>My calendar, iCal feed, weekly digest</td><td class="y">yes</td><td class="y">yes</td></tr>
+            <tr><td>Open near you</td><td class="y">yes</td><td class="y">yes</td></tr>
+            <tr><td>Attendance log</td><td>3 per year</td><td class="y">unlimited + notes, results</td></tr>
+            <tr><td>Follows and saved searches</td><td>current free limits</td><td class="y">unlimited</td></tr>
+            <tr><td>Export for renewals (PDF, CSV)</td><td class="n0">—</td><td class="y">yes</td></tr>
+            <tr><td>Dedicated status tracker</td><td class="n0">—</td><td class="y">yes</td></tr>
+            <tr><td>Notify me when entries open</td><td class="n0">—</td><td class="y">yes</td></tr>
+            <tr><td>Season stats</td><td class="n0">—</td><td class="y">yes</td></tr>
+          </table>
+          <p class="hint">Check whether "Export for renewals" is free today; the live log page shows the button to a free account. Decide before gating it.</p>
+        </div>
+      </main>
     </div>
   </section>
 </div>

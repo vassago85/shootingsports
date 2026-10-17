@@ -24,21 +24,18 @@ it('loads the staff dashboard for a signed-in staff user', function () {
     $this->actingAs($staff)
         ->get(StaffDashboard::getUrl())
         ->assertOk()
-        // Register stats block must render — this is the widget
-        // that used to run its own count queries. If it silently
-        // fails after the PublicCounts refactor the labels won't
-        // show at all. Vocabulary comes from lang/en/labels.php so
-        // the tile copy mirrors the public register.
-        ->assertSee('Events')
-        ->assertSee('upcoming')
-        ->assertSee('Clubs')
-        ->assertSee('Ranges')
-        ->assertSee('Sports')
-        ->assertSee('Industry')
-        ->assertSee('Users')
-        // Attention band + quick actions.
-        ->assertSee('Needs attention')
-        ->assertSee('Quick actions');
+        // Phase 2 renames the dashboard "Today". The four headline
+        // tiles (Inbox / Events this week / Listings unconfirmed /
+        // Ads live) replace the old register-stats widget.
+        ->assertSee('Today')
+        ->assertSee('Inbox')
+        ->assertSee('Events this week')
+        ->assertSee('Listings')
+        ->assertSee('Ads live')
+        // Attention band + rows below the tiles.
+        ->assertSee('Fix these')
+        ->assertSee('Next 7 days')
+        ->assertSee('Recent activity');
 });
 
 it('shuts a non-staff user out of the admin dashboard', function () {

@@ -22,7 +22,7 @@ beforeEach(function () {
     $this->withoutVite();
 });
 
-it('shows the register dashboard with later staff tools still linked', function () {
+it('shows the Today dashboard with the attention list for submitted matches', function () {
     $staff = User::factory()->create(['is_staff' => true]);
     Event::factory()->create([
         'title' => 'Waiting Club Shoot',
@@ -31,15 +31,17 @@ it('shows the register dashboard with later staff tools still linked', function 
         'source' => ListingSource::Submission,
     ]);
 
+    // Phase 2 rename: "Needs attention" + "Quick actions" grid are
+    // gone. The dashboard is now "Today" with a "Fix these" attention
+    // list and headline tiles. Submitted matches still surface in Fix
+    // these as a critical row, so the draft above drives the count.
     $this->actingAs($staff)
         ->get('/admin')
         ->assertOk()
-        ->assertSee('What needs doing on the register')
-        ->assertSee('Needs attention')
-        ->assertSee('Waiting Club Shoot')
-        ->assertSee('Email log')
-        ->assertSee('Page pictures')
-        ->assertSee('Submitted matches');
+        ->assertSee('Today')
+        ->assertSee('Fix these')
+        ->assertSee('Submitted matches')
+        ->assertSee('waiting for approval');
 });
 
 it('opens only new enquiries from the attention list', function () {

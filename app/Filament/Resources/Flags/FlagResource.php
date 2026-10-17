@@ -28,9 +28,18 @@ class FlagResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
-    protected static \UnitEnum|string|null $navigationGroup = 'Settings';
+    protected static \UnitEnum|string|null $navigationGroup = null;
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    /**
+     * Flags are managed inside the Settings page tabs now. The resource
+     * routes still resolve so existing deep links / tests keep working.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 
     public static function form(Schema $schema): Schema
     {

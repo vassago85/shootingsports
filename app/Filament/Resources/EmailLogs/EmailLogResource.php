@@ -20,9 +20,18 @@ class EmailLogResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedEnvelope;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Settings';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
     protected static ?string $navigationLabel = 'Email log';
+
+    /**
+     * Email log is reached through the Settings page tabs now. The
+     * resource routes still resolve so existing deep links keep working.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 
     protected static ?string $modelLabel = 'email';
 

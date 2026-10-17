@@ -28,13 +28,20 @@ class ManageMailSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedEnvelope;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Settings';
-
-    protected static ?int $navigationSort = 5;
+    protected static string|UnitEnum|null $navigationGroup = null;
 
     protected static ?string $navigationLabel = 'Email & Turnstile';
 
     protected static ?string $title = 'Email & Turnstile';
+
+    /**
+     * Reached from the Settings landing page, not the top-level nav.
+     * Route stays live so bookmarks and the Settings page link resolve.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 
     /**
      * @var array<string, mixed>|null
