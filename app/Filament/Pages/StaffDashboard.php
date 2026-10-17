@@ -115,6 +115,9 @@ class StaffDashboard extends Page
             'placementsUrl' => PlacementResource::getUrl('index'),
             'emailUrl' => ManageMailSettings::getUrl(),
             'emailLogUrl' => EmailLogResource::getUrl('index'),
+            'subscribersUrl' => UserResource::getUrl('index', [
+                'filters' => ['paystack_subscription_code' => ['value' => true]],
+            ]),
             'pagePicturesUrl' => ManagePagePictures::getUrl(),
             'verificationUrl' => VerificationDashboard::getUrl(),
             'duplicatesUrl' => VenueDuplicates::getUrl(),
@@ -144,12 +147,20 @@ class StaffDashboard extends Page
      */
     private function registerStats(array $publicCounts): array
     {
+        // Each tile links to the index filtered by the same scope that
+        // produced its count (B3 in the Phase 1 brief). The filter and
+        // the count both live on the model — see the on_public_* filters
+        // on each resource — so they cannot drift.
+        $publicFilter = ['filters' => ['on_public_register' => ['isActive' => true]]];
+
         return [
-            ['label' => 'Upcoming matches', 'value' => $publicCounts['matches'], 'href' => EventResource::getUrl('index')],
-            ['label' => 'Clubs & series', 'value' => $publicCounts['clubs'] + $publicCounts['series'], 'href' => OrganisationResource::getUrl('index')],
-            ['label' => 'Ranges', 'value' => $publicCounts['ranges'], 'href' => VenueResource::getUrl('index')],
-            ['label' => 'Sports', 'value' => $publicCounts['disciplines'], 'href' => DisciplineResource::getUrl('index')],
-            ['label' => 'Industry', 'value' => Provider::query()->published()->count(), 'href' => ProviderResource::getUrl('index')],
+            ['label' => __('labels.events_nav').' — upcoming', 'value' => $publicCounts['matches'], 'href' => EventResource::getUrl('index', [
+                'filters' => ['on_public_calendar' => ['isActive' => true]],
+            ])],
+            ['label' => __('labels.clubs_nav'), 'value' => $publicCounts['clubs'] + $publicCounts['series'], 'href' => OrganisationResource::getUrl('index', $publicFilter)],
+            ['label' => __('labels.ranges_nav'), 'value' => $publicCounts['ranges'], 'href' => VenueResource::getUrl('index', $publicFilter)],
+            ['label' => __('labels.sports_nav'), 'value' => $publicCounts['disciplines'], 'href' => DisciplineResource::getUrl('index', $publicFilter)],
+            ['label' => __('labels.industry_nav'), 'value' => $publicCounts['suppliers'], 'href' => ProviderResource::getUrl('index', $publicFilter)],
             ['label' => 'Users', 'value' => User::query()->count(), 'href' => UserResource::getUrl('index')],
         ];
     }

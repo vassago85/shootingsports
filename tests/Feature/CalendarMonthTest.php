@@ -24,6 +24,11 @@ it('/calendar/month renders the month grid and three-way toggle', function () {
 });
 
 it('month grid shows upcoming matches in the visible month only', function () {
+    // Pin "now" so hardcoded 2026-10-15 fixture dates remain in the
+    // future — otherwise the public upcoming() scope filters the
+    // in-month event out and the assertSee below fails.
+    $this->travelTo('2026-10-01 09:00:00');
+
     $host = Organisation::factory()->create(['status' => ListingStatus::Published]);
     $venue = Venue::factory()->create([
         'status' => ListingStatus::Published,
@@ -63,6 +68,10 @@ it('list and map toggles include Month link', function () {
 });
 
 it('places a multi-day match on every day it runs', function () {
+    // Pin "now" so the hardcoded 2026-10-24 → 2026-10-25 match
+    // remains in the future.
+    $this->travelTo('2026-10-01 09:00:00');
+
     $host = Organisation::factory()->create(['status' => ListingStatus::Published]);
     $venue = Venue::factory()->create(['status' => ListingStatus::Published]);
 

@@ -121,7 +121,12 @@ it('event JSON-LD falls back to a 4h endDate when ends_at is null', function () 
         ->and($payload['startDate'])->toContain('+02:00');
 });
 
-it('event JSON-LD falls back to end-of-day when the event is all_day', function () {
+it('event JSON-LD emits date-only startDate and endDate when the event is all_day', function () {
+    // All-day events should emit `YYYY-MM-DD` (date-only) in both
+    // startDate and endDate — Google's docs for Event rich results.
+    // The previous behaviour emitted ISO8601 which Rich Results
+    // interpreted as 02:00 SAST, surfacing the "02:00 phantom" the
+    // Phase 1 brief calls out.
     $starts = now()->addWeek()->startOfDay();
     $event = Event::factory()->confirmed()->create([
         'starts_at' => $starts,
@@ -129,9 +134,10 @@ it('event JSON-LD falls back to end-of-day when the event is all_day', function 
         'all_day' => true,
     ]);
 
-    $expected = $starts->copy()->endOfDay()->timezone(config('app.timezone'))->toIso8601String();
+    $expectedDate = $starts->copy()->timezone(config('app.timezone'))->format('Y-m-d');
 
-    expect(JsonLd::event($event)['endDate'])->toBe($expected);
+    expect(JsonLd::event($event)['startDate'])->toBe($expectedDate)
+        ->and(JsonLd::event($event)['endDate'])->toBe($expectedDate);
 });
 
 it('event JSON-LD omits price when no fee is on record', function () {

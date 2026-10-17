@@ -45,6 +45,14 @@ class UserResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    /**
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'email'];
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

@@ -4,19 +4,18 @@ namespace App\Filament\Resources\Media;
 
 use App\Enums\MediaRole;
 use App\Enums\ModerationStatus;
-use App\Filament\Resources\Media\Pages\CreateMedia;
 use App\Filament\Resources\Media\Pages\EditMedia;
 use App\Filament\Resources\Media\Pages\ListMedia;
 use App\Models\Media;
+use App\Support\RecordLinker;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -36,33 +35,33 @@ class MediaResource extends Resource
 
     protected static ?int $navigationSort = 30;
 
+    public static function canCreate(): bool
+    {
+        // Media rows are created when a user uploads via the public
+        // forms. Staff only moderate.
+        return false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                TextInput::make('disk')
-                    ->required(),
-                TextInput::make('path')
-                    ->required(),
-                TextInput::make('mime')
-                    ->required(),
-                TextInput::make('bytes')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('width')
-                    ->numeric(),
-                TextInput::make('height')
-                    ->numeric(),
-                TextInput::make('attachable_type'),
-                TextInput::make('attachable_id')
-                    ->numeric(),
+                Placeholder::make('attachable')
+                    ->label('Attached to')
+                    ->content(fn (?Media $record): string => RecordLinker::label($record?->attachable)),
+                Placeholder::make('path')
+                    ->label('File')
+                    ->content(fn (?Media $record): string => (string) $record?->path),
+                Placeholder::make('mime')
+                    ->label('Type')
+                    ->content(fn (?Media $record): string => (string) $record?->mime),
                 Select::make('role')
                     ->options(MediaRole::class)
                     ->required(),
-                Textarea::make('derivatives')
-                    ->columnSpanFull(),
-                TextInput::make('uploaded_by')
-                    ->numeric(),
+                Select::make('uploaded_by')
+                    ->relationship('uploader', 'name')
+                    ->searchable()
+                    ->preload(),
                 Select::make('moderation_status')
                     ->options(ModerationStatus::class)
                     ->default('pending')
@@ -73,38 +72,52 @@ class MediaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(25)
             ->columns([
-                TextColumn::make('disk')
-                    ->searchable(),
-                TextColumn::make('path')
-                    ->searchable(),
-                TextColumn::make('mime')
-                    ->searchable(),
-                TextColumn::make('bytes')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('width')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('height')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('attachable_type')
-                    ->searchable(),
-                TextColumn::make('attachable_id')
-                    ->numeric()
-                    ->sortable(),
+                TextColumn::make('attachable')
+                    ->label('Attached to')
+                    ->getStateUsing(fn (Media $record): string => RecordLinker::label($record->attachable))
+                    ->url(fn (Media $record): ?string => RecordLinker::adminUrl($record->attachable))
+                    ->wrap(),
                 TextColumn::make('role')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('uploaded_by')
-                    ->numeric()
-                    ->sortable(),
                 TextColumn::make('moderation_status')
+                    ->label('Moderation')
                     ->badge()
                     ->searchable(),
+                TextColumn::make('uploader.name')
+                    ->label('Uploaded by')
+                    ->toggleable(),
                 TextColumn::make('created_at')
+                    ->label('Received')
                     ->dateTime()
+                    ->sortable(),
+                // Storage internals are hidden by default — staff moderate
+                // based on the attached record and the role, not the
+                // disk/path/dimensions.
+                TextColumn::make('disk')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('path')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('mime')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('bytes')
+                    ->label('Size')
+                    ->formatStateUsing(fn (?int $state): string => $state === null
+                        ? '—'
+                        : self::formatBytes($state))
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('width')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('height')
+                    ->numeric()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
@@ -145,8 +158,20 @@ class MediaResource extends Resource
     {
         return [
             'index' => ListMedia::route('/'),
-            'create' => CreateMedia::route('/create'),
             'edit' => EditMedia::route('/{record}/edit'),
         ];
+    }
+
+    private static function formatBytes(int $bytes): string
+    {
+        if ($bytes < 1024) {
+            return $bytes.' B';
+        }
+
+        if ($bytes < 1024 * 1024) {
+            return number_format($bytes / 1024, 1).' KB';
+        }
+
+        return number_format($bytes / 1024 / 1024, 1).' MB';
     }
 }

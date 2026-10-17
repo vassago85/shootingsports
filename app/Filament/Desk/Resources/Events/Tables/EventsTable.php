@@ -3,6 +3,8 @@
 namespace App\Filament\Desk\Resources\Events\Tables;
 
 use App\Enums\EventStatus;
+use App\Models\Event;
+use Carbon\CarbonInterface;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -26,7 +28,7 @@ class EventsTable
                     ->label('Disciplines')
                     ->badge(),
                 TextColumn::make('starts_at')
-                    ->dateTime('D j M Y, H:i')
+                    ->formatStateUsing(fn ($state, Event $record): string => self::formatEventDate($state, $record))
                     ->sortable(),
                 TextColumn::make('status')
                     ->badge(),
@@ -42,5 +44,22 @@ class EventsTable
             ->recordActions([
                 EditAction::make(),
             ]);
+    }
+
+    /**
+     * All-day events show the date only — mirrors the admin table and
+     * keeps the "02:00 phantom" out of the desk list too.
+     */
+    private static function formatEventDate(mixed $state, Event $record): string
+    {
+        if (! $state instanceof CarbonInterface) {
+            return '—';
+        }
+
+        $local = $state->timezone(config('app.timezone'));
+
+        return $record->all_day
+            ? $local->format('D j M Y')
+            : $local->format('D j M Y, H:i');
     }
 }

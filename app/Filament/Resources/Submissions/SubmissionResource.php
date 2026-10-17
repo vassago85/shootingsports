@@ -5,15 +5,16 @@ namespace App\Filament\Resources\Submissions;
 use App\Actions\MergeSubmission;
 use App\Enums\SubmissionStatus;
 use App\Enums\SubmissionType;
-use App\Filament\Resources\Submissions\Pages\CreateSubmission;
 use App\Filament\Resources\Submissions\Pages\EditSubmission;
 use App\Filament\Resources\Submissions\Pages\ListSubmissions;
 use App\Models\Submission;
+use App\Support\RecordLinker;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -36,6 +37,13 @@ class SubmissionResource extends Resource
 
     protected static ?int $navigationSort = 10;
 
+    public static function canCreate(): bool
+    {
+        // Submissions come from the public correction forms. Staff only
+        // merge, reject, or close them.
+        return false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -55,9 +63,9 @@ class SubmissionResource extends Resource
                     ->options(SubmissionStatus::class)
                     ->default('pending')
                     ->required(),
-                TextInput::make('merged_into_type'),
-                TextInput::make('merged_into_id')
-                    ->numeric(),
+                Placeholder::make('merged_into')
+                    ->label('Merged into')
+                    ->content(fn (?Submission $record): string => RecordLinker::label($record?->mergedInto)),
                 Select::make('moderator_id')
                     ->relationship('moderator', 'name'),
             ]);
@@ -66,6 +74,7 @@ class SubmissionResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('type')
                     ->badge()
@@ -73,21 +82,26 @@ class SubmissionResource extends Resource
                 TextColumn::make('submitter_name')
                     ->searchable(),
                 TextColumn::make('submitter_email')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(),
                 TextColumn::make('status')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('merged_into_type')
-                    ->searchable(),
-                TextColumn::make('merged_into_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('moderator.name')
-                    ->searchable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
+                TextColumn::make('merged_into')
+                    ->label('Merged into')
+                    ->getStateUsing(fn (Submission $record): string => $record->merged_into_type
+                        ? RecordLinker::label($record->mergedInto)
+                        : '—')
+                    ->url(fn (Submission $record): ?string => RecordLinker::adminUrl($record->mergedInto))
+                    ->wrap()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('moderator.name')
+                    ->label('Moderator')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('created_at')
+                    ->label('Received')
+                    ->dateTime()
+                    ->sortable(),
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
@@ -125,7 +139,6 @@ class SubmissionResource extends Resource
     {
         return [
             'index' => ListSubmissions::route('/'),
-            'create' => CreateSubmission::route('/create'),
             'edit' => EditSubmission::route('/{record}/edit'),
         ];
     }

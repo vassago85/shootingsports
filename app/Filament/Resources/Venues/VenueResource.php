@@ -16,6 +16,7 @@ use App\Filament\Resources\Venues\Pages\CreateVenue;
 use App\Filament\Resources\Venues\Pages\EditVenue;
 use App\Filament\Resources\Venues\Pages\ListVenues;
 use App\Models\Venue;
+use App\Rules\NotAProvinceName;
 use App\Support\CoordinatePaste;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -54,6 +55,29 @@ class VenueResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('labels.ranges_nav');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('labels.range');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('labels.ranges');
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'town'];
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -66,7 +90,8 @@ class VenueResource extends Resource
                     ->options(Province::class)
                     ->required(),
                 TextInput::make('town')
-                    ->required(),
+                    ->required()
+                    ->rule(new NotAProvinceName),
                 Select::make('metro')
                     ->options(GautengMetro::class),
                 TextInput::make('coordinate_paste')
@@ -179,61 +204,85 @@ class VenueResource extends Resource
     {
         return $table
             ->recordTitleAttribute('name')
+            ->defaultPaginationPageOption(25)
             ->columns([
+                // Default-visible shortlist per the Phase 1 brief:
+                // name, town, province, GPS, status, verification.
+                // Everything else is toggleable and hidden by default.
                 ImageColumn::make('image_paths')
                     ->label('Photo')
                     ->disk('media')
                     ->getStateUsing(fn (Venue $record): ?string => collect($record->image_paths)->first())
                     ->imageSize(40)
-                    ->square(),
-                TextColumn::make('slug')
-                    ->searchable(),
+                    ->square()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('name')
+                    ->searchable(),
+                TextColumn::make('town')
                     ->searchable(),
                 TextColumn::make('province')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('town')
-                    ->searchable(),
-                TextColumn::make('metro')
+                TextColumn::make('has_gps')
+                    ->label('GPS')
+                    ->state(fn (Venue $record): string => $record->hasCoordinates() ? 'Yes' : 'No')
                     ->badge()
-                    ->searchable(),
-                TextColumn::make('lat')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('lng')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('max_distance_m')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('bay_count')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('access')
-                    ->badge()
-                    ->searchable(),
-                TextColumn::make('day_fee_cents')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('tier')
-                    ->badge()
-                    ->sortable(),
+                    ->color(fn (string $state): string => $state === 'Yes' ? 'success' : 'danger'),
                 TextColumn::make('status')
                     ->badge()
                     ->searchable(),
                 TextColumn::make('verification_state')
+                    ->label('Verification')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('last_verified_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('claimed_by')
+                TextColumn::make('tier')
+                    ->badge()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('metro')
+                    ->badge()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('access')
+                    ->badge()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('day_fee_cents')
+                    ->label('Day fee')
+                    ->money('ZAR', divideBy: 100)
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('max_distance_m')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('bay_count')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('lat')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('lng')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('slug')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('source')
                     ->badge()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('claimed_by')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('last_verified_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -248,6 +297,11 @@ class VenueResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Filter::make('on_public_register')
+                    ->label('On the public register')
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)
+                        ? $query->published()
+                        : $query),
                 SelectFilter::make('verification_state')->options(VerificationState::class),
                 SelectFilter::make('province')->options(Province::class),
                 Filter::make('missing_gps')

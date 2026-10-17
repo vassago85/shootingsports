@@ -27,8 +27,10 @@ it('loads the staff dashboard for a signed-in staff user', function () {
         // Register stats block must render — this is the widget
         // that used to run its own count queries. If it silently
         // fails after the PublicCounts refactor the labels won't
-        // show at all.
-        ->assertSee('Upcoming matches')
+        // show at all. Vocabulary comes from lang/en/labels.php so
+        // the tile copy mirrors the public register.
+        ->assertSee('Events')
+        ->assertSee('upcoming')
         ->assertSee('Clubs')
         ->assertSee('Ranges')
         ->assertSee('Sports')

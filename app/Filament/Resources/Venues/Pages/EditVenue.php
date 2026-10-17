@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Venues\Pages;
 
 use App\Enums\GeocodeSource;
+use App\Filament\Resources\Venues\Concerns\WarnsWhenVenueOutsideProvince;
 use App\Filament\Resources\Venues\VenueResource;
 use App\Models\Venue;
 use App\Services\Geocoding\VenueGeocoder;
@@ -15,7 +16,14 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditVenue extends EditRecord
 {
+    use WarnsWhenVenueOutsideProvince;
+
     protected static string $resource = VenueResource::class;
+
+    protected function afterSave(): void
+    {
+        $this->warnIfVenueOutsideProvince($this->record);
+    }
 
     protected function getHeaderActions(): array
     {

@@ -3,11 +3,14 @@
 namespace App\Filament\Resources\Venues\Pages;
 
 use App\Enums\GeocodeSource;
+use App\Filament\Resources\Venues\Concerns\WarnsWhenVenueOutsideProvince;
 use App\Filament\Resources\Venues\VenueResource;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateVenue extends CreateRecord
 {
+    use WarnsWhenVenueOutsideProvince;
+
     protected static string $resource = VenueResource::class;
 
     /**
@@ -25,5 +28,10 @@ class CreateVenue extends CreateRecord
         }
 
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        $this->warnIfVenueOutsideProvince($this->record);
     }
 }

@@ -194,6 +194,12 @@ it('parses MPSA season dates that wrap a month', function () {
 });
 
 it('imports CGPSA Events Calendar JSON without inventing fees', function () {
+    // Pin "now" so hardcoded 2026-10-03 fixture dates remain in the
+    // future — otherwise the importer stamps them Completed when the
+    // suite is run after October 2026 and the Confirmed assertion
+    // below fails for the wrong reason.
+    $this->travelTo('2026-09-15 09:00:00');
+
     Discipline::factory()->create(['slug' => 'ipsc-practical', 'name' => 'IPSC']);
     Discipline::factory()->create(['slug' => 'steel-challenge', 'name' => 'Steel Challenge']);
 
@@ -279,6 +285,11 @@ it('parses a CGPSA shotgun title onto sporting clays', function () {
 });
 
 it('imports Vektor Events Calendar JSON onto the Centurion club range', function () {
+    // Pin "now" so hardcoded 2026-10-10 fixture dates remain in the
+    // future — otherwise the importer stamps them Completed and the
+    // Confirmed assertion below fails for the wrong reason.
+    $this->travelTo('2026-09-15 09:00:00');
+
     Discipline::factory()->create(['slug' => 'ipsc-practical', 'name' => 'IPSC']);
     Discipline::factory()->create(['slug' => 'multigun', 'name' => 'Multigun']);
     Discipline::factory()->create(['slug' => 'sporting-clays', 'name' => 'Sporting Clays']);

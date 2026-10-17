@@ -234,13 +234,13 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return match ($panel->getId()) {
             'admin' => $this->is_staff,
             // Staff can access desk unconditionally (staff > MD > shooter).
-            // Everyone else must have opted into the MD signup path,
-            // own a hunting farm, or hold an Admin / Secretary seat on
-            // at least one club's register.
+            // Everyone else must have opted into the MD signup path or
+            // hold an Admin / Secretary seat on at least one club's
+            // register. Hunting / Big Game pathways are parked on the
+            // WIP branch until Phase 2.
             'desk' => $this->is_staff
                 || $this->is_match_director
                 || $this->is_media_partner
-                || $this->ownsHuntingBusiness()
                 || $this->holdsAnyMemberManagingRole(),
             default => false,
         };
@@ -261,29 +261,6 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             ->exists();
     }
 
-    public function huntingProperties(): HasMany
-    {
-        return $this->hasMany(HuntingProperty::class, 'claimed_by');
-    }
-
-    public function ownsHuntingProperties(): bool
-    {
-        return $this->huntingProperties()->exists();
-    }
-
-    public function outfitters(): HasMany
-    {
-        return $this->hasMany(Outfitter::class, 'claimed_by');
-    }
-
-    /**
-     * Runs a hunting farm or a safari outfitter on Hunting or Big Game.
-     */
-    public function ownsHuntingBusiness(): bool
-    {
-        return $this->ownsHuntingProperties() || $this->outfitters()->exists();
-    }
-
     /**
      * Post-login landing URL. Staff drop into /admin, match directors
      * into /desk, plain shooters into their own calendar. Callers should
@@ -296,7 +273,6 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             $this->is_staff => '/admin',
             $this->is_match_director,
             $this->is_media_partner,
-            $this->ownsHuntingBusiness(),
             $this->holdsAnyMemberManagingRole() => '/desk',
             default => '/my-calendar',
         };

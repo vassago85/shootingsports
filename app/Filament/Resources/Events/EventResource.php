@@ -20,6 +20,7 @@ use App\Filament\Support\EventPartnerSelect;
 use App\Filament\Support\EventVenueRepeater;
 use App\Models\Event;
 use BackedEnum;
+use Carbon\CarbonInterface;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -65,6 +66,29 @@ class EventResource extends Resource
     protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'title';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('labels.events_nav');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('labels.event');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('labels.events');
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['title', 'hostOrganisation.name', 'venue.name'];
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -310,10 +334,28 @@ class EventResource extends Resource
             ->displayFormat('D j M Y, H:i');
     }
 
+    /**
+     * All-day events show the date only (no 02:00 ghost from UTC
+     * midnight). Timed events show the full local date and time.
+     */
+    private static function formatEventDate(mixed $state, Event $record): string
+    {
+        if (! $state instanceof CarbonInterface) {
+            return '—';
+        }
+
+        $local = $state->timezone(config('app.timezone'));
+
+        return $record->all_day
+            ? $local->format('D j M Y')
+            : $local->format('D j M Y, H:i');
+    }
+
     public static function table(Table $table): Table
     {
         return $table
             ->recordTitleAttribute('title')
+            ->defaultPaginationPageOption(25)
             ->defaultSort('starts_at', 'desc')
             ->columns([
                 TextColumn::make('title')
@@ -329,12 +371,12 @@ class EventResource extends Resource
                     ->badge()
                     ->toggleable(),
                 TextColumn::make('venue.name')
-                    ->label('Venue')
+                    ->label(__('labels.ranges_nav'))
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('starts_at')
                     ->label('Starts')
-                    ->dateTime('D j M Y, H:i')
+                    ->formatStateUsing(fn ($state, Event $record): string => self::formatEventDate($state, $record))
                     ->sortable(),
                 TextColumn::make('level')
                     ->badge()
@@ -368,11 +410,25 @@ class EventResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('import_notes')
+                    ->label('Import notes')
+                    ->wrap()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('status')->options(EventStatus::class),
                 SelectFilter::make('level')->options(EventLevel::class),
                 SelectFilter::make('source')->options(ListingSource::class),
+                Filter::make('on_public_calendar')
+                    ->label('On the public calendar')
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)
+                        ? $query->upcoming()
+                        : $query),
+                Filter::make('needs_review')
+                    ->label('Flagged by importer')
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)
+                        ? $query->where('needs_review', true)
+                        : $query),
                 Filter::make('awaiting_approval')
                     ->label('Waiting for approval')
                     ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)

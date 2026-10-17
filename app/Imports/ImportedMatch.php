@@ -22,5 +22,7 @@ class ImportedMatch
         public ?string $disciplineSlug,
         public ?string $description = null,
         public ?string $venueTown = null,
+        public bool $needsReview = false,
+        public ?string $importNotes = null,
     ) {}
 }

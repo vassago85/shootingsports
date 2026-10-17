@@ -34,6 +34,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -50,11 +51,24 @@ class OrganisationResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Directory';
 
-    protected static ?string $navigationLabel = 'Clubs & series';
-
     protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('labels.clubs_nav');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('labels.club');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('labels.clubs');
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -171,6 +185,7 @@ class OrganisationResource extends Resource
     {
         return $table
             ->recordTitleAttribute('name')
+            ->defaultPaginationPageOption(25)
             ->columns([
                 ImageColumn::make('logo_path')
                     ->label('')
@@ -221,6 +236,13 @@ class OrganisationResource extends Resource
                 TextColumn::make('updated_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Filter::make('on_public_register')
+                    ->label('On the public register')
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)
+                        ? $query
+                            ->where('status', ListingStatus::Published)
+                            ->whereIn('type', [OrganisationType::Club, OrganisationType::Series])
+                        : $query),
                 SelectFilter::make('verification_state')->options(VerificationState::class),
                 SelectFilter::make('status')->options(ListingStatus::class),
                 SelectFilter::make('type')->options(OrganisationType::class),

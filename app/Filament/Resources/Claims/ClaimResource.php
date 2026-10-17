@@ -4,19 +4,19 @@ namespace App\Filament\Resources\Claims;
 
 use App\Enums\ClaimStatus;
 use App\Enums\OrganisationUserRole;
-use App\Filament\Resources\Claims\Pages\CreateClaim;
 use App\Filament\Resources\Claims\Pages\EditClaim;
 use App\Filament\Resources\Claims\Pages\ListClaims;
 use App\Models\Claim;
+use App\Support\RecordLinker;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -35,15 +35,19 @@ class ClaimResource extends Resource
 
     protected static ?int $navigationSort = 20;
 
+    public static function canCreate(): bool
+    {
+        // Claims come from the public /claim form. Staff never create one.
+        return false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                TextInput::make('claimable_type')
-                    ->required(),
-                TextInput::make('claimable_id')
-                    ->required()
-                    ->numeric(),
+                Placeholder::make('claimable')
+                    ->label('Record')
+                    ->content(fn (?Claim $record): string => RecordLinker::label($record?->claimable)),
                 Select::make('user_id')
                     ->relationship('user', 'name')
                     ->required(),
@@ -54,8 +58,10 @@ class ClaimResource extends Resource
                     ->options(ClaimStatus::class)
                     ->default('pending')
                     ->required(),
-                TextInput::make('reviewed_by')
-                    ->numeric(),
+                Select::make('reviewed_by')
+                    ->relationship('reviewer', 'name')
+                    ->searchable()
+                    ->preload(),
                 DateTimePicker::make('reviewed_at'),
             ]);
     }
@@ -63,27 +69,30 @@ class ClaimResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(25)
             ->columns([
-                TextColumn::make('claimable_type')
-                    ->searchable(),
-                TextColumn::make('claimable_id')
-                    ->numeric()
-                    ->sortable(),
+                TextColumn::make('claimable')
+                    ->label('Record')
+                    ->getStateUsing(fn (Claim $record): string => RecordLinker::label($record->claimable))
+                    ->url(fn (Claim $record): ?string => RecordLinker::adminUrl($record->claimable))
+                    ->wrap(),
                 TextColumn::make('user.name')
+                    ->label('Claimed by')
                     ->searchable(),
                 TextColumn::make('status')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('reviewed_by')
-                    ->numeric()
-                    ->sortable(),
+                TextColumn::make('reviewer.name')
+                    ->label('Reviewed by')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('reviewed_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('created_at')
+                    ->label('Received')
+                    ->dateTime()
+                    ->sortable(),
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
@@ -138,7 +147,6 @@ class ClaimResource extends Resource
     {
         return [
             'index' => ListClaims::route('/'),
-            'create' => CreateClaim::route('/create'),
             'edit' => EditClaim::route('/{record}/edit'),
         ];
     }

@@ -48,6 +48,21 @@ class DisciplineResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    public static function getNavigationLabel(): string
+    {
+        return __('labels.sports_nav');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('labels.sport');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('labels.sports');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -157,6 +172,7 @@ class DisciplineResource extends Resource
     {
         return $table
             ->recordTitleAttribute('name')
+            ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('slug')
                     ->searchable(),
@@ -192,6 +208,11 @@ class DisciplineResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Filter::make('on_public_register')
+                    ->label('On the public register')
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)
+                        ? $query->where('is_published', true)->whereNull('parent_id')
+                        : $query),
                 Filter::make('without_longer_description')
                     ->label('Without a longer description')
                     ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)

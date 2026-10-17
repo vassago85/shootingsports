@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShootingSports mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Saira+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c1112;--panel:#11181a;--panel2:#151e20;--line:#223033;--text:#e6ece8;--muted:#8b9a95;
+  --accent:#6b7d3a;--accent-hi:#a9c35a;--danger:#e0705f;--warn:#d9b44a;--ok:#6fbf73;--info:#5aa7c9;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+h1,h2,h3{font-family:"Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.02em;margin:0}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 16px 64px}
+.intro h1{font-size:34px}
+.intro p{color:var(--muted);max-width:760px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:20px 0}
+.tabs button{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:8px 12px;border-radius:6px;cursor:pointer;font:500 13px "IBM Plex Sans"}
+.tabs button.on{color:var(--text);border-color:var(--accent);background:#18220f}
+.screen{display:none}.screen.on{display:block}
+.note{border-left:3px solid var(--accent-hi);background:var(--panel);padding:10px 14px;margin:0 0 16px;color:var(--muted);font-size:13px}
+.note b{color:var(--text)}
+.frame{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--line)}
+.logo{font-family:"Saira Condensed";font-weight:700;font-size:20px;letter-spacing:.03em}
+.logo span{color:var(--accent-hi)}
+.pill{font:500 11px "IBM Plex Mono";padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.search{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;color:var(--muted);width:220px;font-size:13px}
+.app{display:grid;grid-template-columns:230px 1fr;min-height:600px}
+.side{border-right:1px solid var(--line);padding:14px 10px}
+.side .grp{font:600 11px "IBM Plex Sans";color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:16px 8px 6px}
+.side a{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:6px;color:var(--text);text-decoration:none;font-size:13.5px}
+.side a.on{background:#18220f;border:1px solid #2f3d1a;color:var(--accent-hi)}
+.side a.dim{color:var(--muted)}
+.badge{background:var(--danger);color:#1a0d0a;font:600 11px "IBM Plex Mono";padding:1px 7px;border-radius:999px}
+.badge.ok{background:var(--accent-hi);color:#10150a}
+.main{padding:22px 24px}
+.eyebrow{font:500 11px "IBM Plex Mono";color:var(--accent-hi);letter-spacing:.12em;text-transform:uppercase}
+.hdr{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.hdr h2{font-size:28px}
+.btn{background:var(--accent);color:#0b0d0e;border:0;border-radius:6px;padding:8px 14px;font:600 13px "IBM Plex Sans";cursor:pointer}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn.red{background:transparent;color:var(--danger);border:1px solid #5a2e27}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card h3{font-size:16px;margin-bottom:10px}
+.tile .n{font:700 34px "Saira Condensed";line-height:1}
+.tile .l{color:var(--muted);font-size:12px;margin-top:4px}
+.tile .go{color:var(--accent-hi);font-size:12px;margin-top:8px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--line);gap:10px}
+.row:first-of-type{border-top:0}
+.muted{color:var(--muted)}
+.sev{font:500 10.5px "IBM Plex Mono";padding:2px 7px;border-radius:4px;border:1px solid}
+.sev.c{color:var(--danger);border-color:#5a2e27}.sev.w{color:var(--warn);border-color:#5a4a1e}.sev.s{color:var(--muted);border-color:var(--line)}
+.sev.okk{color:var(--ok);border-color:#2b4f2d}.sev.i{color:var(--info);border-color:#244656}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--muted);font-weight:500;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+.subtabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;flex-wrap:wrap}
+.subtabs span{padding:8px 12px;color:var(--muted);font-size:13px;border-bottom:2px solid transparent}
+.subtabs span.on{color:var(--text);border-color:var(--accent-hi)}
+.subtabs i{font-style:normal;font:500 11px "IBM Plex Mono";color:var(--accent-hi);margin-left:4px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px}
+.bar b{display:block;height:100%;background:var(--accent-hi)}
+.steps{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.step{flex:1;min-width:140px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;color:var(--muted);font-size:13px}
+.step b{display:block;font:500 11px "IBM Plex Mono";color:var(--muted)}
+.step.on{border-color:var(--accent-hi);color:var(--text)}.step.on b{color:var(--accent-hi)}
+.step.done{color:var(--text)}.step.done b{color:var(--ok)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12.5px;font-weight:500;margin-bottom:5px}
+.input{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:9px 11px;color:var(--text);font-size:13px}
+.hint{color:var(--muted);font-size:12px;margin-top:4px}
+.toggle{display:inline-flex;align-items:center;gap:8px}
+.toggle i{width:34px;height:18px;border-radius:9px;background:var(--accent);position:relative;display:inline-block}
+.toggle i:after{content:"";position:absolute;right:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#e6ece8}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px;color:var(--muted)}
+.chip.on{border-color:var(--accent-hi);color:var(--accent-hi);background:#141c0c}
+.matrix td,.matrix th{text-align:center}.matrix td:first-child,.matrix th:first-child{text-align:left}
+.y{color:var(--ok);font-weight:600}.n0{color:var(--danger)}
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:center}
+.flow .card{text-align:center}
+.arrow{color:var(--accent-hi);font:600 18px "IBM Plex Mono"}
+.diff del{color:var(--danger);text-decoration:line-through}.diff ins{color:var(--ok);text-decoration:none}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}.side{display:none}
+  .grid4,.grid3{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr}.arrow{transform:rotate(90deg);text-align:center}
+  .search{display:none}
+  table{display:block;overflow-x:auto}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <div class="eyebrow">Mockups · 17 Oct 2026</div>
+    <h1>ShootingSports admin and desk</h1>
+    <p>Reference screens for <code>CURSOR_PLATFORM_SIMPLIFICATION.md</code>. Numbers shown are taken from the live site on the day of the audit where they exist; names in desk examples are placeholders. Built in the current theme (IBM Plex Sans, Saira Condensed, olive accent).</p>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="on" data-s="s1">1 · Admin today</button>
+    <button data-s="s2">2 · Admin inbox</button>
+    <button data-s="s3">3 · Desk home (director)</button>
+    <button data-s="s4">4 · Desk event wizard</button>
+    <button data-s="s5">5 · Desk home (industry)</button>
+    <button data-s="s6">6 · No desk access yet</button>
+    <button data-s="s7">7 · Access map</button>
+  </div>
+
+  <!-- 1 ADMIN TODAY -->
+  <section class="screen on" id="s1">
+    <div class="note"><b>Phase 2.</b> 21 nav items become 12. Public vocabulary everywhere (Events, Clubs, Ranges, Industry, Sports). Every number links to a list that shows the same number. Quick actions grid removed.</div>
+    <div class="frame">
+      <div class="topbar"><div class="logo">SHOOTING<span>SPORTS</span> <span class="pill">STAFF</span></div><div class="search">Search events, clubs, ranges, users</div></div>
+      <div class="app">
+        <nav class="side">
+          <a class="on" href="#">Today</a>
+          <a href="#">Inbox <span class="badge">6</span></a>
+          <div class="grp">Directory</div>
+          <a href="#">Events</a><a href="#">Clubs</a><a href="#">Ranges</a><a href="#">Industry</a><a href="#">Sports</a>
+          <div class="grp">Growth</div>
+          <a href="#">Advertising</a><a href="#">Users</a>
+          <div class="grp">System ▸</div>
+          <a class="dim" href="#">Imports</a><a class="dim" href="#">Settings</a>
+        </nav>
+        <main class="main">
+          <div class="hdr"><div><div class="eyebrow">Saturday 17 October</div><h2>Today</h2></div><button class="btn">Add event</button></div>
+          <div class="grid4">
+            <div class="card tile"><div class="n">6</div><div class="l">Inbox items open (example; live queue is empty)</div><div class="go">Open inbox →</div></div>
+            <div class="card tile"><div class="n">7</div><div class="l">Events this week</div><div class="go">Upcoming, next 7 days →</div></div>
+            <div class="card tile"><div class="n">102</div><div class="l">Listings unconfirmed</div><div class="go">16 clubs · 44 ranges · 42 industry →</div></div>
+            <div class="card tile"><div class="n">2</div><div class="l">Adverts live</div><div class="go">577 views · 17 clicks →</div></div>
+          </div>
+          <div class="grid2" style="margin-top:14px">
+            <div class="card"><h3>Fix these</h3>
+              <div class="row"><span>Ranges without GPS</span><span><span class="muted">8</span> &nbsp;<span class="sev c">CRITICAL</span></span></div>
+              <div class="row"><span>Events without a club</span><span><span class="muted">1</span> &nbsp;<span class="sev c">CRITICAL</span></span></div>
+              <div class="row"><span>Events without a registration link</span><span><span class="muted">8</span> &nbsp;<span class="sev w">ATTENTION</span></span></div>
+              <div class="row"><span>Imported events with no end date (multi-day)</span><span><span class="muted">new rule</span> &nbsp;<span class="sev w">ATTENTION</span></span></div>
+              <div class="row"><span>Sports without a long description</span><span><span class="muted">37</span> &nbsp;<span class="sev s">SUGGESTION</span></span></div>
+            </div>
+            <div class="card"><h3>Next 7 days</h3>
+              <table><tr><th>Date</th><th>Event</th><th>Club</th></tr>
+                <tr><td>Sat 17 Oct</td><td>PR 22 GP Provincial</td><td class="muted">SAPRF</td></tr>
+                <tr><td>Fri 23 Oct</td><td>Cradock .223</td><td class="muted">—</td></tr>
+                <tr><td colspan="3" class="muted">All-day events show the date only, no 02:00.</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="card" style="margin-top:14px"><h3>Recent desk activity</h3>
+            <div class="row"><span>Director added an event under their club</span><span class="sev i">PENDING REVIEW</span></div>
+            <div class="row"><span>Industry listing updated its description</span><span class="sev okk">LIVE</span></div>
+            <div class="row muted"><span>Example rows. Fed by the activity log.</span><span></span></div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 INBOX -->
+  <section class="screen" id="s2">
+    <div class="note"><b>Phase 2.</b> Enquiries, Submissions, Claims, Media, director requests and media partner articles become tabs on one queue. Two actions per row. Oldest first. No "New" buttons on inbound records.</div>
+    <div class="frame">
+      <div class="topbar"><div class="logo">SHOOTING<span>SPORTS</span> <span class="pill">STAFF</span></div><div class="search">Search</div></div>
+      <div class="app">
+        <nav class="side">
+          <a href="#">Today</a><a class="on" href="#">Inbox <span class="badge">6</span></a>
+          <div class="grp">Directory</div><a href="#">Events</a><a href="#">Clubs</a><a href="#">Ranges</a><a href="#">Industry</a><a href="#">Sports</a>
+          <div class="grp">Growth</div><a href="#">Advertising</a><a href="#">Users</a>
+          <div class="grp">System ▸</div>
+        </nav>
+        <main class="main">
+          <div class="hdr"><h2>Inbox</h2><span class="muted">Oldest first</span></div>
+          <div class="subtabs"><span class="on">All<i>6</i></span><span>Events<i>2</i></span><span>Director requests<i>1</i></span><span>Claims<i>1</i></span><span>Corrections<i>1</i></span><span>Media<i>0</i></span><span>Articles<i>0</i></span><span>Enquiries<i>1</i></span></div>
+          <table>
+            <tr><th>Type</th><th>What</th><th>From</th><th>Age</th><th></th></tr>
+            <tr><td><span class="sev i">EVENT</span></td><td>Club monthly shoot, Sat 7 Nov<br><span class="muted">Range with GPS · banner · fee R200</span></td><td>Director, Example Club</td><td>4 d</td><td><button class="btn sm">Publish</button> <button class="btn sm red">Reject</button></td></tr>
+            <tr><td><span class="sev w">DIRECTOR</span></td><td>Wants to manage: Example Shooting Club<br><span class="muted">Email verified · registered as match director</span></td><td>new user</td><td>2 d</td><td><button class="btn sm">Approve</button> <button class="btn sm red">Reject</button></td></tr>
+            <tr><td><span class="sev s">CORRECTION</span></td><td class="diff">Range phone: <del>012 000 0000</del> <ins>012 111 1111</ins></td><td>public form</td><td>1 d</td><td><button class="btn sm">Apply</button> <button class="btn sm red">Dismiss</button></td></tr>
+            <tr><td><span class="sev s">ENQUIRY</span></td><td>Listing enquiry forwarded to organiser<br><span class="muted">Close once answered</span></td><td>public form</td><td>0 d</td><td><button class="btn sm ghost">Close</button></td></tr>
+          </table>
+          <p class="muted" style="font-size:12px;margin-top:10px">Rows are illustrative. Today's live queues are empty apart from 4 closed enquiries.</p>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 DESK DIRECTOR -->
+  <section class="screen" id="s3">
+    <div class="note"><b>Phase 3.</b> Desk shows only the clubs this person manages. No staff bypass. Each upcoming event has a completeness bar so directors fix gaps before staff have to chase them.</div>
+    <div class="frame">
+      <div class="topbar"><div class="logo">SHOOTING<span>SPORTS</span> <span class="pill">DESK</span></div><div><a class="muted" style="font-size:13px;text-decoration:none" href="#">Public site</a> &nbsp; <span class="pill">Account</span></div></div>
+      <div class="app">
+        <nav class="side">
+          <a class="on" href="#">Home</a>
+          <div class="grp">Your clubs</div>
+          <a href="#">My clubs <span class="badge ok">2</span></a>
+          <a href="#">Events</a>
+          <a href="#">Entries</a>
+          <div class="grp">More</div>
+          <a class="dim" href="#">Claim another club</a>
+          <a class="dim" href="#">Notification settings ↗</a>
+        </nav>
+        <main class="main">
+          <div class="hdr"><div><div class="eyebrow">Match director desk</div><h2>Welcome back</h2></div><button class="btn">Add event</button></div>
+          <div class="grid3">
+            <div class="card tile"><div class="n">2</div><div class="l">Clubs you manage</div></div>
+            <div class="card tile"><div class="n">5</div><div class="l">Upcoming events</div></div>
+            <div class="card tile"><div class="n">1</div><div class="l">Waiting for staff review</div></div>
+          </div>
+          <div class="card" style="margin-top:14px"><h3>Upcoming events</h3>
+            <table>
+              <tr><th>Date</th><th>Event</th><th>Status</th><th>Listing</th><th style="width:180px">Complete</th></tr>
+              <tr><td>Sat 7 Nov</td><td>Monthly club shoot<br><span class="muted">Example Club</span></td><td><span class="sev okk">ENTRIES OPEN</span></td><td><span class="sev okk">PUBLISHED</span></td><td>100%<div class="bar"><b style="width:100%"></b></div></td></tr>
+              <tr><td>Sat 21 Nov</td><td>Steel challenge round 4<br><span class="muted">Example Series</span></td><td><span class="sev s">PLANNED</span></td><td><span class="sev i">IN REVIEW</span></td><td>60%<div class="bar"><b style="width:60%"></b></div><span class="hint">Add banner · registration link</span></td></tr>
+              <tr><td>Sat 5 Dec</td><td>Year-end fun shoot<br><span class="muted">Example Club</span></td><td><span class="sev s">PLANNED</span></td><td><span class="sev s">DRAFT</span></td><td>40%<div class="bar"><b style="width:40%"></b></div><span class="hint">Pick a range · fee · description</span></td></tr>
+            </table>
+          </div>
+          <div class="grid2" style="margin-top:14px">
+            <div class="card"><h3>Your clubs</h3>
+              <div class="row"><span>Example Club <span class="muted">· owner</span></span><span class="sev okk">VERIFIED</span></div>
+              <div class="row"><span>Example Series <span class="muted">· editor</span></span><span class="sev s">UNCONFIRMED</span></div>
+              <div class="row"><span class="muted">Owners can invite editors by email</span><button class="btn sm ghost">Invite</button></div>
+            </div>
+            <div class="card"><h3>How publishing works</h3>
+              <p class="muted" style="margin:0">New events go to staff for a quick check and usually appear within a day. Clubs that staff mark as trusted publish straight away. You can change status (confirmed, entries open, postponed, cancelled) any time.</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 WIZARD -->
+  <section class="screen" id="s4">
+    <div class="note"><b>Phase 3.</b> 39 fields on one page become 4 steps. No slug, no status at creation. All day is on by default, so no 02:00 times. Beginner flags become chips with tooltips.</div>
+    <div class="frame">
+      <div class="topbar"><div class="logo">SHOOTING<span>SPORTS</span> <span class="pill">DESK</span></div><span class="pill">Account</span></div>
+      <main class="main" style="max-width:860px;margin:0 auto">
+        <div class="hdr"><h2>Add event</h2><button class="btn ghost">Save draft</button></div>
+        <div class="steps">
+          <div class="step done"><b>1 ✓</b>Basics</div>
+          <div class="step on"><b>2</b>When and where</div>
+          <div class="step"><b>3</b>Entry</div>
+          <div class="step"><b>4</b>Extras and publish</div>
+        </div>
+        <div class="card">
+          <div class="grid2">
+            <div class="field"><label>Start date *</label><div class="input">Sat 21 Nov 2026</div></div>
+            <div class="field"><label>End date</label><div class="input muted">Leave blank for a one-day event</div></div>
+          </div>
+          <div class="field"><span class="toggle"><i></i> All-day event</span><div class="hint">Turn off to set a start time and squad times.</div></div>
+          <div class="field"><label>Range *</label><div class="input">Search ranges by name or town…</div><div class="hint">Range not listed? <a href="#" style="color:var(--accent-hi)">Add it</a>. Staff check new ranges before they show publicly.</div></div>
+          <div class="field"><label>Map check</label><div class="input muted" style="height:120px;display:flex;align-items:center;justify-content:center">Pin from the range's GPS · warns if it falls outside the chosen province</div></div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <h3>Step 4 preview: who is it for</h3>
+          <div class="chips"><span class="chip on">New shooter friendly</span><span class="chip">Coaching on the day</span><span class="chip on">Spectators welcome</span><span class="chip">Juniors welcome</span><span class="chip">Ladies category</span><span class="chip">Overnight camping</span><span class="chip">Sanctioned / ranked</span><span class="chip">Counts toward dedicated status</span></div>
+          <div class="hint">Hover a chip for its definition. Today these are long checkboxes with paragraphs under each.</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:16px"><button class="btn ghost">Back</button><button class="btn">Next: entry</button></div>
+      </main>
+    </div>
+  </section>
+
+  <!-- 5 INDUSTRY -->
+  <section class="screen" id="s5">
+    <div class="note"><b>Phase 3.</b> Same /desk, different menu. An industry-only user never sees Events or Clubs. Advert stats are read-only and scoped to their own placements.</div>
+    <div class="frame">
+      <div class="topbar"><div class="logo">SHOOTING<span>SPORTS</span> <span class="pill">DESK</span></div><span class="pill">Account</span></div>
+      <div class="app">
+        <nav class="side">
+          <a class="on" href="#">Home</a>
+          <div class="grp">Your business</div>
+          <a href="#">My business</a><a href="#">Adverts</a><a href="#">Enquiries <span class="badge ok">3</span></a>
+          <div class="grp">More</div><a class="dim" href="#">Advertise with us ↗</a>
+        </nav>
+        <main class="main">
+          <div class="hdr"><div><div class="eyebrow">Industry desk</div><h2>Example Optics</h2></div><button class="btn">Edit listing</button></div>
+          <div class="grid3">
+            <div class="card tile"><div class="n">204</div><div class="l">Advert views</div></div>
+            <div class="card tile"><div class="n">16</div><div class="l">Advert clicks</div></div>
+            <div class="card tile"><div class="n">3</div><div class="l">Enquiries this month</div></div>
+          </div>
+          <div class="card" style="margin-top:14px"><h3>Listing health</h3>
+            <div class="row"><span>Logo and photos</span><span class="sev okk">DONE</span></div>
+            <div class="row"><span>Opening hours</span><span class="sev w">MISSING</span></div>
+            <div class="row"><span>Confirm listing details (every 6 months)</span><span><button class="btn sm">Confirm now</button></span></div>
+          </div>
+          <p class="muted" style="font-size:12px">View and click figures use one live placement (Whylo, 204 / 16) as an example of scale.</p>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 NO ACCESS -->
+  <section class="screen" id="s6">
+    <div class="note"><b>Phase 3.</b> A signed-in shooter who opens /desk sees this instead of a raw 403. A desk user who opens /admin gets a plain 404.</div>
+    <div class="frame">
+      <div class="topbar"><div class="logo">SHOOTING<span>SPORTS</span></div><span class="pill">Account</span></div>
+      <main class="main" style="max-width:640px;margin:40px auto;text-align:center">
+        <div class="eyebrow">Desk</div>
+        <h2 style="font-size:32px;margin:6px 0 10px">Your desk opens once you manage a listing</h2>
+        <p class="muted">Match directors, club admins and businesses use the desk to keep their listings and events up to date. Link yours to get started.</p>
+        <div class="grid2" style="margin-top:22px;text-align:left">
+          <div class="card"><h3>Run matches?</h3><p class="muted" style="margin:0 0 12px">Claim your club or series, or add a new one. Staff approve within a day.</p><button class="btn">Claim a club</button></div>
+          <div class="card"><h3>Have a business?</h3><p class="muted" style="margin:0 0 12px">Gunsmith, dealer, ammo, optics, instructor. Listing is free.</p><button class="btn ghost">List your business</button></div>
+        </div>
+        <p class="muted" style="margin-top:20px;font-size:13px">Just here to shoot? <a href="#" style="color:var(--accent-hi)">Go to my calendar</a></p>
+      </main>
+    </div>
+  </section>
+
+  <!-- 7 ACCESS MAP -->
+  <section class="screen" id="s7">
+    <div class="note"><b>Phase 3.</b> One login, routed by capability. <code>canAccessPanel()</code> is the wall between panels; <code>getEloquentQuery()</code> scoping and policies are the walls inside desk.</div>
+    <div class="card">
+      <h3>Login routing</h3>
+      <div class="flow">
+        <div class="card">/login<br><span class="muted">/admin/login and /desk/login redirect here</span></div>
+        <div class="arrow">→</div>
+        <div class="card">Check capabilities<br><span class="muted">role · approved memberships · media partner</span></div>
+        <div class="arrow">→</div>
+        <div class="card">Staff → /admin<br>Desk user → /desk<br>Shooter → /my-calendar</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>Who sees what</h3>
+      <table class="matrix">
+        <tr><th>Area</th><th>Shooter</th><th>Director</th><th>Industry</th><th>Media partner</th><th>Staff</th></tr>
+        <tr><td>/admin</td><td class="n0">404</td><td class="n0">404</td><td class="n0">404</td><td class="n0">404</td><td class="y">yes</td></tr>
+        <tr><td>/desk</td><td class="muted">no-access page</td><td class="y">yes</td><td class="y">yes</td><td class="y">yes</td><td class="y">own only</td></tr>
+        <tr><td>Desk · My clubs, Events</td><td>—</td><td class="y">own clubs</td><td>—</td><td>—</td><td class="muted">own clubs</td></tr>
+        <tr><td>Desk · My business, Adverts</td><td>—</td><td>—</td><td class="y">own listing</td><td>—</td><td class="muted">own listing</td></tr>
+        <tr><td>Desk · Articles, Magazine</td><td>—</td><td>—</td><td>—</td><td class="y">own content</td><td class="muted">own content</td></tr>
+        <tr><td>Publish without review</td><td>—</td><td class="muted">trusted clubs</td><td class="muted">description, photos</td><td>—</td><td class="y">yes</td></tr>
+        <tr><td>Public account pages</td><td class="y">yes</td><td class="y">yes</td><td class="y">yes</td><td class="y">yes</td><td class="y">yes</td></tr>
+      </table>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>Data model</h3>
+      <table>
+        <tr><th>Table</th><th>Key fields</th><th>Replaces</th></tr>
+        <tr><td>users.role</td><td>user · staff · admin</td><td class="muted">is_staff</td></tr>
+        <tr><td>organisation_user</td><td>organisation_id, user_id, role (owner/editor), status (pending/approved/rejected)</td><td class="muted">is_md, md_status, approved claims</td></tr>
+        <tr><td>provider_user</td><td>provider_id, user_id, role, status</td><td class="muted">provider claims</td></tr>
+        <tr><td>events.publication</td><td>draft · pending_review · published · rejected</td><td class="muted">mixed into status today</td></tr>
+        <tr><td>organisations.trusted</td><td>boolean, staff-only</td><td class="muted">new</td></tr>
+      </table>
+    </div>
+  </section>
+</div>
+<script>
+document.getElementById('tabs').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===b.dataset.s));
+});
+</script>
+</body>
+</html>

@@ -173,6 +173,38 @@ class SaprfCalendarImporter
         $province = Province::fromCode($cells[4] ?? '')
             ?? Province::tryFrom(strtolower(str_replace(' ', '_', $cells[4] ?? '')));
 
+        $venueName = filled($cells[5] ?? null) ? $cells[5] : null;
+        $needsReview = false;
+        $importNotes = null;
+
+        // "N-Day" / "N Day" titles with a single-date source cell have no
+        // end date on the SAPRF table. Infer ends_at from the title and
+        // flag the row so staff can confirm before publication.
+        if ($endsAt === null) {
+            $inferredDays = $this->inferMultiDayFromTitle($title);
+
+            if ($inferredDays !== null) {
+                $endsAt = $startsAt->copy()->addDays($inferredDays - 1);
+                $needsReview = true;
+                $importNotes = sprintf(
+                    'End date inferred from title (%d-day match): %s',
+                    $inferredDays,
+                    $endsAt->format('j M Y'),
+                );
+            }
+        }
+
+        // Multi-venue strings like "Day 1 - Papaberg / Day 2 - Legends"
+        // are not a single venue. Leave venue_id null so the importer
+        // does not create a junk row and surface the raw string to staff.
+        if ($venueName !== null && $this->looksMultiVenue($venueName)) {
+            $raw = $venueName;
+            $venueName = null;
+            $needsReview = true;
+            $importNotes = trim(($importNotes !== null ? $importNotes."\n" : '')
+                .'Multi-venue source string, left unlinked: '.$raw);
+        }
+
         return new ImportedMatch(
             externalId: 'saprf-event-'.$idMatch[1],
             title: $title,
@@ -182,9 +214,41 @@ class SaprfCalendarImporter
             level: $level,
             status: $this->status($cells[7] ?? $cells[6] ?? ''),
             province: $province,
-            venueName: filled($cells[5] ?? null) ? $cells[5] : null,
+            venueName: $venueName,
             disciplineSlug: $discipline,
+            needsReview: $needsReview,
+            importNotes: $importNotes,
         );
+    }
+
+    /**
+     * Pulls the day count out of titles like "Rimfire 2-Day National",
+     * "Centrefire 3 Day Nationals", "PRS 2Day". Sane upper bound keeps
+     * false matches out — anything above a two-week match is rejected.
+     */
+    private function inferMultiDayFromTitle(string $title): ?int
+    {
+        if (preg_match('/(?<!\d)(\d{1,2})\s*-?\s*day\b/i', $title, $match) !== 1) {
+            return null;
+        }
+
+        $days = (int) $match[1];
+
+        return ($days >= 2 && $days <= 14) ? $days : null;
+    }
+
+    /**
+     * Multi-venue markers in the SAPRF source. A single real venue name
+     * never contains a slash or "Day N" — those are editor shorthand for
+     * two or more venues on different days.
+     */
+    private function looksMultiVenue(string $name): bool
+    {
+        if (str_contains($name, '/')) {
+            return true;
+        }
+
+        return preg_match('/\bday\s*\d+\b/i', $name) === 1;
     }
 
     /**

@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Storage;
     'entry_fee_cents', 'member_fee_cents', 'entry_url', 'contact_email', 'accepts_platform_entries', 'entry_collection', 'accepts_team_entries', 'team_size', 'entry_payment_instructions', 'capacity',
     'entries_taken', 'round_count', 'target_count', 'stage_count',
     'results_url', 'banner_media_id', 'banner_path', 'description', 'created_by',
-    'source', 'last_verified_at',
+    'source', 'last_verified_at', 'import_notes', 'needs_review',
 ])]
 class Event extends Model
 {
@@ -61,6 +61,7 @@ class Event extends Model
             'stage_count' => 'integer',
             'source' => ListingSource::class,
             'last_verified_at' => 'immutable_datetime',
+            'needs_review' => 'boolean',
         ];
     }
 

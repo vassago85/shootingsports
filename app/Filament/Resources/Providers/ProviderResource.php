@@ -33,6 +33,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -51,6 +52,21 @@ class ProviderResource extends Resource
     protected static ?int $navigationSort = 30;
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('labels.industry_nav');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('labels.industry_listing');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('labels.industry_listings');
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -146,58 +162,75 @@ class ProviderResource extends Resource
     {
         return $table
             ->recordTitleAttribute('name')
+            ->defaultPaginationPageOption(25)
             ->columns([
+                // Default-visible shortlist per the Phase 1 brief:
+                // name, category, town, province, status, verification.
+                // Everything else is toggleable and hidden by default.
                 ImageColumn::make('logo_path')
                     ->label('')
                     ->disk('media')
                     ->imageSize(40)
-                    ->square(),
-                TextColumn::make('slug')
-                    ->searchable(),
+                    ->square()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('category')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('province')
-                    ->badge()
-                    ->searchable(),
                 TextColumn::make('town')
                     ->searchable(),
-                TextColumn::make('metro')
-                    ->badge()
-                    ->searchable(),
-                TextColumn::make('lat')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('lng')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('email')
-                    ->label('Email address')
-                    ->searchable(),
-                TextColumn::make('phone')
-                    ->searchable(),
-                TextColumn::make('website_url')
-                    ->searchable(),
-                TextColumn::make('tier')
+                TextColumn::make('province')
                     ->badge()
                     ->searchable(),
                 TextColumn::make('status')
                     ->badge()
                     ->searchable(),
                 TextColumn::make('verification_state')
+                    ->label('Verification')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('last_verified_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('claimed_by')
+                TextColumn::make('tier')
+                    ->badge()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('metro')
+                    ->badge()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('email')
+                    ->label('Email address')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('phone')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('website_url')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('lat')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('lng')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('slug')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('source')
                     ->badge()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('claimed_by')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('last_verified_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -212,6 +245,11 @@ class ProviderResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Filter::make('on_public_register')
+                    ->label('On the public register')
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false)
+                        ? $query->published()->listed()
+                        : $query),
                 SelectFilter::make('status')->options(ListingStatus::class),
                 SelectFilter::make('verification_state')->options(VerificationState::class),
                 SelectFilter::make('category')->options(ProviderCategory::class),

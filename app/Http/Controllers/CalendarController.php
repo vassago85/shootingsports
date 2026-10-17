@@ -60,10 +60,11 @@ class CalendarController extends Controller
             ];
         }
 
-        $listed = (new PublicEventQuery(
-            disciplineSlug: $discipline?->slug,
-            provinceSlug: $province?->urlSlug(),
-        ))->builder()->limit(24)->get();
+        // Build the JSON-LD ItemList with the same filters the user is
+        // actually looking at. Hand-rolling just discipline/province
+        // here used to leak competition rows into ?kind=training and
+        // midweek matches into ?weekend=1 schema payloads.
+        $listed = PublicEventQuery::fromRequest($request)->builder()->limit(24)->get();
 
         $jsonLd = [JsonLd::breadcrumbs($crumbs)];
 

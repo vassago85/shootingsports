@@ -72,7 +72,7 @@ class JsonLd
             '@id' => $event->schemaId(),
             'name' => $event->title,
             'url' => $event->publicUrl(),
-            'startDate' => self::iso($event->starts_at),
+            'startDate' => self::startDateFor($event),
             'endDate' => self::endDateFor($event),
             'eventStatus' => self::eventStatus($event->status),
             'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
@@ -118,10 +118,29 @@ class JsonLd
     }
 
     /**
+     * startDate for the Event schema. All-day events emit a date-only
+     * value ("YYYY-MM-DD") per Google's docs — otherwise Rich Results
+     * reads "02:00 SAST" and marks the match as starting at 2am.
+     */
+    private static function startDateFor(Event $event): ?string
+    {
+        if ($event->starts_at === null) {
+            return null;
+        }
+
+        if ($event->all_day) {
+            return $event->starts_at->timezone(config('app.timezone'))->format('Y-m-d');
+        }
+
+        return self::iso($event->starts_at);
+    }
+
+    /**
      * Best-effort endDate for the Event schema. Google requires this
      * field even for single-session events. Order of preference:
-     *   1. Explicit ends_at on the model.
-     *   2. all_day = true  -> end-of-day on starts_at.
+     *   1. all_day = true -> date-only value, defaults to the same day
+     *      when no explicit ends_at exists.
+     *   2. Explicit ends_at on the model.
      *   3. Fallback: starts_at + 4 hours (typical open-format match).
      *
      * The fallback keeps the schema valid without inventing suspicious
@@ -135,12 +154,14 @@ class JsonLd
             return null;
         }
 
-        if ($event->ends_at) {
-            return self::iso($event->ends_at);
+        if ($event->all_day) {
+            $end = $event->ends_at ?? $event->starts_at;
+
+            return $end->timezone(config('app.timezone'))->format('Y-m-d');
         }
 
-        if ($event->all_day) {
-            return self::iso($event->starts_at->endOfDay());
+        if ($event->ends_at) {
+            return self::iso($event->ends_at);
         }
 
         return self::iso($event->starts_at->addHours(4));

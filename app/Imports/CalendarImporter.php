@@ -55,6 +55,8 @@ class CalendarImporter
                 'description' => $match->description,
                 'source' => ListingSource::Import,
                 'last_verified_at' => now(),
+                'import_notes' => $match->importNotes,
+                'needs_review' => $match->needsReview,
             ];
 
             if ($existing) {

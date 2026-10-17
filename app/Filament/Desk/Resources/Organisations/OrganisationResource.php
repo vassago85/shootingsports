@@ -25,15 +25,24 @@ class OrganisationResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Your listings';
 
-    protected static ?string $navigationLabel = 'Clubs & series';
-
-    protected static ?string $modelLabel = 'listing';
-
-    protected static ?string $pluralModelLabel = 'listings';
-
     protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('labels.clubs_nav');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('labels.club');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('labels.clubs');
+    }
 
     public static function form(Schema $schema): Schema
     {

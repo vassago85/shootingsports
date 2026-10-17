@@ -85,7 +85,7 @@
             @unless ($proSalesOpen)
                 Pro sales are held.
             @endunless
-            <a href="{{ $usersUrl }}">Manage subscribers</a>
+            <a href="{{ $subscribersUrl }}">Manage subscribers</a>
         </p>
         <p class="admin-follow">
             Pro waitlist · {{ now()->format('F Y') }}
