@@ -21,6 +21,7 @@ use App\Models\Placement;
 use App\Models\Provider;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Icons\Heroicon;
@@ -70,6 +71,37 @@ class DeskDashboard extends Page
     public function getHeading(): string|Htmlable
     {
         return '';
+    }
+
+    /**
+     * One entry per managed club that is inside a tier-overage grace window.
+     *
+     * @return list<array{organisation_name: string, tier: string, grace_ends_at: CarbonInterface, active_count: int, cap: int, days_remaining: int}>
+     */
+    public function overageBanners(): array
+    {
+        $clubIds = ClubMemberResource::managedClubIds();
+
+        if ($clubIds === []) {
+            return [];
+        }
+
+        return Organisation::query()
+            ->whereIn('id', $clubIds)
+            ->whereNotNull('tier_grace_ends_at')
+            ->whereHas('platformSubscription')
+            ->with('platformSubscription')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Organisation $org): array => [
+                'organisation_name' => $org->name,
+                'tier' => $org->platformSubscription->tier->getLabel(),
+                'grace_ends_at' => $org->tier_grace_ends_at,
+                'active_count' => (int) $org->active_member_count,
+                'cap' => $org->platformSubscription->tier->memberCap(),
+                'days_remaining' => max(0, (int) ceil(today()->diffInDays($org->tier_grace_ends_at, false))),
+            ])
+            ->all();
     }
 
     /**

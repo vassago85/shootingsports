@@ -34,3 +34,6 @@ Schedule::command('subscriptions:notify-trial-ending')->dailyAt('09:00');
 
 // Platform billing: compile last month's fee statements from paid membership invoices. Idempotent.
 Schedule::command('platform:compile-monthly-fee-statements')->monthlyOn(1, '03:00');
+
+// Platform billing: recount active members, stamp/clear tier grace windows, auto-upgrade expired overages.
+Schedule::command('platform:enforce-tier-overages')->dailyAt('03:00');

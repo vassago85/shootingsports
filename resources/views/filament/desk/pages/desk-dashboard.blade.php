@@ -1,4 +1,11 @@
 <x-filament-panels::page>
+    @foreach ($this->overageBanners() as $banner)
+        <x-filament::section>
+            <strong>{{ $banner['organisation_name'] }}</strong> has exceeded the {{ $banner['tier'] }} tier's cap of {{ $banner['cap'] }} members (currently {{ $banner['active_count'] }}).
+            You have {{ $banner['days_remaining'] }} days to upgrade before the subscription auto-upgrades on {{ $banner['grace_ends_at']->format('Y-m-d') }}.
+        </x-filament::section>
+    @endforeach
+
     <div class="ss-desk ss-desk-{{ $mode }}">
         @if ($mode === 'none')
             <div class="ss-noaccess">

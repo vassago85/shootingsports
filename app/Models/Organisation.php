@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -61,6 +62,8 @@ class Organisation extends Model
             'last_verified_at' => 'immutable_datetime',
             'source' => ListingSource::class,
             'trusted' => 'boolean',
+            'active_member_count' => 'integer',
+            'tier_grace_ends_at' => 'date',
         ];
     }
 
@@ -113,6 +116,11 @@ class Organisation extends Model
     public function clubMembers(): HasMany
     {
         return $this->hasMany(ClubMember::class);
+    }
+
+    public function platformSubscription(): HasOne
+    {
+        return $this->hasOne(PlatformSubscription::class);
     }
 
     public function membershipFees(): HasMany
