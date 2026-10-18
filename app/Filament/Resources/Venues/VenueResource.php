@@ -15,6 +15,7 @@ use App\Filament\Actions\MergeVenuesBulkAction;
 use App\Filament\Resources\Venues\Pages\CreateVenue;
 use App\Filament\Resources\Venues\Pages\EditVenue;
 use App\Filament\Resources\Venues\Pages\ListVenues;
+use App\Filament\Support\ListingStatusBadge;
 use App\Models\Venue;
 use App\Rules\NotAProvinceName;
 use App\Support\CoordinatePaste;
@@ -33,6 +34,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -223,18 +225,22 @@ class VenueResource extends Resource
                 TextColumn::make('province')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('has_gps')
+                // Phase 2.2: GPS reads as "No" with a danger badge
+                // only when it is missing — a "Yes" badge on every
+                // row is just visual noise. Count of missing GPS is
+                // already surfaced on the Today dashboard.
+                IconColumn::make('has_gps')
                     ->label('GPS')
-                    ->state(fn (Venue $record): string => $record->hasCoordinates() ? 'Yes' : 'No')
-                    ->badge()
-                    ->color(fn (string $state): string => $state === 'Yes' ? 'success' : 'danger'),
-                TextColumn::make('status')
-                    ->badge()
-                    ->searchable(),
-                TextColumn::make('verification_state')
-                    ->label('Verification')
-                    ->badge()
-                    ->searchable(),
+                    ->getStateUsing(fn (Venue $record): bool => $record->hasCoordinates())
+                    ->boolean()
+                    ->trueIcon(Heroicon::OutlinedMapPin)
+                    ->falseIcon(Heroicon::OutlinedExclamationTriangle)
+                    ->trueColor('gray')
+                    ->falseColor('danger')
+                    ->tooltip(fn (Venue $record): ?string => $record->hasCoordinates() ? null : 'Missing GPS coordinates'),
+                // Phase 2.2: one combined badge replaces the old
+                // Status + Verification pair.
+                ListingStatusBadge::make(),
                 TextColumn::make('tier')
                     ->badge()
                     ->sortable()

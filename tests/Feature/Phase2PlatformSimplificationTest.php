@@ -59,6 +59,9 @@ it('registers only the Phase 2 top-level admin nav items for staff', function ()
         PlacementResource::class,
         UserResource::class,
         ManageCalendarImports::class,
+        // Email log sits under System now, next to Imports — the
+        // Chrome audit showed it was unreachable buried under Settings.
+        EmailLogResource::class,
         AdminSettingsPage::class,
     ]);
 
@@ -79,7 +82,6 @@ it('hides moved resources from the top-level admin nav', function () {
         ClaimResource::class,
         MediaResource::class,
         FlagResource::class,
-        EmailLogResource::class,
         AdSlotResource::class,
         ManageMailSettings::class,
         ManagePagePictures::class,

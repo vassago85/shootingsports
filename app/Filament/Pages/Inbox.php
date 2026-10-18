@@ -107,6 +107,14 @@ class Inbox extends Page implements HasTable
 
     public function table(Table $table): Table
     {
+        return $this->tableForActiveTab($table)
+            ->emptyStateHeading($this->emptyStateHeading())
+            ->emptyStateDescription('Nothing waiting here. Check the other tabs or come back later.')
+            ->emptyStateIcon(Heroicon::OutlinedInboxStack);
+    }
+
+    private function tableForActiveTab(Table $table): Table
+    {
         return match ($this->activeTab) {
             'submissions' => SubmissionResource::table($table)
                 ->query(fn (): Builder => $this->submissionsQuery())
@@ -124,6 +132,23 @@ class Inbox extends Page implements HasTable
             default => EnquiryResource::table($table)
                 ->query(fn (): Builder => $this->enquiriesQuery())
                 ->defaultSort('created_at', 'asc'),
+        };
+    }
+
+    /**
+     * Human empty-state heading for the active tab. Rendered when the
+     * table has no rows, so staff see "No enquiries waiting" instead
+     * of ten bare column headers.
+     */
+    private function emptyStateHeading(): string
+    {
+        return match ($this->activeTab) {
+            'submissions' => 'No corrections waiting',
+            'claims' => 'No listing claims waiting',
+            'media' => 'No media uploads waiting',
+            'director_requests' => 'No director requests waiting',
+            'articles' => 'No draft articles waiting',
+            default => 'No enquiries waiting',
         };
     }
 
@@ -197,12 +222,26 @@ class Inbox extends Page implements HasTable
 
     // -- Badge support ----------------------------------------------------
 
+    /**
+     * Must stay in lock-step with the sum of the per-tab counts in
+     * {@see self::getTabs()} — the nav badge should never disagree
+     * with the sum of the tab badges. Enquiries excludes MD-signup
+     * (counted separately under "Director requests") because the
+     * Enquiries tab query filters MD-signup out.
+     */
     public static function countOpen(): int
     {
-        return Enquiry::query()->where('status', EnquiryStatus::New)->count()
+        return Enquiry::query()
+            ->where('type', '!=', EnquiryType::MdSignup)
+            ->where('status', EnquiryStatus::New)
+            ->count()
             + Submission::query()->where('status', SubmissionStatus::Pending)->count()
             + Claim::query()->where('status', ClaimStatus::Pending)->count()
             + Media::query()->where('moderation_status', ModerationStatus::Pending)->count()
+            + Enquiry::query()
+                ->where('type', EnquiryType::MdSignup)
+                ->where('status', EnquiryStatus::New)
+                ->count()
             + Article::query()->whereNull('published_at')->count();
     }
 

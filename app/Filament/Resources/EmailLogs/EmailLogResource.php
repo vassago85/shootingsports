@@ -20,24 +20,17 @@ class EmailLogResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedEnvelope;
 
-    protected static string|UnitEnum|null $navigationGroup = null;
+    // Email log is an operational artefact — it belongs next to Imports
+    // under System, not buried as a card inside the Settings landing page.
+    protected static string|UnitEnum|null $navigationGroup = 'System';
 
     protected static ?string $navigationLabel = 'Email log';
-
-    /**
-     * Email log is reached through the Settings page tabs now. The
-     * resource routes still resolve so existing deep links keep working.
-     */
-    public static function shouldRegisterNavigation(): bool
-    {
-        return false;
-    }
 
     protected static ?string $modelLabel = 'email';
 
     protected static ?string $pluralModelLabel = 'email log';
 
-    protected static ?int $navigationSort = 40;
+    protected static ?int $navigationSort = 30;
 
     protected static ?string $recordTitleAttribute = 'subject';
 

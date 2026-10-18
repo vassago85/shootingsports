@@ -39,7 +39,7 @@ class PlacementResource extends Resource
 
     protected static ?string $navigationLabel = 'Advertising';
 
-    protected static ?string $pluralModelLabel = 'advertising placements';
+    protected static ?string $pluralModelLabel = 'Advertising';
 
     protected static ?string $modelLabel = 'placement';
 
@@ -129,19 +129,37 @@ class PlacementResource extends Resource
         return $table
             ->defaultSort('starts_on', 'desc')
             ->columns([
+                // Phase 2.2: default view fits the window — provider,
+                // slot, headline, derived Status, dates, actions.
+                // Rate / impressions / clicks move behind the toggle.
                 TextColumn::make('provider.name')->searchable()->sortable(),
-                TextColumn::make('adSlot.name')->label('Slot catalog')->toggleable(),
+                TextColumn::make('adSlot.name')->label('Slot catalogue')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('slot')->badge(),
-                TextColumn::make('headline')->limit(30)->toggleable(),
+                TextColumn::make('headline')
+                    ->limit(30)
+                    ->placeholder('— no headline —')
+                    ->color(fn (?string $state): ?string => $state === null || trim($state) === '' ? 'warning' : null),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->state(fn (Placement $record): string => self::statusLabel($record))
+                    ->color(fn (string $state): string => match ($state) {
+                        'Live' => 'success',
+                        'Scheduled' => 'info',
+                        'Ended' => 'gray',
+                        'Inactive' => 'warning',
+                        default => 'gray',
+                    }),
                 TextColumn::make('starts_on')->date()->sortable(),
                 TextColumn::make('ends_on')->date()->sortable(),
-                TextColumn::make('impressions')->numeric()->sortable(),
-                TextColumn::make('clicks')->numeric()->sortable(),
+                TextColumn::make('impressions')->numeric()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('clicks')->numeric()->sortable()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('rate_cents')
                     ->label('Rate')
                     ->formatStateUsing(fn (?int $state): string => 'R '.number_format(($state ?? 0) / 100, 0, '.', ' '))
-                    ->sortable(),
-                IconColumn::make('is_active')->boolean(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                IconColumn::make('is_active')->boolean()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->recordActions([
                 EditAction::make(),
@@ -160,5 +178,28 @@ class PlacementResource extends Resource
             'create' => CreatePlacement::route('/create'),
             'edit' => EditPlacement::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * Human one-word status derived from `is_active` + the booking
+     * window. "Live" and "Scheduled" are the two states the ad team
+     * cares about day-to-day; "Ended" reads cleaner than letting a
+     * row look live three months after its end date.
+     */
+    public static function statusLabel(Placement $placement): string
+    {
+        if (! $placement->is_active) {
+            return 'Inactive';
+        }
+
+        $today = today();
+        if ($placement->starts_on !== null && $placement->starts_on->greaterThan($today)) {
+            return 'Scheduled';
+        }
+        if ($placement->ends_on !== null && $placement->ends_on->lessThan($today)) {
+            return 'Ended';
+        }
+
+        return 'Live';
     }
 }

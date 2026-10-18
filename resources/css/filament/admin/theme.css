@@ -419,6 +419,18 @@ input[type='checkbox'].fi-checkbox-input:indeterminate {
     background: var(--ss-surface);
     color: inherit;
     text-decoration: none;
+    transition: background 0.12s ease;
+}
+
+.admin-stats a:hover {
+    background: color-mix(in srgb, var(--ss-brass) 10%, var(--ss-surface));
+}
+
+/* Warning tiles (non-zero attention counts) carry a brass accent so
+   staff can see at a glance that there is work waiting. The default
+   tone keeps the plain surface so a healthy zero reads as "all good".
+*/
+.admin-stat-warning b { color: var(--ss-brass); }
     text-align: center;
 }
 
@@ -465,10 +477,37 @@ input[type='checkbox'].fi-checkbox-input:indeterminate {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr) auto;
     gap: 0.4rem 1rem;
     align-items: center;
-    padding: 0.75rem 0;
+    padding: 0.75rem 0.4rem 0.75rem 0.6rem;
     border-top: 1px solid var(--ss-border);
     color: inherit;
     text-decoration: none;
+    position: relative;
+    transition: background 0.12s ease, padding-left 0.12s ease;
+}
+
+a.admin-row:hover {
+    background: color-mix(in srgb, var(--ss-brass) 10%, transparent);
+    padding-left: 0.9rem;
+}
+
+/* Chevron pulled from the right edge — makes it obvious the row is
+   a link, not a static read-out. Grows slightly on hover. */
+a.admin-row::after {
+    content: '\203A';
+    position: absolute;
+    right: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ss-brass);
+    font-size: 1.3rem;
+    line-height: 1;
+    opacity: 0.5;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+a.admin-row:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(2px);
 }
 
 .admin-row-title { font-weight: 650; color: var(--ss-ink); }

@@ -146,14 +146,21 @@ class UserResource extends Resource
             ->recordTitleAttribute('name')
             ->columns([
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->description(fn (User $record): string => $record->email),
+                // Phase 2.2: email folds into the Name column as a
+                // secondary line; a single Role column replaces the
+                // three raw flag columns (MD / MD status / Is staff).
                 TextColumn::make('email')
                     ->label('Email address')
-                    ->searchable(),
-                TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->placeholder('Not confirmed')
-                    ->sortable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                IconColumn::make('email_verified_at')
+                    ->label('Verified')
+                    ->boolean()
+                    ->getStateUsing(fn (User $record): bool => $record->email_verified_at !== null)
+                    ->tooltip(fn (User $record): string => $record->email_verified_at?->format('j M Y') ?? 'Not confirmed'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -164,42 +171,39 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('home_province')
                     ->badge()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('travel_radius_km')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('digest_frequency')
                     ->badge()
-                    ->searchable(),
-                IconColumn::make('is_match_director')
-                    ->label('MD')
-                    ->boolean(),
-                TextColumn::make('md_status')
-                    ->label('MD status')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('role')
+                    ->label('Role')
                     ->badge()
-                    ->state(fn (User $record): string => $record->mdStatus())
-                    ->color(fn (string $state): string => match ($state) {
-                        'approved' => 'success',
-                        'pending' => 'warning',
-                        'rejected' => 'danger',
+                    ->state(fn (User $record): string => self::roleLabel($record))
+                    ->color(fn (string $state): string => match (true) {
+                        str_starts_with($state, 'Staff') => 'danger',
+                        str_starts_with($state, 'MD') => $state === 'MD (pending)' ? 'warning' : 'success',
+                        $state === 'Media partner' => 'info',
                         default => 'gray',
-                    })
-                    ->toggleable(),
+                    }),
                 TextColumn::make('md_requested_at')
                     ->label('Requested')
                     ->dateTime('j M Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                IconColumn::make('is_staff')
-                    ->boolean(),
                 TextColumn::make('plan')
                     ->badge()
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('plan_expires_at')
                     ->label('Pro until')
                     ->dateTime('j M Y')
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('md_status')
@@ -384,6 +388,24 @@ class UserResource extends Resource
             'create' => CreateUser::route('/create'),
             'edit' => EditUser::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * One-line Role badge used by the list column. Priority follows
+     * authority: Staff beats MD beats Media partner beats Shooter.
+     * MDs show their approval state inline so staff can tell at a
+     * glance whether someone is pending or already approved.
+     */
+    public static function roleLabel(User $user): string
+    {
+        return match (true) {
+            $user->is_staff === true => 'Staff',
+            $user->is_match_director === true => 'MD (approved)',
+            $user->isMdPending() => 'MD (pending)',
+            $user->isMdRejected() => 'MD (rejected)',
+            $user->is_media_partner === true => 'Media partner',
+            default => 'Shooter',
+        };
     }
 
     /**

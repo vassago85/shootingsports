@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Enums\EventStatus;
+use App\Filament\Concerns\HasQuietBreadcrumbs;
 use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
 use Filament\Actions\CreateAction;
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ListEvents extends ListRecords
 {
+    use HasQuietBreadcrumbs;
+
     protected static string $resource = EventResource::class;
 
     protected function getHeaderActions(): array

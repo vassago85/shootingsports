@@ -42,6 +42,14 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::HEAD_START,
                 fn (): string => view('filament.favicons')->render(),
             )
+            // Hide the "0" badge on the table filters trigger — a bare
+            // zero on every table is noise. The vendor view sets it
+            // unconditionally, so we strip it client-side after render
+            // and keep it in sync via a mutation observer.
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => view('filament.admin-tweaks')->render(),
+            )
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->defaultThemeMode(ThemeMode::Dark)
             ->colors([

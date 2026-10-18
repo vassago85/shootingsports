@@ -13,6 +13,7 @@ use App\Filament\Actions\MarkVerifiedBulkAction;
 use App\Filament\Resources\Providers\Pages\CreateProvider;
 use App\Filament\Resources\Providers\Pages\EditProvider;
 use App\Filament\Resources\Providers\Pages\ListProviders;
+use App\Filament\Support\ListingStatusBadge;
 use App\Models\Provider;
 use App\Support\ProviderTierPricing;
 use BackedEnum;
@@ -39,6 +40,7 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Str;
 use UnitEnum;
 
 class ProviderResource extends Resource
@@ -75,7 +77,28 @@ class ProviderResource extends Resource
                 TextInput::make('slug')
                     ->required(),
                 TextInput::make('name')
-                    ->required(),
+                    ->required()
+                    // Normalise obvious all-lowercase / shouty entries on save
+                    // so the directory never shows "lock n load" or "GUN WARRIOR"
+                    // next to properly cased listings.
+                    ->dehydrateStateUsing(function (?string $state): ?string {
+                        if ($state === null) {
+                            return null;
+                        }
+
+                        $trimmed = trim($state);
+
+                        if ($trimmed === '') {
+                            return $trimmed;
+                        }
+
+                        $isAllLower = mb_strtolower($trimmed) === $trimmed;
+                        $isAllUpper = mb_strtoupper($trimmed) === $trimmed;
+
+                        return ($isAllLower || $isAllUpper)
+                            ? Str::title($trimmed)
+                            : $trimmed;
+                    }),
                 Select::make('category')
                     ->options(ProviderCategory::class)
                     ->required(),
@@ -183,13 +206,9 @@ class ProviderResource extends Resource
                 TextColumn::make('province')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('status')
-                    ->badge()
-                    ->searchable(),
-                TextColumn::make('verification_state')
-                    ->label('Verification')
-                    ->badge()
-                    ->searchable(),
+                // Phase 2.2: one combined badge replaces the old
+                // Status + Verification pair.
+                ListingStatusBadge::make(),
                 TextColumn::make('tier')
                     ->badge()
                     ->searchable()

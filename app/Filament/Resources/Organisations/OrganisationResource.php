@@ -12,6 +12,7 @@ use App\Filament\Resources\Organisations\Pages\CreateOrganisation;
 use App\Filament\Resources\Organisations\Pages\EditOrganisation;
 use App\Filament\Resources\Organisations\Pages\ListOrganisations;
 use App\Filament\Resources\Organisations\RelationManagers\MembershipsRelationManager;
+use App\Filament\Support\ListingStatusBadge;
 use App\Models\Organisation;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -212,25 +213,10 @@ class OrganisationResource extends Resource
                     ->searchable(['town', 'province'])
                     ->sortable()
                     ->toggleable(),
-                TextColumn::make('status')
-                    ->badge()
-                    ->sortable()
-                    ->color(fn (ListingStatus|string|null $state): string => match ($state instanceof ListingStatus ? $state : ListingStatus::tryFrom((string) $state)) {
-                        ListingStatus::Published => 'success',
-                        ListingStatus::Pending => 'warning',
-                        ListingStatus::Archived => 'danger',
-                        default => 'gray',
-                    }),
-                TextColumn::make('verification_state')
-                    ->badge()
-                    ->toggleable()
-                    ->color(fn (VerificationState|string|null $state): string => match ($state instanceof VerificationState ? $state : VerificationState::tryFrom((string) $state)) {
-                        VerificationState::Verified => 'success',
-                        VerificationState::Ageing => 'warning',
-                        VerificationState::Unconfirmed => 'gray',
-                        VerificationState::Archived => 'danger',
-                        default => 'gray',
-                    }),
+                // Phase 2.2: one combined badge in place of the old
+                // Status + Verification pair — the raw columns stay in
+                // the data, the UI just stops showing two green pills.
+                ListingStatusBadge::make(),
                 IconColumn::make('accredited')->boolean()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('source')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),

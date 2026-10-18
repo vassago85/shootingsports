@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Resources\EmailLogs\EmailLogResource;
 use App\Filament\Resources\Flags\FlagResource;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -60,12 +59,6 @@ class Settings extends Page
                 'description' => 'Hero and section imagery used across the public site.',
                 'href' => ManagePagePictures::getUrl(),
                 'icon' => Heroicon::OutlinedPhoto,
-            ],
-            [
-                'title' => 'Email log',
-                'description' => 'Audit of every transactional and marketing email sent.',
-                'href' => EmailLogResource::getUrl('index'),
-                'icon' => Heroicon::OutlinedQueueList,
             ],
         ];
     }

@@ -15,6 +15,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\HtmlString;
 use UnitEnum;
 
 class ManageCalendarImports extends Page implements HasForms
@@ -55,7 +56,7 @@ class ManageCalendarImports extends Page implements HasForms
         return $schema
             ->components(collect(CalendarImportSettings::sources())
                 ->map(fn (array $source): Section => Section::make($source['name'])
-                    ->description(fn (): string => $this->lastRunSummary($source['key']))
+                    ->description(fn (): string => $this->runStatusLine($source['key']))
                     ->afterHeader([
                         Action::make('run_'.$source['key'])
                             ->label('Run now')
@@ -67,7 +68,14 @@ class ManageCalendarImports extends Page implements HasForms
                         Select::make($source['key'])
                             ->label('Runs')
                             ->options(ImportFrequency::class)
-                            ->helperText($source['url'])
+                            // Save the frequency the moment staff pick a new
+                            // value instead of making them hunt for a Save
+                            // button at the bottom of a long list of imports.
+                            ->live()
+                            ->afterStateUpdated(fn (mixed $state) => $this->persistFrequency($source['key'], $state))
+                            ->helperText(new HtmlString(
+                                'Source: <a href="'.e($source['url']).'" target="_blank" rel="noopener" class="fi-link">'.e($source['url']).'</a>',
+                            ))
                             ->required(),
                     ]))
                 ->all())
@@ -84,6 +92,27 @@ class ManageCalendarImports extends Page implements HasForms
 
         Notification::make()
             ->title('Import schedule saved')
+            ->success()
+            ->send();
+    }
+
+    private function persistFrequency(string $key, mixed $value): void
+    {
+        $frequency = match (true) {
+            $value instanceof ImportFrequency => $value,
+            is_string($value) => ImportFrequency::tryFrom($value),
+            default => null,
+        };
+
+        if ($frequency === null) {
+            return;
+        }
+
+        CalendarImportSettings::setFrequency($key, $frequency);
+
+        Notification::make()
+            ->title('Saved')
+            ->body(CalendarImportSettings::source($key)['name'].' now runs '.$frequency->getLabel().'.')
             ->success()
             ->send();
     }
@@ -110,5 +139,39 @@ class ManageCalendarImports extends Page implements HasForms
         $run = app(CalendarImportRunner::class)->latestRun($key);
 
         return $run === null ? 'Not run yet.' : 'Last run '.$run->summary();
+    }
+
+    /**
+     * Combined status line: last run summary + next scheduled run. Used
+     * as the Section description so staff see "when" and "what next"
+     * without opening the schedule editor.
+     */
+    private function runStatusLine(string $key): string
+    {
+        $last = $this->lastRunSummary($key);
+        $next = $this->nextRunSummary($key);
+
+        return trim($last.' · '.$next, ' ·');
+    }
+
+    private function nextRunSummary(string $key): string
+    {
+        $frequency = CalendarImportSettings::frequency($key);
+
+        if ($frequency === ImportFrequency::Off) {
+            return 'Next run: off';
+        }
+
+        $next = now();
+
+        for ($i = 0; $i < 400; $i++) {
+            $next = $next->copy()->addDay()->startOfDay();
+
+            if ($frequency->isDueOn($next)) {
+                return 'Next run: '.$next->format('D j M');
+            }
+        }
+
+        return 'Next run: '.$frequency->getLabel();
     }
 }

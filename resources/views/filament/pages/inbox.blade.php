@@ -25,16 +25,19 @@
             >
                 <span>{{ $tabInfo['label'] }}</span>
 
-                @if ($count > 0)
-                    <span
-                        class="fi-badge inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold
-                            {{ $isActive
-                                ? 'bg-white/20 text-white'
-                                : 'bg-primary-100 text-primary-700 dark:bg-primary-500/20 dark:text-primary-200' }}"
-                    >
-                        {{ $count }}
-                    </span>
-                @endif
+                {{-- Always render the count — zero is useful information
+                     ("nothing waiting here") rather than noise, and
+                     stops staff clicking through six tabs to find out. --}}
+                <span
+                    class="fi-badge inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold
+                        {{ $isActive
+                            ? 'bg-white/20 text-white'
+                            : ($count > 0
+                                ? 'bg-primary-100 text-primary-700 dark:bg-primary-500/20 dark:text-primary-200'
+                                : 'bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400') }}"
+                >
+                    {{ $count }}
+                </span>
             </button>
         @endforeach
     </nav>

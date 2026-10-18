@@ -45,6 +45,10 @@ class DeskPanelProvider extends PanelProvider
                 PanelsRenderHook::HEAD_START,
                 fn (): string => view('filament.favicons')->render(),
             )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => view('filament.admin-tweaks')->render(),
+            )
             ->viteTheme('resources/css/filament/desk/theme.css')
             ->defaultThemeMode(ThemeMode::Dark)
             ->colors([

@@ -96,7 +96,9 @@ class EventResource extends Resource
             ->columns(1)
             ->components([
                 Tabs::make('Event')
-                    ->persistTab()
+                    // No persistTab(): opening a different event should land
+                    // on Details every time, not on whatever tab staff were
+                    // last looking at (usually Communications/Sharing).
                     ->columnSpanFull()
                     ->tabs([
                         Tab::make('Details')
@@ -358,29 +360,36 @@ class EventResource extends Resource
             ->defaultPaginationPageOption(25)
             ->defaultSort('starts_at', 'desc')
             ->columns([
+                // Phase 2.2: fit the list on a normal desktop without
+                // horizontal scroll. Title carries the host as a
+                // secondary line, Disciplines/Range/Level/Entry fee
+                // move behind the column toggle, so the default view
+                // is just Title+Host, Starts, Status, actions.
                 TextColumn::make('title')
                     ->searchable()
                     ->sortable()
-                    ->wrap(),
+                    ->wrap()
+                    ->description(fn (Event $record): ?string => $record->hostOrganisation?->name),
                 TextColumn::make('hostOrganisation.name')
                     ->label('Host')
                     ->searchable()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('disciplines.name')
                     ->label('Disciplines')
                     ->badge()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('venue.name')
                     ->label(__('labels.ranges_nav'))
                     ->searchable()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('starts_at')
                     ->label('Starts')
                     ->formatStateUsing(fn ($state, Event $record): string => self::formatEventDate($state, $record))
                     ->sortable(),
                 TextColumn::make('level')
                     ->badge()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
                     ->badge()
                     ->sortable(),
@@ -389,7 +398,8 @@ class EventResource extends Resource
                     ->formatStateUsing(fn (?int $state): string => $state !== null
                         ? 'R'.number_format($state / 100, 2)
                         : '—')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('entries_taken')
                     ->label('Entries')
                     ->numeric()

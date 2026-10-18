@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Providers\Pages;
 
 use App\Enums\VerificationState;
+use App\Filament\Concerns\HasQuietBreadcrumbs;
 use App\Filament\Resources\Providers\ProviderResource;
 use App\Models\Provider;
 use Filament\Actions\CreateAction;
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ListProviders extends ListRecords
 {
+    use HasQuietBreadcrumbs;
+
     protected static string $resource = ProviderResource::class;
 
     protected function getHeaderActions(): array
@@ -28,16 +31,24 @@ class ListProviders extends ListRecords
      */
     public function getTabs(): array
     {
-        return [
+        $ageingCount = Provider::query()->where('verification_state', VerificationState::Ageing)->count();
+
+        $tabs = [
             'all' => Tab::make('All'),
             'unconfirmed' => Tab::make('Unconfirmed')
                 ->modifyQueryUsing(fn (Builder $q): Builder => $q->where('verification_state', VerificationState::Unconfirmed))
                 ->badge(Provider::query()->where('verification_state', VerificationState::Unconfirmed)->count()),
-            'ageing' => Tab::make('Ageing')
-                ->modifyQueryUsing(fn (Builder $q): Builder => $q->where('verification_state', VerificationState::Ageing))
-                ->badge(Provider::query()->where('verification_state', VerificationState::Ageing)->count()),
-            'verified' => Tab::make('Verified')
-                ->modifyQueryUsing(fn (Builder $q): Builder => $q->where('verification_state', VerificationState::Verified)),
         ];
+
+        if ($ageingCount > 0) {
+            $tabs['ageing'] = Tab::make('Ageing')
+                ->modifyQueryUsing(fn (Builder $q): Builder => $q->where('verification_state', VerificationState::Ageing))
+                ->badge($ageingCount);
+        }
+
+        $tabs['verified'] = Tab::make('Verified')
+            ->modifyQueryUsing(fn (Builder $q): Builder => $q->where('verification_state', VerificationState::Verified));
+
+        return $tabs;
     }
 }

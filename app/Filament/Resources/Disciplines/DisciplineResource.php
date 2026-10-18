@@ -173,31 +173,54 @@ class DisciplineResource extends Resource
         return $table
             ->recordTitleAttribute('name')
             ->defaultPaginationPageOption(25)
+            // Parent sports first, children nested underneath by name
+            // so the hierarchy reads at a glance instead of alphabetical soup.
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query
+                ->orderByRaw('COALESCE(parent_id, id) asc')
+                ->orderBy('parent_id', 'asc')
+                ->orderBy('name', 'asc'))
             ->columns([
-                TextColumn::make('slug')
-                    ->searchable(),
+                // The picture column stays in the table so the grid is
+                // consistent, but the cell renders empty when there is
+                // no uploaded image (Filament hides the broken-image icon
+                // for us) instead of a thumb placeholder on every row.
                 ImageColumn::make('image_path')
                     ->label('Picture')
                     ->disk('media'),
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    // Soft indent for children so the parent / child relationship
+                    // reads without an extra column.
+                    ->formatStateUsing(fn (?string $state, ?Discipline $record): string => $record !== null && $record->parent_id !== null
+                        ? '— '.(string) $state
+                        : (string) $state),
                 TextColumn::make('family')
                     ->badge()
                     ->searchable(),
                 TextColumn::make('parent.name')
-                    ->searchable(),
-                TextColumn::make('federation_organisation_id')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Parent')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('short_blurb')
+                    ->label('Description')
+                    ->limit(80)
+                    ->tooltip(fn (?Discipline $record): ?string => $record?->short_blurb)
                     ->searchable(),
                 TextColumn::make('typical_distances')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('sort_order')
+                    ->label('Order')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('is_published')
+                    ->label('Published')
                     ->boolean(),
+                TextColumn::make('slug')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

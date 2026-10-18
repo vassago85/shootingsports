@@ -10,6 +10,8 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 
 class EditEvent extends EditRecord
@@ -49,6 +51,29 @@ class EditEvent extends EditRecord
     public function areFormActionsSticky(): bool
     {
         return true;
+    }
+
+    /**
+     * Insert a visible separator between the form and the relation
+     * managers so the Entries / Teams / Results tables do not read as
+     * if they live under the sticky Save button. The relation managers
+     * each render their own title, so the wrapper is purely visual.
+     */
+    public function content(Schema $schema): Schema
+    {
+        if ($this->hasCombinedRelationManagerTabsWithContent()) {
+            return parent::content($schema);
+        }
+
+        return $schema
+            ->components([
+                $this->getFormContentComponent(),
+                Section::make('Entries, teams and results')
+                    ->description('Each tab below is its own table; changes here do not need the Save button above.')
+                    ->schema([
+                        $this->getRelationManagersContentComponent(),
+                    ]),
+            ]);
     }
 
     protected function getHeaderActions(): array
