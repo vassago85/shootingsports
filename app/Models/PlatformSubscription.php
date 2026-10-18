@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'organisation_id',
@@ -52,6 +53,11 @@ class PlatformSubscription extends Model
     public function organisation(): BelongsTo
     {
         return $this->belongsTo(Organisation::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(PlatformPayment::class);
     }
 
     public static function startTrial(Organisation $organisation, SubscriptionTier $tier, BillingInterval $interval): self

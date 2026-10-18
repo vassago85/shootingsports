@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Enums\MembershipInvoicePaymentMethod;
 use App\Models\MembershipInvoice;
 use App\Models\PaystackEvent;
+use App\Models\PlatformSubscription;
 use App\Models\User;
 use App\Services\Entries\RecordEventEntryPayment;
 use App\Services\Memberships\RecordMembershipPayment;
 use App\Services\Paystack\PaystackClient;
 use App\Services\Paystack\SubscriptionApplier;
+use App\Services\Platform\PlatformBillingWebhookHandler;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,6 +42,7 @@ class PaystackController extends Controller
     public function __construct(
         private readonly PaystackClient $client,
         private readonly SubscriptionApplier $applier,
+        private readonly PlatformBillingWebhookHandler $platformBilling,
     ) {}
 
     public function callback(Request $request): RedirectResponse
@@ -220,6 +224,7 @@ class PaystackController extends Controller
             'subscription.create' => $this->onSubscriptionCreate($data),
             'subscription.disable', 'subscription.not_renew' => $this->onSubscriptionCancelled($data),
             'invoice.payment_failed' => $this->onInvoicePaymentFailed($data),
+            'invoice.update' => $this->onInvoiceUpdate($data),
             default => null, // Unknown events are recorded but not processed. Fine.
         };
     }
@@ -304,6 +309,12 @@ class PaystackController extends Controller
      */
     private function onChargeSuccess(array $data): void
     {
+        if ($this->isPlatformSubscription($data)) {
+            $this->platformBilling->handle('charge.success', $data);
+
+            return;
+        }
+
         if ($this->isEventEntryPayment($data)) {
             app(RecordEventEntryPayment::class)->markPaid($data);
 
@@ -349,6 +360,12 @@ class PaystackController extends Controller
      */
     private function onSubscriptionCreate(array $data): void
     {
+        if ($this->isPlatformSubscription($data) || $this->isAwaitingPlatformSubscriptionCode($data)) {
+            $this->platformBilling->handle('subscription.create', $data);
+
+            return;
+        }
+
         $email = (string) data_get($data, 'customer.email', '');
         $subscriptionCode = (string) data_get($data, 'subscription_code', '');
         $customerCode = (string) data_get($data, 'customer.customer_code', '');
@@ -373,6 +390,12 @@ class PaystackController extends Controller
      */
     private function onSubscriptionCancelled(array $data): void
     {
+        if ($this->isPlatformSubscription($data)) {
+            $this->platformBilling->handle('subscription.disable', $data);
+
+            return;
+        }
+
         $email = (string) data_get($data, 'customer.email', '');
         $subscriptionCode = (string) data_get($data, 'subscription_code', '');
 
@@ -390,6 +413,12 @@ class PaystackController extends Controller
      */
     private function onInvoicePaymentFailed(array $data): void
     {
+        if ($this->isPlatformSubscription($data)) {
+            $this->platformBilling->handle('invoice.payment_failed', $data);
+
+            return;
+        }
+
         // Grace-period behaviour is minimal for v1: log the event,
         // leave the user on Pro until plan_expires_at rolls past.
         // Paystack retries failed charges automatically for ~72 hours.
@@ -397,6 +426,73 @@ class PaystackController extends Controller
             'reference' => data_get($data, 'reference'),
             'customer_email' => data_get($data, 'customer.email'),
         ]);
+    }
+
+    /**
+     * Only platform subscriptions react to invoice.update; user Pro
+     * renewals are already handled via charge.success.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function onInvoiceUpdate(array $data): void
+    {
+        if ($this->isPlatformSubscription($data)) {
+            $this->platformBilling->handle('invoice.update', $data);
+        }
+    }
+
+    /**
+     * A platform subscription event is tagged by metadata.purpose, or —
+     * for lifecycle events that carry no metadata — matches a stored
+     * PlatformSubscription by reference or Paystack subscription code.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function isPlatformSubscription(array $data): bool
+    {
+        if ($this->metadataPurposeIs($data, PlatformBillingWebhookHandler::PURPOSE)) {
+            return true;
+        }
+
+        $reference = (string) data_get($data, 'reference', '');
+        $subscriptionCode = (string) (data_get($data, 'subscription_code') ?: data_get($data, 'subscription.subscription_code', ''));
+
+        if ($reference === '' && $subscriptionCode === '') {
+            return false;
+        }
+
+        return PlatformSubscription::query()
+            ->where(function (Builder $query) use ($reference, $subscriptionCode): void {
+                if ($reference !== '') {
+                    $query->orWhere('paystack_reference', $reference);
+                }
+
+                if ($subscriptionCode !== '') {
+                    $query->orWhere('paystack_subscription_code', $subscriptionCode);
+                }
+            })
+            ->exists();
+    }
+
+    /**
+     * subscription.create carries neither our metadata nor the charge
+     * reference, so match the customer code stored from the first charge
+     * — but only while that subscription is still waiting for its code.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function isAwaitingPlatformSubscriptionCode(array $data): bool
+    {
+        $customerCode = (string) data_get($data, 'customer.customer_code', '');
+
+        if ($customerCode === '') {
+            return false;
+        }
+
+        return PlatformSubscription::query()
+            ->where('paystack_customer_code', $customerCode)
+            ->whereNull('paystack_subscription_code')
+            ->exists();
     }
 
     /**
