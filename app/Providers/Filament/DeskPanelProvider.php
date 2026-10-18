@@ -73,6 +73,7 @@ class DeskPanelProvider extends PanelProvider
                 'Your business',
                 'More',
                 'Club',
+                'Billing',
                 'Stories',
             ])
             ->discoverResources(in: app_path('Filament/Desk/Resources'), for: 'App\\Filament\\Desk\\Resources')

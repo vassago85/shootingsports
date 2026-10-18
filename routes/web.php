@@ -12,6 +12,7 @@ use App\Http\Controllers\EmbedController;
 use App\Http\Controllers\EnquiryController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\FeedController;
+use App\Http\Controllers\FeeStatementDownloadController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IcalController;
 use App\Http\Controllers\LlmsTxtController;
@@ -326,5 +327,11 @@ Route::post('/email/unsubscribe/{token}', [UnsubscribeController::class, 'resubs
 Route::get('/settings/notifications', NotificationPreferences::class)
     ->middleware('auth')
     ->name('settings.notifications');
+
+// Desk billing: CSV download of a platform fee statement. Authorised in
+// the controller (staff or the club's managers).
+Route::middleware(['auth'])
+    ->get('/desk/billing/fee-statements/{statement}/download', FeeStatementDownloadController::class)
+    ->name('desk.fee-statements.download');
 
 require __DIR__.'/mockups.php';
