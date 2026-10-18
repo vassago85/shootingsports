@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\EventStatus;
+use App\Enums\ListingStatus;
 use App\Enums\MembershipStatus;
 use App\Enums\OrganisationKind;
 use App\Enums\OrganisationUserRole;
@@ -238,4 +239,61 @@ it('Billing pages remain accessible for single_event orgs', function () {
     $admin = makeSingleEventAdmin();
 
     $this->actingAs($admin)->get('/desk/billing')->assertOk();
+});
+
+function payForSingleEvent(): void
+{
+    $invoice = PlatformInvoice::query()->firstOrFail();
+    $event = Event::query()->firstOrFail();
+
+    [$body, $signature] = signedChargeSuccess([
+        'reference' => 'SE-PAYSTACK-REF',
+        'amount' => 86250,
+        'currency' => 'ZAR',
+        'paid_at' => now()->toIso8601String(),
+        'metadata' => [
+            'purpose' => 'single_event',
+            'organisation_id' => $invoice->organisation_id,
+            'event_id' => $event->id,
+            'platform_invoice_id' => $invoice->id,
+        ],
+    ]);
+
+    test()->call('POST', '/paystack/webhook', [], [], [], [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_X_PAYSTACK_SIGNATURE' => $signature,
+    ], $body)->assertOk();
+}
+
+it('after successful payment, the single_event organisation is published', function () {
+    submitSingleEvent();
+
+    $organisation = Organisation::query()->where('kind', 'single_event')->firstOrFail();
+    expect($organisation->status)->toBe(ListingStatus::Pending);
+
+    payForSingleEvent();
+
+    expect($organisation->fresh()->status)->toBe(ListingStatus::Published);
+});
+
+it('after successful payment, Event::scopeUpcoming returns the paid event', function () {
+    submitSingleEvent();
+
+    $event = Event::query()->firstOrFail();
+    expect(Event::upcoming()->pluck('id')->all())->not->toContain($event->id);
+
+    payForSingleEvent();
+
+    expect(Event::upcoming()->pluck('id')->all())->toContain($event->id);
+});
+
+it('invoice description is clean UTF-8', function () {
+    submitSingleEvent();
+
+    $invoice = PlatformInvoice::query()->firstOrFail();
+
+    expect(preg_match('//u', $invoice->description))->toBe(1)
+        ->and($invoice->description)->toBe("Single-event listing \u{2014} Karoo Open 2027")
+        ->and($invoice->description)->not->toContain('â')
+        ->and($invoice->description)->not->toContain('€');
 });

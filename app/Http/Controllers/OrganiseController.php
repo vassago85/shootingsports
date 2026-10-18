@@ -105,7 +105,7 @@ class OrganiseController extends Controller
                 'issued_on' => today(),
                 'period_start' => today(),
                 'period_end' => today(),
-                'description' => "Single-event listing â€” {$event->title}",
+                'description' => "Single-event listing — {$event->title}",
                 'amount_excl_vat_cents' => $excl,
                 'vat_cents' => $vat,
                 'amount_incl_vat_cents' => $incl,

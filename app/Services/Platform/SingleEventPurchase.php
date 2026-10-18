@@ -3,10 +3,13 @@
 namespace App\Services\Platform;
 
 use App\Enums\EventStatus;
+use App\Enums\ListingStatus;
 use App\Models\Event;
+use App\Models\Organisation;
 use App\Models\PlatformInvoice;
 use App\Models\PlatformPayment;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -53,17 +56,20 @@ class SingleEventPurchase
             return null;
         }
 
-        $payment = PlatformPayment::query()->create([
-            'platform_subscription_id' => null,
-            'paystack_reference' => $reference,
-            'amount_cents' => $amountCents,
-            'currency' => (string) (data_get($data, 'currency') ?: $invoice->currency),
-            'paid_at' => $this->paidAt($data),
-        ]);
+        DB::transaction(function () use ($data, $invoice, $reference, $amountCents): void {
+            $payment = PlatformPayment::query()->create([
+                'platform_subscription_id' => null,
+                'paystack_reference' => $reference,
+                'amount_cents' => $amountCents,
+                'currency' => (string) (data_get($data, 'currency') ?: $invoice->currency),
+                'paid_at' => $this->paidAt($data),
+            ]);
 
-        $invoice->forceFill(['platform_payment_id' => $payment->id])->save();
+            $invoice->forceFill(['platform_payment_id' => $payment->id])->save();
 
-        $this->promoteEvent($invoice, (int) data_get($data, 'metadata.event_id', 0));
+            $this->promoteEvent($invoice, (int) data_get($data, 'metadata.event_id', 0));
+            $this->publishOrganisation($invoice);
+        });
 
         return $invoice;
     }
@@ -77,6 +83,18 @@ class SingleEventPurchase
             ->first();
 
         $event?->update(['status' => EventStatus::Planned]);
+    }
+
+    /**
+     * Event::scopeUpcoming requires the host organisation to be Published.
+     */
+    private function publishOrganisation(PlatformInvoice $invoice): void
+    {
+        Organisation::query()
+            ->whereKey($invoice->organisation_id)
+            ->where('status', '!=', ListingStatus::Published->value)
+            ->first()
+            ?->update(['status' => ListingStatus::Published]);
     }
 
     /**
