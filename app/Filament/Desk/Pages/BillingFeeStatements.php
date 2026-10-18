@@ -3,6 +3,7 @@
 namespace App\Filament\Desk\Pages;
 
 use App\Filament\Desk\Resources\ClubMembers\ClubMemberResource;
+use App\Models\Organisation;
 use App\Models\PlatformFeeStatement;
 use App\Models\User;
 use BackedEnum;
@@ -45,9 +46,23 @@ class BillingFeeStatements extends Page
     public function statements(): Collection
     {
         return PlatformFeeStatement::query()
-            ->whereIn('organisation_id', ClubMemberResource::managedClubIds())
+            ->whereIn('organisation_id', $this->managedClubIds())
             ->with('organisation')
             ->orderByDesc('period_start')
             ->get();
+    }
+
+    /**
+     * @return list<int>
+     */
+    protected function managedClubIds(): array
+    {
+        $user = Auth::user();
+
+        if ($user?->is_staff) {
+            return Organisation::query()->clubs()->pluck('id')->all();
+        }
+
+        return ClubMemberResource::managedClubIds();
     }
 }

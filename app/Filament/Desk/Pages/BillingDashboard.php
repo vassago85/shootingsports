@@ -48,7 +48,7 @@ class BillingDashboard extends Page
     public function managedClubs(): Collection
     {
         return Organisation::query()
-            ->whereIn('id', ClubMemberResource::managedClubIds())
+            ->whereIn('id', $this->managedClubIds())
             ->orderBy('name')
             ->get();
     }
@@ -59,14 +59,14 @@ class BillingDashboard extends Page
     public function subscriptions(): Collection
     {
         return PlatformSubscription::query()
-            ->whereIn('organisation_id', ClubMemberResource::managedClubIds())
+            ->whereIn('organisation_id', $this->managedClubIds())
             ->with('organisation')
             ->get();
     }
 
     public function changeTier(int $organisationId): void
     {
-        abort_unless(in_array($organisationId, ClubMemberResource::managedClubIds(), true), 403);
+        abort_unless(in_array($organisationId, $this->managedClubIds(), true), 403);
 
         Notification::make()
             ->title('Changing tier is coming soon')
@@ -77,7 +77,7 @@ class BillingDashboard extends Page
 
     public function cancelSubscription(int $organisationId): void
     {
-        abort_unless(in_array($organisationId, ClubMemberResource::managedClubIds(), true), 403);
+        abort_unless(in_array($organisationId, $this->managedClubIds(), true), 403);
 
         Notification::make()
             ->title('Cancelling online is coming soon')
@@ -88,12 +88,26 @@ class BillingDashboard extends Page
 
     public function requestSubscription(int $organisationId): void
     {
-        abort_unless(in_array($organisationId, ClubMemberResource::managedClubIds(), true), 403);
+        abort_unless(in_array($organisationId, $this->managedClubIds(), true), 403);
 
         Notification::make()
             ->title('No subscription yet')
             ->body('Contact the platform operator to set up a subscription for this club.')
             ->info()
             ->send();
+    }
+
+    /**
+     * @return list<int>
+     */
+    protected function managedClubIds(): array
+    {
+        $user = Auth::user();
+
+        if ($user?->is_staff) {
+            return Organisation::query()->clubs()->pluck('id')->all();
+        }
+
+        return ClubMemberResource::managedClubIds();
     }
 }

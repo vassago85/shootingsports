@@ -166,3 +166,31 @@ it('the dashboard change-tier and cancel stubs notify without changing the subsc
 
     expect($subscription->refresh()->cancel_at_period_end)->toBeFalse();
 });
+
+it('staff see all clubs on the Billing dashboard', function () {
+    $clubA = Organisation::factory()->create(['name' => 'Alpha Rifle Club']);
+    $clubB = Organisation::factory()->create(['name' => 'Bravo Pistol Club']);
+    PlatformSubscription::factory()->create(['organisation_id' => $clubA->id]);
+    PlatformSubscription::factory()->create(['organisation_id' => $clubB->id]);
+    $staff = User::factory()->create(['is_staff' => true]);
+
+    $this->actingAs($staff)
+        ->get('/desk/billing')
+        ->assertOk()
+        ->assertSee('Alpha Rifle Club')
+        ->assertSee('Bravo Pistol Club');
+});
+
+it('staff see all fee statements on the Fee Statements page', function () {
+    $clubA = Organisation::factory()->create(['name' => 'Alpha Rifle Club']);
+    $clubB = Organisation::factory()->create(['name' => 'Bravo Pistol Club']);
+    PlatformFeeStatement::factory()->create(['organisation_id' => $clubA->id]);
+    PlatformFeeStatement::factory()->create(['organisation_id' => $clubB->id]);
+    $staff = User::factory()->create(['is_staff' => true]);
+
+    $this->actingAs($staff)
+        ->get('/desk/billing-fee-statements')
+        ->assertOk()
+        ->assertSee('Alpha Rifle Club')
+        ->assertSee('Bravo Pistol Club');
+});
