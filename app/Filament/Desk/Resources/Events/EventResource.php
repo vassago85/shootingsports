@@ -26,7 +26,7 @@ class EventResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Calendar';
+    protected static string|UnitEnum|null $navigationGroup = 'Your clubs';
 
     protected static ?string $navigationLabel = 'Events';
 
@@ -65,6 +65,11 @@ class EventResource extends Resource
         $user = Auth::user();
 
         return (bool) ($user?->isDirectorDeskUser() || $user?->is_staff);
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canViewAny();
     }
 
     public static function getRelations(): array

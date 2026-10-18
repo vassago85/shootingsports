@@ -5,12 +5,14 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Http\Middleware\ApplySecurityHeaders;
+use App\Models\User;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -65,17 +67,33 @@ class DeskPanelProvider extends PanelProvider
             ->darkMode(true, isForced: true)
             ->themeSwitcher(false)
             ->sidebarCollapsibleOnDesktop()
+            // Mockup s3/s5 nav groups. Hunting / Big Game stay parked.
             ->navigationGroups([
-                'Your listings',
-                'Hunting',
-                'Big Game',
-                'Calendar',
+                'Your clubs',
+                'Your business',
+                'More',
                 'Club',
                 'Stories',
             ])
             ->discoverResources(in: app_path('Filament/Desk/Resources'), for: 'App\\Filament\\Desk\\Resources')
             ->discoverPages(in: app_path('Filament/Desk/Pages'), for: 'App\\Filament\\Desk\\Pages')
             ->discoverWidgets(in: app_path('Filament/Desk/Widgets'), for: 'App\\Filament\\Desk\\Widgets')
+            ->navigationItems([
+                // Mockup s5 — industry-only side nav. Directors never see these.
+                NavigationItem::make('My business')
+                    ->icon(Heroicon::OutlinedBuildingStorefront)
+                    ->group('Your business')
+                    ->sort(10)
+                    ->url(fn (): string => self::industryEditUrl())
+                    ->visible(fn (): bool => self::isIndustryNavVisible()),
+                NavigationItem::make('Advertise with us')
+                    ->icon(Heroicon::OutlinedMegaphone)
+                    ->group('More')
+                    ->sort(30)
+                    ->url(fn (): string => route('advertise'))
+                    ->openUrlInNewTab()
+                    ->visible(fn (): bool => self::isIndustryNavVisible()),
+            ])
             ->widgets([
                 AccountWidget::class,
             ])
@@ -104,5 +122,28 @@ class DeskPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    protected static function isIndustryNavVisible(): bool
+    {
+        $user = auth()->user();
+
+        return $user instanceof User
+            && $user->isIndustryDeskUser()
+            && ! $user->isDirectorDeskUser();
+    }
+
+    protected static function industryEditUrl(): string
+    {
+        $user = auth()->user();
+        if (! $user instanceof User) {
+            return route('suppliers.onboard');
+        }
+
+        $provider = $user->providers()->orderByDesc('updated_at')->first();
+
+        return $provider !== null
+            ? route('suppliers.onboard.edit', ['provider' => $provider->slug])
+            : route('suppliers.onboard');
     }
 }

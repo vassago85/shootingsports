@@ -22,13 +22,22 @@ class ClaimListing extends Page implements HasForms
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedHandRaised;
 
-    protected static ?string $navigationLabel = 'Claim a listing';
+    protected static ?string $navigationLabel = 'Claim another club';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Your listings';
+    protected static string|\UnitEnum|null $navigationGroup = 'More';
 
     protected static ?string $title = 'Claim an existing listing';
 
     protected static ?int $navigationSort = 20;
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = Auth::user();
+
+        // Mockup: claim sits under More for directors; industry-only
+        // users never see club nav.
+        return (bool) ($user?->isDirectorDeskUser() || $user?->is_staff);
+    }
 
     protected string $view = 'filament.desk.pages.claim-listing';
 

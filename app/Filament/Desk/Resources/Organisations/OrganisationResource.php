@@ -23,7 +23,7 @@ class OrganisationResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Your listings';
+    protected static string|UnitEnum|null $navigationGroup = 'Your clubs';
 
     protected static ?int $navigationSort = 10;
 
@@ -31,7 +31,24 @@ class OrganisationResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('labels.clubs_nav');
+        return 'My clubs';
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        $count = static::getEloquentQuery()->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'success';
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canViewAny();
     }
 
     public static function getModelLabel(): string
@@ -70,6 +87,7 @@ class OrganisationResource extends Resource
     {
         $user = Auth::user();
 
+        // Industry-only users (not directors) never see club nav — mockup s5.
         return (bool) ($user?->isDirectorDeskUser() || $user?->is_staff);
     }
 

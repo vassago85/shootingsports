@@ -19,6 +19,7 @@ use App\Models\User;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -55,6 +56,15 @@ class DeskDashboard extends Page
             'media' => 'Media desk',
             default => 'Desk',
         };
+    }
+
+    /**
+     * Mockup puts the eyebrow + H1 in the page body; hide Filament's
+     * duplicate page heading chrome.
+     */
+    public function getHeading(): string|Htmlable
+    {
+        return '';
     }
 
     /**
@@ -167,8 +177,19 @@ class DeskDashboard extends Page
                     'date' => $event->starts_at->timezone('Africa/Johannesburg')->format('D j M'),
                     'status' => $event->status?->getLabel() ?? '',
                     'status_color' => $event->status?->getColor() ?? 'gray',
-                    'publication' => $event->publication?->getLabel() ?? 'Draft',
-                    'publication_color' => $event->publication?->getColor() ?? 'gray',
+                    // Mockup labels: PUBLISHED / IN REVIEW / DRAFT
+                    'publication' => match ($event->publication) {
+                        EventPublication::Published => 'Published',
+                        EventPublication::PendingReview => 'In review',
+                        EventPublication::Rejected => 'Rejected',
+                        default => 'Draft',
+                    },
+                    'publication_color' => match ($event->publication) {
+                        EventPublication::Published => 'success',
+                        EventPublication::PendingReview => 'info',
+                        EventPublication::Rejected => 'danger',
+                        default => 'gray',
+                    },
                     'percent' => $completeness['percent'],
                     'hints' => $completeness['hints'],
                     'href' => EventResource::getUrl('edit', ['record' => $event]),

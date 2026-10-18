@@ -98,6 +98,8 @@ it('renders the director home with tiles, upcoming events and completeness', fun
         ->assertSee('Phase C Monthly Shoot')
         ->assertSee('Phase C Test Club')
         ->assertSee('How publishing works')
+        ->assertSee('Complete')
+        ->assertSee('Listing')
         ->assertSee('%');
 });
 
