@@ -53,8 +53,13 @@ class EventResource extends Resource
         $query = parent::getEloquentQuery();
         $user = Auth::user();
 
-        // Phase C — no staff bypass. Desk shows only clubs this person
-        // manages, matching the mockup "own only" rule.
+        // Staff / platform owner get a universal view — same policy as
+        // the host-club picker on the create form. Without this, staff
+        // can create an event and then 404 on the edit page.
+        if ($user?->is_staff) {
+            return $query;
+        }
+
         $orgIds = $user?->organisations()->pluck('organisations.id') ?? collect();
 
         return $query->whereIn('host_organisation_id', $orgIds);

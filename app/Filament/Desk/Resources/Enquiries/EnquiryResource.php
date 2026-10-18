@@ -89,18 +89,23 @@ class EnquiryResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
+        $query = parent::getEloquentQuery()->where('about_type', Provider::class);
+        $user = Auth::user();
+
+        if ($user?->is_staff) {
+            return $query;
+        }
+
         $providerIds = PlacementResource::managedProviderIds();
 
-        return parent::getEloquentQuery()
-            ->where('about_type', Provider::class)
-            ->whereIn('about_id', $providerIds !== [] ? $providerIds : [0]);
+        return $query->whereIn('about_id', $providerIds !== [] ? $providerIds : [0]);
     }
 
     public static function canViewAny(): bool
     {
         $user = Auth::user();
 
-        return $user instanceof User && $user->isIndustryDeskUser();
+        return $user instanceof User && ($user->is_staff || $user->isIndustryDeskUser());
     }
 
     public static function shouldRegisterNavigation(): bool

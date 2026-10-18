@@ -29,6 +29,10 @@
 /storage/pail
 /vendor
 /database/playwright.sqlite
+/database/database.sqlite
+/.scratch
+/serve.err
+/serve.out
 /playwright-report
 /test-results
 /blob-report

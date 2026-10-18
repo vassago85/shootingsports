@@ -11,6 +11,8 @@ use App\Models\Organisation;
 use App\Services\ClubMembers\ImportClubMembers;
 use Carbon\CarbonImmutable;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -21,6 +23,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -203,6 +206,75 @@ class ClubMembersTable
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('gray')
                     ->action(fn (Table $table): StreamedResponse => self::exportCsv($table)),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    BulkAction::make('renew')
+                        ->label('Renew to year-end')
+                        ->icon('heroicon-o-arrow-path-rounded-square')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalDescription('Set these members to Active with expiry on each club\'s configured year-end. Lapsed and expired members are reactivated.')
+                        ->action(function (Collection $records): void {
+                            $renewed = 0;
+
+                            foreach ($records as $member) {
+                                /** @var ClubMember $member */
+                                $expiresAt = $member->organisation->membershipYearEndFor(CarbonImmutable::today());
+                                $member->renew($expiresAt, Auth::user(), 'Bulk renew from Desk');
+                                $renewed++;
+                            }
+
+                            Notification::make()
+                                ->title($renewed === 1 ? '1 member renewed.' : $renewed.' members renewed.')
+                                ->success()
+                                ->send();
+                        }),
+                    BulkAction::make('suspend')
+                        ->label('Suspend')
+                        ->icon('heroicon-o-pause-circle')
+                        ->color('warning')
+                        ->schema([
+                            Textarea::make('reason')
+                                ->required()
+                                ->maxLength(1000),
+                        ])
+                        ->action(function (Collection $records, array $data): void {
+                            $reason = (string) ($data['reason'] ?? '');
+                            $actor = Auth::user();
+
+                            foreach ($records as $member) {
+                                /** @var ClubMember $member */
+                                if ($member->status === ClubMemberStatus::Active) {
+                                    $member->transitionTo(ClubMemberStatus::Suspended, $actor, $reason);
+                                }
+                            }
+
+                            Notification::make()->title('Selected members suspended.')->success()->send();
+                        }),
+                    BulkAction::make('resign')
+                        ->label('Mark resigned')
+                        ->icon('heroicon-o-user-minus')
+                        ->color('gray')
+                        ->schema([
+                            Textarea::make('reason')
+                                ->required()
+                                ->maxLength(1000),
+                        ])
+                        ->action(function (Collection $records, array $data): void {
+                            $reason = (string) ($data['reason'] ?? '');
+                            $actor = Auth::user();
+
+                            foreach ($records as $member) {
+                                /** @var ClubMember $member */
+                                if (in_array($member->status, [ClubMemberStatus::Active, ClubMemberStatus::Suspended, ClubMemberStatus::Lapsed], true)) {
+                                    $member->transitionTo(ClubMemberStatus::Resigned, $actor, $reason);
+                                }
+                            }
+
+                            Notification::make()->title('Selected members marked resigned.')->success()->send();
+                        }),
+                ]),
             ]);
     }
 

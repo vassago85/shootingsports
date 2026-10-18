@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MembershipInvoicePaymentMethod;
+use App\Models\MembershipInvoice;
 use App\Models\PaystackEvent;
 use App\Models\User;
 use App\Services\Entries\RecordEventEntryPayment;
+use App\Services\Memberships\RecordMembershipPayment;
 use App\Services\Paystack\PaystackClient;
 use App\Services\Paystack\SubscriptionApplier;
 use Illuminate\Http\JsonResponse;
@@ -12,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 
 /**
  * Two entry points for Paystack:
@@ -63,6 +67,18 @@ class PaystackController extends Controller
             $target = $entry?->event?->publicUrl() ?? route('calendar');
 
             return redirect($target)->with('status', 'You are entered. The fee was paid on this site.');
+        }
+
+        if ($this->isClubMembershipPayment($verified)) {
+            $invoice = $this->markMembershipPaid($verified);
+
+            // my-memberships lands in Phase 3; until it ships we send
+            // the member home with a flash message.
+            $target = $invoice !== null && Route::has('my-memberships')
+                ? route('my-memberships')
+                : '/';
+
+            return redirect($target)->with('status', 'Membership payment received. Your renewal is active.');
         }
 
         $user = $this->resolveUserFromVerified($verified);
@@ -213,10 +229,26 @@ class PaystackController extends Controller
      */
     private function isEventEntryPayment(array $data): bool
     {
+        return $this->metadataPurposeIs($data, 'event_entry');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function isClubMembershipPayment(array $data): bool
+    {
+        return $this->metadataPurposeIs($data, 'club_membership');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function metadataPurposeIs(array $data, string $expected): bool
+    {
         $purpose = data_get($data, 'metadata.purpose');
 
         if (is_string($purpose)) {
-            return $purpose === 'event_entry';
+            return $purpose === $expected;
         }
 
         $metadata = $data['metadata'] ?? null;
@@ -224,10 +256,47 @@ class PaystackController extends Controller
         if (is_string($metadata)) {
             $decoded = json_decode($metadata, true);
 
-            return is_array($decoded) && ($decoded['purpose'] ?? null) === 'event_entry';
+            return is_array($decoded) && ($decoded['purpose'] ?? null) === $expected;
         }
 
         return false;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function markMembershipPaid(array $data): ?MembershipInvoice
+    {
+        $invoiceId = (int) data_get($data, 'metadata.invoice_id', 0);
+
+        if ($invoiceId <= 0) {
+            // Fall back to the Paystack reference — if we initialised
+            // the transaction we stored the reference against the
+            // invoice before sending the user to Checkout.
+            $reference = (string) data_get($data, 'reference', '');
+            if ($reference === '') {
+                return null;
+            }
+
+            $invoice = MembershipInvoice::query()->where('paystack_reference', $reference)->first();
+        } else {
+            $invoice = MembershipInvoice::query()->find($invoiceId);
+        }
+
+        if (! $invoice instanceof MembershipInvoice) {
+            Log::warning('Paystack club_membership: invoice not found', [
+                'invoice_id' => $invoiceId,
+                'reference' => data_get($data, 'reference'),
+            ]);
+
+            return null;
+        }
+
+        return app(RecordMembershipPayment::class)(
+            $invoice,
+            MembershipInvoicePaymentMethod::Paystack,
+            (string) data_get($data, 'reference', '') ?: null,
+        );
     }
 
     /**
@@ -237,6 +306,12 @@ class PaystackController extends Controller
     {
         if ($this->isEventEntryPayment($data)) {
             app(RecordEventEntryPayment::class)->markPaid($data);
+
+            return;
+        }
+
+        if ($this->isClubMembershipPayment($data)) {
+            $this->markMembershipPaid($data);
 
             return;
         }

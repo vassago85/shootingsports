@@ -16,6 +16,13 @@ export function playwrightEnv(): NodeJS.ProcessEnv {
         DB_DATABASE: playwrightDatabase,
         DB_URL: '',
         COMING_SOON: '0',
+        // The .env ships with SESSION_DOMAIN=.shootingsports.test for
+        // local Laragon work. Playwright drives http://127.0.0.1 so
+        // the browser rejects any cookie whose Domain does not match
+        // and no session ever sticks — Filament's /desk redirects
+        // back to /desk/login after a "successful" POST because the
+        // session cookie never came back on the follow-up request.
+        SESSION_DOMAIN: '',
     };
 }
 

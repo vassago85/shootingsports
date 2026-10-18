@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ClubMemberCategory;
 use App\Enums\ClubMemberStatus;
+use Carbon\CarbonImmutable;
 use Database\Factories\ClubMemberFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,6 +27,8 @@ use Illuminate\Support\Carbon;
     'joined_at', 'expires_at',
     'emergency_contact_name', 'emergency_contact_phone',
     'popia_consented_at', 'notes',
+    'reminder_30_sent_at', 'reminder_14_sent_at', 'reminder_7_sent_at',
+    'custom_attributes',
 ])]
 class ClubMember extends Model
 {
@@ -41,6 +44,10 @@ class ClubMember extends Model
             'joined_at' => 'immutable_date',
             'expires_at' => 'immutable_date',
             'popia_consented_at' => 'immutable_datetime',
+            'reminder_30_sent_at' => 'immutable_datetime',
+            'reminder_14_sent_at' => 'immutable_datetime',
+            'reminder_7_sent_at' => 'immutable_datetime',
+            'custom_attributes' => 'array',
         ];
     }
 
@@ -57,6 +64,11 @@ class ClubMember extends Model
     public function statusChanges(): HasMany
     {
         return $this->hasMany(ClubMemberStatusChange::class)->orderBy('created_at');
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(MembershipInvoice::class);
     }
 
     public function fullName(): string
@@ -99,6 +111,32 @@ class ClubMember extends Model
             'to_status' => $to->value,
             'changed_by' => $actor?->id,
             'reason' => $reason,
+        ]);
+    }
+
+    /**
+     * Renew this member to a new expiry. Sets status to Active, stamps
+     * the status-change audit log and clears the reminder stamps so
+     * the next cycle's reminders can fire.
+     */
+    public function renew(CarbonImmutable $expiresAt, ?User $actor = null, ?string $reason = null): void
+    {
+        $from = $this->status;
+
+        $this->forceFill([
+            'status' => ClubMemberStatus::Active,
+            'expires_at' => $expiresAt->toDateString(),
+            'joined_at' => $this->joined_at ?? Carbon::today()->toDateString(),
+            'reminder_30_sent_at' => null,
+            'reminder_14_sent_at' => null,
+            'reminder_7_sent_at' => null,
+        ])->save();
+
+        $this->statusChanges()->create([
+            'from_status' => $from->value,
+            'to_status' => ClubMemberStatus::Active->value,
+            'changed_by' => $actor?->id,
+            'reason' => $reason ?? 'Renewed',
         ]);
     }
 

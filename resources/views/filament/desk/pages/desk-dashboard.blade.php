@@ -50,6 +50,30 @@
                 </a>
             </div>
 
+            @if (! empty($membership) && ($membership['visible'] ?? false))
+                <div class="ss-card ss-mt" data-test="membership-card">
+                    <h3>Membership</h3>
+                    <div class="ss-grid3">
+                        <a class="ss-tile" href="{{ $membership['membersUrl'] }}" data-test="members-active">
+                            <div class="ss-n">{{ $membership['totals']['active'] }}</div>
+                            <div class="ss-l">Active members</div>
+                        </a>
+                        <a class="ss-tile" href="{{ $membership['appliedUrl'] }}" data-test="members-applied">
+                            <div class="ss-n">{{ $membership['totals']['applied'] }}</div>
+                            <div class="ss-l">Applications pending</div>
+                        </a>
+                        <a class="ss-tile" href="{{ $membership['expiringUrl'] }}" data-test="members-expiring">
+                            <div class="ss-n">{{ $membership['totals']['expiring'] }}</div>
+                            <div class="ss-l">Expiring in 30 days</div>
+                        </a>
+                    </div>
+                    <div class="ss-row">
+                        <span class="ss-muted">Lapsed: {{ $membership['totals']['lapsed'] }}</span>
+                        <a class="ss-btn ss-btn-sm" href="{{ $membership['membersUrl'] }}">Open members</a>
+                    </div>
+                </div>
+            @endif
+
             <div class="ss-card ss-mt">
                 <h3>Upcoming events</h3>
                 @if (empty($upcomingEvents))

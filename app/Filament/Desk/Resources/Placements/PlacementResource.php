@@ -76,15 +76,29 @@ class PlacementResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->whereIn('provider_id', self::managedProviderIds());
+        $query = parent::getEloquentQuery();
+        $user = Auth::user();
+
+        if ($user?->is_staff) {
+            return $query;
+        }
+
+        return $query->whereIn('provider_id', self::managedProviderIds());
     }
 
     public static function canViewAny(): bool
     {
         $user = Auth::user();
 
-        if (! $user instanceof User || ! $user->isIndustryDeskUser()) {
+        if (! $user instanceof User) {
+            return false;
+        }
+
+        if ($user->is_staff) {
+            return Placement::query()->exists();
+        }
+
+        if (! $user->isIndustryDeskUser()) {
             return false;
         }
 

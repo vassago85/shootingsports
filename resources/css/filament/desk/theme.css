@@ -298,3 +298,35 @@ a.ss-card:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* ToggleButtons / flag chips — give the selected state a clearly
+   visible treatment so clubs can read what they've ticked. Default
+   Filament dark + olive primary left selected and unselected looking
+   near-identical. */
+.fi-fo-toggle-buttons-item {
+    opacity: 0.6;
+    transition: opacity 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.fi-fo-toggle-buttons-item:hover {
+    opacity: 0.85;
+}
+
+.fi-fo-toggle-buttons-item[aria-pressed='true'],
+.fi-fo-toggle-buttons-item.fi-fo-toggle-buttons-item-selected,
+.fi-fo-toggle-buttons-item[data-selected='true'] {
+    opacity: 1;
+    box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.15),
+        0 0 0 4px var(--ss-accent-hi, #a4b56b);
+    transform: translateY(-1px);
+}
+
+.fi-fo-toggle-buttons-item[aria-pressed='true']::before,
+.fi-fo-toggle-buttons-item.fi-fo-toggle-buttons-item-selected::before,
+.fi-fo-toggle-buttons-item[data-selected='true']::before {
+    content: '✓ ';
+    font-weight: 700;
+    margin-right: 0.25rem;
+}
+

@@ -15,6 +15,7 @@ use App\Filament\Support\EventFlagSelect;
 use App\Filament\Support\EventPartnerSelect;
 use App\Filament\Support\EventVenueRepeater;
 use App\Models\Venue;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -119,20 +120,39 @@ class EventForm
     public static function whenWhereComponents(): array
     {
         return [
-            DateTimePicker::make('starts_at')
-                ->label('Start date')
-                ->seconds(false)
-                ->required(),
-            DateTimePicker::make('ends_at')
-                ->label('End date')
-                ->seconds(false)
-                ->helperText('Leave blank for a one-day event.'),
             Toggle::make('all_day')
                 ->label('All-day event')
                 ->inline(false)
                 ->default(true)
+                ->live()
                 ->helperText('Turn off to set a start time and squad times.')
                 ->columnSpanFull(),
+            // All-day events use date-only pickers; timed events use
+            // date-time pickers. Visibility (and dehydration) swap based
+            // on the toggle above so the form never shows an empty
+            // "--:--" placeholder when the user has said "all day".
+            DatePicker::make('starts_at')
+                ->label('Start date')
+                ->native(false)
+                ->required()
+                ->visible(fn (Get $get): bool => (bool) $get('all_day')),
+            DatePicker::make('ends_at')
+                ->label('End date')
+                ->native(false)
+                ->helperText('Leave blank for a one-day event.')
+                ->visible(fn (Get $get): bool => (bool) $get('all_day')),
+            DateTimePicker::make('starts_at')
+                ->label('Start')
+                ->native(false)
+                ->seconds(false)
+                ->required()
+                ->hidden(fn (Get $get): bool => (bool) $get('all_day')),
+            DateTimePicker::make('ends_at')
+                ->label('End')
+                ->native(false)
+                ->seconds(false)
+                ->helperText('Leave blank for a one-day event.')
+                ->hidden(fn (Get $get): bool => (bool) $get('all_day')),
             Select::make('venue_id')
                 ->label('Range')
                 ->relationship('venue', 'name')
@@ -207,12 +227,14 @@ class EventForm
             Toggle::make('accepts_platform_entries')
                 ->label('Take entries on this site')
                 ->inline(false)
+                ->live()
                 ->columnSpanFull(),
             Select::make('entry_collection')
                 ->label('How the fee is paid')
                 ->options(EntryCollection::class)
                 ->default(EntryCollection::External->value)
-                ->required()
+                ->required(fn (Get $get): bool => (bool) $get('accepts_platform_entries'))
+                ->visible(fn (Get $get): bool => (bool) $get('accepts_platform_entries'))
                 ->helperText('Paystack charges the public entry fee. Leave on “pays the club” until you want to take the money here.')
                 ->columnSpanFull(),
             Toggle::make('accepts_team_entries')
@@ -262,7 +284,7 @@ class EventForm
             Textarea::make('description')
                 ->rows(4)
                 ->columnSpanFull(),
-            EventPartnerSelect::make()->hiddenLabel(),
+            EventPartnerSelect::make(),
         ];
 
         if (! $forCreate) {

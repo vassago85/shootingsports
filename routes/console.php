@@ -21,3 +21,10 @@ foreach (CalendarImportSettings::sources() as $position => $source) {
 // safe to re-run — see SendProTrialNudges docblock. 07:20 SAST so
 // mail lands in the working-day inbox, not overnight.
 Schedule::command('pro:trial-nudges')->dailyAt('07:20');
+
+// Club membership lapse + renewal reminders. Both are idempotent and
+// safe to re-run — see LapseExpiredClubMembers and
+// SendClubMembershipRenewalReminders docblocks. 07:30 SAST so they
+// land in the working-day inbox, after the Pro nudges.
+Schedule::command('club-members:lapse')->dailyAt('07:30');
+Schedule::command('club-members:send-renewal-reminders')->dailyAt('07:35');

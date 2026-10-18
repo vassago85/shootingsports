@@ -12,7 +12,7 @@ export default defineConfig({
     globalSetup: './tests/Playwright/global-setup.ts',
     use: {
         baseURL: 'http://127.0.0.1:8124',
-        trace: 'on-first-retry',
+        trace: process.env.PW_TRACE === '1' ? 'on' : 'on-first-retry',
     },
     projects: [
         {

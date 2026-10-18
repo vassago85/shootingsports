@@ -25,7 +25,7 @@ class OrganisationResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Your clubs';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -76,7 +76,12 @@ class OrganisationResource extends Resource
         $query = parent::getEloquentQuery();
         $user = Auth::user();
 
-        // Phase C — no staff bypass. Everyone sees only their own clubs.
+        // Staff / platform owner see every club. Everyone else is
+        // scoped to the clubs they're linked to.
+        if ($user?->is_staff) {
+            return $query;
+        }
+
         return $query->whereHas(
             'users',
             fn (Builder $q) => $q->where('users.id', $user?->id),

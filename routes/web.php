@@ -18,6 +18,7 @@ use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\MagazineIssueController;
 use App\Http\Controllers\MagazineReadController;
 use App\Http\Controllers\MapController;
+use App\Http\Controllers\MembershipPaymentController;
 use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\PaystackController;
 use App\Http\Controllers\PlacementClickController;
@@ -34,6 +35,8 @@ use App\Livewire\Auth\Register;
 use App\Livewire\FindYourDiscipline;
 use App\Livewire\Listings\SubmitClaim;
 use App\Livewire\Matches\SubmitMatch;
+use App\Livewire\MyMembershipDetails;
+use App\Livewire\MyMemberships;
 use App\Livewire\Settings\NotificationPreferences;
 use App\Livewire\Suppliers\ClaimListing as SupplierClaimListing;
 use App\Livewire\Suppliers\CreateListing as SupplierCreateListing;
@@ -298,6 +301,20 @@ Route::middleware('auth')->group(function (): void {
     Route::delete('/my-log/{attendedEvent}', [ShooterLogController::class, 'destroy'])->name('my-log.destroy');
     Route::get('/my-log/export/csv', [ShooterLogController::class, 'exportCsv'])->name('my-log.export.csv');
     Route::get('/my-log/print', [ShooterLogController::class, 'printable'])->name('my-log.print');
+});
+
+// Member self-service. Linked members see every ClubMember record
+// where user_id matches or the email matches theirs; the Livewire
+// components enforce the actual visibility and the payment paths
+// (Paystack init + "I've paid by EFT" nudge) live on their own
+// controller so the form submits are plain HTTP.
+Route::middleware('auth')->group(function (): void {
+    Route::get('/my-memberships', MyMemberships::class)->name('my-memberships');
+    Route::get('/my-memberships/{member}', MyMembershipDetails::class)->name('my-memberships.show');
+    Route::post('/my-memberships/invoice/{invoice}/paystack', [MembershipPaymentController::class, 'paystack'])
+        ->name('my-memberships.paystack');
+    Route::post('/my-memberships/invoice/{invoice}/notify-eft', [MembershipPaymentController::class, 'notifyEftPaid'])
+        ->name('my-memberships.notify-eft');
 });
 
 // Email preferences. Two unauthenticated endpoints (one-click

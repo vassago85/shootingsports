@@ -2,13 +2,17 @@
 
 namespace App\Filament\Desk\Pages;
 
+use App\Enums\ClubMemberStatus;
 use App\Enums\EventPublication;
 use App\Enums\EventStatus;
 use App\Enums\MembershipStatus;
+use App\Enums\OrganisationUserRole;
 use App\Enums\VerificationState;
 use App\Filament\Desk\Resources\Articles\ArticleResource;
+use App\Filament\Desk\Resources\ClubMembers\ClubMemberResource;
 use App\Filament\Desk\Resources\Events\EventResource;
 use App\Filament\Desk\Resources\Organisations\OrganisationResource;
+use App\Models\ClubMember;
 use App\Models\Enquiry;
 use App\Models\Event;
 use App\Models\Organisation;
@@ -16,6 +20,7 @@ use App\Models\OrganisationUser;
 use App\Models\Placement;
 use App\Models\Provider;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Icons\Heroicon;
@@ -201,6 +206,69 @@ class DeskDashboard extends Page
             'listingsUrl' => OrganisationResource::getUrl('index'),
             'claimUrl' => ClaimListing::getUrl(),
             'createListingUrl' => OrganisationResource::getUrl('create'),
+            'membership' => $this->membershipSnapshot($user),
+        ];
+    }
+
+    /**
+     * Totals + per-club breakdown for the membership-manager card on
+     * the director dashboard. Hidden entirely when the user does not
+     * hold an Admin/Secretary seat on any club.
+     *
+     * @return array<string, mixed>
+     */
+    protected function membershipSnapshot(?User $user): array
+    {
+        if ($user === null || ! $user->holdsAnyMemberManagingRole()) {
+            return ['visible' => false];
+        }
+
+        $clubIds = $user->organisationMemberships()
+            ->whereIn('role', array_map(
+                fn (OrganisationUserRole $role): string => $role->value,
+                OrganisationUserRole::canManageMembers(),
+            ))
+            ->pluck('organisation_id');
+
+        if ($clubIds->isEmpty()) {
+            return ['visible' => false];
+        }
+
+        $today = CarbonImmutable::today();
+        $windowEnd = $today->addDays(30);
+
+        $totals = [
+            'active' => ClubMember::query()
+                ->whereIn('organisation_id', $clubIds)
+                ->active()
+                ->count(),
+            'applied' => ClubMember::query()
+                ->whereIn('organisation_id', $clubIds)
+                ->where('status', ClubMemberStatus::Applied)
+                ->count(),
+            'lapsed' => ClubMember::query()
+                ->whereIn('organisation_id', $clubIds)
+                ->where(function ($q): void {
+                    $q->where('status', ClubMemberStatus::Lapsed)
+                        ->orWhere(function ($qq): void {
+                            $qq->where('status', ClubMemberStatus::Active)
+                                ->whereNotNull('expires_at')
+                                ->where('expires_at', '<', CarbonImmutable::today());
+                        });
+                })
+                ->count(),
+            'expiring' => ClubMember::query()
+                ->whereIn('organisation_id', $clubIds)
+                ->expiringWithin(30)
+                ->count(),
+        ];
+
+        return [
+            'visible' => true,
+            'totals' => $totals,
+            'membersUrl' => ClubMemberResource::getUrl('index'),
+            'expiringUrl' => ClubMemberResource::getUrl('index', ['tableFilters' => ['expiring_soon' => ['isActive' => true]]]),
+            'appliedUrl' => ClubMemberResource::getUrl('index', ['tableFilters' => ['status' => ['value' => ClubMemberStatus::Applied->value]]]),
         ];
     }
 

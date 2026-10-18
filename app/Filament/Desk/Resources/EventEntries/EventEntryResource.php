@@ -78,15 +78,36 @@ class EventEntryResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->whereIn('event_id', self::managedEventIds());
+        $query = parent::getEloquentQuery();
+        $user = Auth::user();
+
+        if ($user?->is_staff) {
+            return $query;
+        }
+
+        return $query->whereIn('event_id', self::managedEventIds());
     }
 
     public static function canViewAny(): bool
     {
         $user = Auth::user();
 
-        if (! $user instanceof User || ! $user->isDirectorDeskUser()) {
+        if (! $user instanceof User) {
+            return false;
+        }
+
+        // Staff / platform owner: show whenever any event in the system
+        // actually accepts entries, so the nav isn't empty for them.
+        if ($user->is_staff) {
+            return Event::query()
+                ->where(function (Builder $query): void {
+                    $query->where('accepts_platform_entries', true)
+                        ->orWhere('accepts_team_entries', true);
+                })
+                ->exists();
+        }
+
+        if (! $user->isDirectorDeskUser()) {
             return false;
         }
 

@@ -5,8 +5,12 @@ namespace App\Filament\Desk\Resources\ClubMembers\Schemas;
 use App\Enums\ClubMemberCategory;
 use App\Enums\ClubMemberStatus;
 use App\Filament\Desk\Resources\ClubMembers\ClubMemberResource;
+use App\Models\ClubMember;
 use App\Models\Organisation;
+use App\Support\MembershipCustomFields;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -81,6 +85,12 @@ class ClubMemberForm
                         TextInput::make('emergency_contact_phone')->tel()->maxLength(40),
                     ]),
 
+                Section::make('Club custom fields')
+                    ->description('Extra fields configured on this club. Only visible once a club with custom fields is picked.')
+                    ->columns(2)
+                    ->visible(fn ($get, ?ClubMember $record): bool => self::clubHasCustomFields($get('organisation_id') ?? $record?->organisation_id))
+                    ->schema(fn ($get, ?ClubMember $record): array => self::customFieldComponents($get('organisation_id') ?? $record?->organisation_id)),
+
                 Section::make('Notes')
                     ->schema([
                         Textarea::make('notes')
@@ -89,6 +99,53 @@ class ClubMemberForm
                             ->columnSpanFull(),
                     ]),
             ]);
+    }
+
+    protected static function clubHasCustomFields(mixed $organisationId): bool
+    {
+        $organisation = self::pickOrganisation(is_numeric($organisationId) ? (int) $organisationId : null);
+
+        return $organisation !== null && MembershipCustomFields::schemaFor($organisation) !== [];
+    }
+
+    /**
+     * @return list<Field>
+     */
+    protected static function customFieldComponents(mixed $organisationId): array
+    {
+        $organisation = self::pickOrganisation(is_numeric($organisationId) ? (int) $organisationId : null);
+
+        if ($organisation === null) {
+            return [];
+        }
+
+        $components = [];
+
+        foreach (MembershipCustomFields::schemaFor($organisation) as $field) {
+            $components[] = self::buildFieldComponent($field);
+        }
+
+        return $components;
+    }
+
+    /**
+     * @param  array{key: string, label: string, type: string, required: bool, options: list<string>}  $field
+     */
+    protected static function buildFieldComponent(array $field): Field
+    {
+        $name = 'custom_attributes.'.$field['key'];
+        $component = match ($field['type']) {
+            'textarea' => Textarea::make($name)->rows(3)->maxLength(2000),
+            'select' => Select::make($name)->options(array_combine($field['options'], $field['options'])),
+            'number' => TextInput::make($name)->numeric(),
+            'date' => DatePicker::make($name)->native(false),
+            'checkbox' => Checkbox::make($name),
+            default => TextInput::make($name)->maxLength(255),
+        };
+
+        return $component
+            ->label($field['label'])
+            ->required($field['required']);
     }
 
     /**
