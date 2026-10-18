@@ -59,10 +59,7 @@ class OrganisationResource extends Resource
         $query = parent::getEloquentQuery();
         $user = Auth::user();
 
-        if ($user?->is_staff) {
-            return $query;
-        }
-
+        // Phase C — no staff bypass. Everyone sees only their own clubs.
         return $query->whereHas(
             'users',
             fn (Builder $q) => $q->where('users.id', $user?->id),
@@ -73,7 +70,7 @@ class OrganisationResource extends Resource
     {
         $user = Auth::user();
 
-        return (bool) ($user?->is_staff || $user?->is_match_director);
+        return (bool) ($user?->isDirectorDeskUser() || $user?->is_staff);
     }
 
     public static function getPages(): array

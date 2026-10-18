@@ -452,4 +452,39 @@ class Event extends Model
     {
         return $this->publicUrl().'#event';
     }
+
+    /**
+     * Phase C — desk completeness score for directors. Each missing
+     * field becomes a short hint under the progress bar so they know
+     * what to fix before staff have to chase them.
+     *
+     * @return array{percent: int, hints: list<string>}
+     */
+    public function listingCompleteness(): array
+    {
+        $checks = [
+            'Pick a range' => filled($this->venue_id),
+            'Add fee or entry link' => $this->entry_fee_cents !== null
+                || filled($this->entry_url)
+                || $this->accepts_platform_entries === true,
+            'Add description' => filled($this->description),
+            'Add banner' => filled($this->banner_path) || filled($this->banner_media_id),
+            'Registration link' => filled($this->entry_url) || $this->accepts_platform_entries === true,
+        ];
+
+        $total = count($checks);
+        $done = count(array_filter($checks));
+        $hints = [];
+
+        foreach ($checks as $label => $ok) {
+            if (! $ok) {
+                $hints[] = $label;
+            }
+        }
+
+        return [
+            'percent' => $total === 0 ? 0 : (int) round(($done / $total) * 100),
+            'hints' => array_slice($hints, 0, 3),
+        ];
+    }
 }

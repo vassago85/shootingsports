@@ -316,17 +316,45 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     {
         return match ($panel->getId()) {
             'admin' => $this->is_staff,
-            // Staff can access desk unconditionally (staff > MD > shooter).
-            // Everyone else must have opted into the MD signup path or
-            // hold an Admin / Secretary seat on at least one club's
-            // register. Hunting / Big Game pathways are parked on the
-            // WIP branch until Phase 2.
-            'desk' => $this->is_staff
-                || $this->is_match_director
-                || $this->is_media_partner
-                || $this->holdsAnyMemberManagingRole(),
+            // Phase C — every signed-in user can open /desk. Directors
+            // and industry get their home; shooters get the no-access
+            // landing instead of a raw 403. Resource policies still
+            // gate what they can actually edit.
+            'desk' => true,
             default => false,
         };
+    }
+
+    /**
+     * Phase C — which Desk home to render. Directors win when a user
+     * holds both club and industry seats (same login, dual capability).
+     */
+    public function deskHomeMode(): string
+    {
+        return match (true) {
+            $this->isDirectorDeskUser() => 'director',
+            $this->isIndustryDeskUser() => 'industry',
+            $this->is_media_partner => 'media',
+            $this->is_staff => 'director',
+            default => 'none',
+        };
+    }
+
+    public function isDirectorDeskUser(): bool
+    {
+        return $this->is_match_director
+            || $this->holdsAnyMemberManagingRole()
+            || $this->organisationMemberships()
+                ->where('status', MembershipStatus::Approved->value)
+                ->exists();
+    }
+
+    public function isIndustryDeskUser(): bool
+    {
+        return $this->isSupplier()
+            || $this->providerMemberships()
+                ->where('status', MembershipStatus::Approved->value)
+                ->exists();
     }
 
     /**
@@ -356,7 +384,9 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             $this->is_staff => '/admin',
             $this->is_match_director,
             $this->is_media_partner,
-            $this->holdsAnyMemberManagingRole() => '/desk',
+            $this->holdsAnyMemberManagingRole(),
+            $this->isSupplier(),
+            $this->hasDeskAccess() => '/desk',
             default => '/my-calendar',
         };
     }

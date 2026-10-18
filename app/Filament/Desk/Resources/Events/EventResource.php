@@ -53,10 +53,8 @@ class EventResource extends Resource
         $query = parent::getEloquentQuery();
         $user = Auth::user();
 
-        if ($user?->is_staff) {
-            return $query;
-        }
-
+        // Phase C — no staff bypass. Desk shows only clubs this person
+        // manages, matching the mockup "own only" rule.
         $orgIds = $user?->organisations()->pluck('organisations.id') ?? collect();
 
         return $query->whereIn('host_organisation_id', $orgIds);
@@ -66,7 +64,7 @@ class EventResource extends Resource
     {
         $user = Auth::user();
 
-        return (bool) ($user?->is_staff || $user?->is_match_director);
+        return (bool) ($user?->isDirectorDeskUser() || $user?->is_staff);
     }
 
     public static function getRelations(): array

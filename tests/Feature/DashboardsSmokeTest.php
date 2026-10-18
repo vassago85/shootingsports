@@ -62,22 +62,21 @@ it('loads the match director desk for a signed-in match director', function () {
         ->get('/desk')
         ->assertOk()
         ->assertSee('Match director desk')
-        ->assertSee('Create club or series')
-        ->assertSee('Claim a listing')
-        ->assertSee('Add a match');
+        ->assertSee('Welcome back')
+        ->assertSee('Add event');
 });
 
-it('shuts a plain shooter out of the desk', function () {
+it('shows the no-access landing to a plain shooter on /desk', function () {
     $shooter = User::factory()->create();
 
     Filament::setCurrentPanel('desk');
 
-    // Filament redirects unauthenticated / unauthorised users to
-    // the panel's login rather than serving a 403 — the assertion
-    // covers both the redirect and the forbidden case.
-    $response = $this->actingAs($shooter)->get('/desk');
-
-    expect($response->status())->toBeIn([302, 403, 404]);
+    // Phase C — shooters open /desk and see the friendly landing
+    // instead of a 403 / login bounce.
+    $this->actingAs($shooter)
+        ->get('/desk')
+        ->assertOk()
+        ->assertSee('Your desk opens once you manage a listing');
 });
 
 it('shows the desk stats and upcoming-matches widget once the director has a listing', function () {
@@ -112,10 +111,9 @@ it('shows the desk stats and upcoming-matches widget once the director has a lis
     $this->actingAs($director)
         ->get('/desk')
         ->assertOk()
-        ->assertSee('Upcoming')
-        ->assertSee('Draft')
-        ->assertSee('Next matches on your desk')
-        ->assertSee('Dashboards Smoke Match');
+        ->assertSee('Upcoming events')
+        ->assertSee('Dashboards Smoke Match')
+        ->assertSee('Dashboards Test Club');
 });
 
 // ---- Shooter my-calendar & my-log ---------------------------------------

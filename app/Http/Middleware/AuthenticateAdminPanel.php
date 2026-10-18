@@ -49,9 +49,11 @@ class AuthenticateAdminPanel extends FilamentAuthenticate
 
     private function redirectWrongPanel(User $user, Request $request): Response
     {
-        $deskPanel = Filament::getPanel('desk');
-
-        if ($deskPanel !== null && $user->canAccessPanel($deskPanel)) {
+        // Phase C opens /desk to every signed-in user (no-access
+        // landing for shooters), so canAccessPanel('desk') is always
+        // true. Only bounce to /desk when they actually manage
+        // something — otherwise send them to their default home.
+        if ($user->deskHomeMode() !== 'none') {
             return redirect('/desk')
                 ->with('status', 'The admin area is staff only. You have been sent to your desk.');
         }

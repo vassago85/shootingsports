@@ -189,15 +189,18 @@ it('does not require host_hint when the match director box is not ticked', funct
         ->assertHasNoErrors();
 });
 
-it('a PENDING match director cannot access /desk yet', function () {
+it('a PENDING match director sees the desk no-access landing', function () {
     $pending = User::factory()->create([
         'is_match_director' => false,
         'md_requested_at' => now(),
     ]);
 
+    // Phase C — pending applicants can open /desk but get the
+    // no-access landing until staff approve a membership.
     $this->actingAs($pending)
         ->get('/desk')
-        ->assertStatus(403);
+        ->assertOk()
+        ->assertSee('Your desk opens once you manage a listing');
 });
 
 // ---- Multi-role: MD + supplier on the same signup ------------------
@@ -289,10 +292,11 @@ it('rejects wrong credentials and does not log the user in', function () {
 
 // ---- Panel access gating ------------------------------------------
 
-it('a plain shooter cannot access /desk', function () {
+it('a plain shooter sees the desk no-access landing', function () {
     $this->actingAs(User::factory()->create())
         ->get('/desk')
-        ->assertStatus(403);
+        ->assertOk()
+        ->assertSee('Your desk opens once you manage a listing');
 });
 
 it('a match director can access /desk', function () {
@@ -375,12 +379,14 @@ it('signs a match director out of the desk panel and drops them on the home page
 
 // ---- Migration back-fill (regression) ------------------------------
 
-it('User::canAccessPanel(desk) returns true for staff even without the MD flag', function () {
+it('User::canAccessPanel(desk) returns true for any signed-in user', function () {
     $staff = User::factory()->staff()->create(['is_match_director' => false]);
+    $shooter = User::factory()->create();
 
     $panel = filament()->getPanel('desk');
 
-    expect($staff->canAccessPanel($panel))->toBeTrue();
+    expect($staff->canAccessPanel($panel))->toBeTrue()
+        ->and($shooter->canAccessPanel($panel))->toBeTrue();
 });
 
 it('back-fill migration would have promoted anyone with an event-managing membership', function () {
