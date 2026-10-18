@@ -1,66 +1,83 @@
 <x-filament-panels::page>
-    <div class="desk-hero">
-        <p class="label">{{ $today }}</p>
-        <h1>Today</h1>
-        <p>Welcome back, {{ $name }}.</p>
-    </div>
+    <div class="ss-today">
+        <div class="ss-hdr">
+            <div>
+                <div class="ss-eyebrow">{{ $today }}</div>
+                <h1 class="ss-h1">Today</h1>
+            </div>
+            <a class="ss-btn" href="{{ $addEventUrl }}">Add event</a>
+        </div>
 
-    {{-- Row 1 — four headline tiles. Each number is a link that
-         opens the exact filtered list that produced its count. --}}
-    <div class="admin-stats admin-stats-headline">
-        @foreach ($tiles as $tile)
-            <a href="{{ $tile['href'] }}" class="admin-stat admin-stat-{{ $tile['tone'] }}">
-                <b>{{ $tile['value'] }}</b>
-                <span>{{ $tile['label'] }}</span>
-            </a>
-        @endforeach
-    </div>
-
-    {{-- Row 2 — Fix these. Attention rules threaded through to the
-         filtered list that produced each count. --}}
-    <section class="desk-widget">
-        <p class="kicker">Fix these</p>
-        @forelse ($attention as $item)
-            <a class="admin-row" href="{{ $item['href'] }}">
-                <span class="admin-row-title">{{ $item['title'] }}</span>
-                <span class="admin-row-meta">{{ $item['problem'] }}</span>
-                <span class="admin-badge {{ $item['severity'] }}">{{ $item['severity'] === 'attention' ? 'Needs attention' : ucfirst($item['severity']) }}</span>
-            </a>
-        @empty
-            <p class="admin-quiet">Nothing flagged right now. Nice work.</p>
-        @endforelse
-    </section>
-
-    {{-- Row 3 — Next 7 days + Recent desk activity, side by side on
-         desktop, stacked on mobile. --}}
-    <div class="admin-split">
-        <section class="desk-widget">
-            <p class="kicker">Next 7 days</p>
-            @forelse ($upcoming as $event)
-                <a class="admin-row" href="{{ $event['href'] }}">
-                    <span class="admin-row-title">{{ $event['title'] }}</span>
-                    <span class="admin-row-meta">
-                        {{ $event['when'] }}
-                        @if ($event['host'])
-                            · {{ $event['host'] }}
-                        @endif
-                    </span>
+        <div class="ss-grid4">
+            @foreach ($tiles as $tile)
+                <a class="ss-card ss-tile" href="{{ $tile['href'] }}">
+                    <div class="ss-n">{{ $tile['value'] }}</div>
+                    <div class="ss-l">{{ $tile['label'] }}</div>
+                    @if (! empty($tile['go']))
+                        <div class="ss-go">{{ $tile['go'] }}</div>
+                    @endif
                 </a>
-            @empty
-                <p class="admin-quiet">Nothing on the public calendar in the next week.</p>
-            @endforelse
-        </section>
+            @endforeach
+        </div>
 
-        <section class="desk-widget">
-            <p class="kicker">Recent activity</p>
+        <div class="ss-grid2 ss-mt">
+            <div class="ss-card">
+                <h3>Fix these</h3>
+                @forelse ($attention as $item)
+                    <a class="ss-row ss-row-link" href="{{ $item['href'] }}">
+                        <span>{{ $item['title'] }}</span>
+                        <span class="ss-row-end">
+                            <span class="ss-muted">{{ $item['count'] }}</span>
+                            <span class="ss-sev ss-sev-{{ $item['severity'] }}">{{ $item['severity_label'] }}</span>
+                        </span>
+                    </a>
+                @empty
+                    <p class="ss-muted" style="margin:0">Nothing flagged right now. Nice work.</p>
+                @endforelse
+            </div>
+
+            <div class="ss-card">
+                <h3>Next 7 days</h3>
+                @if (empty($upcoming))
+                    <p class="ss-muted" style="margin:0">Nothing on the public calendar in the next week.</p>
+                @else
+                    <div class="ss-table-wrap">
+                        <table class="ss-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Event</th>
+                                    <th>Club</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($upcoming as $event)
+                                    <tr>
+                                        <td>{{ $event['when'] }}</td>
+                                        <td><a class="ss-link" href="{{ $event['href'] }}">{{ $event['title'] }}</a></td>
+                                        <td class="ss-muted">{{ $event['host'] ?? '—' }}</td>
+                                    </tr>
+                                @endforeach
+                                <tr>
+                                    <td colspan="3" class="ss-muted">All-day events show the date only, no 02:00.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <div class="ss-card ss-mt">
+            <h3>Recent desk activity</h3>
             @forelse ($recent as $row)
-                <a class="admin-row" href="{{ $row['href'] }}">
-                    <span class="admin-row-title">{{ $row['text'] }}</span>
-                    <span class="admin-row-meta">{{ $row['when'] }}</span>
+                <a class="ss-row ss-row-link" href="{{ $row['href'] }}">
+                    <span>{{ $row['text'] }}</span>
+                    <span class="ss-sev ss-sev-{{ $row['badge_color'] }}">{{ $row['badge'] }}</span>
                 </a>
             @empty
-                <p class="admin-quiet">No recent edits.</p>
+                <p class="ss-muted" style="margin:0">No recent edits.</p>
             @endforelse
-        </section>
+        </div>
     </div>
 </x-filament-panels::page>

@@ -41,7 +41,11 @@ it('shows the Today dashboard with the attention list for submitted matches', fu
         ->assertSee('Today')
         ->assertSee('Fix these')
         ->assertSee('Submitted matches')
-        ->assertSee('waiting for approval');
+        ->assertSee('Critical')
+        ->assertSee('Add event')
+        ->assertSee('Inbox items open')
+        ->assertSee('Next 7 days')
+        ->assertSee('Recent desk activity');
 });
 
 it('opens only new enquiries from the attention list', function () {
@@ -92,7 +96,7 @@ it('opens only matches missing an organiser from the attention list', function (
 
     $this->actingAs($staff)
         ->get('/admin')
-        ->assertSee('missing an organiser')
+        ->assertSee('Events without a club')
         ->assertSee('missing_organiser');
 
     $this->actingAs($staff)
@@ -124,7 +128,7 @@ it('does not flag a past submitted match on the dashboard', function () {
         ->get('/admin')
         ->assertOk()
         ->assertSee('Upcoming Submitted Shoot')
-        ->assertSee('waiting for approval');
+        ->assertSee('Submitted matches');
 
     $this->actingAs($staff)
         ->get(EventResource::getUrl('index', [
@@ -233,8 +237,8 @@ it('opens only pending industry listings from the attention list', function () {
     $this->actingAs($staff)
         ->get('/admin')
         ->assertOk()
-        ->assertSee('Industry listings')
-        ->assertSee('1 pending listing');
+        ->assertSee('Industry listings pending')
+        ->assertSee('Attention');
 
     $this->actingAs($staff)
         ->get(ProviderResource::getUrl('index', [

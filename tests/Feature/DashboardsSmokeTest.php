@@ -28,14 +28,14 @@ it('loads the staff dashboard for a signed-in staff user', function () {
         // tiles (Inbox / Events this week / Listings unconfirmed /
         // Ads live) replace the old register-stats widget.
         ->assertSee('Today')
-        ->assertSee('Inbox')
+        ->assertSee('Inbox items open')
         ->assertSee('Events this week')
-        ->assertSee('Listings')
-        ->assertSee('Ads live')
-        // Attention band + rows below the tiles.
+        ->assertSee('Listings unconfirmed')
+        ->assertSee('Adverts live')
         ->assertSee('Fix these')
         ->assertSee('Next 7 days')
-        ->assertSee('Recent activity');
+        ->assertSee('Recent desk activity')
+        ->assertSee('Add event');
 });
 
 it('shuts a non-staff user out of the admin dashboard', function () {
