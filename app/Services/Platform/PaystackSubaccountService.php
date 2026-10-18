@@ -6,6 +6,7 @@ use App\Models\AgencyAgreementAcceptance;
 use App\Models\Organisation;
 use App\Models\User;
 use App\Services\Paystack\PaystackClient;
+use RuntimeException;
 
 class PaystackSubaccountService
 {
@@ -23,6 +24,10 @@ class PaystackSubaccountService
         string $accountNumber,
         ?string $ipAddress = null,
     ): string {
+        if ($organisation->paystack_subaccount_id !== null) {
+            throw new RuntimeException('Organisation already has a Paystack subaccount.');
+        }
+
         $version = AgencyAgreement::currentVersion();
 
         AgencyAgreementAcceptance::create([

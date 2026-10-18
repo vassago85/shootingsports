@@ -65,11 +65,13 @@ class EnablePaystackSubaccount extends Component
 
     public function submit(PaystackSubaccountService $service): void
     {
-        $this->validate();
-
         $user = Auth::user();
 
         abort_unless($user instanceof User && $this->canManageBilling($user, $this->organisation), 403);
+
+        abort_if($this->organisation->paystack_subaccount_id !== null, 409, 'Subaccount already configured');
+
+        $this->validate();
 
         $service->create(
             $this->organisation,

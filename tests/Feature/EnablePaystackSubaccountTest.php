@@ -72,6 +72,42 @@ it('creates the subaccount via Paystack once agreement is accepted', function ()
         && $request['account_number'] === '0123456789');
 });
 
+it('does not create a second subaccount when one is already configured', function () {
+    Http::fake();
+
+    $org = Organisation::factory()->create(['paystack_subaccount_id' => 'ACCT_existing']);
+    $user = User::factory()->create();
+    attachApprovedAdmin($org, $user);
+    $this->actingAs($user);
+
+    Livewire::test(EnablePaystackSubaccount::class, ['organisation' => $org])
+        ->set('agreement_accepted', true)
+        ->set('settlement_bank', '058')
+        ->set('account_number', '0123456789')
+        ->set('business_name', 'Test Club')
+        ->call('submit')
+        ->assertStatus(409);
+
+    Http::assertNothingSent();
+    expect($org->refresh()->paystack_subaccount_id)->toBe('ACCT_existing')
+        ->and($org->agencyAgreementAcceptances()->count())->toBe(0);
+});
+
+it('forbids approved members whose role is not admin or secretary', function () {
+    $org = Organisation::factory()->create();
+    $editor = User::factory()->create();
+    $org->users()->attach($editor->id, [
+        'role' => OrganisationUserRole::Editor->value,
+        'status' => MembershipStatus::Approved->value,
+        'granted_at' => now(),
+        'approved_at' => now(),
+    ]);
+    $this->actingAs($editor);
+
+    Livewire::test(EnablePaystackSubaccount::class, ['organisation' => $org])
+        ->assertForbidden();
+});
+
 it('forbids users who are not approved admins or secretaries of the organisation', function () {
     $org = Organisation::factory()->create();
     $outsider = User::factory()->create();
