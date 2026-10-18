@@ -28,3 +28,6 @@ Schedule::command('pro:trial-nudges')->dailyAt('07:20');
 // land in the working-day inbox, after the Pro nudges.
 Schedule::command('club-members:lapse')->dailyAt('07:30');
 Schedule::command('club-members:send-renewal-reminders')->dailyAt('07:35');
+
+// Platform billing: trial-ending reminders at T-5 / T-1 / T+0 for org admins and secretaries.
+Schedule::command('subscriptions:notify-trial-ending')->dailyAt('09:00');
