@@ -29,6 +29,7 @@ use App\Policies\OrganisationPolicy;
 use App\Services\Geocoding\Geocoder;
 use App\Services\Geocoding\NominatimGeocoder;
 use App\Support\MailSettings;
+use App\Support\PlatformSettings;
 use App\Support\PublicCache;
 use App\Support\TurnstileSettings;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as FilamentLogoutResponse;
@@ -83,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         MailSettings::apply();
+        PlatformSettings::apply();
         TurnstileSettings::apply();
 
         // User implements MustVerifyEmail, so every Registered event

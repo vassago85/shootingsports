@@ -55,6 +55,12 @@ class Settings extends Page
                 'icon' => Heroicon::OutlinedEnvelope,
             ],
             [
+                'title' => 'Platform billing',
+                'description' => 'Fee %, VAT %, trial length, grace window, single-event price.',
+                'href' => ManagePlatformBillingSettings::getUrl(),
+                'icon' => Heroicon::OutlinedCurrencyDollar,
+            ],
+            [
                 'title' => 'Page pictures',
                 'description' => 'Hero and section imagery used across the public site.',
                 'href' => ManagePagePictures::getUrl(),
