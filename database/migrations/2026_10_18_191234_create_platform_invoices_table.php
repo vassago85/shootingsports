@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('organisation_id')->constrained()->cascadeOnDelete();
             $table->foreignId('platform_subscription_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('platform_payment_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('platform_payment_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('invoice_number')->unique();
             $table->date('issued_on');
             $table->date('period_start');

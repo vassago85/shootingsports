@@ -4,6 +4,7 @@ use App\Enums\BillingInterval;
 use App\Enums\SubscriptionTier;
 use App\Models\PlatformInvoice;
 use App\Models\PlatformSubscription;
+use Illuminate\Database\QueryException;
 
 /**
  * Fire a signed platform_subscription charge.success through the real webhook route.
@@ -148,4 +149,16 @@ it('renders the tax invoice template with all required SA VAT elements', functio
         ->toContain('VAT (15%)')
         ->toContain('R150.00')
         ->toContain('R1,150.00');
+});
+
+it('two invoices for the same platform payment are impossible at the DB level', function () {
+    $first = PlatformInvoice::factory()->create();
+
+    expect(fn () => PlatformInvoice::factory()->create([
+        'organisation_id' => $first->organisation_id,
+        'platform_subscription_id' => $first->platform_subscription_id,
+        'platform_payment_id' => $first->platform_payment_id,
+    ]))->toThrow(QueryException::class);
+
+    expect(PlatformInvoice::query()->count())->toBe(1);
 });
