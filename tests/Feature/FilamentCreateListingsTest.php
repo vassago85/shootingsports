@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\EventLevel;
+use App\Enums\EventPublication;
 use App\Enums\EventStatus;
 use App\Enums\FlagFamily;
 use App\Enums\ListingSource;
@@ -201,11 +202,13 @@ it('creates a match from the desk with a discipline', function () {
     $host = Organisation::factory()->create([
         'status' => ListingStatus::Published,
         'type' => OrganisationType::Club,
+        'trusted' => false,
     ]);
     $host->users()->attach($director->id, [
         'role' => OrganisationUserRole::MatchDirector,
         'granted_at' => now(),
     ]);
+    $venue = Venue::factory()->create();
     $discipline = Discipline::factory()->create(['name' => 'Sporting Clays', 'slug' => 'sporting-clays-desk']);
     Filament::setCurrentPanel(Filament::getPanel('desk'));
 
@@ -215,10 +218,10 @@ it('creates a match from the desk with a discipline', function () {
             'title' => 'Valley Sporting Open',
             'host_organisation_id' => $host->id,
             'discipline_ids' => [$discipline->id],
+            'venue_id' => $venue->id,
             'starts_at' => now()->addMonth()->startOfHour()->toDateTimeString(),
             'all_day' => true,
             'level' => EventLevel::Club->value,
-            'status' => EventStatus::Confirmed->value,
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -226,7 +229,9 @@ it('creates a match from the desk with a discipline', function () {
     $event = Event::query()->where('title', 'Valley Sporting Open')->first();
 
     expect($event)->not->toBeNull()
-        ->and($event->primaryDiscipline()?->id)->toBe($discipline->id);
+        ->and($event->primaryDiscipline()?->id)->toBe($discipline->id)
+        ->and($event->status)->toBe(EventStatus::Planned)
+        ->and($event->publication)->toBe(EventPublication::PendingReview);
 });
 
 it('creates a club from the match director desk', function () {
@@ -294,19 +299,19 @@ it('saves new-shooter-friendly from admin and desk match forms', function () {
         'role' => OrganisationUserRole::MatchDirector,
         'granted_at' => now(),
     ]);
+    $deskVenue = Venue::factory()->create();
     Filament::setCurrentPanel(Filament::getPanel('desk'));
 
     Livewire::actingAs($director)
         ->test(DeskCreateEvent::class)
-        ->assertSee('New shooter friendly')
         ->fillForm([
             'title' => 'Desk Novice Match',
             'host_organisation_id' => $deskHost->id,
             'discipline_ids' => [$discipline->id],
+            'venue_id' => $deskVenue->id,
             'starts_at' => now()->addMonth()->startOfHour()->toDateTimeString(),
             'all_day' => true,
             'level' => EventLevel::Club->value,
-            'status' => EventStatus::Confirmed->value,
             'flags' => [$flag->id],
         ])
         ->call('create')
