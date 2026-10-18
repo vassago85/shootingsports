@@ -6,6 +6,7 @@ return [
     'payout_admin_fee_cents' => (int) env('PLATFORM_PAYOUT_ADMIN_FEE_CENTS', 5000),
     'trial_days' => (int) env('PLATFORM_TRIAL_DAYS', 30),
     'grace_window_days' => (int) env('PLATFORM_GRACE_WINDOW_DAYS', 30),
+    'agency_agreement_version' => (string) env('AGENCY_AGREEMENT_VERSION', '2026-10-18'),
     'dunning_retry_days' => [1, 4, 7, 14],
     'single_event_price_cents' => (int) env('PLATFORM_SINGLE_EVENT_PRICE_CENTS', 75000),
     'tier_prices_cents' => [

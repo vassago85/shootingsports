@@ -11,6 +11,7 @@ use App\Enums\VerificationState;
 use App\Models\Concerns\HasDisciplines;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\HasVerification;
+use App\Services\Platform\AgencyAgreement;
 use App\Support\Indexability;
 use Carbon\CarbonImmutable;
 use Database\Factories\OrganisationFactory;
@@ -127,6 +128,18 @@ class Organisation extends Model
     public function guestVisits(): HasMany
     {
         return $this->hasMany(ClubGuestVisit::class);
+    }
+
+    public function agencyAgreementAcceptances(): HasMany
+    {
+        return $this->hasMany(AgencyAgreementAcceptance::class);
+    }
+
+    public function hasSignedCurrentAgencyAgreement(): bool
+    {
+        return $this->agencyAgreementAcceptances()
+            ->where('version', AgencyAgreement::currentVersion())
+            ->exists();
     }
 
     /**
