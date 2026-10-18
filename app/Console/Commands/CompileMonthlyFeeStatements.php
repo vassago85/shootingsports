@@ -30,12 +30,20 @@ class CompileMonthlyFeeStatements extends Command
 
     public function handle(CompileFeeStatement $compiler): int
     {
-        $month = $this->option('month') ?? CarbonImmutable::now()->subMonthNoOverflow()->format('Y-m');
+        $month = (string) $this->option('month');
+
+        if ($month === '') {
+            $month = CarbonImmutable::now()->subMonthNoOverflow()->format('Y-m');
+        } elseif (! preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)) {
+            $this->error("Invalid --month value '{$month}'. Expected format YYYY-MM.");
+
+            return self::FAILURE;
+        }
 
         try {
             $periodStart = CarbonImmutable::createFromFormat('!Y-m-d', $month.'-01')->startOfMonth();
         } catch (Throwable) {
-            $this->error("Invalid --month value [{$month}]; expected YYYY-MM.");
+            $this->error("Invalid --month value '{$month}'. Expected format YYYY-MM.");
 
             return self::FAILURE;
         }

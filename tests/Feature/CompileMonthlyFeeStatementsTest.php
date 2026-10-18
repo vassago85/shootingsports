@@ -7,6 +7,7 @@ use App\Models\PlatformFeeLine;
 use App\Models\PlatformFeeStatement;
 use App\Services\Platform\CompileFeeStatement;
 use Carbon\CarbonImmutable;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 
 function feeStatementPaidInvoice(Organisation $organisation, string $paidAt, array $overrides = []): MembershipInvoice
@@ -168,4 +169,26 @@ it('the command skips organisations whose only paid invoices carry no platform f
     Artisan::call('platform:compile-monthly-fee-statements', ['--month' => '2026-10']);
 
     expect(PlatformFeeStatement::count())->toBe(0);
+});
+
+it('the command rejects an invalid --month and exits with FAILURE', function (): void {
+    $organisation = Organisation::factory()->create();
+    feeStatementPaidInvoice($organisation, '2027-01-14 09:00:00');
+
+    $exitCode = Artisan::call('platform:compile-monthly-fee-statements', ['--month' => '2026-13']);
+
+    expect($exitCode)->toBe(Command::FAILURE)
+        ->and(PlatformFeeStatement::count())->toBe(0)
+        ->and(Artisan::output())->toContain("Invalid --month value '2026-13'. Expected format YYYY-MM.");
+});
+
+it('rejects --month=2026-00 as invalid', function (): void {
+    $organisation = Organisation::factory()->create();
+    feeStatementPaidInvoice($organisation, '2025-12-14 09:00:00');
+
+    $exitCode = Artisan::call('platform:compile-monthly-fee-statements', ['--month' => '2026-00']);
+
+    expect($exitCode)->toBe(Command::FAILURE)
+        ->and(PlatformFeeStatement::count())->toBe(0)
+        ->and(Artisan::output())->toContain("Invalid --month value '2026-00'. Expected format YYYY-MM.");
 });
