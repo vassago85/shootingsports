@@ -232,6 +232,34 @@ class PaystackClient
     }
 
     /**
+     * Create a Paystack Subaccount so split-at-source settlements land
+     * straight in a club's bank account. `percentage_charge` is
+     * Paystack's cut on the subaccount, not our platform fee — that is
+     * passed as `transaction_charge` on each initialised transaction.
+     *
+     * @return array{subaccount_code:string, is_verified:bool}
+     */
+    public function createSubaccount(string $businessName, string $settlementBank, string $accountNumber, float $percentageCharge = 0.0): array
+    {
+        $response = $this->request()
+            ->post($this->baseUrl.'/subaccount', [
+                'business_name' => $businessName,
+                'settlement_bank' => $settlementBank,
+                'account_number' => $accountNumber,
+                'percentage_charge' => $percentageCharge,
+            ])
+            ->throw()
+            ->json();
+
+        $this->ensureOk($response, 'createSubaccount');
+
+        return [
+            'subaccount_code' => (string) ($response['data']['subaccount_code'] ?? ''),
+            'is_verified' => (bool) ($response['data']['is_verified'] ?? false),
+        ];
+    }
+
+    /**
      * Verify the HMAC-SHA512 signature Paystack attaches to every
      * webhook. MUST be run against the raw request body — any
      * re-serialisation of the JSON produces a mismatch.
