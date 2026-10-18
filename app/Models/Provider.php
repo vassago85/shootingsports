@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\GautengMetro;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
+use App\Enums\MembershipStatus;
 use App\Enums\ProviderCategory;
 use App\Enums\ProviderTier;
 use App\Enums\Province;
@@ -206,6 +207,37 @@ class Provider extends Model
             ->withPivot('sort_order')
             ->withTimestamps()
             ->orderBy('event_provider.sort_order');
+    }
+
+    /**
+     * Phase B — every user-level pivot row (pending, approved,
+     * rejected). Approved-only subset lives on {@see managers()}.
+     *
+     * @return HasMany<ProviderMembership, $this>
+     */
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(ProviderMembership::class);
+    }
+
+    /** @return BelongsToMany<User, $this> */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'provider_user')
+            ->withPivot(['role', 'status', 'requested_at', 'approved_at'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Approved advertisers only — the people the Desk's industry
+     * surface should scope to.
+     *
+     * @return BelongsToMany<User, $this>
+     */
+    public function managers(): BelongsToMany
+    {
+        return $this->users()
+            ->wherePivot('status', MembershipStatus::Approved->value);
     }
 
     public function scopePublished($query)

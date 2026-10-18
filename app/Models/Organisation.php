@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
+use App\Enums\MembershipStatus;
 use App\Enums\OrganisationType;
 use App\Enums\Province;
 use App\Enums\VerificationState;
@@ -28,7 +29,7 @@ use Illuminate\Support\Facades\Storage;
     'membership_enabled', 'accepts_applications',
     'status',
     'verification_state', 'last_verified_at', 'verification_token',
-    'claimed_by', 'source',
+    'claimed_by', 'source', 'trusted',
 ])]
 class Organisation extends Model
 {
@@ -48,6 +49,7 @@ class Organisation extends Model
             'verification_state' => VerificationState::class,
             'last_verified_at' => 'immutable_datetime',
             'source' => ListingSource::class,
+            'trusted' => 'boolean',
         ];
     }
 
@@ -75,8 +77,21 @@ class Organisation extends Model
     {
         return $this->belongsToMany(User::class)
             ->using(OrganisationUser::class)
-            ->withPivot(['role', 'granted_by', 'granted_at'])
+            ->withPivot(['role', 'status', 'granted_by', 'granted_at', 'requested_at', 'approved_at'])
             ->withTimestamps();
+    }
+
+    /**
+     * Approved managers only — the people the Desk should scope
+     * organisation views to. Phase C uses this for the "who gets to
+     * edit this club" check.
+     *
+     * @return BelongsToMany<User, $this>
+     */
+    public function managers(): BelongsToMany
+    {
+        return $this->users()
+            ->wherePivot('status', MembershipStatus::Approved->value);
     }
 
     public function hostedEvents(): HasMany

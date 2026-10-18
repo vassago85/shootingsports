@@ -6,6 +6,7 @@ use App\Enums\EntryCollection;
 use App\Enums\EntryStatus;
 use App\Enums\EventKind;
 use App\Enums\EventLevel;
+use App\Enums\EventPublication;
 use App\Enums\EventStatus;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'slug', 'title', 'host_organisation_id', 'venue_id', 'starts_at', 'ends_at',
-    'all_day', 'level', 'kind', 'status', 'confirmed_at', 'original_starts_at',
+    'all_day', 'level', 'kind', 'status', 'publication', 'confirmed_at', 'original_starts_at',
     'entry_fee_cents', 'member_fee_cents', 'entry_url', 'contact_email', 'accepts_platform_entries', 'entry_collection', 'accepts_team_entries', 'team_size', 'entry_payment_instructions', 'capacity',
     'entries_taken', 'round_count', 'target_count', 'stage_count',
     'results_url', 'banner_media_id', 'banner_path', 'description', 'created_by',
@@ -46,6 +47,7 @@ class Event extends Model
             'level' => EventLevel::class,
             'kind' => EventKind::class,
             'status' => EventStatus::class,
+            'publication' => EventPublication::class,
             'accepts_platform_entries' => 'boolean',
             'entry_collection' => EntryCollection::class,
             'accepts_team_entries' => 'boolean',

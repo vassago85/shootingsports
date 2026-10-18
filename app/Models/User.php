@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Enums\DigestFrequency;
+use App\Enums\MembershipStatus;
 use App\Enums\OrganisationUserRole;
 use App\Enums\Plan;
 use App\Enums\Province;
+use App\Enums\UserRole;
 use App\Models\Concerns\HasPlan;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -24,7 +26,7 @@ use Laravel\Sanctum\HasApiTokens;
 #[Fillable([
     'name', 'email', 'password', 'calendar_slug', 'home_province', 'travel_radius_km',
     'digest_frequency', 'association_membership_number',
-    'is_staff', 'is_match_director', 'is_media_partner',
+    'role', 'is_staff', 'is_match_director', 'is_media_partner',
     'md_requested_at', 'md_approved_at', 'md_rejected_at', 'md_rejection_reason',
     'supplier_requested_at', 'pending_business_name',
     'plan', 'plan_expires_at',
@@ -49,6 +51,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'home_province' => Province::class,
             'travel_radius_km' => 'integer',
             'digest_frequency' => DigestFrequency::class,
+            'role' => UserRole::class,
             'is_staff' => 'boolean',
             'is_match_director' => 'boolean',
             'is_media_partner' => 'boolean',
@@ -134,6 +137,86 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             $this->isMdRejected() => 'rejected',
             default => 'none',
         };
+    }
+
+    // ----- Phase B: role + memberships ----------------------------------
+
+    /**
+     * Phase B shim. Reads the new `role` column first, falls back to
+     * the old `is_staff` boolean so every existing call site keeps
+     * working during the deploy window. Phase C drops the fallback.
+     */
+    public function isStaff(): bool
+    {
+        return $this->role === UserRole::Staff
+            || $this->role === UserRole::Admin
+            || $this->is_staff === true;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::Admin;
+    }
+
+    /** @return HasMany<ProviderMembership, $this> */
+    public function providerMemberships(): HasMany
+    {
+        return $this->hasMany(ProviderMembership::class);
+    }
+
+    /**
+     * Organisations this user actually manages (approved only). Phase
+     * C scopes the desk to this collection; Phase D's event wizard
+     * uses it to populate the "host club" picker.
+     *
+     * @return BelongsToMany<Organisation, $this>
+     */
+    public function managedOrganisations(): BelongsToMany
+    {
+        return $this->belongsToMany(Organisation::class, 'organisation_user')
+            ->using(OrganisationUser::class)
+            ->withPivot(['role', 'status', 'requested_at', 'approved_at', 'granted_by', 'granted_at'])
+            ->wherePivot('status', MembershipStatus::Approved->value)
+            ->withTimestamps();
+    }
+
+    /** @return BelongsToMany<Provider, $this> */
+    public function managedProviders(): BelongsToMany
+    {
+        return $this->belongsToMany(Provider::class, 'provider_user')
+            ->withPivot(['role', 'status', 'requested_at', 'approved_at'])
+            ->wherePivot('status', MembershipStatus::Approved->value)
+            ->withTimestamps();
+    }
+
+    /**
+     * True when the user has at least one approved organisation OR
+     * provider membership. Phase C uses this to gate the Desk panel.
+     */
+    public function hasDeskAccess(): bool
+    {
+        return $this->organisationMemberships()
+            ->where('status', MembershipStatus::Approved->value)
+            ->exists()
+            || $this->providerMemberships()
+                ->where('status', MembershipStatus::Approved->value)
+                ->exists();
+    }
+
+    public function managesOrganisation(Organisation $organisation): bool
+    {
+        return $this->organisationMemberships()
+            ->where('organisation_id', $organisation->id)
+            ->where('status', MembershipStatus::Approved->value)
+            ->exists();
+    }
+
+    public function managesProvider(Provider $provider): bool
+    {
+        return $this->providerMemberships()
+            ->where('provider_id', $provider->id)
+            ->where('status', MembershipStatus::Approved->value)
+            ->exists();
     }
 
     /**
