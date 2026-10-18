@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\BillingInterval;
 use App\Enums\ClubMemberCategory;
 use App\Enums\ClubMemberStatus;
 use App\Enums\EntryCollection;
@@ -10,15 +11,20 @@ use App\Enums\EventStatus;
 use App\Enums\MembershipInvoicePaymentMethod;
 use App\Enums\MembershipInvoiceStatus;
 use App\Enums\MembershipStatus;
+use App\Enums\OrganisationKind;
 use App\Enums\OrganisationUserRole;
+use App\Enums\PlatformSubscriptionStatus;
+use App\Enums\SubscriptionTier;
 use App\Models\Article;
 use App\Models\ClubGuestVisit;
 use App\Models\ClubMember;
+use App\Models\ClubPayable;
 use App\Models\Event;
 use App\Models\MembershipInvoice;
 use App\Models\Organisation;
 use App\Models\OrganisationMembershipFee;
 use App\Models\OrganisationUser;
+use App\Models\PlatformSubscription;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
@@ -81,6 +87,124 @@ class PlaywrightSeeder extends Seeder
         ]);
 
         $this->seedMembershipManagerFixtures($shooter);
+        $this->seedPlatformBillingFixtures($shooter);
+    }
+
+    /**
+     * Platform-billing fixtures: trial club, subaccount club (with an
+     * issued invoice for the Playwright shooter), fresh club without a
+     * subaccount, bank-transfer club and a tier-overage club.
+     */
+    protected function seedPlatformBillingFixtures(User $shooter): void
+    {
+        $trialAdmin = User::factory()->create([
+            'name' => 'Trial Admin',
+            'email' => 'trial-admin@shootingsports.test',
+            'password' => 'password',
+        ]);
+        $trialClub = Organisation::factory()->create([
+            'name' => 'Trial Club',
+            'town' => 'Pretoria',
+            'kind' => OrganisationKind::Club,
+            'payout_method' => 'paystack_subaccount',
+        ]);
+        $this->attachAdminApproved($trialClub, $trialAdmin);
+        PlatformSubscription::factory()->for($trialClub)->trial()->create([
+            'tier' => SubscriptionTier::Micro,
+            'interval' => BillingInterval::Monthly,
+            'trial_ends_at' => CarbonImmutable::now()->addDays(14),
+        ]);
+
+        $subaccountAdmin = User::factory()->create([
+            'name' => 'Subaccount Admin',
+            'email' => 'subaccount-admin@shootingsports.test',
+            'password' => 'password',
+        ]);
+        $subaccountClub = Organisation::factory()->create([
+            'name' => 'Subaccount Club',
+            'paystack_subaccount_id' => 'ACCT_playwright',
+            'paystack_subaccount_status' => 'active',
+            'agency_agreement_signed_at' => now(),
+            'agency_agreement_version' => config('platform.agency_agreement_version'),
+            'payout_method' => 'paystack_subaccount',
+        ]);
+        $this->attachAdminApproved($subaccountClub, $subaccountAdmin);
+        PlatformSubscription::factory()->for($subaccountClub)->create([
+            'status' => PlatformSubscriptionStatus::Active,
+            'tier' => SubscriptionTier::Standard,
+        ]);
+
+        $noSubaccountAdmin = User::factory()->create([
+            'name' => 'Fresh Club Admin',
+            'email' => 'nosubaccount-admin@shootingsports.test',
+            'password' => 'password',
+        ]);
+        $noSubaccountClub = Organisation::factory()->create([
+            'name' => 'Fresh Club',
+            'payout_method' => 'paystack_subaccount',
+        ]);
+        $this->attachAdminApproved($noSubaccountClub, $noSubaccountAdmin);
+        PlatformSubscription::factory()->for($noSubaccountClub)->create([
+            'status' => PlatformSubscriptionStatus::Active,
+            'tier' => SubscriptionTier::Micro,
+        ]);
+
+        $member = ClubMember::factory()->active()->for($subaccountClub, 'organisation')->create([
+            'user_id' => $shooter->id,
+            'first_name' => 'Sam',
+            'last_name' => 'Subaccount',
+            'email' => $shooter->email,
+            'expires_at' => now()->addYears(2)->toDateString(),
+        ]);
+        MembershipInvoice::factory()->create([
+            'organisation_id' => $subaccountClub->id,
+            'club_member_id' => $member->id,
+            'amount_cents' => 60000,
+            'period_start' => today()->startOfYear()->toDateString(),
+            'period_end' => today()->endOfYear()->toDateString(),
+        ]);
+
+        $bankTransferAdmin = User::factory()->create([
+            'name' => 'Bank Transfer Admin',
+            'email' => 'bank-transfer-admin@shootingsports.test',
+            'password' => 'password',
+        ]);
+        $bankTransferClub = Organisation::factory()->create([
+            'name' => 'Bank Transfer Club',
+            'payout_method' => 'bank_transfer',
+        ]);
+        $this->attachAdminApproved($bankTransferClub, $bankTransferAdmin);
+        ClubPayable::factory()->for($bankTransferClub, 'organisation')->count(3)->create([
+            'net_due_cents' => 20000,
+            'paid_out' => false,
+            'occurred_at' => now()->subDays(2),
+        ]);
+
+        $overageAdmin = User::factory()->create([
+            'name' => 'Overage Admin',
+            'email' => 'overage-admin@shootingsports.test',
+            'password' => 'password',
+        ]);
+        $overageClub = Organisation::factory()->create([
+            'name' => 'Overage Club',
+            'active_member_count' => 65,
+            'tier_grace_ends_at' => today()->addDays(14),
+        ]);
+        $this->attachAdminApproved($overageClub, $overageAdmin);
+        PlatformSubscription::factory()->for($overageClub)->create([
+            'status' => PlatformSubscriptionStatus::Active,
+            'tier' => SubscriptionTier::Micro,
+        ]);
+    }
+
+    private function attachAdminApproved(Organisation $organisation, User $user): void
+    {
+        $organisation->users()->attach($user->id, [
+            'role' => OrganisationUserRole::Admin->value,
+            'status' => MembershipStatus::Approved->value,
+            'granted_at' => now(),
+            'approved_at' => now(),
+        ]);
     }
 
     /**
