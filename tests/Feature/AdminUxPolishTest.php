@@ -3,6 +3,7 @@
 use App\Enums\AdPage;
 use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
+use App\Enums\EventStatus;
 use App\Enums\ListingStatus;
 use App\Enums\PlacementSlot;
 use App\Enums\VerificationState;
@@ -17,6 +18,7 @@ use App\Filament\Resources\Users\UserResource;
 use App\Models\AdSlot;
 use App\Models\Discipline;
 use App\Models\Enquiry;
+use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Placement;
 use App\Models\Provider;
@@ -247,6 +249,73 @@ it('orders Sports list parent-first with each child right under its parent', fun
         ->all();
 
     expect($ordered)->toBe(['A Parent', 'A Child', 'Z Parent', 'Z Child']);
+});
+
+// --- Inbox Phase A alignment -------------------------------------------
+
+it('defaults Inbox to the All tab with every queue combined', function () {
+    $staff = User::factory()->staff()->create();
+
+    $this->actingAs($staff)
+        ->get(Inbox::getUrl())
+        ->assertOk()
+        ->assertSee('All')
+        ->assertSee('Events')
+        ->assertSee('Director requests')
+        ->assertSee('Corrections')
+        // "Submissions" was the DB-shaped label; the mockup uses the
+        // word staff actually say — ensure the old label does not
+        // leak back into the UI by accident.
+        ->assertDontSee('>Submissions<', escape: false);
+});
+
+it('counts Draft events in the Inbox Events tab', function () {
+    $host = Organisation::factory()->create();
+
+    Event::create([
+        'slug' => 'inbox-draft-'.uniqid(),
+        'title' => 'Inbox Draft Event',
+        'starts_at' => now()->addWeek(),
+        'all_day' => true,
+        'host_organisation_id' => $host->id,
+        'status' => EventStatus::Draft,
+    ]);
+
+    // One Draft event should bump countOpen by one, no matter which
+    // tab is currently active.
+    expect(Inbox::countOpen())->toBeGreaterThanOrEqual(1);
+});
+
+it('renders the merged All feed with items from multiple queues', function () {
+    $staff = User::factory()->staff()->create();
+
+    // One of each major queue type so the merged table has rows to
+    // show. If any single row throws (bad relation, missing getUrl,
+    // etc.) the whole page would 500.
+    Enquiry::create([
+        'type' => EnquiryType::General,
+        'name' => 'Walk-in',
+        'email' => 'walkin-'.uniqid().'@example.com',
+        'subject' => 'How do I enter?',
+        'body' => 'Please help.',
+        'status' => EnquiryStatus::New,
+    ]);
+
+    $host = Organisation::factory()->create(['name' => 'All-Tab Club']);
+    Event::create([
+        'slug' => 'all-tab-draft-'.uniqid(),
+        'title' => 'All-Tab Draft Event',
+        'starts_at' => now()->addWeek(),
+        'all_day' => true,
+        'host_organisation_id' => $host->id,
+        'status' => EventStatus::Draft,
+    ]);
+
+    $this->actingAs($staff)
+        ->get(Inbox::getUrl(['tab' => 'all']))
+        ->assertOk()
+        ->assertSee('All-Tab Draft Event')
+        ->assertSee('How do I enter?');
 });
 
 // --- Soft redirect still green -----------------------------------------
