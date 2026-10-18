@@ -8,12 +8,14 @@ use App\Enums\PlacementSlot;
 use App\Enums\VerificationState;
 use App\Filament\Pages\Inbox;
 use App\Filament\Pages\StaffDashboard;
+use App\Filament\Resources\Disciplines\DisciplineResource;
 use App\Filament\Resources\EmailLogs\EmailLogResource;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Organisations\OrganisationResource;
 use App\Filament\Resources\Placements\PlacementResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\AdSlot;
+use App\Models\Discipline;
 use App\Models\Enquiry;
 use App\Models\Organisation;
 use App\Models\Placement;
@@ -200,6 +202,51 @@ it('title-cases shouty Industry names and leaves mixed-case alone', function () 
     expect($titleCase('lock n load'))->toBe('Lock N Load');
     expect($titleCase('GUN WARRIOR'))->toBe('Gun Warrior');
     expect($titleCase('Dave Sheer Guns'))->toBe('Dave Sheer Guns');
+});
+
+// --- Sports: parent-then-child ordering --------------------------------
+
+it('orders Sports list parent-first with each child right under its parent', function () {
+    $staff = User::factory()->staff()->create();
+
+    // Z-parent sorts after A-parent by name, but each child must still
+    // sit under its own parent — not after all parents.
+    $zParent = Discipline::factory()->create([
+        'name' => 'Z Parent',
+        'parent_id' => null,
+        'is_published' => true,
+    ]);
+    $zChild = Discipline::factory()->create([
+        'name' => 'Z Child',
+        'parent_id' => $zParent->id,
+        'is_published' => true,
+    ]);
+    $aParent = Discipline::factory()->create([
+        'name' => 'A Parent',
+        'parent_id' => null,
+        'is_published' => true,
+    ]);
+    $aChild = Discipline::factory()->create([
+        'name' => 'A Child',
+        'parent_id' => $aParent->id,
+        'is_published' => true,
+    ]);
+
+    $this->actingAs($staff);
+
+    $query = DisciplineResource::getEloquentQuery();
+
+    // Mirror the modifyQueryUsing in DisciplineResource::table().
+    $ordered = $query
+        ->orderByRaw('COALESCE((select name from disciplines as parent_sort where parent_sort.id = disciplines.parent_id), disciplines.name) asc')
+        ->orderByRaw('CASE WHEN disciplines.parent_id IS NULL THEN 0 ELSE 1 END asc')
+        ->orderBy('disciplines.name', 'asc')
+        ->pluck('name')
+        ->filter(fn (string $n): bool => in_array($n, ['A Parent', 'A Child', 'Z Parent', 'Z Child'], true))
+        ->values()
+        ->all();
+
+    expect($ordered)->toBe(['A Parent', 'A Child', 'Z Parent', 'Z Child']);
 });
 
 // --- Soft redirect still green -----------------------------------------

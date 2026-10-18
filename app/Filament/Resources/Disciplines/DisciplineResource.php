@@ -173,12 +173,17 @@ class DisciplineResource extends Resource
         return $table
             ->recordTitleAttribute('name')
             ->defaultPaginationPageOption(25)
-            // Parent sports first, children nested underneath by name
-            // so the hierarchy reads at a glance instead of alphabetical soup.
+            // Parent sports first, children nested underneath, each
+            // child sitting right under its own parent — sorted by the
+            // PARENT name, not by the parent's primary key, so the
+            // outer order reads alphabetically. A correlated subquery
+            // avoids a self-join (which would make `is_published` and
+            // friends ambiguous in the other filters below) and works
+            // on both Postgres (prod) and SQLite (tests).
             ->modifyQueryUsing(fn (Builder $query): Builder => $query
-                ->orderByRaw('COALESCE(parent_id, id) asc')
-                ->orderBy('parent_id', 'asc')
-                ->orderBy('name', 'asc'))
+                ->orderByRaw('COALESCE((select name from disciplines as parent_sort where parent_sort.id = disciplines.parent_id), disciplines.name) asc')
+                ->orderByRaw('CASE WHEN disciplines.parent_id IS NULL THEN 0 ELSE 1 END asc')
+                ->orderBy('disciplines.name', 'asc'))
             ->columns([
                 // The picture column stays in the table so the grid is
                 // consistent, but the cell renders empty when there is

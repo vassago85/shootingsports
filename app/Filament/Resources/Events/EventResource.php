@@ -366,14 +366,21 @@ class EventResource extends Resource
                 // move behind the column toggle, so the default view
                 // is just Title+Host, Starts, Status, actions.
                 TextColumn::make('title')
-                    ->searchable()
+                    // Search the title AND the host name from this column
+                    // so dropping the separate Host column does not break
+                    // staff who look matches up by the hosting club.
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query
+                        ->where(function (Builder $q) use ($search): void {
+                            $q->where('title', 'like', '%'.$search.'%')
+                                ->orWhereHas('hostOrganisation', fn (Builder $sub) => $sub->where('name', 'like', '%'.$search.'%'));
+                        }))
                     ->sortable()
                     ->wrap()
+                    // Host appears as the secondary line under the title,
+                    // so there is no separate Host column — the pair of
+                    // columns was the main reason the Events table scrolled
+                    // sideways on a normal desktop.
                     ->description(fn (Event $record): ?string => $record->hostOrganisation?->name),
-                TextColumn::make('hostOrganisation.name')
-                    ->label('Host')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('disciplines.name')
                     ->label('Disciplines')
                     ->badge()
