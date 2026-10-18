@@ -14,8 +14,10 @@ use Illuminate\Support\Facades\DB;
  * Nightly sweep: recomputes each subscribed club's active member count,
  * stamps a grace window the first time the count exceeds the tier cap,
  * clears it when the club is back within the cap, and auto-upgrades the
- * subscription once the grace window has expired. Trial and cancelled
- * subscriptions only get the recount — they are never auto-upgraded.
+ * subscription once the grace window has expired. Trial subscriptions are
+ * recounted and keep their grace date (to warn the admin) but are never
+ * auto-upgraded; cancelled subscriptions have the grace date cleared. A club
+ * already on the top tier keeps its grace date and is flagged for review.
  */
 #[AsCommand(name: 'platform:enforce-tier-overages')]
 class EnforceTierOverages extends Command
@@ -45,14 +47,12 @@ class EnforceTierOverages extends Command
                         ->where('status', ClubMemberStatus::Active->value)
                         ->count();
                     $cap = $subscription->tier->memberCap();
-                    $upgradeAllowed = ! in_array($subscription->status, [
-                        PlatformSubscriptionStatus::Trial,
-                        PlatformSubscriptionStatus::Cancelled,
-                    ], true);
+                    $isCancelled = $subscription->status === PlatformSubscriptionStatus::Cancelled;
+                    $upgradeAllowed = ! $isCancelled && $subscription->status !== PlatformSubscriptionStatus::Trial;
 
                     $org->active_member_count = $activeCount;
 
-                    if ($activeCount <= $cap) {
+                    if ($isCancelled || $activeCount <= $cap) {
                         $org->tier_grace_ends_at = null;
                     } elseif ($org->tier_grace_ends_at === null) {
                         $org->tier_grace_ends_at = today()->addDays((int) config('platform.grace_window_days', 30));
@@ -65,7 +65,9 @@ class EnforceTierOverages extends Command
                         } else {
                             $newTier = SubscriptionTier::forMemberCount($activeCount);
 
-                            if ($newTier !== $subscription->tier) {
+                            if ($newTier === $subscription->tier) {
+                                $this->warn("{$org->name}: on Large tier at {$activeCount} members — cap exceeded, no higher tier available. Review required.");
+                            } else {
                                 $this->line("[{$org->name}] auto-upgrade {$subscription->tier->value} -> {$newTier->value}.");
                                 $subscription->tier = $newTier;
                                 $upgradeCount++;
@@ -73,9 +75,9 @@ class EnforceTierOverages extends Command
                                 if (! $dryRun) {
                                     $subscription->save();
                                 }
-                            }
 
-                            $org->tier_grace_ends_at = null;
+                                $org->tier_grace_ends_at = null;
+                            }
                         }
                     }
 

@@ -1,8 +1,18 @@
 <x-filament-panels::page>
     @foreach ($this->overageBanners() as $banner)
         <x-filament::section>
-            <strong>{{ $banner['organisation_name'] }}</strong> has exceeded the {{ $banner['tier'] }} tier's cap of {{ $banner['cap'] }} members (currently {{ $banner['active_count'] }}).
-            You have {{ $banner['days_remaining'] }} days to upgrade before the subscription auto-upgrades on {{ $banner['grace_ends_at']->format('Y-m-d') }}.
+            <strong>{{ $banner['organisation_name'] }}</strong>
+            @switch($banner['banner_variant'])
+                @case('large_capped')
+                    Over cap by {{ $banner['over_by'] }} members on the Large tier. No higher tier available — contact support.
+                    @break
+                @case('trial_no_payment')
+                    Over cap by {{ $banner['over_by'] }} members. Your trial will not auto-upgrade — add a payment method before trial end.
+                    @break
+                @default
+                    has exceeded the {{ $banner['tier'] }} tier's cap of {{ $banner['cap'] }} members (currently {{ $banner['active_count'] }}).
+                    You have {{ $banner['days_remaining'] }} days to upgrade before the subscription auto-upgrades on {{ $banner['grace_ends_at']->format('Y-m-d') }}.
+            @endswitch
         </x-filament::section>
     @endforeach
 

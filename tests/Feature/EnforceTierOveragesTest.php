@@ -4,11 +4,13 @@ use App\Enums\MembershipStatus;
 use App\Enums\OrganisationUserRole;
 use App\Enums\PlatformSubscriptionStatus;
 use App\Enums\SubscriptionTier;
+use App\Filament\Desk\Pages\DeskDashboard;
 use App\Models\ClubMember;
 use App\Models\Organisation;
 use App\Models\PlatformSubscription;
 use App\Models\User;
 use Filament\Facades\Filament;
+use Illuminate\Database\QueryException;
 
 beforeEach(function (): void {
     config()->set('platform.grace_window_days', 30);
@@ -130,3 +132,62 @@ it('DeskDashboard shows an overage banner when the managed club is in grace', fu
         ->assertSee('Overflowing Rifle Club')
         ->assertSee('12 days');
 });
+
+it('Large-tier club with 1200 members keeps grace date and warns (does not loop-clear)', function () {
+    $org = Organisation::factory()->create(['tier_grace_ends_at' => today()->subDay()]);
+    $sub = PlatformSubscription::factory()->for($org)->create(['tier' => SubscriptionTier::Large]);
+    ClubMember::factory()->count(1200)->for($org, 'organisation')->create();
+
+    $this->artisan('platform:enforce-tier-overages')
+        ->expectsOutputToContain('cap exceeded, no higher tier available')
+        ->assertSuccessful();
+
+    expect($org->fresh()->tier_grace_ends_at)->not->toBeNull()
+        ->and($sub->fresh()->tier)->toBe(SubscriptionTier::Large);
+});
+
+it('Trial subscription keeps grace date but banner payload says trial_no_payment', function () {
+    $org = Organisation::factory()->create([
+        'active_member_count' => 60,
+        'tier_grace_ends_at' => today()->subDay(),
+    ]);
+    PlatformSubscription::factory()->for($org)->trial()->create(['tier' => SubscriptionTier::Micro]);
+    ClubMember::factory()->count(60)->for($org, 'organisation')->create();
+    $admin = User::factory()->create();
+    $org->users()->attach($admin->id, [
+        'role' => OrganisationUserRole::Admin->value,
+        'status' => MembershipStatus::Approved->value,
+        'granted_at' => now(),
+        'approved_at' => now(),
+    ]);
+
+    $this->artisan('platform:enforce-tier-overages')->assertSuccessful();
+    expect($org->fresh()->tier_grace_ends_at)->not->toBeNull();
+
+    $this->actingAs($admin);
+    $banners = app(DeskDashboard::class)->overageBanners();
+
+    expect($banners)->toHaveCount(1)
+        ->and($banners[0]['banner_variant'])->toBe('trial_no_payment')
+        ->and($banners[0]['over_by'])->toBe(10);
+});
+
+it('Cancelled subscription clears grace_ends_at on run', function () {
+    $org = Organisation::factory()->create(['tier_grace_ends_at' => today()->addDays(10)]);
+    PlatformSubscription::factory()->for($org)->create([
+        'tier' => SubscriptionTier::Micro,
+        'status' => PlatformSubscriptionStatus::Cancelled,
+    ]);
+    ClubMember::factory()->count(60)->for($org, 'organisation')->create();
+
+    $this->artisan('platform:enforce-tier-overages')->assertSuccessful();
+
+    expect($org->fresh()->tier_grace_ends_at)->toBeNull();
+});
+
+it('duplicate platform_subscription per organisation is impossible at DB level', function () {
+    $org = Organisation::factory()->create();
+    PlatformSubscription::factory()->for($org)->create();
+
+    PlatformSubscription::factory()->for($org)->create();
+})->throws(QueryException::class);

@@ -7,6 +7,8 @@ use App\Enums\EventPublication;
 use App\Enums\EventStatus;
 use App\Enums\MembershipStatus;
 use App\Enums\OrganisationUserRole;
+use App\Enums\PlatformSubscriptionStatus;
+use App\Enums\SubscriptionTier;
 use App\Enums\VerificationState;
 use App\Filament\Desk\Resources\Articles\ArticleResource;
 use App\Filament\Desk\Resources\ClubMembers\ClubMemberResource;
@@ -76,7 +78,10 @@ class DeskDashboard extends Page
     /**
      * One entry per managed club that is inside a tier-overage grace window.
      *
-     * @return list<array{organisation_name: string, tier: string, grace_ends_at: CarbonInterface, active_count: int, cap: int, days_remaining: int}>
+     * `banner_variant` selects the copy: auto_upgrade, large_capped (top tier, nothing
+     * to upgrade to), trial_no_payment, or cancelled (suppressed from the result).
+     *
+     * @return list<array{organisation_name: string, tier: string, grace_ends_at: CarbonInterface, active_count: int, cap: int, over_by: int, days_remaining: int, banner_variant: string}>
      */
     public function overageBanners(): array
     {
@@ -93,14 +98,31 @@ class DeskDashboard extends Page
             ->with('platformSubscription')
             ->orderBy('name')
             ->get()
-            ->map(fn (Organisation $org): array => [
-                'organisation_name' => $org->name,
-                'tier' => $org->platformSubscription->tier->getLabel(),
-                'grace_ends_at' => $org->tier_grace_ends_at,
-                'active_count' => (int) $org->active_member_count,
-                'cap' => $org->platformSubscription->tier->memberCap(),
-                'days_remaining' => max(0, (int) ceil(today()->diffInDays($org->tier_grace_ends_at, false))),
-            ])
+            ->map(function (Organisation $org): array {
+                $subscription = $org->platformSubscription;
+                $activeCount = (int) $org->active_member_count;
+                $cap = $subscription->tier->memberCap();
+
+                $variant = match (true) {
+                    $subscription->status === PlatformSubscriptionStatus::Cancelled => 'cancelled',
+                    $subscription->status === PlatformSubscriptionStatus::Trial => 'trial_no_payment',
+                    SubscriptionTier::forMemberCount($activeCount) === $subscription->tier => 'large_capped',
+                    default => 'auto_upgrade',
+                };
+
+                return [
+                    'organisation_name' => $org->name,
+                    'tier' => $subscription->tier->getLabel(),
+                    'grace_ends_at' => $org->tier_grace_ends_at,
+                    'active_count' => $activeCount,
+                    'cap' => $cap,
+                    'over_by' => max(0, $activeCount - $cap),
+                    'days_remaining' => max(0, (int) ceil(today()->diffInDays($org->tier_grace_ends_at, false))),
+                    'banner_variant' => $variant,
+                ];
+            })
+            ->reject(fn (array $banner): bool => $banner['banner_variant'] === 'cancelled')
+            ->values()
             ->all();
     }
 
