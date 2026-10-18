@@ -419,6 +419,7 @@ input[type='checkbox'].fi-checkbox-input:indeterminate {
     background: var(--ss-surface);
     color: inherit;
     text-decoration: none;
+    text-align: center;
     transition: background 0.12s ease;
 }
 
@@ -431,8 +432,6 @@ input[type='checkbox'].fi-checkbox-input:indeterminate {
    tone keeps the plain surface so a healthy zero reads as "all good".
 */
 .admin-stat-warning b { color: var(--ss-brass); }
-    text-align: center;
-}
 
 .admin-stats b {
     font-family: var(--font-display);
