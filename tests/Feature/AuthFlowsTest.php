@@ -308,6 +308,41 @@ it('staff can access both /desk and /admin', function () {
     $this->actingAs($staff)->get('/admin')->assertOk();
 });
 
+it('soft-redirects a match director from /admin to /desk with a flash message', function () {
+    $md = User::factory()->matchDirector()->create();
+
+    $this->actingAs($md)
+        ->get('/admin')
+        ->assertRedirect('/desk')
+        ->assertSessionHas('status', 'The admin area is staff only. You have been sent to your desk.');
+});
+
+it('soft-redirects a plain shooter from /admin to their default home', function () {
+    $shooter = User::factory()->create();
+
+    $this->actingAs($shooter)
+        ->get('/admin')
+        ->assertRedirect('/my-calendar')
+        ->assertSessionHas('status', 'The admin area is staff only.');
+});
+
+it('soft-redirects wrong-panel users from deep admin URLs too', function () {
+    $md = User::factory()->matchDirector()->create();
+
+    $this->actingAs($md)
+        ->get('/admin/events')
+        ->assertRedirect('/desk');
+});
+
+it('shows the Open desk hop in the admin user menu for staff', function () {
+    $staff = User::factory()->staff()->create();
+
+    $this->actingAs($staff)
+        ->get('/admin')
+        ->assertOk()
+        ->assertSee('Open desk');
+});
+
 // ---- Legacy /desk/register redirect --------------------------------
 
 it('301s the legacy /desk/register bookmark to /register', function () {

@@ -71,10 +71,14 @@ it('lets a match director open the desk panel', function () {
         ->assertOk();
 });
 
-it('blocks non-staff from the admin panel', function () {
-    $user = User::factory()->create(['is_staff' => false]);
+it('soft-redirects non-staff away from the admin panel', function () {
+    // Phase 2.1 replaces the bare 403 with a soft redirect: a plain
+    // shooter who hits /admin bounces to their default home
+    // (/my-calendar), while a desk-capable user bounces to /desk.
+    // Hard staff-only gate still enforced by canAccessPanel().
+    $shooter = User::factory()->create(['is_staff' => false]);
 
-    $this->actingAs($user)
+    $this->actingAs($shooter)
         ->get('/admin')
-        ->assertForbidden();
+        ->assertRedirect('/my-calendar');
 });

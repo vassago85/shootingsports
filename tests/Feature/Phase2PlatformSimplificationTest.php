@@ -106,11 +106,13 @@ it('resolves the Inbox page 200 for staff', function () {
 });
 
 it('denies the Inbox page to non-staff users', function () {
+    // Phase 2.1 soft-redirect — Inbox is admin-only; non-staff bounce
+    // to their default home instead of hitting a bare 403.
     $shooter = User::factory()->create(['is_staff' => false]);
 
     $this->actingAs($shooter)
         ->get(Inbox::getUrl())
-        ->assertForbidden();
+        ->assertRedirect('/my-calendar');
 });
 
 it('reports open counts that match the sum of inbox tabs', function () {

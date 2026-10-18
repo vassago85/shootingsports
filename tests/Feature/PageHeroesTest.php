@@ -52,9 +52,11 @@ it('lets staff open the page pictures desk', function () {
 });
 
 it('refuses the page pictures desk to anyone who is not staff', function () {
+    // Phase 2.1 soft-redirect — admin panel bounces non-staff to
+    // their default home instead of 403ing.
     $shooter = User::factory()->create();
 
     $this->actingAs($shooter)
         ->get(ManagePagePictures::getUrl())
-        ->assertForbidden();
+        ->assertRedirect('/my-calendar');
 });

@@ -126,7 +126,11 @@ it('lets staff change a source frequency and run it now', function () {
 });
 
 it('keeps non-staff out of the calendar imports page', function () {
+    // Phase 2.1 soft-redirects wrong-panel users instead of 403ing —
+    // the hard staff-only gate is still enforced; the shooter just
+    // bounces to their default home.
     $this->actingAs(User::factory()->create());
 
-    $this->get(ManageCalendarImports::getUrl(panel: 'admin'))->assertForbidden();
+    $this->get(ManageCalendarImports::getUrl(panel: 'admin'))
+        ->assertRedirect('/my-calendar');
 });

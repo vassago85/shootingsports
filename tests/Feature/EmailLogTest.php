@@ -37,9 +37,11 @@ it('records a sent email so staff can read it in the admin log', function () {
 });
 
 it('hides the email log from a shooter', function () {
+    // Phase 2.1 soft-redirect — admin panel bounces non-staff to
+    // their default home instead of 403ing.
     $shooter = User::factory()->create();
 
     $this->actingAs($shooter)
         ->get(EmailLogResource::getUrl('index'))
-        ->assertForbidden();
+        ->assertRedirect('/my-calendar');
 });

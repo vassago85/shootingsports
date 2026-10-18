@@ -41,9 +41,11 @@ it('loads the staff dashboard for a signed-in staff user', function () {
 it('shuts a non-staff user out of the admin dashboard', function () {
     $shooter = User::factory()->create();
 
+    // Phase 2.1 soft-redirect — the admin panel no longer 403s a
+    // shooter who wanders in; they bounce to their default home.
     $this->actingAs($shooter)
         ->get(StaffDashboard::getUrl())
-        ->assertForbidden();
+        ->assertRedirect('/my-calendar');
 });
 
 // ---- MD (desk) dashboard -------------------------------------------------

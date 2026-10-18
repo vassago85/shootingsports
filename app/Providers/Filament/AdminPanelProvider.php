@@ -5,15 +5,17 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Http\Middleware\ApplySecurityHeaders;
+use App\Http\Middleware\AuthenticateAdminPanel;
 use App\Http\Middleware\RedirectRetiredAdminUrls;
 use Filament\Enums\ThemeMode;
-use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -67,6 +69,16 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([])
+            ->userMenuItems([
+                // Staff can switch to the match-director desk from the
+                // admin user menu. Non-staff never see this item — the
+                // visible() guard runs per-render.
+                'desk' => MenuItem::make()
+                    ->label('Open desk')
+                    ->url('/desk')
+                    ->icon(Heroicon::OutlinedRectangleGroup)
+                    ->visible(fn (): bool => (bool) auth()->user()?->is_staff),
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -81,7 +93,10 @@ class AdminPanelProvider extends PanelProvider
                 RedirectRetiredAdminUrls::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                // Soft-redirect wrong-panel users (desk/shooter) to
+                // their rightful home instead of a bare 403. Hard
+                // staff-only gate still enforced by canAccessPanel().
+                AuthenticateAdminPanel::class,
             ]);
     }
 }

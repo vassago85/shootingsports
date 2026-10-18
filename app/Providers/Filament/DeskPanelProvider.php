@@ -10,9 +10,11 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -72,6 +74,16 @@ class DeskPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Desk/Widgets'), for: 'App\\Filament\\Desk\\Widgets')
             ->widgets([
                 AccountWidget::class,
+            ])
+            ->userMenuItems([
+                // Mirror of the admin panel's hop — staff can jump
+                // straight back into /admin from the desk user menu.
+                // Non-staff never see this item.
+                'admin' => MenuItem::make()
+                    ->label('Open admin')
+                    ->url('/admin')
+                    ->icon(Heroicon::OutlinedShieldCheck)
+                    ->visible(fn (): bool => (bool) auth()->user()?->is_staff),
             ])
             ->middleware([
                 EncryptCookies::class,
