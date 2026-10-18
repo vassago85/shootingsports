@@ -10,6 +10,16 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-18-platform-billing-and-payment-gateway-design.md`
 
+## Plan amendments (post-pre-flight, 2026-10-18)
+
+These supersede the plan text wherever they conflict. Each is also noted inline on the affected task.
+
+1. **Task 5 — Settings page pattern.** This project uses a `App\Filament\Pages\Settings` landing page that lists child pages (not tabs). Each subject is a `Manage<Subject>Settings` page backed by an `App\Support\<Subject>Settings` support class whose `apply()` is called from `AppServiceProvider::boot()`. Follow this pattern. **Do not** add an inline `applyPlatformSettings()` method on the service provider.
+2. **Tasks 6 + 7 — Paystack recurring architecture.** This project already uses Paystack-managed Plans + Subscriptions (`App\Services\Paystack\PaystackClient::createPlan`, `fetchSubscription`, `disableSubscription`, and `initializeTransaction` with a `plan` parameter). Platform billing aligns with that: provision 6 plans upfront (`PaystackPlatformPlanService`), kick off subscriptions with `initializeTransaction(..., plan: $code)`, listen for lifecycle webhooks (`PlatformBillingWebhookHandler`) to drive status transitions. **Do not** implement `charge_authorization` or a daily `BillRecurringSubscriptions` command — Paystack bills on its own cadence.
+3. **Task 17 — `organisations.kind`.** Column confirmed absent as of 2026-10-18. Add it in a new migration (string, default `'club'`, backfill existing rows) and introduce an `App\Enums\OrganisationKind` enum.
+4. **Settings path references.** Everywhere this plan says `App\Filament\Pages\SiteSettings`, the actual file is `App\Filament\Pages\Settings`.
+5. **"Mailgun pattern" reference.** Point of truth is `App\Support\MailSettings` + `App\Filament\Pages\ManageMailSettings`. Mirror these exactly for the Platform billing settings page — not the SAPRF `applyMailgunSettings()` provider method mentioned in prior conversations.
+
 ## Global Constraints
 
 - **PHP 8.3+** — curly braces always, PHP 8 constructor property promotion, explicit return types, PHPDoc blocks over inline comments.
@@ -725,20 +735,35 @@ git commit -m "Platform billing: PlatformSubscription model + factory with trial
 
 ---
 
-### Task 5: Site Settings tab — Platform billing
+### Task 5: Platform Billing settings page
+
+**NOTE (plan amendment):** This project does **not** have a single `SiteSettings` page with tabs. The pattern is:
+- `App\Filament\Pages\Settings` is a landing page that lists child pages via `getSections()`.
+- Each settings subject lives in its own `Manage<Subject>Settings` page (e.g. `ManageMailSettings`).
+- Each subject has a `App\Support\<Subject>Settings` support class with static `details()`, `save()`, `apply()`, `keys()` methods.
+- `apply()` is called from `AppServiceProvider::boot()` (not an inline method on the provider).
+- Settings persist via `App\Models\Setting::put('key', $value)` / `::get('key', $default)`.
+
+Follow this pattern for the Platform billing settings page. **Do not** introduce an inline `applyPlatformSettings()` method on `AppServiceProvider`; put it in a Support class and call it from `boot()`.
 
 **Files:**
-- Modify: `app/Filament/Pages/SiteSettings.php` (add tab) — adjust path if different; find via `php artisan filament:list-pages`.
+- Create: `app/Support/PlatformSettings.php` — Support class mirroring `App\Support\MailSettings`.
+- Create: `app/Filament/Pages/ManagePlatformBillingSettings.php` — dedicated page mirroring `App\Filament\Pages\ManageMailSettings`.
+- Create: `resources/views/filament/pages/manage-platform-billing-settings.blade.php` — mirror the mail-settings blade.
+- Modify: `app/Filament/Pages/Settings.php` — add a `getSections()` entry linking to the new page.
+- Modify: `app/Providers/AppServiceProvider.php` — call `PlatformSettings::apply()` from `boot()`.
 - Create: `tests/Feature/PlatformBillingSettingsTest.php`
 
 **Interfaces:**
-- Produces: `settings` table keys `platform.fee_bps`, `platform.vat_bps`, `platform.payout_admin_fee_cents`, `platform.trial_days`, `platform.grace_window_days`, `platform.single_event_price_cents`. These override the config/platform.php defaults when present.
-- `AppServiceProvider::applyPlatformSettings()` is called from `boot()`.
+- Produces: `settings` table keys `platform.fee_bps`, `platform.vat_bps`, `platform.payout_admin_fee_cents`, `platform.trial_days`, `platform.grace_window_days`, `platform.single_event_price_cents`. These override the `config/platform.php` defaults when present.
+- `PlatformSettings::apply()` is called from `AppServiceProvider::boot()`.
 
-- [ ] **Step 1: Find the Site Settings page**
+- [ ] **Step 1: Read the existing Mailgun implementation before writing anything**
 
 ```bash
-grep -rn "SiteSettings\|site-settings" app/Filament/
+cat app/Support/MailSettings.php
+cat app/Filament/Pages/ManageMailSettings.php
+cat app/Filament/Pages/Settings.php
 ```
 
 - [ ] **Step 2: Write the failing test**
@@ -747,235 +772,482 @@ grep -rn "SiteSettings\|site-settings" app/Filament/
 <?php
 
 use App\Models\Setting;
+use App\Support\PlatformSettings;
 
 it('reads platform fee basis points from the settings table at runtime', function () {
-    Setting::query()->updateOrCreate(['key' => 'platform.fee_bps'], ['value' => '250']);
+    Setting::put('platform.fee_bps', '250');
 
-    // Reboot the service provider to re-apply.
-    app()->make(\App\Providers\AppServiceProvider::class)->applyPlatformSettings();
+    PlatformSettings::apply();
 
     expect(config('platform.fee_bps'))->toBe(250);
 });
+
+it('writes and applies all platform billing keys via save()', function () {
+    PlatformSettings::save([
+        'fee_bps' => 275,
+        'vat_bps' => 1500,
+        'payout_admin_fee_cents' => 5000,
+        'trial_days' => 30,
+        'grace_window_days' => 7,
+        'single_event_price_cents' => 75000,
+    ]);
+
+    expect(config('platform.fee_bps'))->toBe(275)
+        ->and(config('platform.vat_bps'))->toBe(1500)
+        ->and(config('platform.payout_admin_fee_cents'))->toBe(5000);
+});
 ```
 
-- [ ] **Step 3: Add `applyPlatformSettings()` to `AppServiceProvider`**
+- [ ] **Step 3: Implement `App\Support\PlatformSettings` (mirror MailSettings)**
+
+```php
+<?php
+
+namespace App\Support;
+
+use App\Models\Setting;
+use Illuminate\Support\Facades\Schema;
+use Throwable;
+
+final class PlatformSettings
+{
+    /** @return list<string> */
+    public static function keys(): array
+    {
+        return [
+            'fee_bps',
+            'vat_bps',
+            'payout_admin_fee_cents',
+            'trial_days',
+            'grace_window_days',
+            'single_event_price_cents',
+        ];
+    }
+
+    /** @return array<string, int|string|null> */
+    public static function details(): array
+    {
+        $out = [];
+        foreach (self::keys() as $key) {
+            $out[$key] = Setting::get("platform.{$key}", (string) config("platform.{$key}"));
+        }
+
+        return $out;
+    }
+
+    /** @param array<string, mixed> $data */
+    public static function save(array $data): void
+    {
+        foreach (self::keys() as $key) {
+            if (! array_key_exists($key, $data)) {
+                continue;
+            }
+            Setting::put("platform.{$key}", (string) $data[$key]);
+        }
+
+        self::apply();
+    }
+
+    public static function apply(): void
+    {
+        try {
+            if (! Schema::hasTable('settings')) {
+                return;
+            }
+        } catch (Throwable) {
+            return;
+        }
+
+        foreach (self::keys() as $key) {
+            $value = Setting::get("platform.{$key}");
+
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            config(["platform.{$key}" => is_numeric($value) ? (int) $value : $value]);
+        }
+    }
+}
+```
+
+- [ ] **Step 4: Register `PlatformSettings::apply()` in `AppServiceProvider::boot()`**
+
+The existing `boot()` already calls `MailSettings::apply()` (or similar). Add alongside:
 
 ```php
 public function boot(): void
 {
     // existing code ...
-    $this->applyPlatformSettings();
-}
-
-public function applyPlatformSettings(): void
-{
-    if (! Schema::hasTable('settings')) {
-        return;
-    }
-
-    $overrides = Setting::query()->whereIn('key', [
-        'platform.fee_bps',
-        'platform.vat_bps',
-        'platform.payout_admin_fee_cents',
-        'platform.trial_days',
-        'platform.grace_window_days',
-        'platform.single_event_price_cents',
-    ])->pluck('value', 'key');
-
-    foreach ($overrides as $key => $value) {
-        config([$key => is_numeric($value) ? (int) $value : $value]);
-    }
+    \App\Support\PlatformSettings::apply();
 }
 ```
 
-- [ ] **Step 4: Add the Filament Site Settings tab**
+- [ ] **Step 5: Create `ManagePlatformBillingSettings` Filament page (mirror ManageMailSettings)**
 
-In the existing SiteSettings page, add a new tab:
+The page lives at `app/Filament/Pages/ManagePlatformBillingSettings.php`, with `shouldRegisterNavigation(): false` and `canAccess(): auth()->user()?->is_staff`. `mount()` seeds the form from `PlatformSettings::details()`. `save()` calls `PlatformSettings::save($state)` and shows the standard success notification. Form schema:
 
 ```php
-Tab::make('Platform billing')
+Section::make('Platform fees (transparent to members)')
+    ->description('Changes apply immediately — no redeploy. Shown on every member receipt.')
+    ->columns(2)
     ->schema([
-        TextInput::make('platform.fee_bps')
+        TextInput::make('fee_bps')
             ->label('Platform fee (basis points)')
-            ->numeric()
-            ->minValue(0)->maxValue(10000)
-            ->helperText('200 = 2%. Change requires no deploy; new rate applies to the next transaction.'),
-        TextInput::make('platform.vat_bps')
+            ->numeric()->minValue(0)->maxValue(10000)
+            ->helperText('200 = 2%. Applied to the next transaction.'),
+        TextInput::make('vat_bps')
             ->label('VAT rate (basis points)')
             ->numeric()->minValue(0)->maxValue(10000)
-            ->helperText('1500 = 15%'),
-        TextInput::make('platform.payout_admin_fee_cents')
+            ->helperText('1500 = 15%.'),
+        TextInput::make('payout_admin_fee_cents')
             ->label('Payout admin fee (cents, excl. VAT)')
             ->numeric()->minValue(0)
-            ->helperText('5000 = R50. Applied to 2nd and later payouts per calendar month on the bank-transfer path.'),
-        TextInput::make('platform.trial_days')
-            ->numeric()->minValue(0)->maxValue(90),
-        TextInput::make('platform.grace_window_days')
-            ->numeric()->minValue(0)->maxValue(90),
-        TextInput::make('platform.single_event_price_cents')
-            ->label('Single-event product price (cents, excl. VAT)')
-            ->numeric()->minValue(0),
+            ->helperText('5000 = R50. Applied to the 2nd and later payouts per calendar month on the bank-transfer path.'),
+    ]),
+Section::make('Trial & grace')
+    ->columns(2)
+    ->schema([
+        TextInput::make('trial_days')->numeric()->minValue(0)->maxValue(90),
+        TextInput::make('grace_window_days')->numeric()->minValue(0)->maxValue(90),
+    ]),
+Section::make('Single-event product')
+    ->schema([
+        TextInput::make('single_event_price_cents')
+            ->label('Price (cents, excl. VAT)')
+            ->numeric()->minValue(0)
+            ->helperText('75000 = R750.'),
     ]),
 ```
 
-Save handler writes to `settings` table under the dotted keys. Mirror the pattern used by the existing Mailgun tab.
+- [ ] **Step 6: Add the entry to `Settings::getSections()`**
 
-- [ ] **Step 5: Run tests, pass, commit**
+```php
+[
+    'title' => 'Platform billing',
+    'description' => 'Fee %, VAT %, trial length, grace window, single-event price.',
+    'href' => ManagePlatformBillingSettings::getUrl(),
+    'icon' => Heroicon::OutlinedCurrencyDollar,
+],
+```
+
+- [ ] **Step 7: Blade view**
+
+`resources/views/filament/pages/manage-platform-billing-settings.blade.php` mirrors `manage-mail-settings.blade.php` exactly — a `<x-filament-panels::page>` wrapping the form with a Save action.
+
+- [ ] **Step 8: Run tests, pint, commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
 php artisan test tests/Feature/PlatformBillingSettingsTest.php --compact
-git add app/Providers/AppServiceProvider.php app/Filament/Pages/SiteSettings.php tests/Feature/PlatformBillingSettingsTest.php
-git commit -m "Platform billing: Site Settings tab with runtime overrides for fee, VAT, trial, grace"
+git add app/Support/PlatformSettings.php app/Filament/Pages/ManagePlatformBillingSettings.php resources/views/filament/pages/manage-platform-billing-settings.blade.php app/Filament/Pages/Settings.php app/Providers/AppServiceProvider.php tests/Feature/PlatformBillingSettingsTest.php
+git commit -m "Platform billing: Settings page + Support class with runtime overrides for fee, VAT, trial, grace"
 ```
 
 ---
 
-### Task 6: `PaystackSubscriptionService` + Paystack recurring charge
+### Task 6: `PaystackPlatformPlanService` + Paystack-managed subscription signup
+
+**NOTE (plan amendment):** The original Task 6 described a `charge_authorization` approach where the app manually bills a stored card each period. **Change of direction**: this project already uses Paystack-managed Plans + Subscriptions (`App\Services\Paystack\PaystackClient` has `createPlan`, `fetchSubscription`, `disableSubscription`, and `initializeTransaction` with a `plan` parameter that auto-creates a Paystack subscription). We align platform billing with that existing architecture:
+- Define **6 plans** on Paystack upfront, one per `(tier, interval)` combination: micro-monthly, micro-annually, standard-monthly, standard-annually, large-monthly, large-annually.
+- At trial-end (or user-driven upgrade), call `PaystackClient::initializeTransaction($email, $amountCents, metadata: [...], plan: $planCode)`. Paystack handles the first charge and creates a SUB_xxx subscription that auto-charges on the plan's cadence.
+- All subsequent charges are driven by Paystack; our side listens for webhook events (Task 7) to update `PlatformSubscription.status` and record payments.
+- No daily `BillRecurringSubscriptions` command. No `charge_authorization`.
 
 **Files:**
-- Create: `app/Services/Platform/PaystackSubscriptionService.php`
-- Create: `tests/Feature/PaystackSubscriptionServiceTest.php`
+- Create: `app/Services/Platform/PaystackPlatformPlanService.php` — exposes `getPlanCode(SubscriptionTier $tier, BillingInterval $interval): string`, `provisionPlans(): array` (seeds the 6 plans via `PaystackClient::createPlan`), `startSubscription(PlatformSubscription $sub, string $email, string $callbackUrl): string` (returns the Paystack authorize URL).
+- Create: `app/Console/Commands/ProvisionPlatformBillingPlans.php` — one-shot setup command (`platform:provision-plans`) that provisions all 6 plans on Paystack and caches the plan codes.
+- Add migration: `platform_billing_plans` table (`id`, `tier`, `interval`, `price_cents`, `paystack_plan_code`, timestamps) — serves as the cache of plan codes so we don't re-create plans on every deploy.
+- Create: `app/Models/PlatformBillingPlan.php`
+- Create: `tests/Feature/PaystackPlatformPlanServiceTest.php`
 
 **Interfaces:**
-- Consumes: `PlatformSubscription` model, Paystack HTTP client (reuse existing `App\Services\Paystack\PaystackClient` if present; otherwise create a thin wrapper around `Http::withToken(config('services.paystack.secret_key'))`).
+- Consumes: `App\Services\Paystack\PaystackClient`, `PlatformSubscription`, `SubscriptionTier`, `BillingInterval`.
 - Produces:
-  - `PaystackSubscriptionService::chargeAuthorization(PlatformSubscription): PaystackChargeResult` where `PaystackChargeResult = {success: bool, reference: ?string, failure_reason: ?string}`.
-  - `PaystackSubscriptionService::createAuthorization(PlatformSubscription, string $email): string` — returns an initialise URL.
+  - `PaystackPlatformPlanService::getPlanCode(tier, interval): string` — reads from `platform_billing_plans`.
+  - `PaystackPlatformPlanService::provisionPlans(): array` — idempotent; calls `PaystackClient::createPlan` once per combination and persists the returned plan_code.
+  - `PaystackPlatformPlanService::startSubscription(sub, email, callbackUrl): string` — calls `PaystackClient::initializeTransaction` with `plan` = the right plan_code, stores the Paystack reference on `PlatformSubscription.paystack_reference`, returns the hosted authorize URL for a browser redirect.
 
-- [ ] **Step 1: Write the failing test (uses `Http::fake`)**
+- [ ] **Step 1: Read the existing Paystack client first**
+
+```bash
+cat app/Services/Paystack/PaystackClient.php
+cat app/Console/Commands/PaystackSetupPlans.php  # existing event-side plan provisioning; mirror its style
+```
+
+- [ ] **Step 2: Migration + model for `platform_billing_plans`**
+
+```php
+Schema::create('platform_billing_plans', function (Blueprint $table): void {
+    $table->id();
+    $table->string('tier');                      // micro | standard | large
+    $table->string('interval');                  // monthly | annual
+    $table->unsignedInteger('price_cents');      // excl. VAT, excl. platform fee
+    $table->string('paystack_plan_code')->nullable();
+    $table->timestamps();
+    $table->unique(['tier', 'interval']);
+});
+```
+
+- [ ] **Step 3: Write the failing test (uses `Http::fake`)**
 
 ```php
 <?php
 
 use App\Enums\BillingInterval;
-use App\Enums\PlatformSubscriptionStatus;
 use App\Enums\SubscriptionTier;
-use App\Models\Organisation;
-use App\Models\PlatformSubscription;
-use App\Services\Platform\PaystackSubscriptionService;
+use App\Models\PlatformBillingPlan;
+use App\Services\Platform\PaystackPlatformPlanService;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     config()->set('services.paystack.secret_key', 'sk_test_dummy');
 });
 
-it('charges a stored Paystack authorization and returns success on 200', function () {
-    Http::fake([
-        'api.paystack.co/transaction/charge_authorization' => Http::response([
+it('provisions all 6 plans on Paystack and caches the plan codes', function () {
+    Http::fake(function ($request) {
+        $body = $request->data();
+        $code = 'PLN_'.substr(sha1($body['name']), 0, 10);
+
+        return Http::response([
             'status' => true,
-            'data' => ['reference' => 'ref_abc123', 'status' => 'success'],
-        ], 200),
-    ]);
+            'message' => 'Plan created',
+            'data' => [
+                'plan_code' => $code,
+                'name' => $body['name'],
+                'interval' => $body['interval'],
+                'amount' => $body['amount'],
+            ],
+        ], 200);
+    });
 
-    $org = Organisation::factory()->create();
-    $sub = PlatformSubscription::factory()->for($org)->create([
-        'tier' => SubscriptionTier::Micro,
-        'interval' => BillingInterval::Monthly,
-        'paystack_authorization_code' => 'AUTH_abc',
-    ]);
+    app(PaystackPlatformPlanService::class)->provisionPlans();
 
-    $result = app(PaystackSubscriptionService::class)->chargeAuthorization($sub);
-
-    expect($result->success)->toBeTrue()
-        ->and($result->reference)->toBe('ref_abc123');
+    expect(PlatformBillingPlan::count())->toBe(6);
+    foreach (SubscriptionTier::cases() as $tier) {
+        foreach (BillingInterval::cases() as $interval) {
+            $plan = PlatformBillingPlan::query()
+                ->where('tier', $tier->value)
+                ->where('interval', $interval->value)
+                ->firstOrFail();
+            expect($plan->paystack_plan_code)->toStartWith('PLN_');
+        }
+    }
 });
 
-it('reports failure when Paystack returns a non-success response', function () {
+it('is idempotent — a second provisionPlans run makes no new HTTP calls', function () {
+    PlatformBillingPlan::query()->insert([
+        [
+            'tier' => SubscriptionTier::Micro->value,
+            'interval' => BillingInterval::Monthly->value,
+            'price_cents' => SubscriptionTier::Micro->priceCents(BillingInterval::Monthly),
+            'paystack_plan_code' => 'PLN_existing',
+            'created_at' => now(), 'updated_at' => now(),
+        ],
+    ]);
+
+    Http::fake(); // records calls
+    app(PaystackPlatformPlanService::class)->provisionPlans();
+
+    // Only the 5 missing combinations should trigger createPlan.
+    Http::assertSentCount(5);
+});
+
+it('startSubscription returns the Paystack authorize URL and stores the reference', function () {
     Http::fake([
-        'api.paystack.co/transaction/charge_authorization' => Http::response([
-            'status' => false,
-            'message' => 'Card declined',
+        'api.paystack.co/transaction/initialize' => Http::response([
+            'status' => true,
+            'data' => [
+                'reference' => 'ref_abc',
+                'authorization_url' => 'https://checkout.paystack.com/abc',
+                'access_code' => 'ac_abc',
+            ],
         ], 200),
     ]);
 
-    $sub = PlatformSubscription::factory()->create(['paystack_authorization_code' => 'AUTH_xyz']);
+    PlatformBillingPlan::query()->insert([
+        'tier' => SubscriptionTier::Micro->value,
+        'interval' => BillingInterval::Monthly->value,
+        'price_cents' => SubscriptionTier::Micro->priceCents(BillingInterval::Monthly),
+        'paystack_plan_code' => 'PLN_test',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
 
-    $result = app(PaystackSubscriptionService::class)->chargeAuthorization($sub);
+    $sub = \App\Models\PlatformSubscription::factory()->create([
+        'tier' => SubscriptionTier::Micro,
+        'interval' => BillingInterval::Monthly,
+    ]);
 
-    expect($result->success)->toBeFalse()
-        ->and($result->failure_reason)->toBe('Card declined');
+    $url = app(PaystackPlatformPlanService::class)
+        ->startSubscription($sub, 'admin@example.test', 'https://app.test/billing/callback');
+
+    expect($url)->toBe('https://checkout.paystack.com/abc');
+    expect($sub->fresh()->paystack_reference)->toBe('ref_abc');
 });
 ```
 
-- [ ] **Step 2: Watch it fail, then implement**
+- [ ] **Step 4: Watch it fail, then implement**
 
 ```php
 <?php
 
 namespace App\Services\Platform;
 
+use App\Enums\BillingInterval;
+use App\Enums\SubscriptionTier;
+use App\Models\PlatformBillingPlan;
 use App\Models\PlatformSubscription;
+use App\Services\Paystack\PaystackClient;
 use App\Support\PlatformFees;
-use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
-final readonly class PaystackChargeResult
+class PaystackPlatformPlanService
 {
-    public function __construct(
-        public bool $success,
-        public ?string $reference = null,
-        public ?string $failureReason = null,
-    ) {}
-}
+    public function __construct(private PaystackClient $client) {}
 
-class PaystackSubscriptionService
-{
-    public function chargeAuthorization(PlatformSubscription $subscription): PaystackChargeResult
+    public function getPlanCode(SubscriptionTier $tier, BillingInterval $interval): string
     {
-        $priceExcl = $subscription->tier->priceCents($subscription->interval);
-        $priceIncl = PlatformFees::vatInclusiveCents($priceExcl);
+        $plan = PlatformBillingPlan::query()
+            ->where('tier', $tier->value)
+            ->where('interval', $interval->value)
+            ->firstOrFail();
 
-        $response = Http::withToken(config('services.paystack.secret_key'))
-            ->post('https://api.paystack.co/transaction/charge_authorization', [
-                'authorization_code' => $subscription->paystack_authorization_code,
-                'email' => $subscription->organisation->users()->first()?->email,
-                'amount' => $priceIncl,
-                'metadata' => [
-                    'purpose' => 'platform_subscription',
-                    'subscription_id' => $subscription->id,
-                    'organisation_id' => $subscription->organisation_id,
-                ],
-            ]);
-
-        $json = $response->json();
-
-        if (($json['status'] ?? false) && ($json['data']['status'] ?? null) === 'success') {
-            return new PaystackChargeResult(
-                success: true,
-                reference: (string) $json['data']['reference'],
-            );
+        if (! $plan->paystack_plan_code) {
+            throw new RuntimeException("Plan {$tier->value}/{$interval->value} not provisioned on Paystack. Run `php artisan platform:provision-plans`.");
         }
 
-        return new PaystackChargeResult(
-            success: false,
-            failureReason: (string) ($json['message'] ?? 'Unknown error'),
+        return $plan->paystack_plan_code;
+    }
+
+    /** @return array<string, string> keyed by "tier.interval", values are plan_code */
+    public function provisionPlans(): array
+    {
+        $provisioned = [];
+
+        foreach (SubscriptionTier::cases() as $tier) {
+            foreach (BillingInterval::cases() as $interval) {
+                $priceExcl = $tier->priceCents($interval);
+                $priceIncl = PlatformFees::vatInclusiveCents($priceExcl);
+                $name = "ShootingSports {$tier->label()} ({$interval->label()})";
+
+                $existing = PlatformBillingPlan::query()
+                    ->where('tier', $tier->value)
+                    ->where('interval', $interval->value)
+                    ->first();
+
+                if ($existing && $existing->paystack_plan_code) {
+                    $provisioned["{$tier->value}.{$interval->value}"] = $existing->paystack_plan_code;
+                    continue;
+                }
+
+                $result = $this->client->createPlan(
+                    name: $name,
+                    interval: $interval === BillingInterval::Annual ? 'annually' : 'monthly',
+                    amountCents: $priceIncl,
+                );
+
+                PlatformBillingPlan::query()->updateOrCreate(
+                    ['tier' => $tier->value, 'interval' => $interval->value],
+                    ['price_cents' => $priceExcl, 'paystack_plan_code' => $result['plan_code']],
+                );
+
+                $provisioned["{$tier->value}.{$interval->value}"] = $result['plan_code'];
+            }
+        }
+
+        return $provisioned;
+    }
+
+    public function startSubscription(PlatformSubscription $subscription, string $email, string $callbackUrl): string
+    {
+        $planCode = $this->getPlanCode($subscription->tier, $subscription->interval);
+        $priceIncl = PlatformFees::vatInclusiveCents($subscription->tier->priceCents($subscription->interval));
+
+        $result = $this->client->initializeTransaction(
+            email: $email,
+            amountCents: $priceIncl,
+            metadata: [
+                'purpose' => 'platform_subscription',
+                'subscription_id' => $subscription->id,
+                'organisation_id' => $subscription->organisation_id,
+            ],
+            callbackUrl: $callbackUrl,
+            plan: $planCode,
         );
+
+        $subscription->update(['paystack_reference' => $result['reference']]);
+
+        return $result['authorization_url'];
     }
 }
 ```
 
-- [ ] **Step 3: Pint, run tests, commit**
+Note: `PaystackClient::initializeTransaction` already supports a `plan` parameter — verify the exact signature (`cat app/Services/Paystack/PaystackClient.php`) and adjust the call site to match it. If `plan` is not already a parameter, add it as an optional named arg at the end of `initializeTransaction` (the simplest and safest change).
+
+- [ ] **Step 5: `platform:provision-plans` command**
+
+```php
+<?php
+
+namespace App\Console\Commands;
+
+use App\Services\Platform\PaystackPlatformPlanService;
+use Illuminate\Console\Command;
+
+class ProvisionPlatformBillingPlans extends Command
+{
+    protected $signature = 'platform:provision-plans';
+
+    protected $description = 'Idempotently provision the 6 ShootingSports subscription plans on Paystack.';
+
+    public function handle(PaystackPlatformPlanService $service): int
+    {
+        $provisioned = $service->provisionPlans();
+        foreach ($provisioned as $key => $planCode) {
+            $this->line("  {$key}: {$planCode}");
+        }
+        $this->info('Done.');
+
+        return self::SUCCESS;
+    }
+}
+```
+
+- [ ] **Step 6: Pint, run tests, commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
-php artisan test tests/Feature/PaystackSubscriptionServiceTest.php --compact
-git add app/Services/Platform/PaystackSubscriptionService.php tests/Feature/PaystackSubscriptionServiceTest.php
-git commit -m "Platform billing: PaystackSubscriptionService.chargeAuthorization with Http::fake tests"
+php artisan test tests/Feature/PaystackPlatformPlanServiceTest.php --compact
+git add database/migrations app/Models/PlatformBillingPlan.php app/Services/Platform/PaystackPlatformPlanService.php app/Console/Commands/ProvisionPlatformBillingPlans.php tests/Feature/PaystackPlatformPlanServiceTest.php
+git commit -m "Platform billing: PaystackPlatformPlanService + 6-plan provisioning command"
 ```
 
 ---
 
-### Task 7: `BillRecurringSubscriptions` command + dunning loop
+### Task 7: Paystack subscription webhook handler + lifecycle
+
+**NOTE (plan amendment):** Original Task 7 described a daily `BillRecurringSubscriptions` command that iterated subscriptions and manually charged each one. **Not needed** — Paystack bills on the plan's cadence automatically. We only need to **listen** to Paystack webhooks and translate them into `PlatformSubscription` status transitions and payment records. Paystack also runs its own dunning retries on failed charges; our role is to reflect the final outcome.
 
 **Files:**
-- Create: `app/Console/Commands/BillRecurringSubscriptions.php`
-- Create: `app/Console/Commands/RetryPastDueSubscriptions.php`
-- Create: `tests/Feature/BillRecurringSubscriptionsTest.php`
-- Modify: `routes/console.php` — schedule both.
+- Create: `app/Http/Controllers/PlatformBillingWebhookController.php` — the HTTP endpoint Paystack posts to; verifies the HMAC signature, resolves `metadata.purpose === 'platform_subscription'`, dispatches to handler.
+- Create: `app/Services/Platform/PlatformBillingWebhookHandler.php` — pure PHP, event-dispatch logic. Easy to test with array fixtures.
+- Modify: `routes/web.php` — add the webhook route (`POST /webhooks/paystack/platform`).
+- Create: `tests/Feature/PlatformBillingWebhookTest.php`
+
+Paystack events we care about (per https://paystack.com/docs/payments/webhooks/):
+| Event | Our action |
+|---|---|
+| `charge.success` (first charge, when metadata.purpose = platform_subscription) | Mark subscription Active, set `current_period_start/end`, record `PlatformPayment` row |
+| `subscription.create` | Store `paystack_subscription_code` on `PlatformSubscription` |
+| `subscription.not_renew` | User disabled renewal — status stays Active until period end, then becomes `Cancelled` |
+| `subscription.disable` | Mark subscription Cancelled |
+| `invoice.create` (upcoming invoice) | Log for admin visibility |
+| `invoice.payment_failed` | Mark subscription PastDue (Paystack handles its own retry schedule) |
+| `invoice.update` (success) | Mark subscription Active, extend `current_period_end`, record `PlatformPayment` |
 
 **Interfaces:**
-- Consumes: `PaystackSubscriptionService`, `PlatformSubscription`.
-- Produces: Billing lifecycle — subscriptions due today are charged, successes advance `current_period_start/end`, failures enter the dunning schedule.
+- Consumes: Paystack webhook JSON payload, `PlatformSubscription`.
+- Produces: `PlatformSubscription.status` transitions, `PlatformPayment` records (one per successful charge).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -985,206 +1257,136 @@ git commit -m "Platform billing: PaystackSubscriptionService.chargeAuthorization
 use App\Enums\BillingInterval;
 use App\Enums\PlatformSubscriptionStatus;
 use App\Enums\SubscriptionTier;
-use App\Models\Organisation;
 use App\Models\PlatformSubscription;
-use Illuminate\Support\Facades\Http;
+use App\Services\Platform\PlatformBillingWebhookHandler;
 
-beforeEach(function () {
-    config()->set('services.paystack.secret_key', 'sk_test_dummy');
-    Http::fake();
-});
-
-it('charges active subscriptions whose current period ends today and advances the period', function () {
-    Http::fake([
-        'api.paystack.co/transaction/charge_authorization' => Http::response([
-            'status' => true,
-            'data' => ['reference' => 'ref_ok', 'status' => 'success'],
-        ], 200),
-    ]);
-
-    $org = Organisation::factory()->create();
-    $sub = PlatformSubscription::factory()->for($org)->create([
+it('transitions trial → active on charge.success with a platform_subscription reference', function () {
+    $sub = PlatformSubscription::factory()->create([
+        'status' => PlatformSubscriptionStatus::Trial,
         'tier' => SubscriptionTier::Micro,
         'interval' => BillingInterval::Monthly,
-        'status' => PlatformSubscriptionStatus::Active,
-        'current_period_start' => now()->subMonth()->startOfDay(),
-        'current_period_end' => now()->startOfDay(),
-        'paystack_authorization_code' => 'AUTH_ok',
+        'paystack_reference' => 'ref_abc',
     ]);
 
-    $this->artisan('subscriptions:bill-recurring')->assertSuccessful();
+    app(PlatformBillingWebhookHandler::class)->handle([
+        'event' => 'charge.success',
+        'data' => [
+            'reference' => 'ref_abc',
+            'amount' => 11500,
+            'metadata' => [
+                'purpose' => 'platform_subscription',
+                'subscription_id' => $sub->id,
+            ],
+        ],
+    ]);
 
     $sub->refresh();
     expect($sub->status)->toBe(PlatformSubscriptionStatus::Active)
-        ->and($sub->current_period_end->isSameDay(now()->addMonth()))->toBeTrue();
+        ->and($sub->current_period_end)->not->toBeNull()
+        ->and($sub->payments()->count())->toBe(1);
 });
 
-it('moves a subscription whose charge fails into past_due with next_retry_on day+1', function () {
-    Http::fake([
-        'api.paystack.co/transaction/charge_authorization' => Http::response([
-            'status' => false,
-            'message' => 'Card declined',
-        ], 200),
-    ]);
-
+it('transitions active → past_due on invoice.payment_failed', function () {
     $sub = PlatformSubscription::factory()->create([
         'status' => PlatformSubscriptionStatus::Active,
-        'current_period_end' => today(),
-        'paystack_authorization_code' => 'AUTH_bad',
+        'paystack_subscription_code' => 'SUB_xyz',
     ]);
 
-    $this->artisan('subscriptions:bill-recurring')->assertSuccessful();
+    app(PlatformBillingWebhookHandler::class)->handle([
+        'event' => 'invoice.payment_failed',
+        'data' => [
+            'subscription' => ['subscription_code' => 'SUB_xyz'],
+        ],
+    ]);
 
-    $sub->refresh();
-    expect($sub->status)->toBe(PlatformSubscriptionStatus::PastDue)
-        ->and($sub->next_retry_on->isSameDay(today()->addDay()))->toBeTrue()
-        ->and($sub->dunning_retry_count)->toBe(1);
+    expect($sub->fresh()->status)->toBe(PlatformSubscriptionStatus::PastDue);
+});
+
+it('stores paystack_subscription_code on subscription.create', function () {
+    $sub = PlatformSubscription::factory()->create(['paystack_reference' => 'ref_abc']);
+
+    app(PlatformBillingWebhookHandler::class)->handle([
+        'event' => 'subscription.create',
+        'data' => [
+            'subscription_code' => 'SUB_new',
+            'metadata' => ['subscription_id' => $sub->id],
+        ],
+    ]);
+
+    expect($sub->fresh()->paystack_subscription_code)->toBe('SUB_new');
+});
+
+it('rejects charge.success events for other purposes', function () {
+    $sub = PlatformSubscription::factory()->create(['status' => PlatformSubscriptionStatus::Trial]);
+
+    app(PlatformBillingWebhookHandler::class)->handle([
+        'event' => 'charge.success',
+        'data' => ['metadata' => ['purpose' => 'event_entry'], 'reference' => 'other'],
+    ]);
+
+    expect($sub->fresh()->status)->toBe(PlatformSubscriptionStatus::Trial);
 });
 ```
 
-- [ ] **Step 2: Implement `BillRecurringSubscriptions`**
+- [ ] **Step 2: Implement `PlatformBillingWebhookHandler`**
+
+Pure PHP handler, no HTTP. Dispatches by `event` field; each handler method is small and does one thing. Guards against charges not tagged `purpose === 'platform_subscription'`. Uses `paystack_reference` (first charge) or `paystack_subscription_code` (subsequent charges) to resolve the `PlatformSubscription`.
+
+- [ ] **Step 3: `PlatformBillingWebhookController` (thin HTTP wrapper)**
 
 ```php
 <?php
 
-namespace App\Console\Commands;
+namespace App\Http\Controllers;
 
-use App\Enums\BillingInterval;
-use App\Enums\PlatformSubscriptionStatus;
-use App\Models\PlatformSubscription;
-use App\Services\Platform\PaystackSubscriptionService;
-use Illuminate\Console\Command;
+use App\Services\Platform\PlatformBillingWebhookHandler;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
-class BillRecurringSubscriptions extends Command
+class PlatformBillingWebhookController extends Controller
 {
-    protected $signature = 'subscriptions:bill-recurring';
-
-    protected $description = 'Charges subscriptions whose current period ends today.';
-
-    public function handle(PaystackSubscriptionService $paystack): int
+    public function __invoke(Request $request, PlatformBillingWebhookHandler $handler)
     {
-        PlatformSubscription::query()
-            ->whereIn('status', [PlatformSubscriptionStatus::Active])
-            ->whereDate('current_period_end', '<=', today())
-            ->whereNotNull('paystack_authorization_code')
-            ->get()
-            ->each(fn (PlatformSubscription $sub) => $this->bill($sub, $paystack));
+        $signature = $request->header('x-paystack-signature');
+        $expected = hash_hmac('sha512', $request->getContent(), config('services.paystack.secret_key'));
 
-        return self::SUCCESS;
-    }
-
-    private function bill(PlatformSubscription $sub, PaystackSubscriptionService $paystack): void
-    {
-        $result = $paystack->chargeAuthorization($sub);
-
-        if ($result->success) {
-            $periodLength = $sub->interval === BillingInterval::Annual
-                ? now()->addYear()
-                : now()->addMonth();
-
-            $sub->update([
-                'status' => PlatformSubscriptionStatus::Active,
-                'current_period_start' => today(),
-                'current_period_end' => $periodLength->toDateString(),
-                'dunning_retry_count' => 0,
-                'next_retry_on' => null,
-            ]);
-
-            return;
+        if (! hash_equals($expected, (string) $signature)) {
+            Log::warning('Paystack webhook signature mismatch', ['ip' => $request->ip()]);
+            return response('invalid signature', 400);
         }
 
-        $sub->update([
-            'status' => PlatformSubscriptionStatus::PastDue,
-            'dunning_retry_count' => $sub->dunning_retry_count + 1,
-            'next_retry_on' => today()->addDay(),
-        ]);
+        $handler->handle($request->all());
+
+        return response('ok', 200);
     }
 }
 ```
 
-- [ ] **Step 3: Implement `RetryPastDueSubscriptions`**
+Route: `Route::post('/webhooks/paystack/platform', PlatformBillingWebhookController::class)->middleware(['throttle:60,1'])->withoutMiddleware(['web']);` — bypass CSRF via `withoutMiddleware`, or put the route in a group that doesn't include `VerifyCsrfToken`.
+
+- [ ] **Step 4: `PlatformPayment` model + migration**
+
+Simple ledger of successful Paystack charges tagged `purpose = platform_subscription`:
 
 ```php
-<?php
-
-namespace App\Console\Commands;
-
-use App\Enums\PlatformSubscriptionStatus;
-use App\Models\PlatformSubscription;
-use App\Services\Platform\PaystackSubscriptionService;
-use Illuminate\Console\Command;
-
-class RetryPastDueSubscriptions extends Command
-{
-    protected $signature = 'subscriptions:retry-past-due';
-
-    protected $description = 'Walks the dunning schedule for subscriptions already in past_due.';
-
-    public function handle(PaystackSubscriptionService $paystack): int
-    {
-        $retrySchedule = (array) config('platform.dunning_retry_days', [1, 4, 7, 14]);
-        $maxRetries = count($retrySchedule);
-
-        PlatformSubscription::query()
-            ->where('status', PlatformSubscriptionStatus::PastDue)
-            ->whereDate('next_retry_on', '<=', today())
-            ->get()
-            ->each(function (PlatformSubscription $sub) use ($paystack, $retrySchedule, $maxRetries): void {
-                $result = $paystack->chargeAuthorization($sub);
-
-                if ($result->success) {
-                    $sub->update([
-                        'status' => PlatformSubscriptionStatus::Active,
-                        'current_period_start' => today(),
-                        'current_period_end' => $sub->interval->value === 'annual'
-                            ? today()->addYear()->toDateString()
-                            : today()->addMonth()->toDateString(),
-                        'dunning_retry_count' => 0,
-                        'next_retry_on' => null,
-                    ]);
-
-                    return;
-                }
-
-                $next = $sub->dunning_retry_count + 1;
-
-                if ($next >= $maxRetries) {
-                    $sub->update([
-                        'status' => PlatformSubscriptionStatus::Suspended,
-                        'next_retry_on' => null,
-                    ]);
-
-                    return;
-                }
-
-                $gap = $retrySchedule[$next] - $retrySchedule[$sub->dunning_retry_count];
-                $sub->update([
-                    'dunning_retry_count' => $next,
-                    'next_retry_on' => today()->addDays($gap),
-                ]);
-            });
-
-        return self::SUCCESS;
-    }
-}
-```
-
-- [ ] **Step 4: Schedule both in `routes/console.php`**
-
-```php
-use Illuminate\Support\Facades\Schedule;
-
-Schedule::command('subscriptions:bill-recurring')->dailyAt('02:00');
-Schedule::command('subscriptions:retry-past-due')->dailyAt('02:30');
+Schema::create('platform_payments', function (Blueprint $table): void {
+    $table->id();
+    $table->foreignId('platform_subscription_id')->constrained()->cascadeOnDelete();
+    $table->string('paystack_reference')->unique();
+    $table->unsignedInteger('amount_cents');
+    $table->string('currency', 3)->default('ZAR');
+    $table->timestamp('paid_at');
+    $table->timestamps();
+});
 ```
 
 - [ ] **Step 5: Pint, run tests, commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
-php artisan test tests/Feature/BillRecurringSubscriptionsTest.php --compact
-git add app/Console/Commands/BillRecurringSubscriptions.php app/Console/Commands/RetryPastDueSubscriptions.php tests/Feature/BillRecurringSubscriptionsTest.php routes/console.php
-git commit -m "Platform billing: daily recurring charge + dunning retry commands"
+php artisan test tests/Feature/PlatformBillingWebhookTest.php --compact
+git add database/migrations app/Models/PlatformPayment.php app/Services/Platform/PlatformBillingWebhookHandler.php app/Http/Controllers/PlatformBillingWebhookController.php routes/web.php tests/Feature/PlatformBillingWebhookTest.php
+git commit -m "Platform billing: Paystack webhook handler translates subscription lifecycle to our status machine"
 ```
 
 ---
@@ -1728,7 +1930,7 @@ it('auto-upgrades once the grace window expires', function () {
 **Files:**
 - Create: `app/Http/Controllers/OrganiseController.php`
 - Create: `resources/views/organise/signup.blade.php`
-- Modify: Organisation migration — add `kind` enum column if not already present (`club`, `single_event`, maybe `provider`).
+- Create a new migration — add `kind` string column to `organisations` with values `'club' | 'single_event'` and a default of `'club'` (**confirmed absent** as of 2026-10-18). Backfill all existing rows to `'club'`. Also add an `App\Enums\OrganisationKind` enum.
 - Modify: Panel provider — hide Club nav when `organisation.kind = 'single_event'`.
 - Create: `tests/Feature/SingleEventProductTest.php`
 
