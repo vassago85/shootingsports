@@ -4,10 +4,14 @@ namespace App\Services\Platform;
 
 use App\Enums\BillingInterval;
 use App\Enums\PlatformSubscriptionStatus;
+use App\Models\PlatformInvoice;
 use App\Models\PlatformPayment;
 use App\Models\PlatformSubscription;
+use App\Support\PlatformFees;
 use Carbon\CarbonInterface;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -21,6 +25,8 @@ use Illuminate\Support\Facades\Log;
 class PlatformBillingWebhookHandler
 {
     public const PURPOSE = 'platform_subscription';
+
+    private const INVOICE_NUMBER_ATTEMPTS = 3;
 
     /**
      * @param  array<string, mixed>  $data
@@ -162,12 +168,79 @@ class PlatformBillingWebhookHandler
             'next_retry_on' => null,
         ])->save();
 
-        $subscription->payments()->create([
+        $payment = $subscription->payments()->create([
             'paystack_reference' => $reference,
             'amount_cents' => (int) data_get($data, 'amount', 0),
             'currency' => (string) (data_get($data, 'currency') ?: 'ZAR'),
             'paid_at' => $this->paidAt($data),
         ]);
+
+        $this->issueInvoice($subscription, $payment, $periodStart);
+    }
+
+    /**
+     * Write the SA VAT tax invoice for a subscription charge. The charged
+     * amount is VAT-inclusive, so the exclusive amount and VAT are derived
+     * from it at the VAT rate in force today (snapshotted on the invoice).
+     *
+     * The number is allocated as the next in the issue year; a unique
+     * violation from a concurrent writer bumps the counter and retries.
+     */
+    private function issueInvoice(PlatformSubscription $subscription, PlatformPayment $payment, CarbonInterface $periodStart): void
+    {
+        if (PlatformInvoice::query()->where('platform_payment_id', $payment->id)->exists()) {
+            return;
+        }
+
+        $vatBps = PlatformFees::vatBps();
+        $inclusiveCents = $payment->amount_cents;
+        $exclusiveCents = (int) round($inclusiveCents * 10000 / (10000 + $vatBps));
+        $issuedOn = today();
+        $description = "{$subscription->tier->label()} tier — {$subscription->interval->label()} subscription ({$periodStart->format('Y-m')})";
+
+        $attributes = [
+            'organisation_id' => $subscription->organisation_id,
+            'platform_subscription_id' => $subscription->id,
+            'platform_payment_id' => $payment->id,
+            'issued_on' => $issuedOn,
+            'period_start' => $periodStart,
+            'period_end' => $subscription->current_period_end,
+            'description' => $description,
+            'amount_excl_vat_cents' => $exclusiveCents,
+            'vat_cents' => $inclusiveCents - $exclusiveCents,
+            'amount_incl_vat_cents' => $inclusiveCents,
+            'vat_bps' => $vatBps,
+            'currency' => $payment->currency,
+            'paystack_reference' => $payment->paystack_reference,
+        ];
+
+        $attempt = 0;
+
+        while (true) {
+            try {
+                DB::transaction(fn () => PlatformInvoice::query()->create([
+                    ...$attributes,
+                    'invoice_number' => $this->nextInvoiceNumber($issuedOn->year, $attempt),
+                ]));
+
+                return;
+            } catch (UniqueConstraintViolationException $e) {
+                if (++$attempt >= self::INVOICE_NUMBER_ATTEMPTS) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    private function nextInvoiceNumber(int $year, int $skip): string
+    {
+        $latest = PlatformInvoice::query()
+            ->where('invoice_number', 'like', "INV-{$year}-%")
+            ->max('invoice_number');
+
+        $sequence = $latest === null ? 0 : (int) substr((string) $latest, -6);
+
+        return sprintf('INV-%d-%06d', $year, $sequence + 1 + $skip);
     }
 
     private function advance(CarbonInterface $from, BillingInterval $interval): CarbonInterface

@@ -89,10 +89,11 @@ return [
         ],
     ],
 
-    // VAT number printed on the Section 54 agent receipt. Placeholder
-    // until SARS registration completes.
+    // VAT number printed on the Section 54 agent receipt and the platform
+    // subscription tax invoice. Placeholders until SARS registration completes.
     'sars' => [
         'vat_number' => env('SARS_VAT_NUMBER', 'TBD-pending-registration'),
+        'company_address' => env('SARS_COMPANY_ADDRESS', 'TBD-pending-registration'),
     ],
 
 ];
