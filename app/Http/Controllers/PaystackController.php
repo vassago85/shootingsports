@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\MembershipInvoicePaymentMethod;
+use App\Enums\MembershipInvoiceStatus;
+use App\Models\ClubPayable;
 use App\Models\MembershipInvoice;
 use App\Models\PaystackEvent;
 use App\Models\PlatformSubscription;
@@ -297,12 +299,47 @@ class PaystackController extends Controller
             return null;
         }
 
-        return app(RecordMembershipPayment::class)(
+        $paidInvoice = app(RecordMembershipPayment::class)(
             $invoice,
             MembershipInvoicePaymentMethod::Paystack,
             (string) data_get($data, 'reference', '') ?: null,
             gatewayFeeCents: (int) data_get($data, 'fees', 0),
             metadata: is_array(data_get($data, 'metadata')) ? data_get($data, 'metadata') : null,
+        );
+
+        $this->recordClubPayable($paidInvoice);
+
+        return $paidInvoice;
+    }
+
+    /**
+     * Clubs without a Paystack subaccount are paid out by bank transfer,
+     * so the platform owes them the net. Idempotent per invoice so
+     * webhook retries and the browser callback cannot double-book it.
+     */
+    private function recordClubPayable(MembershipInvoice $invoice): void
+    {
+        if ($invoice->status !== MembershipInvoiceStatus::Paid || $invoice->organisation?->payout_method !== 'bank_transfer') {
+            return;
+        }
+
+        $feeTotal = (int) $invoice->platform_fee_cents + (int) $invoice->platform_fee_vat_cents + (int) $invoice->gateway_fee_cents;
+
+        if ($feeTotal <= 0) {
+            return;
+        }
+
+        ClubPayable::firstOrCreate(
+            ['membership_invoice_id' => $invoice->id],
+            [
+                'organisation_id' => $invoice->organisation_id,
+                'gross_cents' => $invoice->amount_cents,
+                'platform_fee_cents' => $invoice->platform_fee_cents,
+                'platform_fee_vat_cents' => $invoice->platform_fee_vat_cents,
+                'gateway_fee_cents' => $invoice->gateway_fee_cents,
+                'net_due_cents' => $invoice->net_to_club_cents,
+                'occurred_at' => $invoice->paid_at ?? now(),
+            ],
         );
     }
 
