@@ -66,7 +66,12 @@ class ClaimResource extends Resource
                     ->default('pending')
                     ->required(),
                 Select::make('reviewed_by')
-                    ->relationship('reviewer', 'name')
+                    ->relationship(
+                        name: 'reviewer',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn ($query) => $query->where('is_staff', true),
+                    )
+                    ->default(fn (): ?int => auth()->user()?->is_staff ? auth()->id() : null)
                     ->searchable()
                     ->preload(),
                 DateTimePicker::make('reviewed_at'),

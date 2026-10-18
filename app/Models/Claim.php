@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ClaimStatus;
+use App\Enums\MembershipStatus;
 use App\Enums\OrganisationUserRole;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -62,6 +63,8 @@ class Claim extends Model
                     'role' => $role,
                     'granted_by' => $reviewer->id,
                     'granted_at' => now(),
+                    'status' => MembershipStatus::Approved->value,
+                    'approved_at' => now(),
                 ],
             );
 
