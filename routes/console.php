@@ -31,3 +31,6 @@ Schedule::command('club-members:send-renewal-reminders')->dailyAt('07:35');
 
 // Platform billing: trial-ending reminders at T-5 / T-1 / T+0 for org admins and secretaries.
 Schedule::command('subscriptions:notify-trial-ending')->dailyAt('09:00');
+
+// Platform billing: compile last month's fee statements from paid membership invoices. Idempotent.
+Schedule::command('platform:compile-monthly-fee-statements')->monthlyOn(1, '03:00');
