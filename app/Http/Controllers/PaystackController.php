@@ -323,9 +323,7 @@ class PaystackController extends Controller
             return;
         }
 
-        $feeTotal = (int) $invoice->platform_fee_cents + (int) $invoice->platform_fee_vat_cents + (int) $invoice->gateway_fee_cents;
-
-        if ($feeTotal <= 0) {
+        if ((int) $invoice->amount_cents <= 0) {
             return;
         }
 

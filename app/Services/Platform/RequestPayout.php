@@ -36,6 +36,7 @@ class RequestPayout
 
             $alreadyPaidThisMonth = PlatformPayout::query()
                 ->where('organisation_id', $organisation->id)
+                ->where('status', '!=', 'cancelled')
                 ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
                 ->exists();
 

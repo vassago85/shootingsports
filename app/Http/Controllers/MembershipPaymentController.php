@@ -46,6 +46,7 @@ class MembershipPaymentController extends Controller
         $split = PlatformFees::splitFor((int) $invoice->amount_cents);
         $transactionCharge = $split['fee'] + $split['fee_vat'];
         $hasSubaccount = filled($organisation->paystack_subaccount_id);
+        $chargesPlatformFee = $hasSubaccount || $organisation->payout_method === 'bank_transfer';
 
         $metadata = [
             'purpose' => 'club_membership',
@@ -53,7 +54,7 @@ class MembershipPaymentController extends Controller
             'user_id' => $user->id,
         ];
 
-        if ($hasSubaccount) {
+        if ($chargesPlatformFee) {
             $metadata['platform_fee_cents'] = $split['fee'];
             $metadata['platform_fee_vat_cents'] = $split['fee_vat'];
         }

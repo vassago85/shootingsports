@@ -117,6 +117,32 @@ it('omits the subaccount params when the club has no subaccount', function () {
         && ! isset($request['bearer']));
 });
 
+it('bank_transfer org stamps the platform fee in Paystack metadata', function () {
+    [$user, $org, , $invoice] = memberWithIssuedInvoice(null);
+    $org->forceFill(['payout_method' => 'bank_transfer'])->save();
+
+    Http::fake([
+        'https://api.paystack.co/transaction/initialize' => Http::response([
+            'status' => true,
+            'message' => 'ok',
+            'data' => [
+                'authorization_url' => 'https://checkout.paystack.com/bank',
+                'access_code' => 'bank',
+                'reference' => 'ref_bank',
+            ],
+        ]),
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('my-memberships.paystack', $invoice))
+        ->assertRedirect('https://checkout.paystack.com/bank');
+
+    Http::assertSent(fn ($request) => $request['metadata']['platform_fee_cents'] === 1200
+        && $request['metadata']['platform_fee_vat_cents'] === 180
+        && ! isset($request['subaccount'])
+        && ! isset($request['transaction_charge']));
+});
+
 it('populates the four fee columns when the charge.success webhook lands', function () {
     [, , , $invoice] = memberWithIssuedInvoice();
     $invoice->forceFill(['paystack_reference' => 'ref_hook'])->save();

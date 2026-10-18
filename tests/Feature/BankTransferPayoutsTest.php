@@ -9,6 +9,7 @@ use App\Models\PlatformPayout;
 use App\Models\User;
 use App\Services\Platform\RequestPayout;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     config(['services.paystack.secret_key' => 'sk_test_dummy']);
@@ -157,6 +158,83 @@ it('RequestPayout refuses when there is nothing outstanding', function () {
 
     app(RequestPayout::class)->for($org);
 })->throws(RuntimeException::class);
+
+it('a real Paystack checkout for a bank_transfer club produces a ClubPayable with the platform fee deducted', function () {
+    config([
+        'platform.fee_bps' => 200,
+        'platform.vat_bps' => 1500,
+        'services.paystack.base_url' => 'https://api.paystack.co',
+    ]);
+
+    [$org, $invoice] = payoutOrgWithIssuedInvoice('bank_transfer');
+    $org->forceFill(['membership_online_payments' => true])->save();
+    $user = $invoice->clubMember->user;
+
+    Http::fake([
+        'https://api.paystack.co/transaction/initialize' => Http::response([
+            'status' => true,
+            'message' => 'ok',
+            'data' => [
+                'authorization_url' => 'https://checkout.paystack.com/bank',
+                'access_code' => 'bank',
+                'reference' => 'ref_e2e_bank',
+            ],
+        ]),
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('my-memberships.paystack', $invoice))
+        ->assertRedirect('https://checkout.paystack.com/bank');
+
+    $stampedMetadata = null;
+    Http::assertSent(function ($request) use (&$stampedMetadata) {
+        $stampedMetadata = $request['metadata'];
+
+        return true;
+    });
+
+    $body = json_encode([
+        'id' => 'evt_e2e_bank',
+        'event' => 'charge.success',
+        'data' => [
+            'reference' => 'ref_e2e_bank',
+            'amount' => 60000,
+            'fees' => 1500,
+            'metadata' => $stampedMetadata,
+        ],
+    ]);
+
+    $this->call(
+        method: 'POST',
+        uri: '/paystack/webhook',
+        server: [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_PAYSTACK_SIGNATURE' => hash_hmac('sha512', $body, 'sk_test_dummy'),
+        ],
+        content: $body,
+    )->assertOk();
+
+    $payable = ClubPayable::query()->where('membership_invoice_id', $invoice->id)->firstOrFail();
+
+    expect($payable->platform_fee_cents)->toBe(1200)
+        ->and($payable->platform_fee_vat_cents)->toBe(180)
+        ->and($payable->net_due_cents)->toBe(60000 - 1500 - 1200 - 180);
+});
+
+it('cancelled payouts do not count towards the first-payout-of-month rule', function () {
+    config()->set('platform.payout_admin_fee_cents', 5000);
+
+    $org = Organisation::factory()->create();
+    PlatformPayout::factory()->for($org)->create([
+        'status' => 'cancelled',
+        'created_at' => now()->startOfMonth()->addSecond(),
+    ]);
+    ClubPayable::factory()->for($org)->create(['net_due_cents' => 10000, 'paid_out' => false]);
+
+    $payout = app(RequestPayout::class)->for($org);
+
+    expect($payout->admin_fee_cents)->toBe(0);
+});
 
 it('BatchClubPayouts command exports pending payouts to CSV and marks them exported with --mark-exported', function () {
     $org = Organisation::factory()->create(['name' => 'Alpha Rifle Club']);

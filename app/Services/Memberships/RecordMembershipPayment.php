@@ -88,8 +88,10 @@ class RecordMembershipPayment
             $platformFeeVat = (int) $stampedFeeVat;
         } else {
             $hasSubaccount = filled($invoice->organisation?->paystack_subaccount_id);
-            $platformFee = $hasSubaccount ? PlatformFees::feeCents($amount) : 0;
-            $platformFeeVat = $hasSubaccount ? PlatformFees::feeVatCents($platformFee) : 0;
+            $isBankTransfer = $invoice->organisation?->payout_method === 'bank_transfer';
+            $chargesPlatformFee = $hasSubaccount || $isBankTransfer;
+            $platformFee = $chargesPlatformFee ? PlatformFees::feeCents($amount) : 0;
+            $platformFeeVat = $chargesPlatformFee ? PlatformFees::feeVatCents($platformFee) : 0;
         }
 
         return [
