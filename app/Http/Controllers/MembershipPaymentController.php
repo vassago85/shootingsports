@@ -6,6 +6,7 @@ use App\Enums\MembershipInvoiceStatus;
 use App\Models\MembershipInvoice;
 use App\Models\User;
 use App\Services\Paystack\PaystackClient;
+use App\Support\PlatformFees;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -42,6 +43,10 @@ class MembershipPaymentController extends Controller
                 ->with('status', 'This club is not accepting online payments right now.');
         }
 
+        $split = PlatformFees::splitFor((int) $invoice->amount_cents);
+        $transactionCharge = $split['fee'] + $split['fee_vat'];
+        $hasSubaccount = $organisation->paystack_subaccount_id !== null;
+
         try {
             $init = $this->client->initializeOneOffTransaction(
                 email: (string) $user->email,
@@ -52,6 +57,9 @@ class MembershipPaymentController extends Controller
                     'invoice_id' => $invoice->id,
                     'user_id' => $user->id,
                 ],
+                subaccount: $organisation->paystack_subaccount_id,
+                transactionCharge: $hasSubaccount ? $transactionCharge : null,
+                bearer: $hasSubaccount ? 'subaccount' : null,
             );
         } catch (\Throwable $e) {
             report($e);

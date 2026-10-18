@@ -55,6 +55,16 @@
                                             wire:click="notifyPaidByEft({{ $invoice->id }})">I've paid by EFT</button>
                                     </div>
                                 </div>
+                                @if ($invoice->status === \App\Enums\MembershipInvoiceStatus::Issued && $member->organisation?->paystack_subaccount_id !== null)
+                                    @php($split = \App\Support\PlatformFees::splitFor((int) $invoice->amount_cents))
+                                    <div class="checkout-breakdown" data-test="checkout-breakdown" style="margin-top:10px">
+                                        <h3 style="margin:0 0 6px">Payment breakdown</h3>
+                                        <p style="margin:0">Fee to {{ $member->organisation->name }}: R{{ number_format(($invoice->amount_cents - $split['fee'] - $split['fee_vat']) / 100, 2) }}</p>
+                                        <p style="margin:0">Platform fee (shootingsports.co.za, incl. VAT): R{{ number_format(($split['fee'] + $split['fee_vat']) / 100, 2) }}</p>
+                                        <p style="margin:0"><strong>Total: R{{ number_format($invoice->amount_cents / 100, 2) }}</strong></p>
+                                        <p class="footer-note" style="margin:6px 0 0;color:var(--muted)">shootingsports.co.za collects on behalf of {{ $member->organisation->name }} under a Section 54 collection agent agreement.</p>
+                                    </div>
+                                @endif
                                 @if (filled($member->organisation?->membership_eft_instructions))
                                     <details style="margin-top:10px">
                                         <summary style="cursor:pointer">EFT details</summary>

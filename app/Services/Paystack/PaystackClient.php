@@ -90,6 +90,9 @@ class PaystackClient
         string $callbackUrl,
         ?string $reference = null,
         array $metadata = [],
+        ?string $subaccount = null,
+        ?int $transactionCharge = null,
+        ?string $bearer = null,
     ): array {
         $payload = [
             'email' => $email,
@@ -99,6 +102,18 @@ class PaystackClient
             'reference' => $reference ?? $this->generateReference(),
             'metadata' => $metadata,
         ];
+
+        if ($subaccount !== null) {
+            $payload['subaccount'] = $subaccount;
+        }
+
+        if ($transactionCharge !== null) {
+            $payload['transaction_charge'] = $transactionCharge;
+        }
+
+        if ($bearer !== null) {
+            $payload['bearer'] = $bearer;
+        }
 
         $response = $this->request()
             ->post($this->baseUrl.'/transaction/initialize', $payload)
