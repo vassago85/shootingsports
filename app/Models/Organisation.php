@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
 use App\Enums\MembershipStatus;
+use App\Enums\OrganisationKind;
 use App\Enums\OrganisationType;
 use App\Enums\Province;
 use App\Enums\VerificationState;
@@ -27,7 +28,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
-    'slug', 'name', 'short_name', 'type', 'parent_id', 'province', 'town',
+    'slug', 'name', 'short_name', 'type', 'kind', 'parent_id', 'province', 'town',
     'email', 'phone', 'website_url', 'facebook_url', 'description',
     'logo_path', 'accredited', 'visitors_welcome',
     'membership_enabled', 'accepts_applications',
@@ -47,6 +48,7 @@ class Organisation extends Model
     {
         return [
             'type' => OrganisationType::class,
+            'kind' => OrganisationKind::class,
             'province' => Province::class,
             'accredited' => 'boolean',
             'visitors_welcome' => 'boolean',
@@ -65,6 +67,16 @@ class Organisation extends Model
             'active_member_count' => 'integer',
             'tier_grace_ends_at' => 'date',
         ];
+    }
+
+    public function isClub(): bool
+    {
+        return ! $this->isSingleEvent();
+    }
+
+    public function isSingleEvent(): bool
+    {
+        return $this->kind === OrganisationKind::SingleEvent;
     }
 
     public function parent(): BelongsTo

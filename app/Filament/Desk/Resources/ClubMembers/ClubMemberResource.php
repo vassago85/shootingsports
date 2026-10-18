@@ -68,7 +68,7 @@ class ClubMemberResource extends Resource
     {
         $user = Auth::user();
 
-        return (bool) ($user?->is_staff || $user?->holdsAnyMemberManagingRole());
+        return (bool) ($user?->is_staff || $user?->holdsClubMemberManagingRole());
     }
 
     public static function canCreate(): bool

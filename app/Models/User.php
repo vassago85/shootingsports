@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\DigestFrequency;
 use App\Enums\MembershipStatus;
+use App\Enums\OrganisationKind;
 use App\Enums\OrganisationUserRole;
 use App\Enums\Plan;
 use App\Enums\Province;
@@ -389,6 +390,21 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             $this->hasDeskAccess() => '/desk',
             default => '/my-calendar',
         };
+    }
+
+    /**
+     * Member-managing role in at least one club-kind organisation.
+     * Single-event organisations never get the Club Desk tooling.
+     */
+    public function holdsClubMemberManagingRole(): bool
+    {
+        return $this->organisationMemberships()
+            ->whereIn('role', array_map(
+                fn (OrganisationUserRole $role): string => $role->value,
+                OrganisationUserRole::canManageMembers(),
+            ))
+            ->whereHas('organisation', fn ($query) => $query->where('kind', OrganisationKind::Club->value))
+            ->exists();
     }
 
     public function organisationMemberships(): HasMany

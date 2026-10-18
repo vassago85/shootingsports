@@ -9,9 +9,7 @@ use App\Models\PlatformPayment;
 use App\Models\PlatformSubscription;
 use App\Support\PlatformFees;
 use Carbon\CarbonInterface;
-use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -25,8 +23,6 @@ use Illuminate\Support\Facades\Log;
 class PlatformBillingWebhookHandler
 {
     public const PURPOSE = 'platform_subscription';
-
-    private const INVOICE_NUMBER_ATTEMPTS = 3;
 
     /**
      * @param  array<string, mixed>  $data
@@ -214,33 +210,7 @@ class PlatformBillingWebhookHandler
             'paystack_reference' => $payment->paystack_reference,
         ];
 
-        $attempt = 0;
-
-        while (true) {
-            try {
-                DB::transaction(fn () => PlatformInvoice::query()->create([
-                    ...$attributes,
-                    'invoice_number' => $this->nextInvoiceNumber($issuedOn->year, $attempt),
-                ]));
-
-                return;
-            } catch (UniqueConstraintViolationException $e) {
-                if (++$attempt >= self::INVOICE_NUMBER_ATTEMPTS) {
-                    throw $e;
-                }
-            }
-        }
-    }
-
-    private function nextInvoiceNumber(int $year, int $skip): string
-    {
-        $latest = PlatformInvoice::query()
-            ->where('invoice_number', 'like', "INV-{$year}-%")
-            ->max('invoice_number');
-
-        $sequence = $latest === null ? 0 : (int) substr((string) $latest, -6);
-
-        return sprintf('INV-%d-%06d', $year, $sequence + 1 + $skip);
+        app(PlatformInvoiceNumbers::class)->createInvoice($attributes, $issuedOn->year);
     }
 
     private function advance(CarbonInterface $from, BillingInterval $interval): CarbonInterface

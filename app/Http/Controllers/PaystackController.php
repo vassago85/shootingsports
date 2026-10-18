@@ -14,6 +14,7 @@ use App\Services\Memberships\RecordMembershipPayment;
 use App\Services\Paystack\PaystackClient;
 use App\Services\Paystack\SubscriptionApplier;
 use App\Services\Platform\PlatformBillingWebhookHandler;
+use App\Services\Platform\SingleEventPurchase;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -346,6 +347,12 @@ class PaystackController extends Controller
      */
     private function onChargeSuccess(array $data): void
     {
+        if ($this->metadataPurposeIs($data, SingleEventPurchase::PURPOSE)) {
+            app(SingleEventPurchase::class)->markPaid($data);
+
+            return;
+        }
+
         if ($this->isPlatformSubscription($data)) {
             $this->platformBilling->handle('charge.success', $data);
 

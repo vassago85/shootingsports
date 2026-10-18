@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
+use App\Enums\OrganisationKind;
 use App\Enums\OrganisationType;
 use App\Enums\Province;
 use App\Enums\VerificationState;
@@ -25,6 +26,7 @@ class OrganisationFactory extends Factory
             'name' => $name,
             'short_name' => fake()->optional()->lexify('????'),
             'type' => OrganisationType::Club,
+            'kind' => OrganisationKind::Club,
             'province' => fake()->randomElement(Province::cases()),
             'town' => fake()->city(),
             'email' => fake()->companyEmail(),

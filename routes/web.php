@@ -21,6 +21,7 @@ use App\Http\Controllers\MagazineReadController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\MembershipPaymentController;
 use App\Http\Controllers\OrganisationController;
+use App\Http\Controllers\OrganiseController;
 use App\Http\Controllers\PaystackController;
 use App\Http\Controllers\PlacementClickController;
 use App\Http\Controllers\ProviderController;
@@ -293,6 +294,12 @@ Route::post('/upgrade/cancel', [PaystackController::class, 'cancel'])
     ->name('upgrade.cancel');
 Route::get('/paystack/callback', [PaystackController::class, 'callback'])->name('paystack.callback');
 Route::post('/paystack/webhook', [PaystackController::class, 'webhook'])->name('paystack.webhook');
+
+// Single-event product: public signup + one-off Paystack charge. The
+// webhook (not the callback page) promotes the event out of Draft.
+Route::get('/organise', [OrganiseController::class, 'show'])->name('organise.show');
+Route::post('/organise', [OrganiseController::class, 'submit'])->name('organise.submit');
+Route::get('/organise/callback', [OrganiseController::class, 'callback'])->name('organise.callback');
 
 // Personal attendance log. All routes are auth-gated; the export
 // routes are additionally Pro-gated inside the controller so the UI

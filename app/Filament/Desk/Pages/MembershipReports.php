@@ -49,7 +49,7 @@ class MembershipReports extends Page
     {
         $user = Auth::user();
 
-        return $user instanceof User && ($user->is_staff || $user->holdsAnyMemberManagingRole());
+        return $user instanceof User && ($user->is_staff || $user->holdsClubMemberManagingRole());
     }
 
     /**
