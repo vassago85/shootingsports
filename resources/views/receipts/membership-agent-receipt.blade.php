@@ -7,7 +7,7 @@
     <table>
         <tr><td>Membership fee (to the club)</td><td>R{{ number_format(($invoice->amount_cents - $invoice->platform_fee_cents - $invoice->platform_fee_vat_cents) / 100, 2) }}</td></tr>
         <tr><td>Platform fee (shootingsports.co.za)</td><td>R{{ number_format($invoice->platform_fee_cents / 100, 2) }}</td></tr>
-        <tr><td>VAT on platform fee (15%)</td><td>R{{ number_format($invoice->platform_fee_vat_cents / 100, 2) }}</td></tr>
+        <tr><td>VAT on platform fee ({{ \App\Support\PlatformFees::vatBps() / 100 }}%)</td><td>R{{ number_format($invoice->platform_fee_vat_cents / 100, 2) }}</td></tr>
         <tr><th>Total paid</th><th>R{{ number_format($invoice->amount_cents / 100, 2) }}</th></tr>
     </table>
 

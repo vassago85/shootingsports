@@ -45,18 +45,25 @@ class MembershipPaymentController extends Controller
 
         $split = PlatformFees::splitFor((int) $invoice->amount_cents);
         $transactionCharge = $split['fee'] + $split['fee_vat'];
-        $hasSubaccount = $organisation->paystack_subaccount_id !== null;
+        $hasSubaccount = filled($organisation->paystack_subaccount_id);
+
+        $metadata = [
+            'purpose' => 'club_membership',
+            'invoice_id' => $invoice->id,
+            'user_id' => $user->id,
+        ];
+
+        if ($hasSubaccount) {
+            $metadata['platform_fee_cents'] = $split['fee'];
+            $metadata['platform_fee_vat_cents'] = $split['fee_vat'];
+        }
 
         try {
             $init = $this->client->initializeOneOffTransaction(
                 email: (string) $user->email,
                 amountCents: (int) $invoice->amount_cents,
                 callbackUrl: route('paystack.callback'),
-                metadata: [
-                    'purpose' => 'club_membership',
-                    'invoice_id' => $invoice->id,
-                    'user_id' => $user->id,
-                ],
+                metadata: $metadata,
                 subaccount: $organisation->paystack_subaccount_id,
                 transactionCharge: $hasSubaccount ? $transactionCharge : null,
                 bearer: $hasSubaccount ? 'subaccount' : null,

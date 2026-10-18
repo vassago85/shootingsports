@@ -55,7 +55,7 @@
                                             wire:click="notifyPaidByEft({{ $invoice->id }})">I've paid by EFT</button>
                                     </div>
                                 </div>
-                                @if ($invoice->status === \App\Enums\MembershipInvoiceStatus::Issued && $member->organisation?->paystack_subaccount_id !== null)
+                                @if ($invoice->status === \App\Enums\MembershipInvoiceStatus::Issued && filled($member->organisation?->paystack_subaccount_id))
                                     @php($split = \App\Support\PlatformFees::splitFor((int) $invoice->amount_cents))
                                     <div class="checkout-breakdown" data-test="checkout-breakdown" style="margin-top:10px">
                                         <h3 style="margin:0 0 6px">Payment breakdown</h3>

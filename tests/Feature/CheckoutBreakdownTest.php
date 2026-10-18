@@ -88,7 +88,9 @@ it('initialises the Paystack transaction with the subaccount split', function ()
     Http::assertSent(fn ($request) => $request['subaccount'] === 'ACCT_abc'
         && $request['transaction_charge'] === $expectedCharge
         && $request['transaction_charge'] === 1380
-        && $request['bearer'] === 'subaccount');
+        && $request['bearer'] === 'subaccount'
+        && $request['metadata']['platform_fee_cents'] === 1200
+        && $request['metadata']['platform_fee_vat_cents'] === 180);
 });
 
 it('omits the subaccount params when the club has no subaccount', function () {
@@ -153,6 +155,47 @@ it('populates the four fee columns when the charge.success webhook lands', funct
         ->and($invoice->platform_fee_cents)->toBe($fee)
         ->and($invoice->platform_fee_vat_cents)->toBe($feeVat)
         ->and($invoice->net_to_club_cents)->toBe(60000 - 1500 - $fee - $feeVat);
+});
+
+it('webhook prefers metadata-stamped fee split over current config', function () {
+    [, , , $invoice] = memberWithIssuedInvoice();
+    $invoice->forceFill(['paystack_reference' => 'ref_stamped'])->save();
+
+    config(['platform.fee_bps' => 500]);
+
+    $body = json_encode([
+        'id' => 'evt_checkout_stamped',
+        'event' => 'charge.success',
+        'data' => [
+            'reference' => 'ref_stamped',
+            'amount' => 60000,
+            'fees' => 1500,
+            'metadata' => [
+                'purpose' => 'club_membership',
+                'invoice_id' => $invoice->id,
+                'platform_fee_cents' => 1200,
+                'platform_fee_vat_cents' => 180,
+            ],
+        ],
+    ]);
+
+    $this->call(
+        method: 'POST',
+        uri: '/paystack/webhook',
+        server: [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_PAYSTACK_SIGNATURE' => hash_hmac('sha512', $body, 'sk_test_dummy'),
+        ],
+        content: $body,
+    )->assertOk();
+
+    expect(PlatformFees::feeCents(60000))->toBe(3000);
+
+    $invoice = $invoice->fresh();
+
+    expect($invoice->platform_fee_cents)->toBe(1200)
+        ->and($invoice->platform_fee_vat_cents)->toBe(180)
+        ->and($invoice->net_to_club_cents)->toBe(60000 - 1500 - 1200 - 180);
 });
 
 it('renders the agent receipt with the Section 54 breakdown', function () {

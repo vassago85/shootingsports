@@ -302,6 +302,7 @@ class PaystackController extends Controller
             MembershipInvoicePaymentMethod::Paystack,
             (string) data_get($data, 'reference', '') ?: null,
             gatewayFeeCents: (int) data_get($data, 'fees', 0),
+            metadata: is_array(data_get($data, 'metadata')) ? data_get($data, 'metadata') : null,
         );
     }
 
