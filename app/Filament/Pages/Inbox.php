@@ -19,6 +19,7 @@ use App\Models\Enquiry;
 use App\Models\Event;
 use App\Models\Media;
 use App\Models\Submission;
+use App\Support\Inbox\AgeLabel;
 use App\Support\RecordLinker;
 use BackedEnum;
 use Carbon\CarbonInterface;
@@ -231,7 +232,7 @@ class Inbox extends Page implements HasTable
 
     public function ageLabelPublic(?CarbonInterface $when): string
     {
-        return self::ageLabel($when);
+        return AgeLabel::for($when);
     }
 
     private function tableForActiveTab(Table $table): Table
@@ -307,7 +308,7 @@ class Inbox extends Page implements HasTable
                 TextColumn::make('user.name')->label('Author'),
                 TextColumn::make('age')
                     ->label('Age')
-                    ->getStateUsing(fn (Article $record): string => self::ageLabel($record->created_at)),
+                    ->getStateUsing(fn (Article $record): string => AgeLabel::for($record->created_at)),
             ])
             ->recordActions([
                 Action::make('publish')
@@ -406,20 +407,5 @@ class Inbox extends Page implements HasTable
             || Claim::query()->where('status', ClaimStatus::Pending)->where('created_at', '<', $threshold)->exists()
             || Media::query()->where('moderation_status', ModerationStatus::Pending)->where('created_at', '<', $threshold)->exists()
             || Article::query()->whereNull('published_at')->where('created_at', '<', $threshold)->exists();
-    }
-
-    private static function ageLabel(?CarbonInterface $when): string
-    {
-        if ($when === null) {
-            return '—';
-        }
-
-        $days = (int) $when->diffInDays(now());
-
-        return match (true) {
-            $days === 0 => 'today',
-            $days === 1 => '1 day',
-            default => "{$days} days",
-        };
     }
 }

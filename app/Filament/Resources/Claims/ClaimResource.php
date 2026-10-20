@@ -7,6 +7,7 @@ use App\Enums\OrganisationUserRole;
 use App\Filament\Resources\Claims\Pages\EditClaim;
 use App\Filament\Resources\Claims\Pages\ListClaims;
 use App\Models\Claim;
+use App\Support\Inbox\AgeLabel;
 use App\Support\RecordLinker;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -105,6 +106,9 @@ class ClaimResource extends Resource
                     ->label('Received')
                     ->dateTime()
                     ->sortable(),
+                TextColumn::make('age')
+                    ->label('Age')
+                    ->getStateUsing(fn (Claim $record): string => AgeLabel::for($record->created_at)),
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()

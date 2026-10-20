@@ -7,6 +7,7 @@ use App\Enums\ModerationStatus;
 use App\Filament\Resources\Media\Pages\EditMedia;
 use App\Filament\Resources\Media\Pages\ListMedia;
 use App\Models\Media;
+use App\Support\Inbox\AgeLabel;
 use App\Support\RecordLinker;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -100,6 +101,9 @@ class MediaResource extends Resource
                     ->label('Received')
                     ->dateTime()
                     ->sortable(),
+                TextColumn::make('age')
+                    ->label('Age')
+                    ->getStateUsing(fn (Media $record): string => AgeLabel::for($record->created_at)),
                 // Storage internals are hidden by default — staff moderate
                 // based on the attached record and the role, not the
                 // disk/path/dimensions.

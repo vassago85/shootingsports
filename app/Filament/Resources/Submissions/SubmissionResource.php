@@ -8,6 +8,7 @@ use App\Enums\SubmissionType;
 use App\Filament\Resources\Submissions\Pages\EditSubmission;
 use App\Filament\Resources\Submissions\Pages\ListSubmissions;
 use App\Models\Submission;
+use App\Support\Inbox\AgeLabel;
 use App\Support\RecordLinker;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -75,6 +76,12 @@ class SubmissionResource extends Resource
                     ->content(fn (?Submission $record): string => RecordLinker::label($record?->mergedInto)),
                 Select::make('moderator_id')
                     ->relationship('moderator', 'name'),
+                Textarea::make('reject_reason')
+                    ->label('Rejection reason')
+                    ->rows(3)
+                    ->visible(fn (?Submission $record): bool => filled($record?->reject_reason))
+                    ->disabled()
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -109,6 +116,13 @@ class SubmissionResource extends Resource
                     ->label('Received')
                     ->dateTime()
                     ->sortable(),
+                // Age-in-days — triage-scanning column so staff spot
+                // stale items without doing date math. Matches the
+                // "age in days" column on the Articles tab and the
+                // nav-badge stale-item threshold (3 days).
+                TextColumn::make('age')
+                    ->label('Age')
+                    ->getStateUsing(fn (Submission $record): string => AgeLabel::for($record->created_at)),
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
@@ -120,13 +134,37 @@ class SubmissionResource extends Resource
             ])
             ->recordActions([
                 Action::make('merge')
+                    ->label('Approve')
+                    ->color('success')
                     ->visible(fn (Submission $record): bool => $record->status === SubmissionStatus::Pending)
                     ->requiresConfirmation()
                     ->action(function (Submission $record): void {
                         app(MergeSubmission::class)($record, auth()->user());
                         Notification::make()->title('Submission merged.')->success()->send();
                     }),
-                EditAction::make(),
+                // Reject with a reason — mirrors the spec's two-action
+                // row (Approve + Reject with reason). The reason is
+                // stored on the submission so staff see WHY it was
+                // closed when they revisit the record later.
+                Action::make('reject')
+                    ->color('danger')
+                    ->visible(fn (Submission $record): bool => $record->status === SubmissionStatus::Pending)
+                    ->schema([
+                        Textarea::make('reason')
+                            ->label('Reason (shown in the record only — not emailed to the submitter)')
+                            ->rows(3)
+                            ->required(),
+                    ])
+                    ->requiresConfirmation()
+                    ->action(function (Submission $record, array $data): void {
+                        $record->forceFill([
+                            'status' => SubmissionStatus::Rejected,
+                            'moderator_id' => auth()->id(),
+                            'reject_reason' => (string) ($data['reason'] ?? ''),
+                        ])->save();
+                        Notification::make()->title('Submission rejected.')->success()->send();
+                    }),
+                EditAction::make()->label('Open'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

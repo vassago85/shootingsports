@@ -8,13 +8,16 @@ use App\Enums\PrelaunchContributorRole;
 use App\Filament\Resources\Enquiries\Pages\EditEnquiry;
 use App\Filament\Resources\Enquiries\Pages\ListEnquiries;
 use App\Models\Enquiry;
+use App\Support\Inbox\AgeLabel;
 use App\Support\RecordLinker;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\View;
@@ -140,12 +143,36 @@ class EnquiryResource extends Resource
                     ->badge()
                     ->toggleable(),
                 TextColumn::make('status')->badge(),
+                // Age-in-days — triage scan without date math. Same
+                // helper the Articles tab and the stale-badge rule
+                // use so the three agree on what counts as old.
+                TextColumn::make('age')
+                    ->label('Age')
+                    ->getStateUsing(fn (Enquiry $record): string => AgeLabel::for($record->created_at)),
             ])
             ->filters([
                 SelectFilter::make('status')->options(EnquiryStatus::class),
                 SelectFilter::make('type')->options(EnquiryType::class),
             ])
             ->recordActions([
+                // Mark Handled closes the enquiry without opening the
+                // edit form — one click triage for inbound notes that
+                // need no written reply. Hidden once the status is a
+                // terminal one so staff don't close a closed thing.
+                Action::make('mark_handled')
+                    ->label('Mark handled')
+                    ->icon(Heroicon::OutlinedCheckCircle)
+                    ->color('success')
+                    ->visible(fn (Enquiry $record): bool => ! in_array(
+                        $record->status,
+                        [EnquiryStatus::Closed, EnquiryStatus::Replied, EnquiryStatus::PendingConfirmation],
+                        true,
+                    ))
+                    ->requiresConfirmation()
+                    ->action(function (Enquiry $record): void {
+                        $record->forceFill(['status' => EnquiryStatus::Closed])->save();
+                        Notification::make()->title('Enquiry marked handled.')->success()->send();
+                    }),
                 EditAction::make()->label('Open'),
             ]);
     }

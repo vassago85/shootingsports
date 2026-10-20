@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 #[Fillable([
     'type', 'payload', 'submitter_name', 'submitter_email', 'status',
-    'merged_into_type', 'merged_into_id', 'moderator_id',
+    'merged_into_type', 'merged_into_id', 'moderator_id', 'reject_reason',
 ])]
 class Submission extends Model
 {
