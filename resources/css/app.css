@@ -3537,12 +3537,15 @@ html[lang] body.ss-public .fmt-top h3 {
 }
 .me-card.is-link h3::after {
     content: "›";
-    color: var(--slate);
+    color: var(--brass-dk);
     font-weight: 400;
     font-size: 18px;
-    transition: transform .15s, color .15s;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity .15s, transform .15s;
 }
-.me-card.is-link:hover h3::after { transform: translateX(2px); color: var(--brass-dk); }
+.me-card.is-link:hover h3::after,
+.me-card.is-link:focus-visible h3::after { opacity: 1; transform: translateX(0); }
 .me-card p { margin: 0; }
 .me-card .muted { color: var(--slate); font-size: 14px; }
 .me-card .me-card-foot { margin-top: auto; padding-top: 4px; }

@@ -37,6 +37,14 @@ class MeController extends Controller
             ->limit(2)
             ->get();
 
+        // The My calendar card is forward-looking — showing total saves
+        // (which counts past matches) misleads a shooter who last
+        // saved something months ago. "0 upcoming" is honest and
+        // nudges them to open the calendar.
+        $upcomingSavedCount = $user->savedEvents()
+            ->where('starts_at', '>=', now())
+            ->count();
+
         return view('public.me.index', [
             'user' => $user,
             'planLabel' => $user->subscriptionStatusLabel(),
@@ -48,8 +56,9 @@ class MeController extends Controller
             'logLimit' => $logLimit,
             'followCount' => $user->follows()->count(),
             'followLimit' => $followLimit,
-            'savedCount' => $user->savedEvents()->count(),
+            'upcomingSavedCount' => $upcomingSavedCount,
             'nextSavedEvents' => $nextSavedEvents,
+            'proSalesOpen' => (bool) config('plans.pro_enabled'),
         ]);
     }
 }

@@ -16,8 +16,8 @@
                     @if ($onTrial)
                         <span class="me-plan trial">Trial · {{ $user->trialDaysRemaining() }} days left</span>
                     @endif
-                    @if (! $planIsPro && ! $onTrial && config('plans.pro_enabled'))
-                        <a href="{{ route('upgrade') }}" class="me-upgrade-inline">Upgrade to Pro →</a>
+                    @if (! $planIsPro && ! $onTrial)
+                        <a href="{{ route('upgrade') }}" class="me-upgrade-inline">{{ $proSalesOpen ? 'Upgrade to Pro →' : 'Pro is coming →' }}</a>
                     @endif
                 </div>
             </div>
@@ -66,7 +66,7 @@
                     <a class="me-card is-link" href="{{ route('my-calendar') }}">
                         <h3>My calendar</h3>
                         <p class="muted">
-                            {{ $savedCount }} {{ \Illuminate\Support\Str::plural('match', $savedCount) }} saved
+                            {{ $upcomingSavedCount }} upcoming
                         </p>
                         @if ($nextSavedEvents->isNotEmpty())
                             <ul class="me-saved-list" aria-label="Next saved matches">
@@ -110,15 +110,15 @@
             </div>
         </section>
 
-        @if (! $planIsPro && config('plans.pro_enabled'))
+        @if (! $planIsPro && ! $onTrial)
             <section class="me-section">
                 <div class="wrap">
                     <div class="me-upgrade-strip">
                         <div>
-                            <h2>Pro removes the limits</h2>
-                            <p>Unlimited follows, unlimited log history, dedicated-status export, household up to four.</p>
+                            <h2>{{ $proSalesOpen ? 'Pro removes the limits' : 'Pro is coming' }}</h2>
+                            <p>Unlimited follows, unlimited log history, dedicated-status export, household up to four.{{ $proSalesOpen ? '' : ' Join the waitlist to hear first when it opens.' }}</p>
                         </div>
-                        <a class="btn" href="{{ route('upgrade') }}">See Pro</a>
+                        <a class="btn" href="{{ route('upgrade') }}">{{ $proSalesOpen ? 'See Pro' : 'Join the waitlist' }}</a>
                     </div>
                 </div>
             </section>
