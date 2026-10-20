@@ -7,7 +7,7 @@
         $planClass = $planIsPro ? 'pro' : ($onTrial ? 'trial' : '');
     @endphp
     <main id="main">
-        <section class="page-hero">
+        <section class="page-hero me-hero">
             <div class="wrap">
                 <p class="label">My home</p>
                 <h1>Welcome back, {{ $user->name }}</h1>

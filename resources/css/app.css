@@ -3601,7 +3601,9 @@ html[lang] body.ss-public .fmt-top h3 {
 .me-upgrade-strip h2 { margin: 0 0 4px; font-size: 18px; }
 .me-upgrade-strip p { margin: 0; color: var(--slate); max-width: 60ch; }
 
-/* Tighten the /me page — the default section.block padding of 72px
-   leaves a huge gap after the hero. Scope to the page so no other
-   screen is affected. */
-body.ss-public main .me-section:first-of-type { padding-top: 24px; }
+/* Tighten the /me page — the default page-hero bottom padding (40px)
+   plus a 32px first-section top padding ran to ~40px of visible gap
+   after Chrome's margin collapsing. Scope both shrinks to the /me
+   hero and its sibling so no other page's hero padding is touched. */
+.page-hero.me-hero { padding-bottom: 20px; }
+body.ss-public main .me-section:first-of-type { padding-top: 8px; }
