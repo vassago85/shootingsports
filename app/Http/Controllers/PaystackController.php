@@ -152,7 +152,7 @@ class PaystackController extends Controller
     {
         $rawBody = $request->getContent();
         $signature = (string) $request->header('x-paystack-signature', '');
-        $secretKey = (string) config('services.paystack.secret_key');
+        $secretKey = PaystackClient::webhookSigningSecret();
 
         if ($secretKey === '' || $signature === '' || ! PaystackClient::verifyWebhookSignature($rawBody, $signature, $secretKey)) {
             // Return 200 anyway per Paystack docs — a 401 causes their

@@ -162,6 +162,7 @@ it('routes a Paystack club_membership webhook to the invoice recorder', function
     // give it one or signature verification short-circuits with
     // {"status":"invalid"} and the invoice never gets touched.
     config()->set('services.paystack.secret_key', 'sk_test_dummy');
+    config()->set('services.paystack.webhook_secret', null);
 
     $organisation = Organisation::factory()->create();
     OrganisationMembershipFee::factory()->senior(60000)->create(['organisation_id' => $organisation->id]);

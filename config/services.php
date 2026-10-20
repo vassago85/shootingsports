@@ -81,6 +81,9 @@ return [
     'paystack' => [
         'public_key' => env('PAYSTACK_PUBLIC_KEY'),
         'secret_key' => env('PAYSTACK_SECRET_KEY'),
+        // Paystack signs webhooks with the secret key. Set this only when
+        // a dedicated signing secret is issued; blank falls back to secret_key.
+        'webhook_secret' => env('PAYSTACK_WEBHOOK_SECRET'),
         'base_url' => env('PAYSTACK_BASE_URL', 'https://api.paystack.co'),
         'currency' => env('PAYSTACK_CURRENCY', 'ZAR'),
         'plan_codes' => [

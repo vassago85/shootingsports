@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -122,6 +123,35 @@ class Organisation extends Model
     public function membershipInvoices(): HasMany
     {
         return $this->hasMany(MembershipInvoice::class);
+    }
+
+    public function payoutAccount(): HasOne
+    {
+        return $this->hasOne(OrganisationPayoutAccount::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function balanceEntries(): HasMany
+    {
+        return $this->hasMany(OrganisationBalanceEntry::class);
+    }
+
+    /**
+     * Online match entries settle to this club only while its
+     * subaccount is approved and Paystack has an ACCT_ code for it.
+     */
+    public function acceptsOnlineMatchPayments(): bool
+    {
+        return (bool) $this->payoutAccount?->acceptsOnlinePayments();
+    }
+
+    public function amountOwedToPlatformCents(): int
+    {
+        return (int) $this->balanceEntries()->sum('amount_cents');
     }
 
     public function guestVisits(): HasMany

@@ -7,6 +7,7 @@ use App\Models\User;
 beforeEach(function () {
     config([
         'services.paystack.secret_key' => 'sk_test_dummy',
+        'services.paystack.webhook_secret' => null,
         'services.paystack.base_url' => 'https://api.paystack.co',
     ]);
 });
