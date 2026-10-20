@@ -202,14 +202,17 @@ it('does not fan out when a non-status field changes on a saved event', function
     Bus::assertNotDispatched(SendPushNotification::class);
 });
 
-it('does not fan out when the status change is not Cancelled', function () {
+it('does not fan out when the status change is not one of the paged transitions', function () {
     Bus::fake([SendPushNotification::class]);
 
     $event = Event::factory()->create(['status' => EventStatus::Confirmed]);
     $saver = User::factory()->create();
     $saver->savedEvents()->attach($event);
 
-    $event->forceFill(['status' => EventStatus::EntriesOpen])->save();
+    // Full is a status transition we care about operationally but not
+    // one that pages the shooter — the saved match hasn't changed in a
+    // way that requires action from them.
+    $event->forceFill(['status' => EventStatus::Full])->save();
 
     Bus::assertNotDispatched(SendPushNotification::class);
 });
