@@ -1,6 +1,33 @@
 <x-filament-panels::page>
     <div class="ss-desk ss-desk-{{ $mode }}">
-        @if ($mode === 'none')
+        @if (! empty($showCapabilityCards) && $showCapabilityCards)
+            <div class="ss-card ss-mt" data-test="capability-cards">
+                <h3>What you manage</h3>
+                <p class="ss-muted" style="margin-top:-4px">
+                    One account, every hat. Light actions live here; members, invoices,
+                    magazine, and billing open on their own pages.
+                </p>
+                <div class="ss-grid3">
+                    @foreach ($capabilityCards as $card)
+                        <article
+                            class="ss-tile"
+                            data-test="capability-card"
+                            data-kind="{{ $card['kind'] }}"
+                            style="text-align:left"
+                        >
+                            <div class="ss-l">{{ ucfirst($card['kind']) }}</div>
+                            <h4 style="margin:4px 0 2px">{{ $card['title'] }}</h4>
+                            <p class="ss-muted" style="margin:0 0 8px">{{ $card['summary'] }}</p>
+                            <a class="ss-btn ss-btn-sm" href="{{ $card['primary_action']['url'] }}">
+                                {{ $card['primary_action']['label'] }}
+                            </a>
+                        </article>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        @if ($mode === 'none' && empty($capabilityCards))
             <div class="ss-noaccess">
                 <div class="ss-eyebrow">Desk</div>
                 <h1 class="ss-h1">Your desk opens once you manage a listing</h1>
@@ -19,6 +46,11 @@
                         <h3>Have a business?</h3>
                         <p class="ss-muted">Gunsmith, dealer, ammo, optics, instructor. Listing is free.</p>
                         <a class="ss-btn ss-btn-ghost" href="{{ $listBusinessUrl }}">List your business</a>
+                    </div>
+                    <div class="ss-card">
+                        <h3>Run a range?</h3>
+                        <p class="ss-muted">Open your range in the directory, then claim it so you can keep the details current.</p>
+                        <a class="ss-btn ss-btn-ghost" href="{{ $claimRangeUrl }}">Claim a range</a>
                     </div>
                 </div>
 

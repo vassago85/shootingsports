@@ -18,6 +18,7 @@ use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\MagazineIssueController;
 use App\Http\Controllers\MagazineReadController;
 use App\Http\Controllers\MapController;
+use App\Http\Controllers\MeController;
 use App\Http\Controllers\MembershipPaymentController;
 use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\PaystackController;
@@ -162,9 +163,22 @@ Route::get('/matches/{slug}', function (string $slug) {
     return redirect()->route('events.show', $slug, 301);
 })->where('slug', '^(?!submit$).+');
 
-Route::get('/my-calendar', [ShooterCalendarController::class, 'mine'])
+// Shooter home. Every account is a shooter first; the page shows the
+// Manage block only when hasDeskAccess() is true (club, shop, range,
+// or media partner). The /me/* sub-routes host what used to live at
+// /my-calendar, /my-log, and /settings/notifications; the old URLs
+// 301 to the new ones so bookmarks and emailed links keep working.
+// Route names stay the same (my-calendar, my-log, settings.notifications)
+// so every existing route() caller resolves to the new URL with no
+// bounce — only humans typing the old URL hit the redirect.
+Route::get('/me', [MeController::class, 'show'])
+    ->middleware('auth')
+    ->name('me');
+
+Route::get('/me/calendar', [ShooterCalendarController::class, 'mine'])
     ->middleware('auth')
     ->name('my-calendar');
+Route::redirect('/my-calendar', '/me/calendar', 301);
 Route::get('/shooters/{shooter}/calendar.ics', [IcalController::class, 'shooter'])->name('ical.shooter');
 Route::get('/shooters/{shooter}', [ShooterCalendarController::class, 'show'])->name('shooters.show');
 
@@ -293,15 +307,22 @@ Route::post('/upgrade/cancel', [PaystackController::class, 'cancel'])
 Route::get('/paystack/callback', [PaystackController::class, 'callback'])->name('paystack.callback');
 Route::post('/paystack/webhook', [PaystackController::class, 'webhook'])->name('paystack.webhook');
 
-// Personal attendance log. All routes are auth-gated; the export
+// Personal attendance log. Lives under /me/log so it sits next to
+// the shooter home at /me. All routes are auth-gated; the export
 // routes are additionally Pro-gated inside the controller so the UI
-// can render an upgrade CTA instead of a 403 for Free users.
+// can render an upgrade CTA instead of a 403 for Free users. The
+// three GET URLs that users may have bookmarked at /my-log/* 301 to
+// the new /me/log/* equivalents. Route names stay the same so every
+// existing route() caller resolves to the new URL with no bounce.
 Route::middleware('auth')->group(function (): void {
-    Route::get('/my-log', [ShooterLogController::class, 'index'])->name('my-log');
-    Route::delete('/my-log/{attendedEvent}', [ShooterLogController::class, 'destroy'])->name('my-log.destroy');
-    Route::get('/my-log/export/csv', [ShooterLogController::class, 'exportCsv'])->name('my-log.export.csv');
-    Route::get('/my-log/print', [ShooterLogController::class, 'printable'])->name('my-log.print');
+    Route::get('/me/log', [ShooterLogController::class, 'index'])->name('my-log');
+    Route::delete('/me/log/{attendedEvent}', [ShooterLogController::class, 'destroy'])->name('my-log.destroy');
+    Route::get('/me/log/export/csv', [ShooterLogController::class, 'exportCsv'])->name('my-log.export.csv');
+    Route::get('/me/log/print', [ShooterLogController::class, 'printable'])->name('my-log.print');
 });
+Route::redirect('/my-log', '/me/log', 301);
+Route::redirect('/my-log/export/csv', '/me/log/export/csv', 301);
+Route::redirect('/my-log/print', '/me/log/print', 301);
 
 // Member self-service. Linked members see every ClubMember record
 // where user_id matches or the email matches theirs; the Livewire
@@ -320,11 +341,15 @@ Route::middleware('auth')->group(function (): void {
 // Email preferences. Two unauthenticated endpoints (one-click
 // unsubscribe + resubscribe) that identify the user via a per-account
 // token so they work from any inbox. One authenticated endpoint
-// (/settings/notifications) for the full per-category preferences UI.
+// (/me/settings) for the full per-category preferences UI. The old
+// /settings/notifications URL 301s to the new home; the route name
+// stays the same so every existing route() caller resolves to the
+// new URL with no bounce.
 Route::get('/email/unsubscribe/{token}', [UnsubscribeController::class, 'show'])->name('email.unsubscribe');
 Route::post('/email/unsubscribe/{token}', [UnsubscribeController::class, 'resubscribe'])->name('email.resubscribe');
-Route::get('/settings/notifications', NotificationPreferences::class)
+Route::get('/me/settings', NotificationPreferences::class)
     ->middleware('auth')
     ->name('settings.notifications');
+Route::redirect('/settings/notifications', '/me/settings', 301);
 
 require __DIR__.'/mockups.php';

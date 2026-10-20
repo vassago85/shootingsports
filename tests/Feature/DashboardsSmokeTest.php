@@ -45,7 +45,7 @@ it('shuts a non-staff user out of the admin dashboard', function () {
     // shooter who wanders in; they bounce to their default home.
     $this->actingAs($shooter)
         ->get(StaffDashboard::getUrl())
-        ->assertRedirect('/my-calendar');
+        ->assertRedirect(route('my-calendar'));
 });
 
 // ---- MD (desk) dashboard -------------------------------------------------

@@ -69,7 +69,7 @@ it('creates a shooter-only account and lands them on /my-calendar', function () 
         ->set('password', 'longenoughpassword')
         ->set('password_confirmation', 'longenoughpassword')
         ->call('register')
-        ->assertRedirect('/my-calendar');
+        ->assertRedirect(route('my-calendar'));
 
     $user = User::query()->where('email', 'sam@example.test')->firstOrFail();
 
@@ -245,7 +245,7 @@ it('logs in a shooter and redirects them to /my-calendar', function () {
         ->set('email', 'sam@example.test')
         ->set('password', 'longenoughpassword')
         ->call('authenticate')
-        ->assertRedirect('/my-calendar');
+        ->assertRedirect(route('my-calendar'));
 });
 
 it('logs in a match director and redirects them to /desk', function () {
@@ -326,7 +326,7 @@ it('soft-redirects a plain shooter from /admin to their default home', function 
 
     $this->actingAs($shooter)
         ->get('/admin')
-        ->assertRedirect('/my-calendar')
+        ->assertRedirect(route('my-calendar'))
         ->assertSessionHas('status', 'The admin area is staff only.');
 });
 

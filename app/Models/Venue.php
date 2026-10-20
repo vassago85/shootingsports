@@ -6,6 +6,7 @@ use App\Enums\GautengMetro;
 use App\Enums\GeocodeSource;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
+use App\Enums\MembershipStatus;
 use App\Enums\ProviderTier;
 use App\Enums\Province;
 use App\Enums\VenueAccess;
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
@@ -142,6 +144,38 @@ class Venue extends Model
     public function claimedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'claimed_by');
+    }
+
+    /**
+     * Every user-level pivot row (pending, approved, rejected). The
+     * approved-only subset lives on {@see managers()} and is what the
+     * desk + API should scope by.
+     *
+     * @return HasMany<VenueMembership, $this>
+     */
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(VenueMembership::class);
+    }
+
+    /** @return BelongsToMany<User, $this> */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'venue_user')
+            ->withPivot(['role', 'status', 'requested_at', 'approved_at'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Approved managers (range owners / editors) only — the people the
+     * Desk's ranges surface should scope to.
+     *
+     * @return BelongsToMany<User, $this>
+     */
+    public function managers(): BelongsToMany
+    {
+        return $this->users()
+            ->wherePivot('status', MembershipStatus::Approved->value);
     }
 
     public function events(): HasMany

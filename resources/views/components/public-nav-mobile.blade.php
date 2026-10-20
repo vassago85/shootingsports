@@ -35,10 +35,11 @@
     <a href="{{ route('claim') }}">For clubs</a>
 
     @auth
+        <a href="{{ route('me') }}">My home</a>
         <a href="{{ route('my-calendar') }}">My calendar</a>
         <a href="{{ route('my-log') }}">My log</a>
         <a href="{{ route('settings.notifications') }}">Notifications</a>
-        @if (auth()->user()?->is_staff || auth()->user()?->is_match_director || auth()->user()?->is_media_partner)
+        @if (auth()->user()?->is_staff || auth()->user()?->hasDeskAccess())
             <a href="{{ url('/desk') }}">Desk</a>
         @endif
         @unless (auth()->user()->is_staff || auth()->user()->is_match_director)

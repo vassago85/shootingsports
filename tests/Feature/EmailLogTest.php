@@ -43,5 +43,5 @@ it('hides the email log from a shooter', function () {
 
     $this->actingAs($shooter)
         ->get(EmailLogResource::getUrl('index'))
-        ->assertRedirect('/my-calendar');
+        ->assertRedirect(route('my-calendar'));
 });

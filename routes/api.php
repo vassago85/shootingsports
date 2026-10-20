@@ -1,9 +1,13 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\CapabilitiesController;
 use App\Http\Controllers\Api\V1\DeviceTokenController;
 use App\Http\Controllers\Api\V1\DisciplineController;
 use App\Http\Controllers\Api\V1\EventController;
+use App\Http\Controllers\Api\V1\ManagedEnquiryController;
+use App\Http\Controllers\Api\V1\ManagedEventController;
+use App\Http\Controllers\Api\V1\ManagedPlacementController;
 use App\Http\Controllers\Api\V1\MapController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\SavedEventController;
@@ -53,5 +57,25 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
 
         Route::post('device-tokens', [DeviceTokenController::class, 'store'])->name('device-tokens.store');
         Route::delete('device-tokens', [DeviceTokenController::class, 'destroy'])->name('device-tokens.destroy');
+
+        // Manage hub — the mobile Me tab reads capabilities from here
+        // instead of re-deriving the clubs/shops/ranges list from a
+        // dozen individual API calls.
+        Route::get('capabilities', [CapabilitiesController::class, 'index'])->name('capabilities.index');
+
+        // Light manage endpoints. Everything heavier (member register,
+        // invoices, event wizard, placement edits, magazine issues)
+        // stays on the desk website.
+        Route::get('events', [ManagedEventController::class, 'index'])->name('events.index');
+        Route::patch('events/{eventId}/status', [ManagedEventController::class, 'updateStatus'])
+            ->where('eventId', '[0-9]+')
+            ->name('events.status');
+
+        Route::get('enquiries', [ManagedEnquiryController::class, 'index'])->name('enquiries.index');
+        Route::post('enquiries/{enquiryId}/read', [ManagedEnquiryController::class, 'markRead'])
+            ->where('enquiryId', '[0-9]+')
+            ->name('enquiries.read');
+
+        Route::get('placements', [ManagedPlacementController::class, 'index'])->name('placements.index');
     });
 });

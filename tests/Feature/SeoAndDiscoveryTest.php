@@ -231,7 +231,7 @@ it('ships a robots.txt with the sitemap and no admin path advertisements', funct
         ->assertSee('Sitemap: '.url('/sitemap.xml'), false)
         ->assertDontSee('Disallow: /desk', false)
         ->assertDontSee('Disallow: /admin', false)
-        ->assertDontSee('Disallow: /my-calendar', false);
+        ->assertDontSee('Disallow: /me', false);
 });
 
 it('serves the pages sitemap with static URLs and skips private surfaces', function () {
@@ -249,7 +249,7 @@ it('serves the pages sitemap with static URLs and skips private surfaces', funct
         ->assertDontSee('/claim', false)
         ->assertDontSee('/desk', false)
         ->assertDontSee('/admin', false)
-        ->assertDontSee('my-calendar', false);
+        ->assertDontSee('/me/', false);
 });
 
 it('lists the pages sitemap in the sitemap index', function () {

@@ -49,8 +49,8 @@
                     </svg>
                 </a>
                 @auth
-                    <a class="btn ghost on-dark" href="{{ route('my-calendar') }}">Account</a>
-                    @if (auth()->user()?->is_staff || auth()->user()?->is_match_director || auth()->user()?->is_media_partner)
+                    <a class="btn ghost on-dark" href="{{ route('me') }}">My home</a>
+                    @if (auth()->user()?->is_staff || auth()->user()?->hasDeskAccess())
                         <a class="btn ghost on-dark" href="{{ url('/desk') }}">Desk</a>
                     @endif
                 @else

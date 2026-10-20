@@ -70,6 +70,7 @@ class DeskPanelProvider extends PanelProvider
             // Mockup s3/s5 nav groups. Hunting / Big Game stay parked.
             ->navigationGroups([
                 'Your clubs',
+                'Your ranges',
                 'Your business',
                 'More',
                 'Club',

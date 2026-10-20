@@ -58,5 +58,5 @@ it('refuses the page pictures desk to anyone who is not staff', function () {
 
     $this->actingAs($shooter)
         ->get(ManagePagePictures::getUrl())
-        ->assertRedirect('/my-calendar');
+        ->assertRedirect(route('my-calendar'));
 });

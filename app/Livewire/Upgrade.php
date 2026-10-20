@@ -78,7 +78,7 @@ class Upgrade extends Component
         // back on /upgrade after starting a trial feels weird — nothing
         // more to do here.
         session()->flash('status', 'Your 30-day Pro trial has started. No card, no commitment.');
-        $this->redirect('/my-calendar', navigate: false);
+        $this->redirect(route('my-calendar'), navigate: false);
     }
 
     public function checkout(PaystackClient $paystack): void

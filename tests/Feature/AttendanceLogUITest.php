@@ -12,15 +12,15 @@ beforeEach(function () {
     $this->withoutVite();
 });
 
-it('a guest hitting /my-log is redirected to the login page', function () {
-    $this->get('/my-log')->assertRedirect(route('login'));
+it('a guest hitting the log is redirected to the login page', function () {
+    $this->get(route('my-log'))->assertRedirect(route('login'));
 });
 
-it('/my-log renders for a signed-in user with no entries', function () {
+it('the log renders for a signed-in user with no entries', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->get('/my-log')
+        ->get(route('my-log'))
         ->assertOk()
         ->assertSee('Attendance record')
         ->assertSee('No matches logged');
@@ -118,12 +118,12 @@ it('AddManualAttendance validates the required fields', function () {
     expect(AttendedEvent::count())->toBe(0);
 });
 
-it('deleting an entry from /my-log removes it', function () {
+it('deleting an entry from the log removes it', function () {
     $user = User::factory()->create(['plan' => Plan::Pro]);
     $entry = AttendedEvent::factory()->create(['user_id' => $user->id]);
 
     $this->actingAs($user)
-        ->delete('/my-log/'.$entry->id)
+        ->delete(route('my-log.destroy', $entry->id))
         ->assertRedirect();
 
     expect(AttendedEvent::query()->find($entry->id))->toBeNull();
@@ -136,13 +136,13 @@ it('a user cannot delete another users log entry', function () {
     $entry = AttendedEvent::factory()->create(['user_id' => $theirs->id]);
 
     $this->actingAs($mine)
-        ->delete('/my-log/'.$entry->id)
+        ->delete(route('my-log.destroy', $entry->id))
         ->assertForbidden();
 
     expect(AttendedEvent::query()->find($entry->id))->not->toBeNull();
 });
 
-it('/my-log filters entries by year', function () {
+it('the log filters entries by year', function () {
     $user = User::factory()->create(['plan' => Plan::Pro]);
 
     AttendedEvent::factory()->create([
@@ -157,13 +157,13 @@ it('/my-log filters entries by year', function () {
     ]);
 
     $this->actingAs($user)
-        ->get('/my-log?year='.now()->year)
+        ->get(route('my-log', ['year' => now()->year]))
         ->assertOk()
         ->assertSee('This Year Match')
         ->assertDontSee('Old Match From 2024');
 
     $this->actingAs($user)
-        ->get('/my-log?year=2024')
+        ->get(route('my-log', ['year' => 2024]))
         ->assertOk()
         ->assertSee('Old Match From 2024')
         ->assertDontSee('This Year Match');

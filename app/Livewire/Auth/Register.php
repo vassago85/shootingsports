@@ -181,7 +181,7 @@ class Register extends Component
             return;
         }
 
-        $this->redirectIntended('/my-calendar', navigate: false);
+        $this->redirectIntended(route('my-calendar'), navigate: false);
     }
 
     public function render()

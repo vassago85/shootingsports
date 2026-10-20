@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ClaimStatus;
+use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Enums\OrganisationUserRole;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -78,6 +79,21 @@ class Claim extends Model
                     'md_rejection_reason' => null,
                 ])->save();
             }
+        }
+
+        if ($claimable instanceof Venue) {
+            VenueMembership::query()->updateOrCreate(
+                [
+                    'venue_id' => $claimable->id,
+                    'user_id' => $this->user_id,
+                ],
+                [
+                    'role' => MembershipRole::Owner->value,
+                    'status' => MembershipStatus::Approved->value,
+                    'requested_at' => $this->created_at,
+                    'approved_at' => now(),
+                ],
+            );
         }
     }
 

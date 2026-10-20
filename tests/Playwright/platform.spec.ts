@@ -45,7 +45,7 @@ test('a shooter can record an entry without paying on the site', async ({ page }
     await page.getByLabel('Email').fill('playwright@shootingsports.test');
     await page.getByLabel('Password').fill('password');
     await page.getByRole('button', { name: 'Log in' }).click();
-    await page.waitForURL('**/my-calendar');
+    await page.waitForURL('**/me/calendar');
 
     await page.goto('/events/playwright-club-match');
     await page.getByRole('button', { name: 'Enter this event' }).click();

@@ -43,7 +43,7 @@ it('keeps member routes gated while the public directory is exposed', function (
     $this->get('/register')->assertOk();
 
     $this->actingAs(User::factory()->create())
-        ->get('/my-calendar')
+        ->get(route('my-calendar'))
         ->assertRedirect(route('coming-soon'));
 });
 
@@ -165,7 +165,7 @@ it('serves robots and a schema-valid sitemap in both indexability states', funct
     expect($open->getContent())
         ->not->toContain('Disallow: /admin')
         ->not->toContain('Disallow: /desk')
-        ->not->toContain('Disallow: /my-calendar');
+        ->not->toContain('Disallow: /me');
 
     $index = $this->get('/sitemap.xml')->assertOk();
     expect(sitemapRoot($index->getContent()))->toBe('sitemapindex');

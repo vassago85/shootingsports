@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Support\DeskCapabilities;
+use Illuminate\View\View;
+
+/**
+ * The shooter's home on the public site. Every account is a shooter
+ * first; the Manage block only appears when the user has stacked a
+ * club, shop, range, or media capability on top. Heavy desk work
+ * (members, invoices, magazine, billing) stays behind the website
+ * links on each capability card.
+ */
+class MeController extends Controller
+{
+    public function show(): View
+    {
+        $user = auth()->user();
+        abort_unless($user instanceof User, 401);
+        $user->ensureCalendarSlug();
+
+        $capabilityCards = DeskCapabilities::for($user);
+
+        $logLimit = $user->limit('attended_events_slots');
+        $followLimit = $user->limit('follows');
+
+        return view('public.me.index', [
+            'user' => $user,
+            'planLabel' => $user->subscriptionStatusLabel(),
+            'planIsPro' => $user->isPro(),
+            'onTrial' => $user->isOnTrial(),
+            'capabilityCards' => $capabilityCards,
+            'hasDeskAccess' => $user->hasDeskAccess(),
+            'logCount' => $user->attendedEvents()->count(),
+            'logLimit' => $logLimit,
+            'followCount' => $user->follows()->count(),
+            'followLimit' => $followLimit,
+            'savedCount' => $user->savedEvents()->count(),
+        ]);
+    }
+}

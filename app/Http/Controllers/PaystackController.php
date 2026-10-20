@@ -104,7 +104,7 @@ class PaystackController extends Controller
             auth()->login($user);
         }
 
-        return redirect('/my-calendar')->with('status', 'Welcome to Pro. Renewal happens automatically at the end of each billing cycle.');
+        return redirect()->route('my-calendar')->with('status', 'Welcome to Pro. Renewal happens automatically at the end of each billing cycle.');
     }
 
     /**

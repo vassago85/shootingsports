@@ -80,5 +80,5 @@ it('soft-redirects non-staff away from the admin panel', function () {
 
     $this->actingAs($shooter)
         ->get('/admin')
-        ->assertRedirect('/my-calendar');
+        ->assertRedirect(route('my-calendar'));
 });

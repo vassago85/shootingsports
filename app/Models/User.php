@@ -164,6 +164,12 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->hasMany(ProviderMembership::class);
     }
 
+    /** @return HasMany<VenueMembership, $this> */
+    public function venueMemberships(): HasMany
+    {
+        return $this->hasMany(VenueMembership::class);
+    }
+
     /**
      * Organisations this user actually manages (approved only). Phase
      * C scopes the desk to this collection; Phase D's event wizard
@@ -190,15 +196,39 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     }
 
     /**
-     * True when the user has at least one approved organisation OR
-     * provider membership. Phase C uses this to gate the Desk panel.
+     * Ranges this user actually manages (approved only). Range
+     * ownership is a first-class capability stacked on the shooter
+     * account, same shape as `managedProviders()` for shops.
+     *
+     * @return BelongsToMany<Venue, $this>
+     */
+    public function managedVenues(): BelongsToMany
+    {
+        return $this->belongsToMany(Venue::class, 'venue_user')
+            ->withPivot(['role', 'status', 'requested_at', 'approved_at'])
+            ->wherePivot('status', MembershipStatus::Approved->value)
+            ->withTimestamps();
+    }
+
+    /**
+     * True when the user holds at least one approved capability on
+     * top of being a shooter — club, shop, range, or media partner.
+     * Staff do not get desk access from this method alone; the panel
+     * provider decides whether they can open `/desk` directly.
      */
     public function hasDeskAccess(): bool
     {
+        if ($this->is_media_partner === true) {
+            return true;
+        }
+
         return $this->organisationMemberships()
             ->where('status', MembershipStatus::Approved->value)
             ->exists()
             || $this->providerMemberships()
+                ->where('status', MembershipStatus::Approved->value)
+                ->exists()
+            || $this->venueMemberships()
                 ->where('status', MembershipStatus::Approved->value)
                 ->exists();
     }
@@ -215,6 +245,27 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     {
         return $this->providerMemberships()
             ->where('provider_id', $provider->id)
+            ->where('status', MembershipStatus::Approved->value)
+            ->exists();
+    }
+
+    public function managesVenue(Venue $venue): bool
+    {
+        return $this->venueMemberships()
+            ->where('venue_id', $venue->id)
+            ->where('status', MembershipStatus::Approved->value)
+            ->exists();
+    }
+
+    /**
+     * True when the user is a range owner or editor on at least one
+     * venue. Mirrors {@see isSupplier()} for shops and backs the
+     * Range capability card on the desk + the `range` entry in the
+     * `/api/v1/me` capabilities payload.
+     */
+    public function isRangeManager(): bool
+    {
+        return $this->venueMemberships()
             ->where('status', MembershipStatus::Approved->value)
             ->exists();
     }
@@ -387,7 +438,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             $this->holdsAnyMemberManagingRole(),
             $this->isSupplier(),
             $this->hasDeskAccess() => '/desk',
-            default => '/my-calendar',
+            default => '/me/calendar',
         };
     }
 

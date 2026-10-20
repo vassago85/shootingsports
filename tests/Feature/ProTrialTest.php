@@ -147,7 +147,7 @@ it('/upgrade startTrial() action starts a fresh trial and redirects to /my-calen
     Livewire::actingAs($user)
         ->test(Upgrade::class)
         ->call('startTrial')
-        ->assertRedirect('/my-calendar');
+        ->assertRedirect(route('my-calendar'));
 
     expect($user->fresh()->isOnTrial())->toBeTrue();
 });

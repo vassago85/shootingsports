@@ -132,5 +132,5 @@ it('keeps non-staff out of the calendar imports page', function () {
     $this->actingAs(User::factory()->create());
 
     $this->get(ManageCalendarImports::getUrl(panel: 'admin'))
-        ->assertRedirect('/my-calendar');
+        ->assertRedirect(route('my-calendar'));
 });

@@ -28,7 +28,7 @@
                 <pre class="mono embed-code">{{ url('/embed/calendar') }}?organisation=your-federation-slug</pre>
 
                 <p class="label" style="margin-top:28px">Shooter</p>
-                <p style="max-width:40rem">Signed-in shooters add matches to <a href="{{ url('/my-calendar') }}">My calendar</a>, then embed that list:</p>
+                <p style="max-width:40rem">Signed-in shooters add matches to <a href="{{ route('my-calendar') }}">My calendar</a>, then embed that list:</p>
                 <pre class="mono embed-code">{{ url('/embed/calendar') }}?shooter=your-shooter-slug</pre>
 
                 <p class="label" style="margin-top:28px">Colours and fonts</p>

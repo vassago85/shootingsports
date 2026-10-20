@@ -20,6 +20,7 @@ use App\Models\OrganisationUser;
 use App\Models\Placement;
 use App\Models\Provider;
 use App\Models\User;
+use App\Support\DeskCapabilities;
 use Carbon\CarbonImmutable;
 use Filament\Pages\Page;
 use Filament\Panel;
@@ -80,12 +81,30 @@ class DeskDashboard extends Page
         $user = Auth::user();
         $mode = $this->mode();
 
-        return match ($mode) {
+        $modeData = match ($mode) {
             'director' => $this->directorData($user),
             'industry' => $this->industryData($user),
             'media' => $this->mediaData($user),
             default => $this->noAccessData(),
         };
+
+        // Capability cards sit above the mode-specific body so a user
+        // who holds more than one hat (club + shop + range + media)
+        // can jump straight to any surface instead of being locked
+        // into the mode `deskHomeMode()` picked for them. A single
+        // card is still worth rendering when the mode is 'none' —
+        // that catches range-only users whose mode falls through to
+        // the no-access landing but who do have a venue to manage.
+        $cards = $user instanceof User
+            ? DeskCapabilities::for($user)
+            : [];
+
+        $showCards = count($cards) >= 2 || (count($cards) >= 1 && $mode === 'none');
+
+        return array_merge($modeData, [
+            'capabilityCards' => $cards,
+            'showCapabilityCards' => $showCards,
+        ]);
     }
 
     protected function mode(): string
@@ -358,6 +377,9 @@ class DeskDashboard extends Page
             'mode' => 'none',
             'claimUrl' => ClaimListing::getUrl(),
             'listBusinessUrl' => route('suppliers.start'),
+            // Ranges don't have a dedicated start page yet — the public
+            // claim surface already covers "I run this range".
+            'claimRangeUrl' => route('ranges.index'),
             'calendarUrl' => route('my-calendar'),
         ];
     }

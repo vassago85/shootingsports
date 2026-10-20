@@ -78,7 +78,7 @@ async function loginAsShooter(page: Page): Promise<void> {
     await page.getByLabel('Email').fill('playwright@shootingsports.test');
     await page.getByLabel('Password').fill('password');
     await page.getByRole('button', { name: 'Log in' }).click();
-    await page.waitForURL('**/my-calendar');
+    await page.waitForURL('**/me/calendar');
 }
 
 test('Linked shooter can self-service renew by notifying EFT paid', async ({ page }) => {

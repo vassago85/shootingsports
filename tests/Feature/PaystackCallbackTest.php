@@ -40,7 +40,7 @@ it('verifies a successful transaction and upgrades the user to Pro', function ()
 
     $response = $this->actingAs($user)->get('/paystack/callback?reference=ref_ok');
 
-    $response->assertRedirect('/my-calendar');
+    $response->assertRedirect(route('my-calendar'));
     $response->assertSessionHas('status');
 
     $user->refresh();
@@ -108,7 +108,7 @@ it('logs the user in if the callback lands them without a session', function () 
     // No actingAs() — Paystack can deliver the customer back in a
     // fresh browser session after a phone payment.
     $this->get('/paystack/callback?reference=ref_login')
-        ->assertRedirect('/my-calendar');
+        ->assertRedirect(route('my-calendar'));
 
     expect(auth()->id())->toBe($user->id)
         ->and($user->fresh()->plan)->toBe(Plan::Pro);
