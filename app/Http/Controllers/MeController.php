@@ -26,6 +26,17 @@ class MeController extends Controller
         $logLimit = $user->limit('attended_events_slots');
         $followLimit = $user->limit('follows');
 
+        // Next two saved matches shown inline on the My calendar card so
+        // the page is useful at a glance instead of a wall of four links.
+        // Eager-loads venue so we can show the location without a per-row
+        // query — Expensive-changes rule.
+        $nextSavedEvents = $user->savedEvents()
+            ->with('venue:id,name,town')
+            ->where('starts_at', '>=', now())
+            ->orderBy('starts_at')
+            ->limit(2)
+            ->get();
+
         return view('public.me.index', [
             'user' => $user,
             'planLabel' => $user->subscriptionStatusLabel(),
@@ -38,6 +49,7 @@ class MeController extends Controller
             'followCount' => $user->follows()->count(),
             'followLimit' => $followLimit,
             'savedCount' => $user->savedEvents()->count(),
+            'nextSavedEvents' => $nextSavedEvents,
         ]);
     }
 }

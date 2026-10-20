@@ -3460,3 +3460,145 @@ html[lang] body.ss-public .fmt-top h3 {
 .magazine-flipbook { min-height: 420px; display: block; width: 100%; }
 .magazine-flipbook__loading { padding: 24px; text-align: center; color: var(--muted, #8a8a8a); }
 .magazine-flipbook:focus { outline: 2px solid var(--brass, #c7a35b); outline-offset: 4px; }
+
+/* -----------------------------------------------------------------
+   /me — shooter home. The original inline styles referenced
+   var(--line) which does not exist in this stylesheet (should be
+   --rule), so the browser dropped the border declaration and the
+   cards rendered as bare text. These classes make the cards
+   self-contained and remove the inline-style dependency entirely.
+   ----------------------------------------------------------------- */
+.me-hero-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.me-plan {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    color: var(--slate);
+    background: var(--surface);
+}
+.me-plan.pro {
+    border-color: var(--brass-dk);
+    color: var(--brass-dk);
+    background: rgba(36, 93, 63, .08);
+}
+.me-plan.trial {
+    border-color: var(--brass);
+    color: var(--brass-dk);
+    background: rgba(107, 125, 58, .12);
+}
+.me-upgrade-inline {
+    font-family: var(--f-mono); font-size: 12px; letter-spacing: .06em;
+    color: var(--brass-dk);
+    text-decoration: none;
+    border-bottom: 1px dashed currentColor;
+}
+.me-upgrade-inline:hover { border-bottom-style: solid; }
+
+.me-section { padding: 32px 0; }
+.me-section + .me-section { padding-top: 24px; }
+.me-section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin-bottom: 14px;
+}
+.me-section-head .label { margin: 0; }
+.me-section-head p { margin: 0; }
+
+.me-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.me-card {
+    display: flex; flex-direction: column; gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 18px 20px;
+    min-height: 108px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.me-card:hover,
+.me-card:focus-visible {
+    border-color: var(--brass-dk);
+    box-shadow: 0 4px 14px rgba(16, 37, 31, .08);
+    transform: translateY(-1px);
+}
+.me-card h3 {
+    margin: 0;
+    font-size: 16px;
+    font-family: var(--f-display, inherit);
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.me-card.is-link h3::after {
+    content: "›";
+    color: var(--slate);
+    font-weight: 400;
+    font-size: 18px;
+    transition: transform .15s, color .15s;
+}
+.me-card.is-link:hover h3::after { transform: translateX(2px); color: var(--brass-dk); }
+.me-card p { margin: 0; }
+.me-card .muted { color: var(--slate); font-size: 14px; }
+.me-card .me-card-foot { margin-top: auto; padding-top: 4px; }
+
+/* Capability card variant — same base, with a kind tag in the header
+   and an action strip pinned to the bottom. */
+.me-card .me-card-kind {
+    font-family: var(--f-mono); font-size: 10px; letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--slate);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-weight: 400;
+}
+.me-card-items { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
+.me-card-items a {
+    font-family: var(--f-mono); font-size: 13px;
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 2px;
+}
+.me-card-items a:hover { border-bottom-color: var(--brass-dk); color: var(--brass-dk); }
+
+/* Compact "next matches" list rendered inside the My calendar card. */
+.me-saved-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.me-saved-list li {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 8px;
+    align-items: baseline;
+    font-size: 13px;
+}
+.me-saved-list time {
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--brass-dk);
+}
+.me-saved-list .me-saved-title { font-weight: 500; }
+.me-saved-list .me-saved-venue { color: var(--slate); font-size: 12px; }
+
+/* Bottom Upgrade strip — tighter than the generic .block section so the
+   whole page sits above the fold on a laptop. */
+.me-upgrade-strip {
+    border: 1px solid var(--brass-dk);
+    border-radius: 10px;
+    padding: 20px 22px;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+}
+.me-upgrade-strip h2 { margin: 0 0 4px; font-size: 18px; }
+.me-upgrade-strip p { margin: 0; color: var(--slate); max-width: 60ch; }
+
+/* Tighten the /me page — the default section.block padding of 72px
+   leaves a huge gap after the hero. Scope to the page so no other
+   screen is affected. */
+body.ss-public main .me-section:first-of-type { padding-top: 24px; }
