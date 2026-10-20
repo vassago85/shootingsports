@@ -187,17 +187,22 @@ class AppServiceProvider extends ServiceProvider
         // inline in Livewire, Blade or controllers. Guest users are
         // always false (the ?User signature returns null on guests, so
         // the null-coalesce below trips false).
-        Gate::define('pro', fn (?User $user): bool => (bool) $user?->isPro());
-        Gate::define('export-season', fn (?User $user): bool => (bool) $user?->allows('export'));
-        Gate::define('unlimited-follows', fn (?User $user): bool => $user !== null && $user->limit('follows') === null);
-        Gate::define('full-history', fn (?User $user): bool => $user !== null && $user->limit('history_months') === null);
+        // Staff bypass Pro gates: platform operators need every feature
+        // available while supporting real users (exporting a shooter's
+        // CSV for a dispute, inspecting a custom calendar). Scope rules
+        // on individual resources still apply — this only short-circuits
+        // the paid-feature check, not row-level ownership.
+        Gate::define('pro', fn (?User $user): bool => (bool) ($user?->is_staff || $user?->isPro()));
+        Gate::define('export-season', fn (?User $user): bool => (bool) ($user?->is_staff || $user?->allows('export')));
+        Gate::define('unlimited-follows', fn (?User $user): bool => $user !== null && ($user->is_staff || $user->limit('follows') === null));
+        Gate::define('full-history', fn (?User $user): bool => $user !== null && ($user->is_staff || $user->limit('history_months') === null));
         // Attendance log — logging up to the free cap is open to any
         // signed-in user; the annual export PDF/CSV is Pro-only. Kept
         // as two gates so views can hide UI cleanly without repeating
         // the plan lookup.
         Gate::define('log-attendance', fn (?User $user): bool => $user !== null);
-        Gate::define('export-attendance-log', fn (?User $user): bool => (bool) $user?->allows('export'));
-        Gate::define('custom-calendar', fn (?User $user): bool => (bool) $user?->allows('custom_calendar'));
+        Gate::define('export-attendance-log', fn (?User $user): bool => (bool) ($user?->is_staff || $user?->allows('export')));
+        Gate::define('custom-calendar', fn (?User $user): bool => (bool) ($user?->is_staff || $user?->allows('custom_calendar')));
 
         $bumpPublic = static fn () => PublicCache::bump();
 

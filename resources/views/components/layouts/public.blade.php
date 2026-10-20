@@ -53,6 +53,9 @@
                     @if (auth()->user()?->is_staff || auth()->user()?->hasDeskAccess())
                         <a class="btn ghost on-dark" href="{{ url('/desk') }}">Desk</a>
                     @endif
+                    @if (auth()->user()?->is_staff)
+                        <a class="btn ghost on-dark" href="{{ url('/admin') }}">Admin</a>
+                    @endif
                 @else
                     <a class="btn ghost on-dark" href="{{ route('login') }}">Sign in</a>
                 @endauth

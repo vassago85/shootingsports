@@ -22,7 +22,9 @@ use UnitEnum;
 
 /**
  * Industry desk — enquiries about the signed-in business's listing.
- * Read-only; staff triage happens in admin Inbox.
+ * Read-only; staff see every enquiry here (same list as admin Inbox)
+ * so a staff user supporting an industry account doesn't have to
+ * flip between panels.
  */
 class EnquiryResource extends Resource
 {
@@ -89,16 +91,21 @@ class EnquiryResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->where('about_type', Provider::class);
+        $query = parent::getEloquentQuery();
         $user = Auth::user();
 
+        // Staff see every enquiry regardless of type — the industry
+        // about_type / about_id scope is only applied for non-staff
+        // industry users looking at their own listing's leads.
         if ($user?->is_staff) {
             return $query;
         }
 
         $providerIds = PlacementResource::managedProviderIds();
 
-        return $query->whereIn('about_id', $providerIds !== [] ? $providerIds : [0]);
+        return $query
+            ->where('about_type', Provider::class)
+            ->whereIn('about_id', $providerIds !== [] ? $providerIds : [0]);
     }
 
     public static function canViewAny(): bool

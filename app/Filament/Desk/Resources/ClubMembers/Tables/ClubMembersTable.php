@@ -35,6 +35,7 @@ class ClubMembersTable
     {
         return $table
             ->defaultSort('last_name')
+            ->searchPlaceholder('Search by name, email, number or phone')
             ->columns([
                 TextColumn::make('member_number')
                     ->label('No.')
@@ -52,7 +53,9 @@ class ClubMembersTable
                             $like = '%'.addcslashes($search, '%_\\').'%';
                             $inner->where('first_name', 'like', $like)
                                 ->orWhere('last_name', 'like', $like)
-                                ->orWhere('email', 'like', $like);
+                                ->orWhere('email', 'like', $like)
+                                ->orWhere('phone', 'like', $like)
+                                ->orWhere('member_number', 'like', $like);
                         })),
                 TextColumn::make('category')
                     ->badge(),
@@ -65,6 +68,12 @@ class ClubMembersTable
                     ->date('j M Y')
                     ->sortable()
                     ->placeholder('—'),
+                TextColumn::make('joined_at')
+                    ->label('Joined')
+                    ->date('j M Y')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->placeholder('—'),
                 TextColumn::make('organisation.name')
                     ->label('Club')
                     ->visible(fn (): bool => self::managesMultipleClubs())
@@ -74,7 +83,9 @@ class ClubMembersTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('status')->options(ClubMemberStatus::class),
+                SelectFilter::make('status')
+                    ->options(ClubMemberStatus::class)
+                    ->query(fn (Builder $query, array $data): Builder => self::applyStatusFilter($query, $data['value'] ?? null)),
                 SelectFilter::make('category')->options(ClubMemberCategory::class),
                 Filter::make('expiring_soon')
                     ->label('Expiring in 30 days')
@@ -90,13 +101,7 @@ class ClubMembersTable
                     ->visible(fn (ClubMember $record): bool => $record->status === ClubMemberStatus::Applied)
                     ->requiresConfirmation()
                     ->action(function (ClubMember $record): void {
-                        $record->transitionTo(ClubMemberStatus::Active, Auth::user(), 'Approved from Desk');
-                        $record->forceFill([
-                            'joined_at' => $record->joined_at ?? now()->toDateString(),
-                            'expires_at' => $record->expires_at ?? now()->addYear()->toDateString(),
-                        ])->save();
-
-                        self::notifyApplicant($record, approved: true);
+                        self::approveApplication($record, 'Approved from Desk');
                     }),
                 Action::make('reject')
                     ->label('Reject')
@@ -205,10 +210,67 @@ class ClubMembersTable
                     ->label('Export CSV')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('gray')
-                    ->action(fn (Table $table): StreamedResponse => self::exportCsv($table)),
+                    ->tooltip('Exports every row that matches the current tab, filters and search. Narrow the list first to export a subset.')
+                    ->action(fn (Table $table): StreamedResponse => self::streamCsv($table->getFilteredSortedTableQuery())),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('bulk_approve')
+                        ->label('Approve applications')
+                        ->icon('heroicon-o-check-badge')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalDescription('Approves every selected application, stamps joined / expires dates when missing, and emails the applicant. Members not in the Applied state are skipped.')
+                        ->action(function (Collection $records): void {
+                            $approved = 0;
+
+                            foreach ($records as $member) {
+                                /** @var ClubMember $member */
+                                if ($member->status !== ClubMemberStatus::Applied) {
+                                    continue;
+                                }
+
+                                self::approveApplication($member, 'Bulk approved from Desk');
+                                $approved++;
+                            }
+
+                            Notification::make()
+                                ->title($approved === 1 ? '1 application approved.' : $approved.' applications approved.')
+                                ->success()
+                                ->send();
+                        }),
+                    BulkAction::make('bulk_reject')
+                        ->label('Reject applications')
+                        ->icon('heroicon-o-x-mark')
+                        ->color('danger')
+                        ->schema([
+                            Textarea::make('reason')
+                                ->required()
+                                ->maxLength(1000)
+                                ->label('Why are these applications rejected?')
+                                ->helperText('The same reason is emailed to every applicant.'),
+                        ])
+                        ->action(function (Collection $records, array $data): void {
+                            $reason = (string) ($data['reason'] ?? '');
+                            $actor = Auth::user();
+                            $rejected = 0;
+
+                            foreach ($records as $member) {
+                                /** @var ClubMember $member */
+                                if ($member->status !== ClubMemberStatus::Applied) {
+                                    continue;
+                                }
+
+                                $member->transitionTo(ClubMemberStatus::Rejected, $actor, $reason);
+                                self::notifyApplicant($member, approved: false, reason: $reason);
+                                $rejected++;
+                            }
+
+                            Notification::make()
+                                ->title($rejected === 1 ? '1 application rejected.' : $rejected.' applications rejected.')
+                                ->success()
+                                ->send();
+                        }),
                     BulkAction::make('renew')
                         ->label('Renew to year-end')
                         ->icon('heroicon-o-arrow-path-rounded-square')
@@ -278,6 +340,43 @@ class ClubMembersTable
             ]);
     }
 
+    /**
+     * Maps the stored status column to the user's mental model: picking
+     * "Active" shows only members whose membership is current, picking
+     * "Lapsed" shows the derived set (Active status, expiry past). The
+     * dropdown stays simple while the query matches what the badge in
+     * the row shows.
+     */
+    private static function applyStatusFilter(Builder $query, ?string $value): Builder
+    {
+        if ($value === null || $value === '') {
+            return $query;
+        }
+
+        return match ($value) {
+            ClubMemberStatus::Active->value => $query->active(),
+            ClubMemberStatus::Lapsed->value => $query->lapsed(),
+            default => $query->where('status', $value),
+        };
+    }
+
+    /**
+     * Shared approval path for the single-row and bulk approve actions
+     * so the audit trail, date stamping and applicant email stay in
+     * lockstep.
+     */
+    private static function approveApplication(ClubMember $member, string $reason): void
+    {
+        $member->transitionTo(ClubMemberStatus::Active, Auth::user(), $reason);
+
+        $member->forceFill([
+            'joined_at' => $member->joined_at ?? now()->toDateString(),
+            'expires_at' => $member->expires_at ?? now()->addYear()->toDateString(),
+        ])->save();
+
+        self::notifyApplicant($member, approved: true);
+    }
+
     private static function managesMultipleClubs(): bool
     {
         $user = Auth::user();
@@ -310,9 +409,13 @@ class ClubMembersTable
         Mail::to($member->email)->queue(new ClubApplicationDecisionMail($member, $approved, $reason));
     }
 
-    private static function exportCsv(Table $table): StreamedResponse
+    /**
+     * Shared CSV writer used by the header export (filtered query) and
+     * the bulk `Export selected` action (whereIn query over selected
+     * IDs). Chunked to keep memory flat on large registers.
+     */
+    private static function streamCsv(Builder $query): StreamedResponse
     {
-        $query = $table->getFilteredSortedTableQuery();
         $timestamp = CarbonImmutable::now()->format('Ymd-His');
 
         return response()->streamDownload(function () use ($query): void {

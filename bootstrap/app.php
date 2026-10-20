@@ -35,6 +35,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // /up is registered without the web stack, so this must be global.
         $middleware->append(RestrictHealthEndpoint::class);
 
+        // Lets the /api/v1 routes read the signed-in web session cookie
+        // (via Sanctum's EnsureFrontendRequestsAreStateful) so a user
+        // logged into the website can call /api/v1/me from the browser
+        // without issuing a bearer token. Mobile clients still auth
+        // with Sanctum bearer tokens from /api/v1/auth/login — this
+        // only adds the SPA-session path, it doesn't remove the token
+        // path. SANCTUM_STATEFUL_DOMAINS controls which hosts count.
+        $middleware->statefulApi();
+
         $middleware->web(append: [
             CanonicalHost::class,
             EnsureComingSoonAccess::class,

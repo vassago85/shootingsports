@@ -61,10 +61,19 @@ class VenueForm
                             ->minValue(0)
                             ->helperText('Longest shootable distance.'),
                         TextInput::make('day_fee_cents')
-                            ->label('Day fee (cents)')
+                            ->label('Day fee')
+                            ->prefix('R')
                             ->numeric()
                             ->minValue(0)
-                            ->helperText('Zero means free or members-only.'),
+                            ->step('0.01')
+                            ->inputMode('decimal')
+                            ->helperText('Zero means free or members-only. Stored internally in cents.')
+                            ->formatStateUsing(fn (?int $state): ?string => $state === null
+                                ? null
+                                : number_format($state / 100, 2, '.', ''))
+                            ->dehydrateStateUsing(fn ($state): ?int => ($state === null || $state === '')
+                                ? null
+                                : (int) round(((float) $state) * 100)),
                         Textarea::make('notes')
                             ->label('Range officer notes')
                             ->rows(3)

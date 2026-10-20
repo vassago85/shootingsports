@@ -42,6 +42,9 @@
         @if (auth()->user()?->is_staff || auth()->user()?->hasDeskAccess())
             <a href="{{ url('/desk') }}">Desk</a>
         @endif
+        @if (auth()->user()?->is_staff)
+            <a href="{{ url('/admin') }}">Admin</a>
+        @endif
         @unless (auth()->user()->is_staff || auth()->user()->is_match_director)
             <a href="{{ route('events.submit') }}">Submit an event</a>
         @endunless

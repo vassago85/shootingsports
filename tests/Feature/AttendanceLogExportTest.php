@@ -8,7 +8,7 @@ it('CSV export is 403 for Free users', function () {
     $user = User::factory()->create(['plan' => Plan::Free]);
 
     $this->actingAs($user)
-        ->get('/my-log/export/csv?year='.now()->year)
+        ->get(route('my-log.export.csv', ['year' => now()->year]))
         ->assertForbidden();
 });
 
@@ -27,7 +27,7 @@ it('CSV export streams a valid CSV for Pro users with the right columns', functi
     ]);
 
     $response = $this->actingAs($user)
-        ->get('/my-log/export/csv?year='.now()->year);
+        ->get(route('my-log.export.csv', ['year' => now()->year]));
 
     $response->assertOk();
     $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
@@ -48,7 +48,7 @@ it('print/PDF page is 403 for Free users', function () {
     $user = User::factory()->create(['plan' => Plan::Free]);
 
     $this->actingAs($user)
-        ->get('/my-log/print?year='.now()->year)
+        ->get(route('my-log.print', ['year' => now()->year]))
         ->assertForbidden();
 });
 
@@ -67,7 +67,7 @@ it('print/PDF page renders for Pro with signature line and entries', function ()
     ]);
 
     $this->actingAs($user)
-        ->get('/my-log/print?year='.now()->year)
+        ->get(route('my-log.print', ['year' => now()->year]))
         ->assertOk()
         ->assertSee('Annual attendance record')
         ->assertSee('Test Shooter')
@@ -82,7 +82,7 @@ it('print page renders "No matches logged" empty state for Pro with no entries',
     $user = User::factory()->create(['plan' => Plan::Pro]);
 
     $this->actingAs($user)
-        ->get('/my-log/print?year='.now()->year)
+        ->get(route('my-log.print', ['year' => now()->year]))
         ->assertOk()
         ->assertSee('No matches logged for '.now()->year);
 });
@@ -102,7 +102,7 @@ it('CSV export omits entries from other years', function () {
     ]);
 
     $body = $this->actingAs($user)
-        ->get('/my-log/export/csv?year='.now()->year)
+        ->get(route('my-log.export.csv', ['year' => now()->year]))
         ->streamedContent();
 
     expect($body)
