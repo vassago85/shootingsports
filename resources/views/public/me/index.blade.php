@@ -110,6 +110,14 @@
             </div>
         </section>
 
+        @if ($user->isPro() && ($user->hasDedicatedTracker() || $user->dedicated_body !== null))
+            <section class="me-section">
+                <div class="wrap">
+                    <x-dedicated-progress :user="$user" />
+                </div>
+            </section>
+        @endif
+
         @if (! $planIsPro && ! $onTrial)
             <section class="me-section">
                 <div class="wrap">

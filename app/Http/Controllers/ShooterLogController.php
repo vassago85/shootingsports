@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -120,6 +121,64 @@ class ShooterLogController extends Controller
                     $e->field_size,
                     $e->score,
                     $e->notes,
+                ]);
+            }
+
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    /**
+     * Dedicated-status export. Filters the attendance log to just the
+     * entries that count toward activity requirements (the "counts
+     * toward activity requirements" flag on the linked event) within
+     * the current renewal window. Pro-only and only makes sense for
+     * users who have filled in their dedicated-status settings.
+     */
+    public function exportDedicated(): StreamedResponse
+    {
+        $user = auth()->user();
+        abort_unless($user instanceof User, 401);
+        abort_unless($user->hasDedicatedTracker(), 403);
+        abort_unless(auth()->user()?->can('export-attendance-log'), 403);
+
+        $progress = $user->dedicatedProgress();
+
+        $entries = AttendedEvent::query()
+            ->with('event')
+            ->where('user_id', $user->id)
+            ->whereBetween('event_date', [$progress['window_start'], $progress['window_end']])
+            ->whereHas('event.flags', fn ($q) => $q->where('slug', 'counts-toward-activity-requirements'))
+            ->orderBy('event_date')
+            ->get();
+
+        $body = $progress['body'] !== '' ? Str::slug($progress['body']) : 'dedicated';
+        $filename = $body.'-activity-'.$progress['window_end']->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($entries, $progress, $user): void {
+            $out = fopen('php://output', 'wb');
+
+            fputcsv($out, ['Shooter', $user->name]);
+            fputcsv($out, ['Accrediting body', $progress['body']]);
+            fputcsv($out, ['Window start', $progress['window_start']->format('Y-m-d')]);
+            fputcsv($out, ['Window end (renewal)', $progress['window_end']->format('Y-m-d')]);
+            fputcsv($out, ['Matches logged', (string) $progress['logged']]);
+            fputcsv($out, ['Matches required', (string) $progress['required']]);
+            fputcsv($out, []);
+            fputcsv($out, ['Date', 'Match', 'Discipline', 'Host', 'Venue', 'Division', 'Placing', 'Score']);
+
+            foreach ($entries as $e) {
+                fputcsv($out, [
+                    $e->event_date?->format('Y-m-d'),
+                    $e->event_name_snapshot,
+                    $e->discipline_name_snapshot,
+                    $e->host_snapshot,
+                    $e->venue_snapshot,
+                    $e->division,
+                    $e->placing,
+                    $e->score,
                 ]);
             }
 

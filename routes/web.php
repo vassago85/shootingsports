@@ -38,6 +38,7 @@ use App\Livewire\Listings\SubmitClaim;
 use App\Livewire\Matches\SubmitMatch;
 use App\Livewire\MyMembershipDetails;
 use App\Livewire\MyMemberships;
+use App\Livewire\Settings\DedicatedStatus;
 use App\Livewire\Settings\NotificationPreferences;
 use App\Livewire\Suppliers\ClaimListing as SupplierClaimListing;
 use App\Livewire\Suppliers\CreateListing as SupplierCreateListing;
@@ -318,6 +319,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/me/log', [ShooterLogController::class, 'index'])->name('my-log');
     Route::delete('/me/log/{attendedEvent}', [ShooterLogController::class, 'destroy'])->name('my-log.destroy');
     Route::get('/me/log/export/csv', [ShooterLogController::class, 'exportCsv'])->name('my-log.export.csv');
+    Route::get('/me/log/export/dedicated', [ShooterLogController::class, 'exportDedicated'])->name('my-log.export.dedicated');
     Route::get('/me/log/print', [ShooterLogController::class, 'printable'])->name('my-log.print');
 });
 Route::redirect('/my-log', '/me/log', 301);
@@ -350,6 +352,9 @@ Route::post('/email/unsubscribe/{token}', [UnsubscribeController::class, 'resubs
 Route::get('/me/settings', NotificationPreferences::class)
     ->middleware('auth')
     ->name('settings.notifications');
+Route::get('/me/settings/dedicated-status', DedicatedStatus::class)
+    ->middleware('auth')
+    ->name('settings.dedicated-status');
 Route::redirect('/settings/notifications', '/me/settings', 301);
 
 require __DIR__.'/mockups.php';

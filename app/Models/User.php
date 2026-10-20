@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -71,6 +72,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'pro_trial_started_at' => 'datetime',
             'pro_trial_ending_notified_at' => 'datetime',
             'pro_trial_ended_notified_at' => 'datetime',
+            'dedicated_renewal_on' => 'date',
+            'dedicated_required_count' => 'integer',
         ];
     }
 
@@ -541,6 +544,71 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function attendedEvents(): HasMany
     {
         return $this->hasMany(AttendedEvent::class);
+    }
+
+    /**
+     * True when the shooter has filled in all three dedicated-status
+     * fields AND has Pro access. We intentionally gate the TRACKER
+     * (not the setup form) on Pro: non-Pro shooters can see the
+     * setup form while Pro is on hold so they can prep for when it
+     * opens, but the progress widget only renders for Pro.
+     */
+    public function hasDedicatedTracker(): bool
+    {
+        return $this->dedicated_body !== null
+            && $this->dedicated_body !== ''
+            && $this->dedicated_renewal_on !== null
+            && $this->dedicated_required_count !== null
+            && $this->dedicated_required_count > 0
+            && $this->isPro();
+    }
+
+    /**
+     * Progress snapshot for the dedicated-status widget.
+     *
+     * Counts attendance log entries where the linked event carries
+     * the "counts-toward-activity-requirements" flag AND the event
+     * date is between the LAST renewal (i.e. one renewal period
+     * back) and today. Manual log entries with no linked event never
+     * count — we can't verify them.
+     *
+     * @return array{logged:int,required:int,remaining:int,days_to_renewal:int,window_start:Carbon,window_end:Carbon,body:string}
+     */
+    public function dedicatedProgress(): array
+    {
+        $required = (int) ($this->dedicated_required_count ?? 0);
+        $renewal = $this->dedicated_renewal_on?->copy()->startOfDay();
+        $now = now()->startOfDay();
+
+        // The counting window is "since the previous renewal". If the
+        // renewal date is in the future, step back one year to get
+        // the current cycle. If it's already past, step forward one
+        // year — the shooter has rolled into the new cycle.
+        if ($renewal === null) {
+            $windowEnd = $now;
+            $windowStart = $now;
+        } elseif ($renewal->isFuture()) {
+            $windowEnd = $renewal;
+            $windowStart = $renewal->copy()->subYear();
+        } else {
+            $windowEnd = $renewal->copy()->addYear();
+            $windowStart = $renewal;
+        }
+
+        $logged = $this->attendedEvents()
+            ->whereBetween('event_date', [$windowStart, $windowEnd])
+            ->whereHas('event.flags', fn ($q) => $q->where('slug', 'counts-toward-activity-requirements'))
+            ->count();
+
+        return [
+            'logged' => $logged,
+            'required' => $required,
+            'remaining' => max(0, $required - $logged),
+            'days_to_renewal' => (int) $now->diffInDays($windowEnd, false),
+            'window_start' => $windowStart,
+            'window_end' => $windowEnd,
+            'body' => (string) ($this->dedicated_body ?? ''),
+        ];
     }
 
     public function eventEntries(): HasMany

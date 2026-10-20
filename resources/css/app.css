@@ -3601,6 +3601,45 @@ html[lang] body.ss-public .fmt-top h3 {
 .me-upgrade-strip h2 { margin: 0 0 4px; font-size: 18px; }
 .me-upgrade-strip p { margin: 0; color: var(--slate); max-width: 60ch; }
 
+/* Dedicated-status tracker — rendered on /me/log (top) and /me (as a
+   tile for Pro users with the fields set). Styled to sit comfortably
+   inside both surfaces without stealing the eye from the log table. */
+.dedicated-tracker {
+    display: grid; gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin: 0 0 18px;
+}
+.dedicated-tracker-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+}
+.dedicated-tracker-head strong { font-size: 16px; display: block; margin-top: 2px; }
+.dedicated-tracker-meta {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-size: 13px;
+}
+.dedicated-tracker-bar {
+    height: 8px; border-radius: 999px;
+    background: var(--surface-2, #f2f5f1);
+    overflow: hidden;
+}
+.dedicated-tracker-bar span {
+    display: block; height: 100%;
+    background: var(--brass-dk);
+    transition: width .3s ease-out;
+}
+.dedicated-tracker-actions {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-top: 2px;
+}
+.dedicated-tracker-empty {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+}
+.dedicated-tracker-empty > div { max-width: 60ch; }
+
 /* Tighten the /me page. Two gotchas earlier rounds hit:
      1. The public skin override at line 2725
         (html[lang] body.ss-public .page-hero:not(.has-photo))

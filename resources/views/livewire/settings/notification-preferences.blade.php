@@ -84,11 +84,12 @@
                         </div>
                     </div>
 
-                    <div class="prefs-actions">
+                    <div class="prefs-actions" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
                         <button type="submit" class="btn" wire:loading.attr="disabled" wire:target="save">
                             <span wire:loading.remove wire:target="save">Save preferences</span>
                             <span wire:loading wire:target="save">Saving…</span>
                         </button>
+                        <a href="{{ route('settings.dedicated-status') }}" style="color:var(--brass-dk)">Dedicated-status tracker →</a>
                     </div>
                 </form>
             </div>

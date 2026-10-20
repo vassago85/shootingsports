@@ -29,6 +29,8 @@
                     </div>
                 @endif
 
+                <x-dedicated-progress :user="$user" />
+
                 @if ($totals->isNotEmpty())
                     <div class="my-log-summary">
                         <div>
