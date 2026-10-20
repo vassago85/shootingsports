@@ -28,3 +28,9 @@ Schedule::command('pro:trial-nudges')->dailyAt('07:20');
 // land in the working-day inbox, after the Pro nudges.
 Schedule::command('club-members:lapse')->dailyAt('07:30');
 Schedule::command('club-members:send-renewal-reminders')->dailyAt('07:35');
+
+// Dedicated-status cycle reminders: fires daily, but the command
+// itself only emails on the configured "days before cycle end"
+// days (default 60, 30 and 7 — i.e. 1 Sep, 1 Oct, 24 Oct when the
+// cycle ends 31 Oct). Idempotent per cycle end.
+Schedule::command('dedicated:send-reminders')->dailyAt('07:40');

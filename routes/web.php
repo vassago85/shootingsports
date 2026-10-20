@@ -321,6 +321,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/me/log/export/csv', [ShooterLogController::class, 'exportCsv'])->name('my-log.export.csv');
     Route::get('/me/log/export/dedicated', [ShooterLogController::class, 'exportDedicated'])->name('my-log.export.dedicated');
     Route::get('/me/log/print', [ShooterLogController::class, 'printable'])->name('my-log.print');
+    Route::get('/me/log/dedicated/print', [ShooterLogController::class, 'dedicatedPrintable'])->name('my-log.dedicated.print');
 });
 Route::redirect('/my-log', '/me/log', 301);
 Route::redirect('/my-log/export/csv', '/me/log/export/csv', 301);

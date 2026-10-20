@@ -32,6 +32,8 @@ class NotificationPreferences extends Component
 
     public bool $trialNudges = true;
 
+    public bool $dedicatedReminders = true;
+
     public function mount(): void
     {
         $user = auth()->user();
@@ -45,6 +47,7 @@ class NotificationPreferences extends Component
         $this->weeklyDigest = (bool) $user->emails_weekly_digest_enabled;
         $this->productUpdates = (bool) $user->emails_product_updates_enabled;
         $this->trialNudges = (bool) $user->emails_trial_nudges_enabled;
+        $this->dedicatedReminders = (bool) $user->emails_dedicated_reminders_enabled;
     }
 
     public function save(): void
@@ -61,6 +64,7 @@ class NotificationPreferences extends Component
             'emails_weekly_digest_enabled' => $this->weeklyDigest,
             'emails_product_updates_enabled' => $this->productUpdates,
             'emails_trial_nudges_enabled' => $this->trialNudges,
+            'emails_dedicated_reminders_enabled' => $this->dedicatedReminders,
         ])->save();
 
         // If they toggled the master back on from this page, clear the

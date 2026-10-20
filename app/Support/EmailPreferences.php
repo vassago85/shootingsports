@@ -87,6 +87,7 @@ final class EmailPreferences
             EmailCategory::WeeklyDigest => 'emails_weekly_digest_enabled',
             EmailCategory::ProductUpdates => 'emails_product_updates_enabled',
             EmailCategory::TrialNudges => 'emails_trial_nudges_enabled',
+            EmailCategory::DedicatedReminders => 'emails_dedicated_reminders_enabled',
         };
     }
 

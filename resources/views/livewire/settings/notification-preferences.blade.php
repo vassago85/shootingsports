@@ -72,6 +72,16 @@
                                 </div>
                             </label>
                         </div>
+
+                        <div class="prefs-row">
+                            <label>
+                                <input type="checkbox" wire:model="dedicatedReminders" @disabled(! $marketingMaster)>
+                                <div>
+                                    <b>{{ \App\Enums\EmailCategory::DedicatedReminders->label() }}</b>
+                                    <p>{{ \App\Enums\EmailCategory::DedicatedReminders->description() }}</p>
+                                </div>
+                            </label>
+                        </div>
                     </fieldset>
 
                     <div class="prefs-row prefs-locked" aria-hidden="false">

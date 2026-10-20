@@ -131,41 +131,40 @@ class ShooterLogController extends Controller
     }
 
     /**
-     * Dedicated-status export. Filters the attendance log to just the
-     * entries that count toward activity requirements (the "counts
-     * toward activity requirements" flag on the linked event) within
-     * the current renewal window. Pro-only and only makes sense for
+     * Dedicated-status CSV export. Filters the attendance log to just
+     * the entries that count toward activity requirements (the
+     * "counts-toward-activity-requirements" flag on the linked event)
+     * within the chosen cycle. Pro-only and only makes sense for
      * users who have filled in their dedicated-status settings.
+     *
+     * Query parameters:
+     *   cycle=0 (current, default) | cycle=N (N cycles back)
      */
-    public function exportDedicated(): StreamedResponse
+    public function exportDedicated(Request $request): StreamedResponse
     {
         $user = auth()->user();
         abort_unless($user instanceof User, 401);
         abort_unless($user->hasDedicatedTracker(), 403);
         abort_unless(auth()->user()?->can('export-attendance-log'), 403);
 
-        $progress = $user->dedicatedProgress();
+        $cyclesBack = max(0, (int) $request->query('cycle', 0));
+        $progress = $user->dedicatedProgress($cyclesBack);
 
-        $entries = AttendedEvent::query()
-            ->with('event')
-            ->where('user_id', $user->id)
-            ->whereBetween('event_date', [$progress['window_start'], $progress['window_end']])
-            ->whereHas('event.flags', fn ($q) => $q->where('slug', 'counts-toward-activity-requirements'))
-            ->orderBy('event_date')
-            ->get();
-
-        $body = $progress['body'] !== '' ? Str::slug($progress['body']) : 'dedicated';
-        $filename = $body.'-activity-'.$progress['window_end']->format('Y-m-d').'.csv';
+        $entries = $this->countingEntries($user, $progress['window_start'], $progress['window_end']);
+        $filename = $this->dedicatedFilename($progress, 'csv');
 
         return response()->streamDownload(function () use ($entries, $progress, $user): void {
             $out = fopen('php://output', 'wb');
 
             fputcsv($out, ['Shooter', $user->name]);
-            fputcsv($out, ['Accrediting body', $progress['body']]);
-            fputcsv($out, ['Window start', $progress['window_start']->format('Y-m-d')]);
-            fputcsv($out, ['Window end (renewal)', $progress['window_end']->format('Y-m-d')]);
-            fputcsv($out, ['Matches logged', (string) $progress['logged']]);
-            fputcsv($out, ['Matches required', (string) $progress['required']]);
+            fputcsv($out, ['Accrediting body', $progress['body_label']]);
+            fputcsv($out, ['Membership number', (string) $user->dedicated_membership_number]);
+            fputcsv($out, ['Dedicated status number', (string) $user->dedicated_status_number]);
+            fputcsv($out, ['Category', $this->categoryLabel($user->dedicated_category)]);
+            fputcsv($out, ['Cycle start', $progress['window_start']->format('Y-m-d')]);
+            fputcsv($out, ['Cycle end', $progress['window_end']->format('Y-m-d')]);
+            fputcsv($out, ['Activities logged', (string) $progress['logged']]);
+            fputcsv($out, ['Activities required', (string) $progress['required']]);
             fputcsv($out, []);
             fputcsv($out, ['Date', 'Match', 'Discipline', 'Host', 'Venue', 'Division', 'Placing', 'Score']);
 
@@ -186,6 +185,82 @@ class ShooterLogController extends Controller
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    /**
+     * Dedicated-status activity record — print-optimised HTML meant
+     * as a licence supporting document. Shooter opens the page, hits
+     * Ctrl/Cmd+P → "Save as PDF" (or prints directly for a wet
+     * signature). Pro-gated the same way as the CSV export.
+     *
+     * Query parameters:
+     *   cycle=0 (current, default) | cycle=N (N cycles back)
+     *   from=YYYY-MM-DD & to=YYYY-MM-DD — override the cycle dates
+     *       for a custom range (e.g. motivation window)
+     */
+    public function dedicatedPrintable(Request $request): View
+    {
+        $user = auth()->user();
+        abort_unless($user instanceof User, 401);
+        abort_unless($user->hasDedicatedTracker(), 403);
+        abort_unless(auth()->user()?->can('export-attendance-log'), 403);
+
+        $cyclesBack = max(0, (int) $request->query('cycle', 0));
+        $progress = $user->dedicatedProgress($cyclesBack);
+
+        // Allow a custom range for licence motivations that don't
+        // line up with the annual cycle (e.g. "last 24 months").
+        $from = $request->date('from');
+        $to = $request->date('to');
+        $windowStart = $from ?: $progress['window_start'];
+        $windowEnd = $to ?: $progress['window_end'];
+
+        $entries = $this->countingEntries($user, $windowStart, $windowEnd);
+
+        return view('public.shooters.log-dedicated-print', [
+            'user' => $user,
+            'progress' => $progress,
+            'entries' => $entries,
+            'windowStart' => $windowStart,
+            'windowEnd' => $windowEnd,
+            'customRange' => $from !== null || $to !== null,
+            'categoryLabel' => $this->categoryLabel($user->dedicated_category),
+            'generatedAt' => now(),
+        ]);
+    }
+
+    /**
+     * Shared cycle filter — attendance entries where the linked event
+     * carries the activity flag, within [$start, $end]. Manual
+     * entries (no event_id) never count.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, AttendedEvent>
+     */
+    private function countingEntries(User $user, $start, $end): \Illuminate\Database\Eloquent\Collection
+    {
+        return AttendedEvent::query()
+            ->with('event')
+            ->where('user_id', $user->id)
+            ->whereBetween('event_date', [$start, $end])
+            ->whereHas('event.flags', fn ($q) => $q->where('slug', 'counts-toward-activity-requirements'))
+            ->orderBy('event_date')
+            ->get();
+    }
+
+    private function dedicatedFilename(array $progress, string $extension): string
+    {
+        $body = $progress['body'] !== '' ? Str::slug($progress['body']) : 'dedicated';
+
+        return $body.'-activity-'.$progress['window_end']->format('Y-m-d').'.'.$extension;
+    }
+
+    private function categoryLabel(?string $code): string
+    {
+        if ($code === null || $code === '') {
+            return '—';
+        }
+
+        return (string) data_get(config('dedicated.categories'), $code, '—');
     }
 
     /**

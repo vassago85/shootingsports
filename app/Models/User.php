@@ -35,7 +35,9 @@ use Laravel\Sanctum\HasApiTokens;
     'plan_billing_cycle', 'plan_cancelled_at',
     'emails_marketing_enabled', 'emails_match_alerts_enabled',
     'emails_weekly_digest_enabled', 'emails_product_updates_enabled',
-    'emails_trial_nudges_enabled',
+    'emails_trial_nudges_enabled', 'emails_dedicated_reminders_enabled',
+    'dedicated_body', 'dedicated_membership_number', 'dedicated_status_number',
+    'dedicated_category', 'dedicated_required_count',
     'pro_trial_started_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
@@ -68,12 +70,13 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'emails_weekly_digest_enabled' => 'boolean',
             'emails_product_updates_enabled' => 'boolean',
             'emails_trial_nudges_enabled' => 'boolean',
+            'emails_dedicated_reminders_enabled' => 'boolean',
             'unsubscribed_at' => 'datetime',
             'pro_trial_started_at' => 'datetime',
             'pro_trial_ending_notified_at' => 'datetime',
             'pro_trial_ended_notified_at' => 'datetime',
-            'dedicated_renewal_on' => 'date',
             'dedicated_required_count' => 'integer',
+            'dedicated_last_reminded_cycle_end' => 'date',
         ];
     }
 
@@ -547,67 +550,100 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     }
 
     /**
-     * True when the shooter has filled in all three dedicated-status
-     * fields AND has Pro access. We intentionally gate the TRACKER
-     * (not the setup form) on Pro: non-Pro shooters can see the
-     * setup form while Pro is on hold so they can prep for when it
-     * opens, but the progress widget only renders for Pro.
+     * True when the shooter has at least picked an accrediting body
+     * AND holds Pro. The other dedicated-status fields are optional
+     * — a shooter who's just NRAPA with no membership number yet
+     * should still see the tracker and start logging activities.
+     *
+     * We intentionally gate the TRACKER (not the setup form) on Pro:
+     * non-Pro shooters can prepare their fields while Pro is on hold
+     * so the widget appears the moment Pro opens.
      */
     public function hasDedicatedTracker(): bool
     {
-        return $this->dedicated_body !== null
-            && $this->dedicated_body !== ''
-            && $this->dedicated_renewal_on !== null
-            && $this->dedicated_required_count !== null
-            && $this->dedicated_required_count > 0
-            && $this->isPro();
+        $validBody = $this->dedicated_body !== null
+            && array_key_exists((string) $this->dedicated_body, (array) config('dedicated.bodies', []));
+
+        return $validBody && $this->isPro();
     }
 
     /**
-     * Progress snapshot for the dedicated-status widget.
+     * Current (or past) activity cycle. The cycle END date comes from
+     * config (`dedicated.cycle_end`, default 31 October) and the START
+     * is the day AFTER the end, one year earlier (default 1 November).
      *
-     * Counts attendance log entries where the linked event carries
-     * the "counts-toward-activity-requirements" flag AND the event
-     * date is between the LAST renewal (i.e. one renewal period
-     * back) and today. Manual log entries with no linked event never
-     * count — we can't verify them.
+     * `$yearsBack` picks a past cycle for the printable-report "pick
+     * previous cycle" selector: 0 = the cycle that ends on or after
+     * today, 1 = the one before that, etc.
      *
-     * @return array{logged:int,required:int,remaining:int,days_to_renewal:int,window_start:Carbon,window_end:Carbon,body:string}
+     * @return array{start: Carbon, end: Carbon}
      */
-    public function dedicatedProgress(): array
+    public function dedicatedCycle(int $yearsBack = 0): array
     {
-        $required = (int) ($this->dedicated_required_count ?? 0);
-        $renewal = $this->dedicated_renewal_on?->copy()->startOfDay();
-        $now = now()->startOfDay();
+        $month = (int) config('dedicated.cycle_end.month', 10);
+        $day = (int) config('dedicated.cycle_end.day', 31);
+        $today = now()->startOfDay();
 
-        // The counting window is "since the previous renewal". If the
-        // renewal date is in the future, step back one year to get
-        // the current cycle. If it's already past, step forward one
-        // year — the shooter has rolled into the new cycle.
-        if ($renewal === null) {
-            $windowEnd = $now;
-            $windowStart = $now;
-        } elseif ($renewal->isFuture()) {
-            $windowEnd = $renewal;
-            $windowStart = $renewal->copy()->subYear();
-        } else {
-            $windowEnd = $renewal->copy()->addYear();
-            $windowStart = $renewal;
+        // First guess: the cycle END in the current calendar year.
+        $end = $today->copy()->setDate($today->year, $month, $day)->startOfDay();
+
+        // If today is already past this year's end date, we're inside
+        // the next cycle (which ends next calendar year). Roll end
+        // forward one year so the "current" cycle is the one we're
+        // actually in, not the one that just closed.
+        if ($today->greaterThan($end)) {
+            $end->addYear();
         }
 
+        if ($yearsBack > 0) {
+            $end->subYears($yearsBack);
+        }
+
+        // Start is one day after the previous cycle's end — i.e. one
+        // year before this cycle's end, plus one day. For a 31 Oct
+        // end that's 1 November of the previous year.
+        $start = $end->copy()->subYear()->addDay();
+
+        return ['start' => $start, 'end' => $end];
+    }
+
+    /**
+     * Progress snapshot for the dedicated-status widget and the
+     * printable report. Counts attendance log entries where the
+     * linked event carries the "counts-toward-activity-requirements"
+     * flag AND the event date falls inside the chosen cycle. Manual
+     * log entries with no linked event never count — we can't verify
+     * them.
+     *
+     * @return array{logged:int,required:int,remaining:int,days_to_renewal:int,window_start:Carbon,window_end:Carbon,body:string,body_label:string}
+     */
+    public function dedicatedProgress(int $yearsBack = 0): array
+    {
+        $required = max(
+            (int) config('dedicated.minimum_required_count', 2),
+            (int) ($this->dedicated_required_count ?? config('dedicated.default_required_count', 2)),
+        );
+
+        $cycle = $this->dedicatedCycle($yearsBack);
+        $now = now()->startOfDay();
+
         $logged = $this->attendedEvents()
-            ->whereBetween('event_date', [$windowStart, $windowEnd])
+            ->whereBetween('event_date', [$cycle['start'], $cycle['end']])
             ->whereHas('event.flags', fn ($q) => $q->where('slug', 'counts-toward-activity-requirements'))
             ->count();
+
+        $bodyCode = (string) ($this->dedicated_body ?? '');
+        $bodies = (array) config('dedicated.bodies', []);
 
         return [
             'logged' => $logged,
             'required' => $required,
             'remaining' => max(0, $required - $logged),
-            'days_to_renewal' => (int) $now->diffInDays($windowEnd, false),
-            'window_start' => $windowStart,
-            'window_end' => $windowEnd,
-            'body' => (string) ($this->dedicated_body ?? ''),
+            'days_to_renewal' => (int) $now->diffInDays($cycle['end'], false),
+            'window_start' => $cycle['start'],
+            'window_end' => $cycle['end'],
+            'body' => $bodyCode,
+            'body_label' => $bodies[$bodyCode] ?? $bodyCode,
         ];
     }
 

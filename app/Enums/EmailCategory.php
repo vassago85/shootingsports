@@ -26,6 +26,7 @@ enum EmailCategory: string
     case WeeklyDigest = 'weekly_digest';
     case ProductUpdates = 'product_updates';
     case TrialNudges = 'trial_nudges';
+    case DedicatedReminders = 'dedicated_reminders';
 
     public function label(): string
     {
@@ -35,6 +36,7 @@ enum EmailCategory: string
             self::WeeklyDigest => 'Weekly digest',
             self::ProductUpdates => 'Product updates',
             self::TrialNudges => 'Trial reminders',
+            self::DedicatedReminders => 'Dedicated-status cycle reminders',
         };
     }
 
@@ -46,6 +48,7 @@ enum EmailCategory: string
             self::WeeklyDigest => 'A Monday summary of matches coming up in the disciplines and provinces you follow. Off by default.',
             self::ProductUpdates => 'Occasional emails when we launch a new feature or make a big change to the site. Never more than one a month.',
             self::TrialNudges => 'Two-message set during your 30-day Pro trial: one three days before it ends, one the day it ends. No other trial emails.',
+            self::DedicatedReminders => 'Nudges before your dedicated-status cycle ends if you still have activities to log. Up to three per year.',
         };
     }
 
