@@ -240,7 +240,7 @@ it('sends a shooter to their calendar after they confirm their email', function 
 
     $this->actingAs($user)
         ->get($url)
-        ->assertRedirect('/my-calendar?verified=1');
+        ->assertRedirect(route('my-calendar', ['verified' => 1]));
 });
 
 it('opens signup with the match director box ticked from List an event', function () {

@@ -11,7 +11,7 @@ jobs:
       APP_KEY: base64:WqzUkQEeVXbK8p/Dklt2M5JcelLt7nWGYnsGijOQ+GU=
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -19,6 +19,11 @@ jobs:
           php-version: "8.4"
           extensions: pdo_sqlite, sqlite, mbstring, xml, curl, zip, bcmath, intl, gd, exif
           coverage: none
+          # Bumped above the 128M default so a real test failure doesn't
+          # get swallowed by Collision's pretty-printer blowing up while
+          # tokenizing a large compiled Blade view (Filament topbar
+          # typically compiles to 500+ lines).
+          ini-values: memory_limit=1G
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
