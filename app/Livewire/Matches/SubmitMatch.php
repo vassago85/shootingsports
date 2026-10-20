@@ -24,37 +24,93 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
- * Public match submission. Any signed-in, verified user can file a
- * match without desk access. The match is stored as a draft and the
- * host club as a pending listing, so neither appears on the public
- * calendar until staff run ApproveSubmittedMatch.
+ * Public match submission wizard — a four-step flow (Date → Match →
+ * Venue → Review) that creates a draft Event and, if the host is new,
+ * a pending Organisation under the submitter's account. Both stay
+ * off the public calendar until staff run ApproveSubmittedMatch.
+ *
+ * Design notes:
+ *   - Any signed-in, verified user can submit. First-time submitters
+ *     have an MdSignup enquiry filed for staff to review their
+ *     director capability — see {@see self::recordDirectorRequest()}.
+ *   - {@see self::next()} runs per-step validation so a shooter can't
+ *     advance until the current step is clean.
+ *   - {@see self::submit()} runs full-form validation and creates the
+ *     records. Tests may call submit() directly after setting every
+ *     field — the wizard navigation is UX, not behaviour.
+ *   - The `step` property is URL-bound so hitting Back / Forward in
+ *     the browser lands on the step the user left, not the start.
  */
 class SubmitMatch extends Component
 {
-    public string $title = '';
+    #[Url(as: 'step')]
+    public int $step = 1;
 
+    // Step 1 — Date
     public string $starts_on = '';
 
+    public bool $all_day = true;
+
+    public string $starts_at_time = '';
+
+    public string $ends_at_time = '';
+
+    // Step 2 — Match
+    public string $title = '';
+
+    public string $kind = 'competition';
+
+    public ?string $discipline_id = null;
+
+    public string $description = '';
+
+    // Step 3 — Venue
     public string $host_name = '';
 
     public string $province = '';
 
     public string $town = '';
 
-    public ?string $discipline_id = null;
-
-    public string $description = '';
-
-    public string $kind = 'competition';
-
+    // Carried forward from signup if the user ticked the director
+    // box there — surfaced on the review step so they can confirm
+    // the host they named at signup is the one they're really
+    // submitting under.
     public string $signup_note = '';
+
+    public const int TOTAL_STEPS = 4;
 
     public function mount(): void
     {
         $this->signup_note = (string) Session::get('md.pending_host', '');
+
+        // Clamp any URL-supplied step to a sane range. Protects
+        // against someone bookmarking ?step=99 or a stale link.
+        $this->step = max(1, min(self::TOTAL_STEPS, $this->step));
+    }
+
+    public function next(): void
+    {
+        $this->validate(
+            $this->rulesForStep($this->step),
+            [],
+            $this->validationAttributes(),
+        );
+
+        $this->step = min(self::TOTAL_STEPS, $this->step + 1);
+    }
+
+    public function back(): void
+    {
+        $this->step = max(1, $this->step - 1);
+    }
+
+    public function goTo(int $step): void
+    {
+        $this->step = max(1, min(self::TOTAL_STEPS, $step));
     }
 
     public function submit(): void
@@ -71,32 +127,22 @@ class SubmitMatch extends Component
             $this->discipline_id = null;
         }
 
-        $this->validate([
-            'title' => ['required', 'string', 'max:160'],
-            'starts_on' => ['required', 'date', 'after_or_equal:today'],
-            'host_name' => ['required', 'string', 'min:3', 'max:160'],
-            'province' => ['required', 'string', Rule::enum(Province::class)],
-            'town' => ['nullable', 'string', 'max:120'],
-            'discipline_id' => ['nullable', 'integer', 'exists:disciplines,id'],
-            'description' => ['nullable', 'string', 'max:2000'],
-            'kind' => ['required', Rule::enum(EventKind::class)],
-        ], [], [
-            'title' => 'match title',
-            'starts_on' => 'date',
-            'host_name' => 'club or series',
-            'discipline_id' => 'sport',
-        ]);
+        $this->validate(
+            $this->fullRules(),
+            [],
+            $this->validationAttributes(),
+        );
 
         $event = DB::transaction(function () use ($user): Event {
             $host = $this->resolveHost($user);
-            $startsAt = Carbon::parse($this->starts_on)->startOfDay();
+            [$startsAt, $endsAt] = $this->computeTimestamps();
 
             $event = Event::create([
                 'title' => trim($this->title),
                 'host_organisation_id' => $host->id,
                 'starts_at' => $startsAt,
-                'ends_at' => $startsAt->copy()->endOfDay(),
-                'all_day' => true,
+                'ends_at' => $endsAt,
+                'all_day' => $this->all_day,
                 'level' => EventLevel::Club,
                 'kind' => EventKind::from($this->kind),
                 'status' => EventStatus::Draft,
@@ -131,7 +177,115 @@ class SubmitMatch extends Component
                 ->orderBy('name')
                 ->pluck('name', 'id')
                 ->all(),
+            'disciplineLabel' => $this->disciplineLabel(),
+            'kindLabel' => $this->kindLabel(),
+            'provinceLabel' => $this->provinceLabel(),
+            'totalSteps' => self::TOTAL_STEPS,
         ])->layout('components.layouts.public', ['title' => 'Submit an event']);
+    }
+
+    /**
+     * Human label for the current discipline selection — used on the
+     * review step so the shooter sees "IPSC Handgun" rather than a
+     * bare id, and "— None selected" when they skipped it.
+     */
+    public function disciplineLabel(): string
+    {
+        if ($this->discipline_id === null || $this->discipline_id === '') {
+            return '— None selected';
+        }
+
+        return (string) (Discipline::query()->find((int) $this->discipline_id)?->name
+            ?? '— Unknown discipline');
+    }
+
+    public function kindLabel(): string
+    {
+        return $this->kind === 'training' ? 'Training' : 'Competition';
+    }
+
+    public function provinceLabel(): string
+    {
+        if ($this->province === '') {
+            return '— Not set';
+        }
+
+        return Province::tryFrom($this->province)?->getLabel() ?? $this->province;
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    private function rulesForStep(int $step): array
+    {
+        return match ($step) {
+            1 => [
+                'starts_on' => ['required', 'date', 'after_or_equal:today'],
+                'all_day' => ['boolean'],
+                'starts_at_time' => ['nullable', 'required_if:all_day,false', 'date_format:H:i'],
+                'ends_at_time' => ['nullable', 'required_if:all_day,false', 'date_format:H:i', 'after:starts_at_time'],
+            ],
+            2 => [
+                'title' => ['required', 'string', 'max:160'],
+                'kind' => ['required', Rule::enum(EventKind::class)],
+                'discipline_id' => ['nullable', 'integer', 'exists:disciplines,id'],
+                'description' => ['nullable', 'string', 'max:2000'],
+            ],
+            3 => [
+                'host_name' => ['required', 'string', 'min:3', 'max:160'],
+                'province' => ['required', 'string', Rule::enum(Province::class)],
+                'town' => ['nullable', 'string', 'max:120'],
+            ],
+            default => [],
+        };
+    }
+
+    /**
+     * Full-form rules used by {@see self::submit()}. Deliberately
+     * merged from the per-step rules so there's exactly one source
+     * for each rule and tests can't catch us with a review-only rule
+     * that the step-by-step path never ran.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function fullRules(): array
+    {
+        return $this->rulesForStep(1)
+            + $this->rulesForStep(2)
+            + $this->rulesForStep(3);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function validationAttributes(): array
+    {
+        return [
+            'title' => 'match title',
+            'starts_on' => 'date',
+            'starts_at_time' => 'start time',
+            'ends_at_time' => 'end time',
+            'host_name' => 'club or series',
+            'discipline_id' => 'sport',
+            'all_day' => 'all-day toggle',
+        ];
+    }
+
+    /**
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    private function computeTimestamps(): array
+    {
+        $date = Carbon::parse($this->starts_on);
+
+        if ($this->all_day) {
+            return [$date->copy()->startOfDay(), $date->copy()->endOfDay()];
+        }
+
+        $start = $date->copy()->setTimeFromTimeString($this->starts_at_time ?: '09:00');
+        $end = $date->copy()->setTimeFromTimeString($this->ends_at_time ?: '17:00');
+
+        return [$start, $end];
     }
 
     private function resolveHost(User $user): Organisation
