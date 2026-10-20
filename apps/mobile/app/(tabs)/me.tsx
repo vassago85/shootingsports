@@ -1,0 +1,419 @@
+import * as Linking from 'expo-linking';
+import { Link, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+import { logout } from '@/api/auth';
+import { EventCard } from '@/api/events';
+import { CapabilityCard, fetchCapabilities, fetchMe, MeProfile } from '@/api/me';
+import { listSavedEvents, unsaveEvent } from '@/api/saved-events';
+import { getAuthToken } from '@/auth/store';
+
+/**
+ * Me — the shooter's home inside the app. Four blocks:
+ *   1. Plan state (Free / Pro / Trial) from `/api/v1/me`.
+ *   2. Manage hub (capability cards) when the shooter also wears a
+ *      club / shop / range / media hat. Light actions only; the
+ *      heavy editor (members, invoices, magazine, billing) opens
+ *      on the website via the system browser.
+ *   3. Saved matches, mirroring the web /my-calendar.
+ *   4. Logout.
+ *
+ * No in-app Pro purchase. Pro is sold on the website so the Apple /
+ * Google in-app purchase rules do not apply to this app; locked
+ * rows direct the user to shootingsports.co.za to upgrade.
+ *
+ * Covers eight visual states (see
+ * `docs/superpowers/specs/2026-10-20-app-and-web-mockup-framework.md`
+ * M5a–M5h): signed-out, Free + no caps, Free + 1 cap, Pro,
+ * Trial, all four caps, loading, and error.
+ */
+
+type Plan = 'free' | 'pro' | 'trial';
+
+function derivePlan(me: MeProfile | null): Plan {
+  if (me === null) {
+    return 'free';
+  }
+
+  if (me.on_trial) {
+    return 'trial';
+  }
+
+  return me.is_pro ? 'pro' : 'free';
+}
+
+function openWebsite(url: string): void {
+  Linking.openURL(url).catch(() => {
+    Alert.alert('Could not open', 'Try opening shootingsports.co.za in your browser.');
+  });
+}
+
+export default function MeScreen() {
+  const router = useRouter();
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [me, setMe] = useState<MeProfile | null>(null);
+  const [cards, setCards] = useState<CapabilityCard[]>([]);
+  const [saved, setSaved] = useState<EventCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setError(null);
+    try {
+      const profile = await fetchMe();
+      setMe(profile);
+
+      if (profile.has_desk_access) {
+        setCards(await fetchCapabilities());
+      } else {
+        setCards([]);
+      }
+
+      setSaved(await listSavedEvents());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load your profile.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void (async () => {
+      const token = await getAuthToken();
+      const hasToken = token !== null;
+      setSignedIn(hasToken);
+
+      if (hasToken) {
+        await load();
+      } else {
+        setLoading(false);
+      }
+    })();
+  }, [load]);
+
+  // M5a — signed-out state. Covers both the pre-login and post-logout cases.
+  if (signedIn === false) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.eyebrowCenter}>My home</Text>
+        <Text style={styles.copy}>
+          Log in to see your home, save matches, and manage your clubs or business.
+        </Text>
+        <TouchableOpacity onPress={() => router.push('/login')} style={styles.primaryBtn}>
+          <Text style={styles.primaryBtnText}>Log in</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // M5g — first-load loading state.
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator color="#d9ae52" />
+      </View>
+    );
+  }
+
+  // M5h — hard error (first load failed, nothing cached). Full-screen retry.
+  if (error !== null && me === null) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.eyebrowCenter}>My home</Text>
+        <Text style={styles.errorHeading}>Could not reach the server</Text>
+        <Text style={styles.copyMuted}>{error}</Text>
+        <TouchableOpacity
+          onPress={() => {
+            setLoading(true);
+            void load();
+          }}
+          style={styles.primaryBtn}
+        >
+          <Text style={styles.primaryBtnText}>Try again</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const plan = derivePlan(me);
+  const planLabel = plan === 'trial'
+    ? `Trial · ${me?.trial_days_remaining ?? 0} days left`
+    : plan === 'pro'
+      ? 'Pro'
+      : 'Free';
+
+  const planPillStyle = plan === 'free' ? styles.planPillFree : styles.planPillAccent;
+  const planPillTextStyle = plan === 'free' ? styles.planPillTextFree : styles.planPillTextAccent;
+
+  return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ padding: 16, gap: 20 }}
+      refreshControl={
+        <RefreshControl
+          tintColor="#d9ae52"
+          refreshing={refreshing}
+          onRefresh={() => {
+            setRefreshing(true);
+            void load();
+          }}
+        />
+      }
+    >
+      {/* M5h variant — soft error banner above the previously-loaded content. */}
+      {error !== null && me !== null && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>Could not refresh. Pull down to try again.</Text>
+        </View>
+      )}
+
+      {me !== null && (
+        <View>
+          <Text style={styles.eyebrow}>My home</Text>
+          <Text style={styles.h1}>{me.name}</Text>
+          <View style={planPillStyle}>
+            <Text style={planPillTextStyle}>{planLabel}</Text>
+          </View>
+        </View>
+      )}
+
+      {/* M5c–M5f — Manage hub, only when the shooter also wears a club / shop / range / media hat. */}
+      {cards.length > 0 && (
+        <View style={{ gap: 10 }}>
+          <Text style={styles.sectionTitle}>Manage</Text>
+          <Text style={styles.muted}>
+            Light actions live here. Members, invoices, magazine, and billing open on the website.
+          </Text>
+          {cards.map((card) => (
+            <View key={card.kind} style={styles.card}>
+              <Text style={styles.cardEyebrow}>{card.kind}</Text>
+              <Text style={styles.cardTitle}>{card.title}</Text>
+              <Text style={styles.cardMeta}>{card.summary}</Text>
+              {card.items.slice(0, 3).map((item) => (
+                <Text key={item.name} style={styles.cardListItem}>· {item.name}</Text>
+              ))}
+              <TouchableOpacity
+                style={styles.cardAction}
+                onPress={() => openWebsite(card.primary_action.url)}
+              >
+                <Text style={styles.cardActionText}>{card.primary_action.label} ↗</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Saved matches. Mirrors the web /my-calendar. */}
+      <View style={{ gap: 10 }}>
+        <Text style={styles.sectionTitle}>Saved matches</Text>
+        {saved.length === 0 ? (
+          <Text style={styles.muted}>
+            Nothing saved yet. Open the calendar and tap Save on a match.
+          </Text>
+        ) : (
+          saved.map((event) => (
+            <View key={event.id} style={styles.card}>
+              <Link href={{ pathname: '/matches/[slug]', params: { slug: event.slug } }} asChild>
+                <TouchableOpacity>
+                  <Text style={styles.cardTitle}>{event.title}</Text>
+                  <Text style={styles.cardMeta}>
+                    {event.starts_at !== null ? new Date(event.starts_at).toDateString() : 'TBC'} · {event.location_label}
+                  </Text>
+                </TouchableOpacity>
+              </Link>
+              <TouchableOpacity
+                onPress={async () => {
+                  await unsaveEvent(event.id);
+                  await load();
+                }}
+                style={styles.removeRow}
+              >
+                <Text style={styles.removeText}>Remove</Text>
+              </TouchableOpacity>
+            </View>
+          ))
+        )}
+      </View>
+
+      {/* Pro upsell. Opens the website — never charges inside the app. Hidden on Pro and Trial. */}
+      {plan === 'free' && (
+        <View style={styles.proCard}>
+          <Text style={styles.proTitle}>Pro is managed on the website</Text>
+          <Text style={styles.proBody}>
+            Unlimited follows, unlimited log history, and dedicated-status export. Open
+            shootingsports.co.za to see the current plans.
+          </Text>
+          <TouchableOpacity
+            style={styles.primaryBtn}
+            onPress={() => openWebsite('https://shootingsports.co.za/upgrade')}
+          >
+            <Text style={styles.primaryBtnText}>Open Pro on the website ↗</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <TouchableOpacity
+        onPress={async () => {
+          await logout();
+          setSignedIn(false);
+          setMe(null);
+          setCards([]);
+          setSaved([]);
+          setError(null);
+        }}
+        style={styles.logoutRow}
+      >
+        <Text style={styles.logoutText}>Log out</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#101516' },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#101516',
+    padding: 24,
+    gap: 12,
+  },
+
+  /* Shared copy + buttons */
+  copy: { color: '#f4f0e6', fontSize: 16, textAlign: 'center' },
+  copyMuted: { color: '#a3adaa', fontSize: 14, textAlign: 'center' },
+  primaryBtn: {
+    backgroundColor: '#d9ae52',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignSelf: 'center',
+  },
+  primaryBtnText: {
+    color: '#232a2c',
+    fontWeight: '700',
+    fontSize: 14,
+    letterSpacing: 0.5,
+  },
+
+  /* Hero */
+  eyebrow: { color: '#d9ae52', fontSize: 12, letterSpacing: 1.1, textTransform: 'uppercase' },
+  eyebrowCenter: {
+    color: '#d9ae52',
+    fontSize: 12,
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  h1: { color: '#f4f0e6', fontSize: 24, fontWeight: '700', marginTop: 4 },
+
+  /* Plan pill — brass border for Pro / Trial, grey for Free */
+  planPillFree: {
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#3a4548',
+  },
+  planPillAccent: {
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#d9ae52',
+    backgroundColor: 'rgba(217,174,82,0.08)',
+  },
+  planPillTextFree: { color: '#f4f0e6', fontSize: 12 },
+  planPillTextAccent: { color: '#d9ae52', fontSize: 12, fontWeight: '600' },
+
+  /* Section titles + muted body copy */
+  sectionTitle: { color: '#f4f0e6', fontSize: 18, fontWeight: '600' },
+  muted: { color: '#a3adaa', fontSize: 13 },
+
+  /* Capability + match + saved cards share the same shape */
+  card: {
+    backgroundColor: '#1c2426',
+    borderRadius: 8,
+    padding: 14,
+    gap: 4,
+  },
+  cardEyebrow: {
+    color: '#d9ae52',
+    fontSize: 10,
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+  },
+  cardTitle: { color: '#f4f0e6', fontSize: 15, fontWeight: '600' },
+  cardMeta: { color: '#a3adaa', fontSize: 12 },
+  cardListItem: { color: '#f4f0e6', fontSize: 13 },
+
+  /* Capability-card primary action — filled brass to make the website
+   * handoff visually the loudest thing on the card. Secondary / light
+   * in-app actions can sit above or below this later. */
+  cardAction: {
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: '#d9ae52',
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  cardActionText: { color: '#232a2c', fontWeight: '700', fontSize: 13 },
+
+  /* Remove-from-saved pill */
+  removeRow: {
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#3a4548',
+    alignSelf: 'flex-start',
+  },
+  removeText: { color: '#f4f0e6', fontSize: 12 },
+
+  /* Pro upsell */
+  proCard: {
+    backgroundColor: '#1c2426',
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#d9ae52',
+    gap: 10,
+  },
+  proTitle: { color: '#f4f0e6', fontSize: 16, fontWeight: '700' },
+  proBody: { color: '#a3adaa', fontSize: 13 },
+
+  /* Error states */
+  errorHeading: { color: '#f28c8c', fontSize: 20, fontWeight: '700', textAlign: 'center' },
+  errorBanner: {
+    backgroundColor: 'rgba(242,140,140,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(242,140,140,0.4)',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  errorBannerText: { color: '#f28c8c', fontSize: 13 },
+
+  /* Logout */
+  logoutRow: { padding: 16, alignItems: 'center' },
+  logoutText: { color: '#a3adaa', fontSize: 13 },
+});

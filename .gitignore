@@ -36,8 +36,18 @@
 /playwright-report
 /test-results
 /blob-report
-# Expo mobile scaffold — local/dev only; not part of the Laravel deploy.
-/apps/
+# Expo mobile scaffold — source is tracked so EAS Build and CI can
+# consume it; only the install artefacts stay local.
+/apps/*/node_modules
+/apps/*/.expo
+/apps/*/dist
+/apps/*/.env
+/apps/*/web-build
+/apps/*/android/build
+/apps/*/android/app/build
+/apps/*/android/.gradle
+/apps/*/ios/build
+/apps/*/ios/Pods
 _ide_helper.php
 Homestead.json
 Homestead.yaml
