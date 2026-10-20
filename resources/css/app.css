@@ -3601,9 +3601,15 @@ html[lang] body.ss-public .fmt-top h3 {
 .me-upgrade-strip h2 { margin: 0 0 4px; font-size: 18px; }
 .me-upgrade-strip p { margin: 0; color: var(--slate); max-width: 60ch; }
 
-/* Tighten the /me page — the default page-hero bottom padding (40px)
-   plus a 32px first-section top padding ran to ~40px of visible gap
-   after Chrome's margin collapsing. Scope both shrinks to the /me
-   hero and its sibling so no other page's hero padding is touched. */
-.page-hero.me-hero { padding-bottom: 20px; }
-body.ss-public main .me-section:first-of-type { padding-top: 8px; }
+/* Tighten the /me page. Two gotchas earlier rounds hit:
+     1. The public skin override at line 2725
+        (html[lang] body.ss-public .page-hero:not(.has-photo))
+        has specificity (0,4,2) and beats a bare `.page-hero.me-hero`
+        (0,2,0), so the hero override has to re-use the same prefix
+        to win.
+     2. `.me-section:first-of-type` keys on element type (<section>),
+        not on class. The page-hero IS the first <section> child of
+        <main>, so no `.me-section` ever matches `:first-of-type`.
+        Use the adjacent-sibling selector instead. */
+html[lang] body.ss-public .page-hero.me-hero { padding-bottom: 8px; }
+.page-hero.me-hero + .me-section { padding-top: 10px; }
