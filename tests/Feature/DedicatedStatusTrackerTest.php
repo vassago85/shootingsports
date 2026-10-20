@@ -204,6 +204,28 @@ it('enforces the regulation floor of 2 activities per cycle', function () {
         ->assertHasErrors(['requiredCount']);
 });
 
+it('labels the required-count validation message with the field name shoppers see', function () {
+    $user = User::factory()->create();
+
+    $component = Livewire::actingAs($user)
+        ->test(DedicatedStatus::class)
+        ->set('body', 'nrapa')
+        ->set('requiredCount', 1)
+        ->call('save');
+
+    expect($component->errors()->first('requiredCount'))
+        ->toContain('activities required per cycle');
+});
+
+it('301-redirects the old /me/settings/notifications URL to the real settings page', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get('/me/settings/notifications')
+        ->assertStatus(301)
+        ->assertRedirect('/me/settings');
+});
+
 it('defaults a new user to NRAPA with the regulation floor of 2', function () {
     $user = User::factory()->create(); // No dedicated_* fields set.
 

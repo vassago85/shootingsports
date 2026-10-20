@@ -64,18 +64,27 @@ class DedicatedStatus extends Component
         $user = auth()->user();
         abort_unless($user instanceof User, 403);
 
-        $data = $this->validate([
-            'body' => ['required', Rule::in(array_keys($this->bodies()))],
-            'membershipNumber' => ['nullable', 'string', 'max:60'],
-            'statusNumber' => ['nullable', 'string', 'max:60'],
-            'category' => ['nullable', Rule::in(array_keys($this->categories()))],
-            'requiredCount' => [
-                'required',
-                'integer',
-                'min:'.(int) config('dedicated.minimum_required_count', 2),
-                'max:365',
+        $data = $this->validate(
+            rules: [
+                'body' => ['required', Rule::in(array_keys($this->bodies()))],
+                'membershipNumber' => ['nullable', 'string', 'max:60'],
+                'statusNumber' => ['nullable', 'string', 'max:60'],
+                'category' => ['nullable', Rule::in(array_keys($this->categories()))],
+                'requiredCount' => [
+                    'required',
+                    'integer',
+                    'min:'.(int) config('dedicated.minimum_required_count', 2),
+                    'max:365',
+                ],
             ],
-        ]);
+            attributes: [
+                'body' => 'accrediting body',
+                'membershipNumber' => 'membership number',
+                'statusNumber' => 'dedicated status number',
+                'category' => 'dedicated status category',
+                'requiredCount' => 'activities required per cycle',
+            ],
+        );
 
         $user->forceFill([
             'dedicated_body' => $data['body'],

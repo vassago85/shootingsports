@@ -357,5 +357,8 @@ Route::get('/me/settings/dedicated-status', DedicatedStatus::class)
     ->middleware('auth')
     ->name('settings.dedicated-status');
 Route::redirect('/settings/notifications', '/me/settings', 301);
+// The old /me/settings/notifications URL (which some drafts of the
+// spec and a few external emails referenced) 301s to the real page.
+Route::redirect('/me/settings/notifications', '/me/settings', 301);
 
 require __DIR__.'/mockups.php';
