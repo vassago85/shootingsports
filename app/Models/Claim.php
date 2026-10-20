@@ -6,6 +6,9 @@ use App\Enums\ClaimStatus;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Enums\OrganisationUserRole;
+use App\Jobs\SendPushNotification;
+use App\Mail\ListingClaimSubmittedMail;
+use App\Support\RecordLinker;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -95,6 +98,8 @@ class Claim extends Model
                 ],
             );
         }
+
+        $this->notifyClaimant(approved: true);
     }
 
     public function reject(User $reviewer): void
@@ -104,5 +109,38 @@ class Claim extends Model
             'reviewed_by' => $reviewer->id,
             'reviewed_at' => now(),
         ])->save();
+
+        $this->notifyClaimant(approved: false);
+    }
+
+    /**
+     * Push the approve/reject outcome to the claimant's mobile devices.
+     * Counts as transactional — the user explicitly submitted the claim,
+     * so this bypasses any marketing opt-out. Email continues to go via
+     * {@see ListingClaimSubmittedMail} / its decision variant.
+     */
+    private function notifyClaimant(bool $approved): void
+    {
+        if ($this->user_id === null) {
+            return;
+        }
+
+        $recordLabel = RecordLinker::label($this->claimable);
+        $title = $approved ? 'Claim approved' : 'Claim rejected';
+        $body = $approved
+            ? sprintf('You now manage %s on the desk.', $recordLabel)
+            : sprintf('Your claim on %s was rejected. Reply to the email for the reason.', $recordLabel);
+
+        SendPushNotification::dispatch(
+            userId: $this->user_id,
+            title: $title,
+            body: $body,
+            data: [
+                'type' => $approved ? 'claim.approved' : 'claim.rejected',
+                'claim_id' => $this->id,
+                'claimable_type' => $this->claimable_type,
+                'claimable_id' => $this->claimable_id,
+            ],
+        );
     }
 }

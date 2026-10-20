@@ -12,9 +12,11 @@ use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
 use App\Models\Concerns\HasDisciplines;
 use App\Models\Concerns\HasSlug;
+use App\Observers\EventObserver;
 use App\Support\Indexability;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,6 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
+#[ObservedBy([EventObserver::class])]
 #[Fillable([
     'slug', 'title', 'host_organisation_id', 'venue_id', 'starts_at', 'ends_at',
     'all_day', 'level', 'kind', 'status', 'publication', 'confirmed_at', 'original_starts_at',
