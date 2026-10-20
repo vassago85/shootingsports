@@ -114,7 +114,7 @@ it('denies the Inbox page to non-staff users', function () {
 
     $this->actingAs($shooter)
         ->get(Inbox::getUrl())
-        ->assertRedirect('/my-calendar');
+        ->assertRedirect(route('my-calendar'));
 });
 
 it('reports open counts that match the sum of inbox tabs', function () {
@@ -153,11 +153,16 @@ it('shows the verification tabs on the Clubs list', function () {
         'name' => 'Unconfirmed Club',
         'verification_state' => VerificationState::Unconfirmed,
     ]);
+    Organisation::factory()->create([
+        'name' => 'Verified Club',
+        'verification_state' => VerificationState::Verified,
+    ]);
 
     $this->actingAs($staff)
-        ->get(OrganisationResource::getUrl('index', ['activeTab' => 'unconfirmed']))
+        ->get(OrganisationResource::getUrl('index').'?tab=unconfirmed')
         ->assertOk()
-        ->assertSee('Unconfirmed Club');
+        ->assertSee('Unconfirmed Club')
+        ->assertDontSee('Verified Club');
 });
 
 it('shows the verification tabs on the Ranges list', function () {
@@ -167,11 +172,16 @@ it('shows the verification tabs on the Ranges list', function () {
         'name' => 'Unconfirmed Range',
         'verification_state' => VerificationState::Unconfirmed,
     ]);
+    Venue::factory()->create([
+        'name' => 'Verified Range',
+        'verification_state' => VerificationState::Verified,
+    ]);
 
     $this->actingAs($staff)
-        ->get(VenueResource::getUrl('index', ['activeTab' => 'unconfirmed']))
+        ->get(VenueResource::getUrl('index').'?tab=unconfirmed')
         ->assertOk()
-        ->assertSee('Unconfirmed Range');
+        ->assertSee('Unconfirmed Range')
+        ->assertDontSee('Verified Range');
 });
 
 it('shows the find duplicates header action on the Ranges list', function () {

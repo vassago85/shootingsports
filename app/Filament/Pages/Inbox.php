@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Enums\ClaimStatus;
-use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
 use App\Enums\EventStatus;
 use App\Enums\ModerationStatus;
@@ -329,7 +328,7 @@ class Inbox extends Page implements HasTable
     {
         return Enquiry::query()
             ->where('type', '!=', EnquiryType::MdSignup)
-            ->where('status', EnquiryStatus::New);
+            ->awaitingStaff();
     }
 
     private function submissionsQuery(): Builder
@@ -351,7 +350,7 @@ class Inbox extends Page implements HasTable
     {
         return Enquiry::query()
             ->where('type', EnquiryType::MdSignup)
-            ->where('status', EnquiryStatus::New);
+            ->awaitingStaff();
     }
 
     private function articlesQuery(): Builder
@@ -382,7 +381,7 @@ class Inbox extends Page implements HasTable
     {
         return Enquiry::query()
             ->where('type', '!=', EnquiryType::MdSignup)
-            ->where('status', EnquiryStatus::New)
+            ->awaitingStaff()
             ->count()
             + Event::query()->where('status', EventStatus::Draft)->count()
             + Submission::query()->where('status', SubmissionStatus::Pending)->count()
@@ -390,7 +389,7 @@ class Inbox extends Page implements HasTable
             + Media::query()->where('moderation_status', ModerationStatus::Pending)->count()
             + Enquiry::query()
                 ->where('type', EnquiryType::MdSignup)
-                ->where('status', EnquiryStatus::New)
+                ->awaitingStaff()
                 ->count()
             + Article::query()->whereNull('published_at')->count();
     }
@@ -399,7 +398,7 @@ class Inbox extends Page implements HasTable
     {
         $threshold = now()->subDays(3);
 
-        return Enquiry::query()->where('status', EnquiryStatus::New)->where('created_at', '<', $threshold)->exists()
+        return Enquiry::query()->awaitingStaff()->where('created_at', '<', $threshold)->exists()
             || Event::query()->where('status', EventStatus::Draft)->where('created_at', '<', $threshold)->exists()
             || Submission::query()->where('status', SubmissionStatus::Pending)->where('created_at', '<', $threshold)->exists()
             || Claim::query()->where('status', ClaimStatus::Pending)->where('created_at', '<', $threshold)->exists()

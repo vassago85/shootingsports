@@ -11,6 +11,7 @@ use App\Filament\Pages\Inbox;
 use App\Filament\Pages\StaffDashboard;
 use App\Filament\Resources\Disciplines\DisciplineResource;
 use App\Filament\Resources\EmailLogs\EmailLogResource;
+use App\Filament\Resources\Enquiries\EnquiryResource;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Organisations\OrganisationResource;
 use App\Filament\Resources\Placements\PlacementResource;
@@ -136,12 +137,16 @@ it('shows the combined Role column on the Users list', function () {
         ->assertSee('Role');
 });
 
-it('resolves the Staff tab on the Users list', function () {
+it('filters the Users list to match directors from the tab query', function () {
     $staff = User::factory()->staff()->create();
+    User::factory()->create(['name' => 'Plain Shooter']);
+    User::factory()->matchDirector()->create(['name' => 'Range Director']);
 
     $this->actingAs($staff)
-        ->get(UserResource::getUrl('index', ['activeTab' => 'staff']))
-        ->assertOk();
+        ->get(UserResource::getUrl('index').'?tab=match_directors')
+        ->assertOk()
+        ->assertSee('Range Director')
+        ->assertDontSee('Plain Shooter');
 });
 
 // --- Advertising: derived status badge ---------------------------------
@@ -318,6 +323,60 @@ it('renders the merged All feed with items from multiple queues', function () {
         ->assertSee('How do I enter?');
 });
 
+it('keeps a read enquiry in the inbox until it is replied or closed', function () {
+    $staff = User::factory()->staff()->create();
+
+    Enquiry::create([
+        'type' => EnquiryType::Listing,
+        'name' => 'Range visitor',
+        'email' => 'visitor-'.uniqid().'@example.com',
+        'subject' => 'Price list',
+        'body' => 'Please send the price list.',
+        'status' => EnquiryStatus::Read,
+    ]);
+    Enquiry::create([
+        'type' => EnquiryType::Listing,
+        'name' => 'Finished visitor',
+        'email' => 'finished-'.uniqid().'@example.com',
+        'subject' => 'Already closed',
+        'body' => 'Done.',
+        'status' => EnquiryStatus::Closed,
+    ]);
+
+    $this->actingAs($staff)
+        ->get(Inbox::getUrl(['tab' => 'all']))
+        ->assertSee('Range visitor')
+        ->assertSee('Price list')
+        ->assertDontSee('Finished visitor');
+
+    $this->get(StaffDashboard::getUrl())
+        ->assertSee('Enquiries');
+
+    expect(Inbox::countOpen())->toBe(1);
+});
+
+it('keeps an enquiry in the inbox after staff open it', function () {
+    $staff = User::factory()->staff()->create();
+    $enquiry = Enquiry::create([
+        'type' => EnquiryType::Listing,
+        'name' => 'Opened visitor',
+        'email' => 'opened-'.uniqid().'@example.com',
+        'subject' => 'Price list',
+        'body' => 'Please send the price list.',
+        'status' => EnquiryStatus::New,
+    ]);
+
+    $this->actingAs($staff)
+        ->get(EnquiryResource::getUrl('edit', ['record' => $enquiry]))
+        ->assertOk();
+
+    expect($enquiry->fresh()->status)->toBe(EnquiryStatus::Read);
+
+    $this->get(Inbox::getUrl(['tab' => 'enquiries']))
+        ->assertSee('Opened visitor')
+        ->assertSee('Price list');
+});
+
 // --- Soft redirect still green -----------------------------------------
 
 it('still soft-redirects non-staff away from /admin without a 403', function () {
@@ -325,5 +384,5 @@ it('still soft-redirects non-staff away from /admin without a 403', function () 
 
     $this->actingAs($shooter)
         ->get('/admin')
-        ->assertRedirect('/my-calendar');
+        ->assertRedirect(route('my-calendar'));
 });

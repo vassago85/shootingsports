@@ -4,6 +4,7 @@ use App\Enums\ClaimStatus;
 use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
 use App\Enums\ListingStatus;
+use App\Filament\Resources\Enquiries\EnquiryResource;
 use App\Mail\EnquiryReceivedMail;
 use App\Mail\ListingClaimSubmittedMail;
 use App\Mail\NewRegistrationMail;
@@ -58,5 +59,6 @@ it('sends html mail with the logo', function () {
     }
 
     expect($messages[1])->toContain('Claimable Club')
+        ->and($messages[2])->toContain(EnquiryResource::getUrl('edit', ['record' => $enquiry], panel: 'admin'))
         ->and($messages[4])->toContain('#6B7D3A');
 });

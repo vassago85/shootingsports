@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -45,6 +46,21 @@ class Enquiry extends Model
     public function replies(): HasMany
     {
         return $this->hasMany(EnquiryReply::class)->orderBy('id');
+    }
+
+    /**
+     * Still waiting on staff. Opening the record marks it read, which
+     * must not take it out of the inbox. Replied and closed do.
+     *
+     * @param  Builder<Enquiry>  $query
+     * @return Builder<Enquiry>
+     */
+    public function scopeAwaitingStaff(Builder $query): Builder
+    {
+        return $query->whereIn('status', [
+            EnquiryStatus::New,
+            EnquiryStatus::Read,
+        ]);
     }
 
     public function markRead(): void

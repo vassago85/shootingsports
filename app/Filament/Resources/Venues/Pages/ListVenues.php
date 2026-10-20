@@ -47,18 +47,18 @@ class ListVenues extends ListRecords
         $tabs = [
             'all' => Tab::make('All'),
             'unconfirmed' => Tab::make('Unconfirmed')
-                ->modifyQueryUsing(fn (Builder $q): Builder => $q->where('verification_state', VerificationState::Unconfirmed))
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('verification_state', VerificationState::Unconfirmed))
                 ->badge(Venue::query()->where('verification_state', VerificationState::Unconfirmed)->count()),
         ];
 
         if ($ageingCount > 0) {
             $tabs['ageing'] = Tab::make('Ageing')
-                ->modifyQueryUsing(fn (Builder $q): Builder => $q->where('verification_state', VerificationState::Ageing))
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('verification_state', VerificationState::Ageing))
                 ->badge($ageingCount);
         }
 
         $tabs['verified'] = Tab::make('Verified')
-            ->modifyQueryUsing(fn (Builder $q): Builder => $q->where('verification_state', VerificationState::Verified));
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('verification_state', VerificationState::Verified));
 
         return $tabs;
     }

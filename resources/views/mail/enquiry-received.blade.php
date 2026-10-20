@@ -19,7 +19,7 @@
 {!! nl2br(e($enquiry->body)) !!}
 </x-mail::panel>
 
-<x-mail::button :url="url('/admin')">
-Open admin
+<x-mail::button :url="\App\Filament\Resources\Enquiries\EnquiryResource::getUrl('edit', ['record' => $enquiry], panel: 'admin')">
+Open enquiry
 </x-mail::button>
 </x-mail::message>

@@ -36,13 +36,13 @@ class ListUsers extends ListRecords
         return [
             'all' => Tab::make('All'),
             'staff' => Tab::make('Staff')
-                ->modifyQueryUsing(fn (Builder $q): Builder => $q->where('is_staff', true))
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('is_staff', true))
                 ->badge(User::query()->where('is_staff', true)->count()),
             'match_directors' => Tab::make('Match directors')
-                ->modifyQueryUsing(fn (Builder $q): Builder => $q->where('is_match_director', true))
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('is_match_director', true))
                 ->badge(User::query()->where('is_match_director', true)->count()),
             'pending_md' => Tab::make('Pending MD')
-                ->modifyQueryUsing(fn (Builder $q): Builder => $q
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query
                     ->whereNotNull('md_requested_at')
                     ->where('is_match_director', false)
                     ->whereNull('md_rejected_at'))
@@ -52,7 +52,7 @@ class ListUsers extends ListRecords
                     ->whereNull('md_rejected_at')
                     ->count()),
             'unverified' => Tab::make('Unverified')
-                ->modifyQueryUsing(fn (Builder $q): Builder => $q->whereNull('email_verified_at'))
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->whereNull('email_verified_at'))
                 ->badge(User::query()->whereNull('email_verified_at')->count()),
         ];
     }

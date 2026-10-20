@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Enums\ClaimStatus;
-use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
 use App\Enums\EventPublication;
 use App\Enums\EventStatus;
@@ -12,7 +11,6 @@ use App\Enums\ListingStatus;
 use App\Enums\SubmissionStatus;
 use App\Filament\Resources\Claims\ClaimResource;
 use App\Filament\Resources\Disciplines\DisciplineResource;
-use App\Filament\Resources\Enquiries\EnquiryResource;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Organisations\OrganisationResource;
 use App\Filament\Resources\Placements\PlacementResource;
@@ -71,9 +69,9 @@ class StaffDashboard extends Page
         $pendingProviders = Provider::query()->where('status', ListingStatus::Pending)->count();
         $pendingClaims = Claim::query()->where('status', ClaimStatus::Pending)->count();
         $pendingSubmissions = Submission::query()->where('status', SubmissionStatus::Pending)->count();
-        $newEnquiries = Enquiry::query()
+        $openEnquiries = Enquiry::query()
             ->where('type', '!=', EnquiryType::MdSignup)
-            ->where('status', EnquiryStatus::New)
+            ->awaitingStaff()
             ->count();
         $pendingMatches = Event::query()
             ->where('status', EventStatus::Draft)
@@ -88,7 +86,7 @@ class StaffDashboard extends Page
             'attention' => $this->attentionRows(
                 $pendingMatches,
                 $pendingOrgs,
-                $newEnquiries,
+                $openEnquiries,
                 $pendingClaims,
                 $pendingSubmissions,
                 $pendingProviders,
@@ -169,7 +167,7 @@ class StaffDashboard extends Page
      *
      * @return list<array{severity: string, severity_label: string, title: string, count: string|int, href: string}>
      */
-    private function attentionRows(int $pendingMatches, int $pendingOrgs, int $newEnquiries, int $pendingClaims, int $pendingSubmissions, int $pendingProviders): array
+    private function attentionRows(int $pendingMatches, int $pendingOrgs, int $openEnquiries, int $pendingClaims, int $pendingSubmissions, int $pendingProviders): array
     {
         $rows = [];
 
@@ -263,20 +261,13 @@ class StaffDashboard extends Page
             ]));
         }
 
-        if ($newEnquiries > 0) {
-            $push('attention', 'Enquiries', $newEnquiries, EnquiryResource::getUrl('index', [
-                'filters' => ['status' => ['value' => EnquiryStatus::New->value]],
-            ]));
+        if ($openEnquiries > 0) {
+            $push('attention', 'Enquiries', $openEnquiries, Inbox::getUrl(['tab' => 'enquiries']));
         }
 
         $mdPending = $this->mdRequestsPending();
         if ($mdPending > 0) {
-            $push('attention', 'Match director requests', $mdPending, EnquiryResource::getUrl('index', [
-                'filters' => [
-                    'type' => ['value' => EnquiryType::MdSignup->value],
-                    'status' => ['value' => EnquiryStatus::New->value],
-                ],
-            ]));
+            $push('attention', 'Match director requests', $mdPending, Inbox::getUrl(['tab' => 'director_requests']));
         }
 
         $withoutDescription = Discipline::query()->withoutLongerDescription()->count();
@@ -382,7 +373,7 @@ class StaffDashboard extends Page
     {
         return Enquiry::query()
             ->where('type', EnquiryType::MdSignup)
-            ->where('status', EnquiryStatus::New)
+            ->awaitingStaff()
             ->count();
     }
 
