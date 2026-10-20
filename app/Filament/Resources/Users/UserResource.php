@@ -2,17 +2,14 @@
 
 namespace App\Filament\Resources\Users;
 
+use App\Actions\ApproveMdRequest;
+use App\Actions\RejectMdRequest;
 use App\Enums\DigestFrequency;
-use App\Enums\EnquiryStatus;
-use App\Enums\EnquiryType;
 use App\Enums\Province;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
-use App\Models\Enquiry;
 use App\Models\User;
-use App\Notifications\MdRequestApproved;
-use App\Notifications\MdRequestRejected;
 use App\Services\Paystack\SubscriptionApplier;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -284,19 +281,7 @@ class UserResource extends Resource
                     ->modalHeading('Approve this match director request?')
                     ->modalDescription('This grants /desk access, stamps md_approved_at, closes the linked MD signup enquiry, and emails the applicant.')
                     ->action(function (User $record): void {
-                        $record->forceFill([
-                            'is_match_director' => true,
-                            'md_approved_at' => now(),
-                            // Re-approvals clear a prior rejection so the
-                            // audit trail reads: applied → rejected →
-                            // approved without leaving stale reject state.
-                            'md_rejected_at' => null,
-                            'md_rejection_reason' => null,
-                        ])->save();
-
-                        self::closeLinkedMdSignupEnquiries($record, EnquiryStatus::Closed);
-
-                        $record->notify(new MdRequestApproved($record));
+                        app(ApproveMdRequest::class)($record);
 
                         Notification::make()
                             ->title('MD request approved')
@@ -320,17 +305,7 @@ class UserResource extends Resource
                     ->modalHeading('Reject this match director request?')
                     ->modalDescription('The applicant keeps their shooter account. They will be emailed the reason if you provide one and can re-apply later.')
                     ->action(function (User $record, array $data): void {
-                        $reason = trim((string) ($data['reason'] ?? '')) ?: null;
-
-                        $record->forceFill([
-                            'is_match_director' => false,
-                            'md_rejected_at' => now(),
-                            'md_rejection_reason' => $reason,
-                        ])->save();
-
-                        self::closeLinkedMdSignupEnquiries($record, EnquiryStatus::Closed);
-
-                        $record->notify(new MdRequestRejected($record, $reason));
+                        app(RejectMdRequest::class)($record, (string) ($data['reason'] ?? ''));
 
                         Notification::make()
                             ->title('MD request rejected')
@@ -413,12 +388,4 @@ class UserResource extends Resource
      * staff inbox does not carry stale "pending review" rows after
      * the decision has been made. Idempotent — safe to call twice.
      */
-    private static function closeLinkedMdSignupEnquiries(User $user, EnquiryStatus $status): void
-    {
-        Enquiry::query()
-            ->where('type', EnquiryType::MdSignup)
-            ->where('user_id', $user->id)
-            ->whereIn('status', [EnquiryStatus::New->value, EnquiryStatus::Read->value])
-            ->update(['status' => $status->value]);
-    }
 }

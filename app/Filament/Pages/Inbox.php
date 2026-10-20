@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Actions\ApproveMdRequest;
+use App\Actions\RejectMdRequest;
 use App\Enums\ClaimStatus;
 use App\Enums\EnquiryType;
 use App\Enums\EventStatus;
@@ -24,6 +26,9 @@ use App\Support\RecordLinker;
 use BackedEnum;
 use Carbon\CarbonInterface;
 use Filament\Actions\Action;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -251,9 +256,7 @@ class Inbox extends Page implements HasTable
             'media' => MediaResource::table($table)
                 ->query(fn (): Builder => $this->mediaQuery())
                 ->defaultSort('created_at', 'asc'),
-            'director_requests' => EnquiryResource::table($table)
-                ->query(fn (): Builder => $this->directorRequestsQuery())
-                ->defaultSort('created_at', 'asc'),
+            'director_requests' => $this->directorRequestsTable($table),
             'articles' => $this->articlesTable($table),
             default => EnquiryResource::table($table)
                 ->query(fn (): Builder => $this->enquiriesQuery())
@@ -290,6 +293,111 @@ class Inbox extends Page implements HasTable
             'articles' => 'No draft articles waiting',
             default => 'No enquiries waiting',
         };
+    }
+
+    /**
+     * Director-requests tab wraps the base EnquiryResource table and
+     * appends the real Approve + Reject MD actions. These are the
+     * same two actions that live on the Users admin list (and share
+     * the ApproveMdRequest / RejectMdRequest action classes) — the
+     * difference is here they operate on the enquiry row and look
+     * the applicant up through the linked user.
+     *
+     * Enquiries with no linked user (seeded or legacy) show "Open"
+     * only — there's no user to toggle `is_match_director` on.
+     */
+    private function directorRequestsTable(Table $table): Table
+    {
+        $base = EnquiryResource::table($table)
+            ->query(fn (): Builder => $this->directorRequestsQuery())
+            ->defaultSort('created_at', 'asc');
+
+        return $base->recordActions([
+            Action::make('approveMd')
+                ->label('Approve')
+                ->icon(Heroicon::OutlinedCheckBadge)
+                ->color('success')
+                ->visible(fn (Enquiry $record): bool => $this->applicantAwaitingReview($record))
+                ->requiresConfirmation()
+                ->modalHeading('Approve this match director request?')
+                ->modalDescription('Grants /desk access, closes this enquiry, and emails the applicant.')
+                ->action(function (Enquiry $record): void {
+                    $applicant = $record->user;
+
+                    if ($applicant === null) {
+                        Notification::make()
+                            ->title('No linked user')
+                            ->body('This enquiry has no linked user to approve.')
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
+                    app(ApproveMdRequest::class)($applicant);
+
+                    Notification::make()
+                        ->title('MD request approved')
+                        ->body("{$applicant->name} now has /desk access and has been emailed.")
+                        ->success()
+                        ->send();
+                }),
+            Action::make('rejectMd')
+                ->label('Reject')
+                ->icon(Heroicon::OutlinedXCircle)
+                ->color('danger')
+                ->visible(fn (Enquiry $record): bool => $this->applicantAwaitingReview($record))
+                ->schema([
+                    Textarea::make('reason')
+                        ->label('Reason (optional — shown to applicant)')
+                        ->rows(3)
+                        ->maxLength(1000)
+                        ->placeholder('e.g. Could not verify link to the named club. Please reply with more detail if you want us to reconsider.'),
+                ])
+                ->requiresConfirmation()
+                ->modalHeading('Reject this match director request?')
+                ->modalDescription('The applicant keeps their shooter account. They will be emailed the reason if you provide one and can re-apply later.')
+                ->action(function (Enquiry $record, array $data): void {
+                    $applicant = $record->user;
+
+                    if ($applicant === null) {
+                        Notification::make()
+                            ->title('No linked user')
+                            ->body('This enquiry has no linked user to reject.')
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
+                    app(RejectMdRequest::class)($applicant, (string) ($data['reason'] ?? ''));
+
+                    Notification::make()
+                        ->title('MD request rejected')
+                        ->body("{$applicant->name} has been emailed. They can re-apply from /register.")
+                        ->warning()
+                        ->send();
+                }),
+            EditAction::make()->label('Open'),
+        ]);
+    }
+
+    /**
+     * True when the enquiry's linked applicant can be acted on from
+     * the Inbox — i.e. there IS a linked user, and they are either
+     * still pending review or previously rejected. Approved
+     * applicants hide the actions so staff don't accidentally
+     * re-approve someone who already has /desk access.
+     */
+    private function applicantAwaitingReview(Enquiry $enquiry): bool
+    {
+        $applicant = $enquiry->user;
+
+        if ($applicant === null) {
+            return false;
+        }
+
+        return $applicant->isMdPending() || $applicant->isMdRejected();
     }
 
     /**
