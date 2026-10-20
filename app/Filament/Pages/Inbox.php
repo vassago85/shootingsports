@@ -19,6 +19,7 @@ use App\Models\Enquiry;
 use App\Models\Event;
 use App\Models\Media;
 use App\Models\Submission;
+use App\Support\RecordLinker;
 use BackedEnum;
 use Carbon\CarbonInterface;
 use Filament\Actions\Action;
@@ -215,7 +216,7 @@ class Inbox extends Page implements HasTable
                 'type' => 'enquiry',
                 'label' => 'ENQUIRY',
                 'color' => 'gray',
-                'what' => $enquiry->subject ?: 'Enquiry',
+                'what' => $enquiry->subject ?: ($enquiry->about ? RecordLinker::label($enquiry->about) : 'Enquiry'),
                 'context' => $enquiry->body,
                 'from' => $enquiry->name,
                 'created_at' => $enquiry->created_at,
@@ -327,6 +328,7 @@ class Inbox extends Page implements HasTable
     private function enquiriesQuery(): Builder
     {
         return Enquiry::query()
+            ->with('about')
             ->where('type', '!=', EnquiryType::MdSignup)
             ->awaitingStaff();
     }

@@ -8,8 +8,10 @@ use App\Enums\PrelaunchContributorRole;
 use App\Filament\Resources\Enquiries\Pages\EditEnquiry;
 use App\Filament\Resources\Enquiries\Pages\ListEnquiries;
 use App\Models\Enquiry;
+use App\Support\RecordLinker;
 use BackedEnum;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -21,6 +23,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class EnquiryResource extends Resource
@@ -54,6 +57,13 @@ class EnquiryResource extends Resource
                         TextInput::make('email')->disabled(),
                         TextInput::make('phone')->disabled(),
                         Select::make('type')->options(EnquiryType::class)->disabled(),
+                        Placeholder::make('about_listing')
+                            ->label('About')
+                            ->content(fn (?Enquiry $record): string => $record?->about
+                                ? RecordLinker::label($record->about)
+                                : '—')
+                            ->visible(fn (?Enquiry $record): bool => filled($record?->about_id))
+                            ->columnSpanFull(),
                         TextInput::make('subject')->disabled()->columnSpanFull(),
                         Textarea::make('body')->disabled()->rows(8)->columnSpanFull(),
                         // Context is polymorphic per enquiry type:
@@ -85,6 +95,13 @@ class EnquiryResource extends Resource
             ->columns([
                 TextColumn::make('created_at')->dateTime('j M H:i')->sortable(),
                 TextColumn::make('type')->badge(),
+                TextColumn::make('about')
+                    ->label('About')
+                    ->getStateUsing(fn (Enquiry $record): ?string => $record->about
+                        ? RecordLinker::label($record->about)
+                        : null)
+                    ->url(fn (Enquiry $record): ?string => RecordLinker::adminUrl($record->about))
+                    ->placeholder('—'),
                 TextColumn::make('name')->searchable(),
                 TextColumn::make('email')->searchable(),
                 TextColumn::make('subject')->limit(40)->toggleable(),
@@ -144,5 +161,10 @@ class EnquiryResource extends Resource
     public static function canCreate(): bool
     {
         return false;
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with('about');
     }
 }

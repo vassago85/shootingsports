@@ -2,17 +2,45 @@
 
 use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
+use App\Filament\Pages\Inbox;
+use App\Filament\Resources\Enquiries\EnquiryResource;
 use App\Filament\Resources\Enquiries\Pages\EditEnquiry;
 use App\Mail\EnquiryFollowUpMail;
 use App\Mail\EnquiryReplyMail;
 use App\Models\Enquiry;
 use App\Models\User;
+use App\Models\Venue;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 
 beforeEach(function () {
     $this->withoutVite();
+});
+
+it('shows the listing an enquiry is about', function () {
+    $staff = User::factory()->staff()->create();
+    $venue = Venue::factory()->create(['name' => 'Dwarskloof Shooting Range']);
+    $enquiry = Enquiry::query()->create([
+        'type' => EnquiryType::Listing,
+        'name' => 'Lebogang Mawela',
+        'email' => 'visitor@example.test',
+        'phone' => '0676711995',
+        'body' => 'Price list',
+        'about_type' => 'venue',
+        'about_id' => $venue->id,
+        'status' => EnquiryStatus::Read,
+    ]);
+
+    $this->actingAs($staff)
+        ->get(EnquiryResource::getUrl('edit', ['record' => $enquiry]))
+        ->assertOk()
+        ->assertSee('Dwarskloof Shooting Range')
+        ->assertSee('Range');
+
+    $this->get(Inbox::getUrl(['tab' => 'all']))
+        ->assertOk()
+        ->assertSee('Dwarskloof Shooting Range');
 });
 
 it('lets staff reply from the enquiry and emails the sender a link back', function () {
