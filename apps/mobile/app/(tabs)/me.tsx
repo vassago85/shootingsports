@@ -1,6 +1,6 @@
 import * as Linking from 'expo-linking';
-import { Link, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { Link, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -17,6 +17,7 @@ import { EventCard } from '@/api/events';
 import { CapabilityCard, fetchCapabilities, fetchMe, MeProfile } from '@/api/me';
 import { listSavedEvents, unsaveEvent } from '@/api/saved-events';
 import { getAuthToken } from '@/auth/store';
+import { colors } from '@/theme';
 
 /**
  * Me — the shooter's home inside the app. Four blocks:
@@ -31,6 +32,10 @@ import { getAuthToken } from '@/auth/store';
  * No in-app Pro purchase. Pro is sold on the website so the Apple /
  * Google in-app purchase rules do not apply to this app; locked
  * rows direct the user to shootingsports.co.za to upgrade.
+ *
+ * Reload policy: {@link useFocusEffect} re-runs the loader every time
+ * the tab regains focus. Save a match on Calendar, come back to Me,
+ * and the saved list is already fresh — no pull-to-refresh needed.
  *
  * Covers eight visual states (see
  * `docs/superpowers/specs/2026-10-20-app-and-web-mockup-framework.md`
@@ -89,19 +94,34 @@ export default function MeScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    void (async () => {
-      const token = await getAuthToken();
-      const hasToken = token !== null;
-      setSignedIn(hasToken);
+  // Re-run the loader on every tab focus so saved matches, plan state
+  // and capability cards stay in sync with anything the user did on
+  // the Calendar / match-detail screens or on the website.
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
 
-      if (hasToken) {
-        await load();
-      } else {
-        setLoading(false);
-      }
-    })();
-  }, [load]);
+      void (async () => {
+        const token = await getAuthToken();
+        if (cancelled) {
+          return;
+        }
+
+        const hasToken = token !== null;
+        setSignedIn(hasToken);
+
+        if (hasToken) {
+          await load();
+        } else {
+          setLoading(false);
+        }
+      })();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [load]),
+  );
 
   // M5a — signed-out state. Covers both the pre-login and post-logout cases.
   if (signedIn === false) {
@@ -122,7 +142,7 @@ export default function MeScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#d9ae52" />
+        <ActivityIndicator color={colors.brass} />
       </View>
     );
   }
@@ -163,7 +183,7 @@ export default function MeScreen() {
       contentContainerStyle={{ padding: 16, gap: 20 }}
       refreshControl={
         <RefreshControl
-          tintColor="#d9ae52"
+          tintColor={colors.brass}
           refreshing={refreshing}
           onRefresh={() => {
             setRefreshing(true);
@@ -172,7 +192,7 @@ export default function MeScreen() {
         />
       }
     >
-      {/* M5h variant — soft error banner above the previously-loaded content. */}
+      {/* Soft-error banner above the previously-loaded content. */}
       {error !== null && me !== null && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorBannerText}>Could not refresh. Pull down to try again.</Text>
@@ -266,6 +286,8 @@ export default function MeScreen() {
 
       <TouchableOpacity
         onPress={async () => {
+          // logout() handles its own errors and always clears the
+          // local token, so the state transition below is safe.
           await logout();
           setSignedIn(false);
           setMe(null);
@@ -282,43 +304,43 @@ export default function MeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#101516' },
+  container: { flex: 1, backgroundColor: colors.base },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#101516',
+    backgroundColor: colors.base,
     padding: 24,
     gap: 12,
   },
 
   /* Shared copy + buttons */
-  copy: { color: '#f4f0e6', fontSize: 16, textAlign: 'center' },
-  copyMuted: { color: '#a3adaa', fontSize: 14, textAlign: 'center' },
+  copy: { color: colors.ink, fontSize: 16, textAlign: 'center' },
+  copyMuted: { color: colors.slate, fontSize: 14, textAlign: 'center' },
   primaryBtn: {
-    backgroundColor: '#d9ae52',
+    backgroundColor: colors.brass,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 6,
     alignSelf: 'center',
   },
   primaryBtnText: {
-    color: '#232a2c',
+    color: colors.onBrass,
     fontWeight: '700',
     fontSize: 14,
     letterSpacing: 0.5,
   },
 
   /* Hero */
-  eyebrow: { color: '#d9ae52', fontSize: 12, letterSpacing: 1.1, textTransform: 'uppercase' },
+  eyebrow: { color: colors.brass, fontSize: 12, letterSpacing: 1.1, textTransform: 'uppercase' },
   eyebrowCenter: {
-    color: '#d9ae52',
+    color: colors.brass,
     fontSize: 12,
     letterSpacing: 1.1,
     textTransform: 'uppercase',
     textAlign: 'center',
   },
-  h1: { color: '#f4f0e6', fontSize: 24, fontWeight: '700', marginTop: 4 },
+  h1: { color: colors.ink, fontSize: 24, fontWeight: '700', marginTop: 4 },
 
   /* Plan pill — brass border for Pro / Trial, grey for Free */
   planPillFree: {
@@ -328,7 +350,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#3a4548',
+    borderColor: colors.rule,
   },
   planPillAccent: {
     alignSelf: 'flex-start',
@@ -337,32 +359,32 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#d9ae52',
-    backgroundColor: 'rgba(217,174,82,0.08)',
+    borderColor: colors.brass,
+    backgroundColor: colors.brassTint,
   },
-  planPillTextFree: { color: '#f4f0e6', fontSize: 12 },
-  planPillTextAccent: { color: '#d9ae52', fontSize: 12, fontWeight: '600' },
+  planPillTextFree: { color: colors.ink, fontSize: 12 },
+  planPillTextAccent: { color: colors.brass, fontSize: 12, fontWeight: '600' },
 
   /* Section titles + muted body copy */
-  sectionTitle: { color: '#f4f0e6', fontSize: 18, fontWeight: '600' },
-  muted: { color: '#a3adaa', fontSize: 13 },
+  sectionTitle: { color: colors.ink, fontSize: 18, fontWeight: '600' },
+  muted: { color: colors.slate, fontSize: 13 },
 
   /* Capability + match + saved cards share the same shape */
   card: {
-    backgroundColor: '#1c2426',
+    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 14,
     gap: 4,
   },
   cardEyebrow: {
-    color: '#d9ae52',
+    color: colors.brass,
     fontSize: 10,
     letterSpacing: 1.1,
     textTransform: 'uppercase',
   },
-  cardTitle: { color: '#f4f0e6', fontSize: 15, fontWeight: '600' },
-  cardMeta: { color: '#a3adaa', fontSize: 12 },
-  cardListItem: { color: '#f4f0e6', fontSize: 13 },
+  cardTitle: { color: colors.ink, fontSize: 15, fontWeight: '600' },
+  cardMeta: { color: colors.slate, fontSize: 12 },
+  cardListItem: { color: colors.ink, fontSize: 13 },
 
   /* Capability-card primary action — filled brass to make the website
    * handoff visually the loudest thing on the card. Secondary / light
@@ -371,11 +393,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    backgroundColor: '#d9ae52',
+    backgroundColor: colors.brass,
     borderRadius: 6,
     alignSelf: 'flex-start',
   },
-  cardActionText: { color: '#232a2c', fontWeight: '700', fontSize: 13 },
+  cardActionText: { color: colors.onBrass, fontWeight: '700', fontSize: 13 },
 
   /* Remove-from-saved pill */
   removeRow: {
@@ -384,25 +406,25 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#3a4548',
+    borderColor: colors.rule,
     alignSelf: 'flex-start',
   },
-  removeText: { color: '#f4f0e6', fontSize: 12 },
+  removeText: { color: colors.ink, fontSize: 12 },
 
   /* Pro upsell */
   proCard: {
-    backgroundColor: '#1c2426',
+    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#d9ae52',
+    borderColor: colors.brass,
     gap: 10,
   },
-  proTitle: { color: '#f4f0e6', fontSize: 16, fontWeight: '700' },
-  proBody: { color: '#a3adaa', fontSize: 13 },
+  proTitle: { color: colors.ink, fontSize: 16, fontWeight: '700' },
+  proBody: { color: colors.slate, fontSize: 13 },
 
   /* Error states */
-  errorHeading: { color: '#f28c8c', fontSize: 20, fontWeight: '700', textAlign: 'center' },
+  errorHeading: { color: colors.error, fontSize: 20, fontWeight: '700', textAlign: 'center' },
   errorBanner: {
     backgroundColor: 'rgba(242,140,140,0.12)',
     borderWidth: 1,
@@ -411,9 +433,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  errorBannerText: { color: '#f28c8c', fontSize: 13 },
+  errorBannerText: { color: colors.error, fontSize: 13 },
 
   /* Logout */
   logoutRow: { padding: 16, alignItems: 'center' },
-  logoutText: { color: '#a3adaa', fontSize: 13 },
+  logoutText: { color: colors.slate, fontSize: 13 },
 });

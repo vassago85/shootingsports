@@ -75,10 +75,54 @@ export async function apiFetch<T>(path: string, init: RequestInitJson = {}): Pro
   const parsed: unknown = raw.length > 0 ? safeJsonParse(raw) : undefined;
 
   if (!response.ok) {
-    throw new ApiError(response.status, `API ${response.status} on ${path}`, parsed);
+    throw new ApiError(response.status, friendlyErrorMessage(response.status, path, parsed), parsed);
   }
 
   return parsed as T;
+}
+
+/**
+ * Preferred error source order:
+ *   1. The first validation error on any field (`errors.<field>[0]`) —
+ *      Laravel's 422 shape, best-fit copy for a form submission.
+ *   2. The top-level `message` string — Laravel's default shape for
+ *      ValidationException and most authentication exceptions.
+ *   3. A hand-written fallback keyed on the HTTP status so the user
+ *      never sees `API 500` or `undefined` on a 500/401/403.
+ */
+function friendlyErrorMessage(status: number, path: string, body: unknown): string {
+  if (body !== null && typeof body === 'object') {
+    const bag = body as { message?: unknown; errors?: unknown };
+
+    if (bag.errors !== null && typeof bag.errors === 'object') {
+      for (const value of Object.values(bag.errors as Record<string, unknown>)) {
+        if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+          return value[0];
+        }
+      }
+    }
+
+    if (typeof bag.message === 'string' && bag.message.length > 0) {
+      return bag.message;
+    }
+  }
+
+  switch (status) {
+    case 401:
+      return 'You need to log in again.';
+    case 403:
+      return 'You are not allowed to do that.';
+    case 404:
+      return 'That page or record is gone.';
+    case 429:
+      return 'Too many attempts. Wait a moment and try again.';
+    case 500:
+    case 502:
+    case 503:
+      return 'The server is having a bad moment. Try again shortly.';
+    default:
+      return `Something went wrong on ${path}. Try again shortly.`;
+  }
 }
 
 function safeJsonParse(text: string): unknown {
