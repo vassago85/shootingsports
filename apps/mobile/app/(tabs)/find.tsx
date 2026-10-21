@@ -1,31 +1,30 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 
 import { fetchMap, MapPayload } from '@/api/map';
 import { colors, fonts } from '@/theme';
 
 /**
- * `react-native-maps` with `PROVIDER_GOOGLE` on Android hard-crashes
- * the app at native-view mount time when there's no Google Maps API
- * key in `app.json.android.config.googleMaps.apiKey`. In Expo Go the
- * key comes bundled; in a signed APK it does not, so we must bring
- * our own. Until the key is wired in we read the configured value at
- * runtime and swap the <MapView /> for a safe placeholder.
- *
- * To light the map up:
- *   1. Create a Google Maps Android API key restricted to package
- *      `com.shootingsports.app` + the EAS keystore's SHA-1.
- *   2. Paste it into `app.json` → android.config.googleMaps.apiKey.
- *   3. Rebuild the APK — this fallback vanishes automatically.
+ * Map provider strategy:
+ *   - Android: Google Maps via PROVIDER_GOOGLE. Requires an API key in
+ *     app.json → android.config.googleMaps.apiKey. Without it the native
+ *     view hard-crashes at mount time, so we check at runtime and swap in
+ *     a placeholder.
+ *   - iOS: Apple Maps (the default when `provider` is undefined). Free,
+ *     no key, no billing. Enabling Google Maps on iOS requires extra pod
+ *     setup (`react-native-google-maps` subspec) that the Expo managed
+ *     build doesn't ship by default — not worth the complexity for a
+ *     province-cluster map.
  */
 const googleMapsApiKey: string =
   (Constants.expoConfig as unknown as {
     android?: { config?: { googleMaps?: { apiKey?: string } } };
   })?.android?.config?.googleMaps?.apiKey ?? '';
-const hasGoogleMapsKey = googleMapsApiKey.length > 0;
+const hasMapProvider = Platform.OS === 'ios' || googleMapsApiKey.length > 0;
+const mapProvider = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
 
 const SOUTH_AFRICA_REGION: Region = {
   latitude: -29.0,
@@ -60,9 +59,9 @@ export default function FindScreen() {
 
   useEffect(() => {
     // Skip the map fetch when Events mode isn't active, or when the
-    // Google Maps key is missing — in the latter case the MapView never
-    // mounts anyway and the API call would just be wasted bandwidth.
-    if (mode !== 'events' || !hasGoogleMapsKey) {
+    // Android Google Maps key is missing — in the latter case the
+    // MapView never mounts anyway and the API call would be wasted.
+    if (mode !== 'events' || !hasMapProvider) {
       return;
     }
 
@@ -93,7 +92,7 @@ export default function FindScreen() {
       </View>
 
       {mode === 'events' ? (
-        !hasGoogleMapsKey ? (
+        !hasMapProvider ? (
           <View style={styles.center}>
             <Text style={styles.muted}>
               The province cluster map opens here once the Google Maps API
@@ -113,7 +112,7 @@ export default function FindScreen() {
           <View style={styles.mapWrap}>
             <MapView
               style={StyleSheet.absoluteFill}
-              provider={PROVIDER_GOOGLE}
+              provider={mapProvider}
               initialRegion={SOUTH_AFRICA_REGION}
             >
               {payload.pins.map((pin) => (
