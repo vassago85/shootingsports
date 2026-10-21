@@ -8,7 +8,9 @@
     "userInterfaceStyle": "automatic",
     "plugins": [
       "expo-router",
-      "expo-notifications"
+      "expo-notifications",
+      "expo-font",
+      "expo-web-browser"
     ],
     "ios": {
       "bundleIdentifier": "com.shootingsports.app",
@@ -30,8 +32,10 @@
     },
     "extra": {
       "eas": {
-        "projectId": ""
-      }
-    }
+        "projectId": "a3f6c97d-97b4-48df-880d-e13fd30c741a"
+      },
+      "router": {}
+    },
+    "owner": "charsley-digital"
   }
 }

@@ -69,7 +69,7 @@ export default function LoginScreen() {
         keyboardType="email-address"
         autoComplete="email"
         placeholder="you@example.com"
-        placeholderTextColor={colors.slate}
+        placeholderTextColor={colors.placeholder}
       />
 
       <Text style={styles.label}>Password</Text>
@@ -80,7 +80,7 @@ export default function LoginScreen() {
           onChangeText={setPassword}
           secureTextEntry={!showPassword}
           autoComplete="password"
-          placeholderTextColor={colors.slate}
+          placeholderTextColor={colors.placeholder}
         />
         <Pressable
           onPress={() => setShowPassword((prev) => !prev)}
@@ -92,7 +92,7 @@ export default function LoginScreen() {
           <Ionicons
             name={showPassword ? 'eye-off-outline' : 'eye-outline'}
             size={22}
-            color={colors.slate}
+            color={colors.muted}
           />
         </Pressable>
       </View>
@@ -101,7 +101,7 @@ export default function LoginScreen() {
 
       <TouchableOpacity onPress={onSubmit} disabled={submitting} style={styles.button}>
         {submitting ? (
-          <ActivityIndicator color={colors.onBrass} />
+          <ActivityIndicator color={colors.ink} />
         ) : (
           <Text style={styles.buttonText}>Log in</Text>
         )}
@@ -110,16 +110,20 @@ export default function LoginScreen() {
   );
 }
 
+// TEMPORARY stylesheet — stays until the full M1a–M1d reskin lands
+// with the proper HeroBand ("Welcome back" eyebrow + "Sign in" H1),
+// Forgot-password and Register links, and the modal presentation.
+// Token references use the new palette's semantic matches.
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.base, padding: 20, gap: 8 },
-  label: { color: colors.slate, fontSize: 12, marginTop: 12 },
+  container: { flex: 1, backgroundColor: colors.page, padding: 20, gap: 8 },
+  label: { color: colors.muted, fontSize: 12, marginTop: 12 },
   input: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     color: colors.ink,
     borderRadius: 6,
     padding: 12,
     borderWidth: 1,
-    borderColor: colors.rule,
+    borderColor: colors.control,
   },
   /* Password field — composite row so the eye-toggle sits inside the
    * same visual box as the input. The underlying TextInput still owns
@@ -127,10 +131,10 @@ const styles = StyleSheet.create({
   inputWithIcon: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: colors.rule,
+    borderColor: colors.control,
   },
   inputInner: {
     flex: 1,
@@ -142,12 +146,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   button: {
-    backgroundColor: colors.brass,
+    backgroundColor: colors.lime,
     padding: 14,
     borderRadius: 6,
     alignItems: 'center',
     marginTop: 20,
   },
-  buttonText: { color: colors.onBrass, fontWeight: '700' },
+  buttonText: { color: colors.ink, fontWeight: '700' },
   error: { color: colors.error, marginTop: 12 },
 });

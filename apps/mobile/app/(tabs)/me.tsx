@@ -142,7 +142,7 @@ export default function MeScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={colors.brass} />
+        <ActivityIndicator color={colors.link} />
       </View>
     );
   }
@@ -183,7 +183,7 @@ export default function MeScreen() {
       contentContainerStyle={{ padding: 16, gap: 20 }}
       refreshControl={
         <RefreshControl
-          tintColor={colors.brass}
+          tintColor={colors.link}
           refreshing={refreshing}
           onRefresh={() => {
             setRefreshing(true);
@@ -303,38 +303,43 @@ export default function MeScreen() {
   );
 }
 
+// TEMPORARY stylesheet — stays until the full M5a–M5h reskin lands
+// with the proper HeroBand, PlanPill, CapabilityCard and MatchCard
+// shared components (Phase 1, docs/build-pack/BUILD_SPEC.md §3.2).
+// All token references are the new palette's semantic matches: light
+// surfaces, link-green accents, lime primaries, muted supporting text.
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.base },
+  container: { flex: 1, backgroundColor: colors.page },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.base,
+    backgroundColor: colors.page,
     padding: 24,
     gap: 12,
   },
 
   /* Shared copy + buttons */
   copy: { color: colors.ink, fontSize: 16, textAlign: 'center' },
-  copyMuted: { color: colors.slate, fontSize: 14, textAlign: 'center' },
+  copyMuted: { color: colors.muted, fontSize: 14, textAlign: 'center' },
   primaryBtn: {
-    backgroundColor: colors.brass,
+    backgroundColor: colors.lime,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 6,
     alignSelf: 'center',
   },
   primaryBtnText: {
-    color: colors.onBrass,
+    color: colors.ink,
     fontWeight: '700',
     fontSize: 14,
     letterSpacing: 0.5,
   },
 
   /* Hero */
-  eyebrow: { color: colors.brass, fontSize: 12, letterSpacing: 1.1, textTransform: 'uppercase' },
+  eyebrow: { color: colors.link, fontSize: 12, letterSpacing: 1.1, textTransform: 'uppercase' },
   eyebrowCenter: {
-    color: colors.brass,
+    color: colors.link,
     fontSize: 12,
     letterSpacing: 1.1,
     textTransform: 'uppercase',
@@ -342,7 +347,7 @@ const styles = StyleSheet.create({
   },
   h1: { color: colors.ink, fontSize: 24, fontWeight: '700', marginTop: 4 },
 
-  /* Plan pill — brass border for Pro / Trial, grey for Free */
+  /* Plan pill — link-green border for Pro / Trial, grey for Free */
   planPillFree: {
     alignSelf: 'flex-start',
     marginTop: 10,
@@ -359,45 +364,47 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: colors.brass,
-    backgroundColor: colors.brassTint,
+    borderColor: colors.link,
+    backgroundColor: colors.tint,
   },
   planPillTextFree: { color: colors.ink, fontSize: 12 },
-  planPillTextAccent: { color: colors.brass, fontSize: 12, fontWeight: '600' },
+  planPillTextAccent: { color: colors.link, fontSize: 12, fontWeight: '600' },
 
   /* Section titles + muted body copy */
   sectionTitle: { color: colors.ink, fontSize: 18, fontWeight: '600' },
-  muted: { color: colors.slate, fontSize: 13 },
+  muted: { color: colors.muted, fontSize: 13 },
 
   /* Capability + match + saved cards share the same shape */
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: 8,
     padding: 14,
     gap: 4,
+    borderWidth: 1,
+    borderColor: colors.rule,
   },
   cardEyebrow: {
-    color: colors.brass,
+    color: colors.link,
     fontSize: 10,
     letterSpacing: 1.1,
     textTransform: 'uppercase',
   },
   cardTitle: { color: colors.ink, fontSize: 15, fontWeight: '600' },
-  cardMeta: { color: colors.slate, fontSize: 12 },
+  cardMeta: { color: colors.muted, fontSize: 12 },
   cardListItem: { color: colors.ink, fontSize: 13 },
 
-  /* Capability-card primary action — filled brass to make the website
-   * handoff visually the loudest thing on the card. Secondary / light
-   * in-app actions can sit above or below this later. */
+  /* Capability-card primary action — lime fill so the website handoff
+   * is the loudest thing on the card. Secondary / light in-app
+   * actions can sit above or below this later. */
   cardAction: {
     marginTop: 10,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    backgroundColor: colors.brass,
+    backgroundColor: colors.lime,
     borderRadius: 6,
     alignSelf: 'flex-start',
   },
-  cardActionText: { color: colors.onBrass, fontWeight: '700', fontSize: 13 },
+  cardActionText: { color: colors.ink, fontWeight: '700', fontSize: 13 },
 
   /* Remove-from-saved pill */
   removeRow: {
@@ -411,24 +418,22 @@ const styles = StyleSheet.create({
   },
   removeText: { color: colors.ink, fontSize: 12 },
 
-  /* Pro upsell */
+  /* Pro upsell — forest card per spec M5 */
   proCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.forest,
     borderRadius: 8,
     padding: 16,
-    borderWidth: 1,
-    borderColor: colors.brass,
     gap: 10,
   },
-  proTitle: { color: colors.ink, fontSize: 16, fontWeight: '700' },
-  proBody: { color: colors.slate, fontSize: 13 },
+  proTitle: { color: colors.onForest, fontSize: 16, fontWeight: '700' },
+  proBody: { color: colors.onForestMuted, fontSize: 13 },
 
   /* Error states */
   errorHeading: { color: colors.error, fontSize: 20, fontWeight: '700', textAlign: 'center' },
   errorBanner: {
-    backgroundColor: 'rgba(242,140,140,0.12)',
+    backgroundColor: colors.errorBg,
     borderWidth: 1,
-    borderColor: 'rgba(242,140,140,0.4)',
+    borderColor: colors.errorBorder,
     borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -437,5 +442,5 @@ const styles = StyleSheet.create({
 
   /* Logout */
   logoutRow: { padding: 16, alignItems: 'center' },
-  logoutText: { color: colors.slate, fontSize: 13 },
+  logoutText: { color: colors.muted, fontSize: 13 },
 });

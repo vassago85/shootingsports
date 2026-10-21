@@ -1,38 +1,118 @@
 /**
- * Mobile palette — aligned to the web's `resources/css/app.css` tokens
- * so the native app and shootingsports.co.za feel like the same brand
- * when a shooter flips between them. The web is canonical; mobile
- * mirrors it.
+ * Mobile theme.
  *
- * The mockup framework (`docs/superpowers/specs/2026-10-20-app-and-web-
- * mockup-framework.md`) flagged this alignment as a decision to make
- * once the first mockups came back. Paul saw them side-by-side and
- * picked "mobile matches web" — this file is that decision captured.
+ * Source of truth: {@link ../../../docs/build-pack/design/tokens.json}
+ * — these values are mirrored here because mobile code can't import
+ * from outside its own package. If a token changes in tokens.json,
+ * change it here too. Website mirrors live in
+ * `docs/build-pack/design/tokens.css` and should land as the
+ * `:root` variables in `resources/css/app.css` during Phase 1 web.
  *
- * Keep these in sync with the CSS custom-properties in app.css. If a
- * token changes there, change it here too.
+ * The palette is the live shootingsports.co.za palette (forest + lime
+ * light theme). The old brass + gunmetal dark palette this file
+ * previously held is deliberately gone — see
+ * `docs/build-pack/BUILD_SPEC.md` §2 for the rationale.
  */
+
+/* -------------------------------------------------------------------
+ * Colours
+ * ---------------------------------------------------------------- */
+
 export const colors = {
-  /** Page background — `--base` on web */
-  base: '#0B0D0E',
-  /** Card / section background — `--surface` on web */
-  surface: '#15191B',
-  /** Elevated card, filter-chip rest — `--surface-2` on web */
-  surface2: '#252B2E',
-  /** Primary text, headings — `--ink` on web */
-  ink: '#F1F2EE',
-  /** Button background, active chip — `--brass` on web (olive-green) */
-  brass: '#6B7D3A',
-  /** Hover / active text — `--brass-dk` on web */
-  brassDark: '#879A4A',
-  /** Text that sits on top of a brass button */
-  onBrass: '#1a1405',
-  /** Muted / supporting text — `--slate` on web */
-  slate: '#9CA3A5',
-  /** Hairline borders — `--rule` on web */
-  rule: '#252B2E',
-  /** Error copy — keeps a warm red; no web token to mirror */
-  error: '#f28c8c',
-  /** Transparent brass tint used by the plan pill when Pro / Trial */
-  brassTint: 'rgba(107,125,58,0.14)',
-};
+  /** Header band, hero, tab bar, upsell card, active chip, map pins */
+  forest: '#0E3328',
+  /** Primary button fill, active tab, eyebrow + pill on forest. Never on light bg. */
+  lime: '#C5E07A',
+  /** Text on light bg; text on lime */
+  ink: '#10251F',
+  /** Screen background */
+  page: '#F7F8F5',
+  /** Cards, lists, chip strip, inputs */
+  card: '#FFFFFF',
+  /** Card borders, dividers */
+  rule: '#DCE3DE',
+  /** Resting chip border */
+  chipBorder: '#D6DAD8',
+  /** Input borders, empty-state icons, spinner track, muted text on forest */
+  control: '#C6CCC9',
+  /** Meta and supporting text on light */
+  muted: '#52655E',
+  /** Input placeholder text */
+  placeholder: '#6B7C74',
+  /** Links, ghost buttons, section underline, eyebrow on light, spinner head */
+  link: '#245D3F',
+  /** Date blocks, icon tiles, map backdrop */
+  tint: '#E7EFE8',
+  /** Error text and error input border (proposed in spec; not final) */
+  error: '#B3261E',
+  /** Error row background (proposed) */
+  errorBg: '#FBEAEA',
+  /** Error row border (proposed) */
+  errorBorder: '#EBC1BE',
+  /** White on forest */
+  onForest: '#FFFFFF',
+  /** Muted text on forest, same as `control` */
+  onForestMuted: '#C6CCC9',
+} as const;
+
+/* -------------------------------------------------------------------
+ * Typography
+ *
+ * Load with @expo-google-fonts/saira-condensed, /ibm-plex-sans,
+ * /ibm-plex-mono in the root layout. Until those packages are added
+ * and useFonts() has resolved, these fontFamily strings will fall
+ * back silently to the system default on both platforms — safe to
+ * reference ahead of install.
+ * ---------------------------------------------------------------- */
+
+export const fonts = {
+  /** H1, H2, buttons — always uppercase */
+  display: 'SairaCondensed_700Bold',
+  displaySemi: 'SairaCondensed_600SemiBold',
+  /** Body copy */
+  body: 'IBMPlexSans_400Regular',
+  bodyMedium: 'IBMPlexSans_500Medium',
+  bodySemi: 'IBMPlexSans_600SemiBold',
+  /** Eyebrows, dates, counts, meta */
+  mono: 'IBMPlexMono_400Regular',
+  monoSemi: 'IBMPlexMono_600SemiBold',
+} as const;
+
+/* -------------------------------------------------------------------
+ * Shape and spacing
+ * ---------------------------------------------------------------- */
+
+export const radius = {
+  /** Match cards, capability cards */
+  card: 14,
+  /** Primary + ghost buttons */
+  button: 10,
+  /** Text inputs */
+  input: 10,
+  /** Filter chips, plan pill */
+  chip: 999,
+} as const;
+
+export const size = {
+  /** Minimum tappable region on any axis — accessibility floor */
+  touchMin: 44,
+  /** Chip height, matches touchMin */
+  chip: 44,
+  /** Primary + ghost button height */
+  button: 48,
+  /** Text input height */
+  input: 52,
+  /** Tab bar content height (plus safe-area inset) */
+  tabBar: 49,
+} as const;
+
+export const space = {
+  /** Horizontal screen gutter */
+  screenX: 20,
+  /** Gap between major sections on a screen */
+  section: 26,
+  /** Padding inside a card */
+  cardPad: 16,
+  /** Vertical gap between list rows */
+  list: 10,
+} as const;

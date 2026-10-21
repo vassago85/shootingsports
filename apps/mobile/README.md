@@ -1,76 +1,56 @@
-# Shooting Sports — mobile client
+# Shooting Sports mobile app
 
-Expo Router app that consumes the Laravel `/api/v1` surface for the
-shooters-first discovery MVP. See
-`docs/superpowers/specs/2026-09-17-native-apps-roadmap.md` for the
-phased plan this scaffold satisfies.
+Expo (SDK 57) + Expo Router + TypeScript. The design brief and screen
+spec live in `docs/build-pack/BUILD_SPEC.md`. The design tokens live
+in `docs/build-pack/design/tokens.json` and are mirrored into
+`src/theme.ts`.
 
-## Prerequisites
+## Why we pin to SDK 57 (and not the latest Expo)
 
-- Node 20+
-- Expo CLI (`npx expo` — no global install required)
-- iOS Simulator (Xcode) or Android emulator, or Expo Go on a device
-- Laravel API running locally at `http://127.0.0.1:8000` (or accessible
-  from the device via LAN IP / `10.0.2.2` on Android emulator)
+Section 0.2 of `BUILD_SPEC.md` says: *"Target the latest stable Expo
+SDK, Expo Router and React Native. Never pin to an older major to
+make code fit. If the repo is behind, flag it and keep the upgrade
+as a separate change."*
 
-## Setup
+We're following the flag-it clause. The reason is downstream, not us:
+
+- The South African Google Play Store serves **Expo Go 2.33.x**,
+  which bundles SDK 57 as its newest supported SDK.
+- Expo Go on US / EU stores already has SDK 58+. SA has not caught
+  up at the time of writing (2026-10-21).
+- Testing on a real device via Expo Go is the fastest feedback loop
+  we have during Phase 1. Jumping to SDK 58 would force every
+  tester onto a custom dev-client APK before they can open the app.
+
+### When to lift the pin
+
+Lift the pin to the latest SDK when **either**:
+
+1. The SA Play Store ships an Expo Go that bundles the newer SDK; or
+2. We've shipped a custom dev-client APK through EAS Build and
+   handed it to all testers.
+
+Whichever happens first, update:
+
+- `apps/mobile/package.json` dependency pins — `expo`, every
+  `expo-*` package, `react`, `react-native`, `react-native-*`.
+- `app.json` plugins list — some plugins (Notifications, Maps)
+  gain new properties across SDKs.
+- Re-run `npx expo-doctor` and fix every warning before shipping.
+
+## Local development
 
 ```bash
 cd apps/mobile
-cp .env.example .env         # then edit EXPO_PUBLIC_API_URL
 npm install
-npx expo install --check     # aligns package versions with the SDK
+npm start      # Expo CLI, prints a QR for Expo Go
+npm run android
+npm run ios
+npm run web
+npm run typecheck
 ```
 
-## Run
-
-```bash
-npx expo start
-```
-
-Then press `i` for iOS Simulator, `a` for Android emulator, or scan
-the QR code with Expo Go.
-
-## Environment
-
-| Variable | Purpose |
-|---|---|
-| `EXPO_PUBLIC_API_URL` | Base URL of the Laravel API. Android emulator points at `10.0.2.2:8000` for host `127.0.0.1`. iOS Simulator can use `http://127.0.0.1:8000`. Real devices need the host machine's LAN IP. |
-
-## Screens
-
-Four tabs, always, for every signed-in or guest shooter. No tab
-appears or disappears based on role — the Manage hub lives inside
-the Me tab and only shows up when the shooter also wears a club,
-shop, range, or media hat.
-
-- `/` Home — next upcoming matches on the national calendar
-- `/calendar` Calendar list with family + novice filters
-- `/find` Discovery surface with chips for Events / Clubs / Ranges /
-  Shops / Sports. Events is backed by the province cluster map today;
-  the other chips light up as their directory endpoints land.
-- `/me` Shooter home. Plan state, saved matches, and (if applicable)
-  the Manage hub. Heavy desk work (members, invoices, magazine,
-  billing) opens the website via the system browser rather than
-  rendering inline, so Apple / Google in-app purchase rules do not
-  apply. Covers eight visual states (M5a–M5h in
-  `docs/superpowers/specs/2026-10-20-app-and-web-mockup-framework.md`):
-  signed-out, Free + no caps, Free + 1 cap, Pro, Trial, all four
-  caps, loading, and error.
-- `/matches/[slug]` Match detail
-- `/login` Email + password login
-
-## Push
-
-`src/push/register.ts` runs on app launch when the user is signed in
-and stores an Expo push token via `POST /api/v1/me/device-tokens`.
-Delivery is wired server-side in Phase 3.
-
-## Before EAS builds
-
-- Add app icon + notification icon + adaptive icon PNGs under `./assets/`
-  and reference them in `app.json` (currently omitted so a fresh clone
-  boots without the assets present).
-- Set `extra.eas.projectId` in `app.json` after running `eas init`.
-- Set `android.config.googleMaps.apiKey` for release builds. Dev builds
-  via Expo Go work without a key.
+The dev server needs the Laravel API reachable from your phone.
+Point `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` at your LAN IP
+(e.g. `http://192.168.1.124:8000`) and run `php artisan serve
+--host=0.0.0.0` so the Samsung on Wi-Fi can hit it.
