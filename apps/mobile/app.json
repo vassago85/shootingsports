@@ -36,6 +36,12 @@
       },
       "router": {}
     },
-    "owner": "charsley-digital"
+    "owner": "charsley-digital",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a3f6c97d-97b4-48df-880d-e13fd30c741a"
+    }
   }
 }
