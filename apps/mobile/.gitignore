@@ -3,6 +3,7 @@ node_modules/
 dist/
 .env
 .env.local
+.env.eas-simulator
 web-build/
 *.orig.*
 *.jks
