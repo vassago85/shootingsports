@@ -26,7 +26,8 @@
       "bundleIdentifier": "com.shootingsports.app",
       "supportsTablet": true,
       "config": {
-        "usesNonExemptEncryption": false
+        "usesNonExemptEncryption": false,
+        "googleMapsApiKey": "AIzaSyC-DIVqHR_xs8DZugLa2slGfUv--itlCIg"
       }
     },
     "android": {
@@ -37,7 +38,7 @@
       },
       "config": {
         "googleMaps": {
-          "apiKey": ""
+          "apiKey": "AIzaSyC-DIVqHR_xs8DZugLa2slGfUv--itlCIg"
         }
       }
     },
