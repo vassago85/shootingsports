@@ -1,26 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
+import { colors, fonts } from '@/theme';
+
 /**
  * Four tabs, always, for every signed-in or guest shooter. No tab
  * appears or disappears based on role — the Manage hub lives inside
  * the Me tab and only shows up when the shooter also wears a club,
  * shop, range, or media hat.
  *
- * Icons use the outline variant when inactive and the solid variant
- * when active, matching how the tokens doc describes "active chip
- * flipped colours" for the brass accent.
+ * Spec §3.1: "The tab bar is forest. Inactive items are control-
+ * coloured, the active item is lime, and each tab has an icon over
+ * its label." Icons use the outline variant when inactive and the
+ * solid variant when active.
  */
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#d9ae52',
-        tabBarInactiveTintColor: '#a3adaa',
-        tabBarStyle: { backgroundColor: '#161c1e', borderTopColor: '#3a4548' },
-        headerStyle: { backgroundColor: '#232a2c' },
-        headerTintColor: '#f4f0e6',
-        headerTitleStyle: { fontWeight: '600' },
+        tabBarActiveTintColor: colors.lime,
+        tabBarInactiveTintColor: colors.control,
+        tabBarStyle: { backgroundColor: colors.forest, borderTopColor: colors.forest },
+        headerStyle: { backgroundColor: colors.forest },
+        headerTintColor: colors.onForest,
+        headerTitleStyle: { fontFamily: fonts.display, fontSize: 18 },
+        sceneStyle: { backgroundColor: colors.page },
       }}
     >
       <Tabs.Screen

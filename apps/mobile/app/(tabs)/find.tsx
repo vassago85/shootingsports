@@ -4,6 +4,7 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 
 import { fetchMap, MapPayload } from '@/api/map';
+import { colors, fonts } from '@/theme';
 
 const SOUTH_AFRICA_REGION: Region = {
   latitude: -29.0,
@@ -74,7 +75,7 @@ export default function FindScreen() {
           </View>
         ) : payload === null ? (
           <View style={styles.center}>
-            <ActivityIndicator />
+            <ActivityIndicator color={colors.link} />
           </View>
         ) : (
           <View style={styles.mapWrap}>
@@ -117,36 +118,49 @@ export default function FindScreen() {
   );
 }
 
+// TEMPORARY stylesheet — stays until the full M4 reskin lands
+// (chip strip for Events/Clubs/Ranges/Shops/Sports, states a-l,
+// placeholders say "opens here when its API endpoint lands"
+// per BUILD_SPEC §3.2). Palette matches the pack's forest/lime.
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#101516' },
+  container: { flex: 1, backgroundColor: colors.page },
   chipBar: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
     padding: 12,
-    backgroundColor: '#161c1e',
+    backgroundColor: colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.rule,
   },
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#3a4548',
+    borderColor: colors.chipBorder,
+    backgroundColor: colors.card,
   },
-  chipActive: { backgroundColor: '#d9ae52', borderColor: '#d9ae52' },
-  chipText: { color: '#f4f0e6', fontSize: 12 },
-  chipTextActive: { color: '#232a2c', fontWeight: '700' },
+  chipActive: { backgroundColor: colors.forest, borderColor: colors.forest },
+  chipText: { color: colors.ink, fontSize: 14, fontFamily: fonts.bodyMedium },
+  chipTextActive: { color: colors.page, fontWeight: '700' },
   mapWrap: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#101516', padding: 24 },
-  muted: { color: '#a3adaa', fontSize: 14, textAlign: 'center' },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.page,
+    padding: 24,
+  },
+  muted: { color: colors.muted, fontSize: 15, textAlign: 'center', lineHeight: 22 },
   footer: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
     padding: 12,
-    backgroundColor: '#101516cc',
+    backgroundColor: colors.forest,
   },
-  footerText: { color: '#f4f0e6', textAlign: 'center', fontSize: 12 },
-  error: { color: '#f28c8c', textAlign: 'center' },
+  footerText: { color: colors.onForest, textAlign: 'center', fontSize: 12 },
+  error: { color: colors.error, textAlign: 'center' },
 });

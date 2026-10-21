@@ -1,5 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { colors, fonts } from '@/theme';
+
 /**
  * Web override for the Find tab. The native screen in `find.tsx`
  * uses `react-native-maps`, which is iOS/Android only — importing it
@@ -31,26 +33,30 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#101516',
+    backgroundColor: colors.page,
     padding: 32,
     gap: 12,
   },
   eyebrow: {
-    color: '#d9ae52',
+    color: colors.link,
     fontSize: 12,
-    letterSpacing: 1.1,
+    letterSpacing: 1.4,
     textTransform: 'uppercase',
+    fontFamily: fonts.monoSemi,
   },
   title: {
-    color: '#f4f0e6',
-    fontSize: 20,
+    color: colors.ink,
+    fontSize: 24,
     fontWeight: '700',
     textAlign: 'center',
+    fontFamily: fonts.display,
+    textTransform: 'uppercase',
   },
   copy: {
-    color: '#a3adaa',
-    fontSize: 14,
+    color: colors.muted,
+    fontSize: 15,
     textAlign: 'center',
     maxWidth: 420,
+    lineHeight: 22,
   },
 });

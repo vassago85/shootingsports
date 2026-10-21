@@ -5,6 +5,7 @@ import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpac
 import { EventDetail, fetchEvent } from '@/api/events';
 import { saveEvent, unsaveEvent, listSavedEvents } from '@/api/saved-events';
 import { getAuthToken } from '@/auth/store';
+import { colors, fonts } from '@/theme';
 
 export default function MatchDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -68,7 +69,7 @@ export default function MatchDetailScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator />
+        <ActivityIndicator color={colors.link} />
       </View>
     );
   }
@@ -114,22 +115,59 @@ export default function MatchDetailScreen() {
   );
 }
 
+// TEMPORARY stylesheet — stays until the full R1/R2 reskin lands
+// (HeroBand with discipline eyebrow, details list, PrimaryButton
+// "Save match" + GhostButton "Open match page", in-app browser for
+// the external link, per BUILD_SPEC §3.2).
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#101516' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#101516' },
-  title: { color: '#f4f0e6', fontSize: 22, fontWeight: '700' },
-  meta: { color: '#a3adaa', fontSize: 13 },
-  body: { color: '#d0d5d3', fontSize: 14, lineHeight: 20, marginTop: 12 },
+  container: { flex: 1, backgroundColor: colors.page },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.page,
+  },
+  title: {
+    color: colors.ink,
+    fontSize: 26,
+    fontWeight: '700',
+    fontFamily: fonts.display,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  meta: { color: colors.muted, fontSize: 13, fontFamily: fonts.mono },
+  body: { color: colors.ink, fontSize: 15, lineHeight: 22, marginTop: 12 },
   row: { flexDirection: 'row', gap: 12, marginTop: 16, flexWrap: 'wrap' },
-  primary: { backgroundColor: '#d9ae52', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 6 },
-  primaryText: { color: '#232a2c', fontWeight: '700' },
+  primary: {
+    backgroundColor: colors.lime,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 10,
+    minHeight: 48,
+    justifyContent: 'center',
+  },
+  primaryText: {
+    color: colors.ink,
+    fontWeight: '700',
+    fontFamily: fonts.display,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+  },
   secondary: {
     borderWidth: 1,
-    borderColor: '#3a4548',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 6,
+    borderColor: colors.link,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 10,
+    minHeight: 48,
+    justifyContent: 'center',
   },
-  secondaryText: { color: '#f4f0e6' },
-  error: { color: '#f28c8c', textAlign: 'center', margin: 24 },
+  secondaryText: {
+    color: colors.link,
+    fontWeight: '700',
+    fontFamily: fonts.display,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+  },
+  error: { color: colors.error, textAlign: 'center', margin: 24 },
 });

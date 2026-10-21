@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { EventCard, listEvents } from '@/api/events';
+import { colors, fonts } from '@/theme';
 
 type Filters = {
   family: string | null;
@@ -74,7 +75,7 @@ export default function CalendarScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator style={{ marginTop: 32 }} />
+        <ActivityIndicator style={{ marginTop: 32 }} color={colors.link} />
       ) : error !== null ? (
         <Text style={styles.error}>{error}</Text>
       ) : (
@@ -110,33 +111,41 @@ export default function CalendarScreen() {
   );
 }
 
+// TEMPORARY stylesheet — stays until the full M3 reskin lands
+// (sticky chip strip, pinned Novice toggle, removable province
+// chip, MatchRow grouped by month, states a-e per BUILD_SPEC §3.2).
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#101516' },
+  container: { flex: 1, backgroundColor: colors.page },
   filterBar: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
     padding: 12,
-    backgroundColor: '#161c1e',
+    backgroundColor: colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.rule,
   },
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#3a4548',
+    borderColor: colors.chipBorder,
+    backgroundColor: colors.card,
   },
-  chipActive: { backgroundColor: '#d9ae52', borderColor: '#d9ae52' },
-  chipText: { color: '#f4f0e6', fontSize: 12 },
-  chipTextActive: { color: '#232a2c', fontWeight: '700' },
+  chipActive: { backgroundColor: colors.forest, borderColor: colors.forest },
+  chipText: { color: colors.ink, fontSize: 14, fontFamily: fonts.bodyMedium },
+  chipTextActive: { color: colors.page, fontWeight: '700' },
   card: {
-    backgroundColor: '#1c2426',
-    borderRadius: 8,
-    padding: 14,
-    gap: 4,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.rule,
+    borderRadius: 14,
+    padding: 16,
+    gap: 6,
   },
-  cardTitle: { color: '#f4f0e6', fontSize: 16, fontWeight: '600' },
-  cardMeta: { color: '#a3adaa', fontSize: 12 },
-  empty: { color: '#a3adaa', textAlign: 'center', marginTop: 48 },
-  error: { color: '#f28c8c', textAlign: 'center', margin: 24 },
+  cardTitle: { color: colors.ink, fontSize: 16, fontWeight: '600' },
+  cardMeta: { color: colors.muted, fontSize: 12 },
+  empty: { color: colors.muted, textAlign: 'center', marginTop: 48 },
+  error: { color: colors.error, textAlign: 'center', margin: 24 },
 });

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { EventCard, listEvents } from '@/api/events';
+import { colors, fonts } from '@/theme';
 
 /**
  * Home — the reason to open the app on a Friday. The next few
@@ -54,7 +55,7 @@ export default function HomeScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator />
+        <ActivityIndicator color={colors.link} />
       ) : error !== null ? (
         <Text style={styles.error}>{error}</Text>
       ) : events.length === 0 ? (
@@ -86,25 +87,51 @@ export default function HomeScreen() {
   );
 }
 
+// TEMPORARY stylesheet — stays until the full M2 reskin lands
+// (HeroBand + MatchCard + GhostButton primitives, states a-d per
+// docs/build-pack/BUILD_SPEC.md §3.2). Token references match the
+// pack's forest/lime light palette.
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#101516' },
-  eyebrow: { color: '#d9ae52', fontSize: 12, letterSpacing: 1.1, textTransform: 'uppercase' },
-  h1: { color: '#f4f0e6', fontSize: 24, fontWeight: '700', marginTop: 4 },
-  muted: { color: '#a3adaa', fontSize: 14 },
-  error: { color: '#f28c8c', fontSize: 14 },
-  card: {
-    backgroundColor: '#1c2426',
-    borderRadius: 8,
-    padding: 14,
-    gap: 4,
+  container: { flex: 1, backgroundColor: colors.page },
+  eyebrow: {
+    color: colors.link,
+    fontSize: 12,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    fontFamily: fonts.monoSemi,
   },
-  cardTitle: { color: '#f4f0e6', fontSize: 16, fontWeight: '600' },
-  cardMeta: { color: '#a3adaa', fontSize: 12 },
+  h1: {
+    color: colors.ink,
+    fontSize: 28,
+    fontWeight: '700',
+    marginTop: 4,
+    fontFamily: fonts.display,
+    textTransform: 'uppercase',
+  },
+  muted: { color: colors.muted, fontSize: 14 },
+  error: { color: colors.error, fontSize: 14 },
+  card: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.rule,
+    borderRadius: 14,
+    padding: 16,
+    gap: 6,
+  },
+  cardTitle: { color: colors.ink, fontSize: 16, fontWeight: '600' },
+  cardMeta: { color: colors.muted, fontSize: 12 },
   cta: {
-    backgroundColor: '#d9ae52',
-    paddingVertical: 12,
-    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.link,
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: 'center',
   },
-  ctaText: { color: '#232a2c', fontWeight: '700' },
+  ctaText: {
+    color: colors.link,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    fontFamily: fonts.display,
+  },
 });
