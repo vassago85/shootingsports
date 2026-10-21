@@ -318,7 +318,7 @@ Existing or named in the framework. Verify the shapes in the code.
 | 2. API surfaces | M1, M2, M3, M5 and R1, R2 with every state | Every request has a visible loading state and a recovery path |
 | 3. Role stacking | Manage cards from the capability payload; `/me`, `/me/settings`, `/me/log`, `/desk` home | Shooters with no capabilities and with four are equally easy to read; `/desk` cannot reach `/admin` |
 | 4. Discovery | M4 Events map and pin to Calendar deep link; directory placeholders | No placeholder looks like a zero-results search |
-| 5. Increments (flagged) | M2e, M4f/h/j/l, R3, activity history | Each lands with its own real endpoint |
+| 5. Increments (flagged) | M2e, M4f/h/j/l, R3, activity history, M3 advanced filters (sub-discipline chips, date range, confirmed-only toggle, distance slider) | Each lands with its own real endpoint. The API side of M3 advanced filters already exists — `/api/v1/events` accepts `discipline`, `from`, `to`, `confirmed`, `radius`, `near`; this is pure UI work. |
 
 ---
 
