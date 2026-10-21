@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Url;
@@ -42,12 +43,14 @@ use Livewire\Component;
  *   - {@see self::submit()} runs full-form validation and creates the
  *     records. Tests may call submit() directly after setting every
  *     field — the wizard navigation is UX, not behaviour.
- *   - The `step` property is URL-bound so hitting Back / Forward in
- *     the browser lands on the step the user left, not the start.
+ *   - The `step` property is URL-bound and pushes a history entry
+ *     on each change, so the browser Back button walks the steps
+ *     the shooter just left. A bookmarked or typed step cannot
+ *     jump past the first step whose fields are still invalid.
  */
 class SubmitMatch extends Component
 {
-    #[Url(as: 'step')]
+    #[Url(as: 'step', history: true)]
     public int $step = 1;
 
     // Step 1 — Date
@@ -86,17 +89,61 @@ class SubmitMatch extends Component
     public function mount(): void
     {
         $this->signup_note = (string) Session::get('md.pending_host', '');
+    }
 
-        // Clamp any URL-supplied step to a sane range. Protects
-        // against someone bookmarking ?step=99 or a stale link.
-        $this->step = max(1, min(self::TOTAL_STEPS, $this->step));
+    /**
+     * Runs after the URL attribute has copied `?step=` onto the
+     * property. Clamping inside mount() is too early — that value
+     * is still the default when mount() runs. Later Livewire
+     * requests already carry a step the actions have checked, so
+     * this only applies to the first full-page load.
+     */
+    public function booted(): void
+    {
+        if (app('livewire')->isLivewireRequest()) {
+            return;
+        }
+
+        $reachable = $this->reachableStep($this->step);
+
+        if (request()->has('step') && (int) request()->query('step') !== $reachable) {
+            $this->redirect(route('events.submit', ['step' => $reachable]), navigate: false);
+
+            return;
+        }
+
+        $this->step = $reachable;
+    }
+
+    public function updatedAllDay(bool $allDay): void
+    {
+        if (! $allDay) {
+            return;
+        }
+
+        $this->clearHiddenTimes();
+    }
+
+    /**
+     * A forged request can set `step` directly. Keep it on a step
+     * the shooter has actually earned.
+     */
+    public function updatedStep(int $step): void
+    {
+        $reachable = $this->reachableStep($step);
+
+        if ($step !== $reachable) {
+            $this->step = $reachable;
+        }
     }
 
     public function next(): void
     {
+        $this->normalizeSubmissionFields();
+
         $this->validate(
             $this->rulesForStep($this->step),
-            [],
+            $this->validationMessages(),
             $this->validationAttributes(),
         );
 
@@ -110,7 +157,7 @@ class SubmitMatch extends Component
 
     public function goTo(int $step): void
     {
-        $this->step = max(1, min(self::TOTAL_STEPS, $step));
+        $this->step = $this->reachableStep($step);
     }
 
     public function submit(): void
@@ -123,13 +170,11 @@ class SubmitMatch extends Component
             return;
         }
 
-        if ($this->discipline_id === '') {
-            $this->discipline_id = null;
-        }
+        $this->normalizeSubmissionFields();
 
         $this->validate(
             $this->fullRules(),
-            [],
+            $this->validationMessages(),
             $this->validationAttributes(),
         );
 
@@ -222,8 +267,8 @@ class SubmitMatch extends Component
             1 => [
                 'starts_on' => ['required', 'date', 'after_or_equal:today'],
                 'all_day' => ['boolean'],
-                'starts_at_time' => ['nullable', 'required_if:all_day,false', 'date_format:H:i'],
-                'ends_at_time' => ['nullable', 'required_if:all_day,false', 'date_format:H:i', 'after:starts_at_time'],
+                'starts_at_time' => [Rule::excludeIf(fn (): bool => $this->all_day), 'nullable', 'required_if:all_day,false', 'date_format:H:i'],
+                'ends_at_time' => [Rule::excludeIf(fn (): bool => $this->all_day), 'nullable', 'required_if:all_day,false', 'date_format:H:i', 'after:starts_at_time'],
             ],
             2 => [
                 'title' => ['required', 'string', 'max:160'],
@@ -265,10 +310,91 @@ class SubmitMatch extends Component
             'starts_on' => 'date',
             'starts_at_time' => 'start time',
             'ends_at_time' => 'end time',
-            'host_name' => 'club or series',
+            'host_name' => 'club, range or series',
+            'province' => 'province',
             'discipline_id' => 'sport',
             'all_day' => 'all-day toggle',
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function validationMessages(): array
+    {
+        return [
+            'starts_on.required' => 'Enter the date.',
+            'starts_on.after_or_equal' => 'The date must be today or later.',
+            'starts_at_time.required_if' => 'Enter a start time.',
+            'ends_at_time.required_if' => 'Enter an end time.',
+            'ends_at_time.after' => 'The end time must be after the start time.',
+            'title.required' => 'Enter the match title.',
+            'host_name.required' => 'Enter the club, range or series.',
+            'province.required' => 'Pick a province.',
+        ];
+    }
+
+    /**
+     * Highest step a request may land on: the first incomplete step,
+     * or Review once Date, Match and Venue all pass.
+     */
+    private function reachableStep(int $requested): int
+    {
+        $requested = max(1, min(self::TOTAL_STEPS, $requested));
+
+        $this->normalizeSubmissionFields();
+
+        $reachable = 1;
+
+        for ($step = 1; $step < self::TOTAL_STEPS; $step++) {
+            if (! $this->stepDataIsValid($step)) {
+                break;
+            }
+
+            $reachable = $step + 1;
+        }
+
+        return min($requested, $reachable);
+    }
+
+    private function stepDataIsValid(int $step): bool
+    {
+        $rules = $this->rulesForStep($step);
+
+        if ($rules === []) {
+            return true;
+        }
+
+        return Validator::make(
+            $this->unwrapDataForValidation($this->getDataForValidation($rules)),
+            $rules,
+            $this->validationMessages(),
+            $this->validationAttributes(),
+        )->passes();
+    }
+
+    private function normalizeSubmissionFields(): void
+    {
+        if ($this->discipline_id === '') {
+            $this->discipline_id = null;
+        }
+
+        $this->clearHiddenTimes();
+    }
+
+    /**
+     * All-day matches have no start or end time. Leaving a rejected
+     * pair in state blocks Next on fields the form no longer shows.
+     */
+    private function clearHiddenTimes(): void
+    {
+        if (! $this->all_day) {
+            return;
+        }
+
+        $this->starts_at_time = '';
+        $this->ends_at_time = '';
+        $this->resetValidation(['starts_at_time', 'ends_at_time']);
     }
 
     /**

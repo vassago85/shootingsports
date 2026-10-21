@@ -1343,6 +1343,25 @@ button.wiz-step-btn:hover { border-color: var(--brass); color: var(--ink); }
 .wiz-step-future .wiz-step-btn { opacity: .55; }
 
 .wiz-form { display: flex; flex-direction: column; gap: 14px; }
+.wiz-form .field input,
+.wiz-form .field select,
+.wiz-form .field textarea {
+    background: #fff;
+    color: #10251f;
+    color-scheme: light;
+    border: 1px solid #c5d0c8;
+    border-radius: 8px;
+    font-family: var(--f-sans);
+    font-size: 15px;
+}
+.wiz-form .field .err {
+    color: #9b2c2c;
+    font-family: var(--f-sans);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
 .wiz-h2 { font-size: 18px; margin: 2px 0 10px; font-weight: 600; }
 .wiz-inline-check {
     flex-direction: row; align-items: center; gap: 10px;
@@ -2191,8 +2210,8 @@ footer.site a:hover { color: #fff; }
     position: absolute; inset: 0; z-index: 0;
     pointer-events: none;
     background-image:
-        linear-gradient(rgba(217,174,82,.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(217,174,82,.05) 1px, transparent 1px);
+        linear-gradient(rgba(169,195,90,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(169,195,90,.05) 1px, transparent 1px);
     background-size: 60px 60px;
     mask-image: radial-gradient(ellipse at center, #000 40%, transparent 85%);
     -webkit-mask-image: radial-gradient(ellipse at center, #000 40%, transparent 85%);
@@ -2230,11 +2249,11 @@ footer.site a:hover { color: #fff; }
 .cs-btn.ghost {
     background: transparent;
     color: var(--brass-lt);
-    border-color: rgba(217,174,82,.55);
+    border-color: rgba(169,195,90,.55);
 }
 .cs-btn.ghost:hover {
-    background: rgba(217,174,82,.10);
-    color: #f5e5b6;
+    background: rgba(169,195,90,.10);
+    color: #c5e07a;
     transform: none;
 }
 
@@ -2257,20 +2276,20 @@ footer.site a:hover { color: #fff; }
     color: var(--brass-lt);
     margin: 0 0 24px;
     padding: 6px 14px;
-    border: 1px solid rgba(217,174,82,.35);
+    border: 1px solid rgba(169,195,90,.35);
     border-radius: 999px;
-    background: rgba(217,174,82,.06);
+    background: rgba(169,195,90,.06);
 }
 .cs-dot {
     width: 8px; height: 8px; border-radius: 50%;
     background: var(--brass-lt);
-    box-shadow: 0 0 0 0 rgba(217,174,82,.7);
+    box-shadow: 0 0 0 0 rgba(169,195,90,.7);
     animation: cs-dot-pulse 2.2s ease-out infinite;
 }
 @keyframes cs-dot-pulse {
-    0%   { box-shadow: 0 0 0 0 rgba(217,174,82,.55); }
-    70%  { box-shadow: 0 0 0 12px rgba(217,174,82,0); }
-    100% { box-shadow: 0 0 0 0 rgba(217,174,82,0); }
+    0%   { box-shadow: 0 0 0 0 rgba(169,195,90,.55); }
+    70%  { box-shadow: 0 0 0 12px rgba(169,195,90,0); }
+    100% { box-shadow: 0 0 0 0 rgba(169,195,90,0); }
 }
 @media (prefers-reduced-motion: reduce) {
     .cs-dot { animation: none; }
@@ -2289,7 +2308,7 @@ footer.site a:hover { color: #fff; }
 .cs-headline em {
     font-style: normal;
     color: var(--brass-lt);
-    background: linear-gradient(180deg, #efd28b 0%, #d9ae52 60%, #b3892b 100%);
+    background: linear-gradient(180deg, #d4ec8e 0%, #a9c35a 55%, #6b7d3a 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -2350,7 +2369,7 @@ footer.site a:hover { color: #fff; }
     text-underline-offset: 3px;
     text-decoration-thickness: 1px;
 }
-.cs-cta a:hover { color: #f5e5b6; }
+.cs-cta a:hover { color: #c5e07a; }
 
 .cs-interest {
     margin-top: 36px;

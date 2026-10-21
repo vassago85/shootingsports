@@ -42,47 +42,52 @@
                 </ol>
 
                 <form wire:submit.prevent="submit" class="wiz-form" novalidate>
-                    {{-- Step 1 — Date & time -----------------------------------------}}
+                    {{-- Step 1 — Date & time. Each step is its own keyed
+                         element so morphing cannot reuse the date input
+                         as the title or host field on the next step. --}}
                     @if ($step === 1)
+                        <div wire:key="wizard-step-date">
                         <h2 class="wiz-h2">When is the match?</h2>
                         <label class="field">
                             <span>Date</span>
-                            <input type="date" wire:model="starts_on" required>
+                            <input type="date" wire:key="starts-on" wire:model="starts_on" required>
                             @error('starts_on') <span class="err">{{ $message }}</span> @enderror
                         </label>
 
                         <label class="field wiz-inline-check">
-                            <input type="checkbox" wire:model.live="all_day">
+                            <input type="checkbox" wire:key="all-day" wire:model.live="all_day">
                             <span>All day</span>
                         </label>
 
                         @unless ($all_day)
-                            <div class="wiz-time-grid">
+                            <div class="wiz-time-grid" wire:key="wizard-times">
                                 <label class="field">
                                     <span>Start time</span>
-                                    <input type="time" wire:model="starts_at_time">
+                                    <input type="time" wire:key="starts-at-time" wire:model="starts_at_time">
                                     @error('starts_at_time') <span class="err">{{ $message }}</span> @enderror
                                 </label>
                                 <label class="field">
                                     <span>End time</span>
-                                    <input type="time" wire:model="ends_at_time">
+                                    <input type="time" wire:key="ends-at-time" wire:model="ends_at_time">
                                     @error('ends_at_time') <span class="err">{{ $message }}</span> @enderror
                                 </label>
                             </div>
                         @endunless
+                        </div>
 
                     {{-- Step 2 — Match -----------------------------------------------}}
                     @elseif ($step === 2)
+                        <div wire:key="wizard-step-match">
                         <h2 class="wiz-h2">What is the match?</h2>
                         <label class="field">
                             <span>Match title</span>
-                            <input type="text" wire:model="title" required autofocus maxlength="160" placeholder="e.g. Wednesday IPSC">
+                            <input type="text" wire:key="match-title" wire:model="title" required autofocus maxlength="160" placeholder="e.g. Wednesday IPSC">
                             @error('title') <span class="err">{{ $message }}</span> @enderror
                         </label>
 
                         <label class="field">
                             <span>Type</span>
-                            <select wire:model="kind" required>
+                            <select wire:key="match-kind" wire:model="kind" required>
                                 <option value="competition">Competition</option>
                                 <option value="training">Training</option>
                             </select>
@@ -91,7 +96,7 @@
 
                         <label class="field">
                             <span>Sport (optional)</span>
-                            <select wire:model="discipline_id">
+                            <select wire:key="match-discipline" wire:model="discipline_id">
                                 <option value="">Pick one</option>
                                 @foreach ($disciplineOptions as $id => $label)
                                     <option value="{{ $id }}">{{ $label }}</option>
@@ -102,17 +107,19 @@
 
                         <label class="field">
                             <span>Details (optional)</span>
-                            <textarea wire:model="description" rows="4" maxlength="2000"
+                            <textarea wire:key="match-description" wire:model="description" rows="4" maxlength="2000"
                                 placeholder="Squadding, what to bring, who can enter."></textarea>
                             @error('description') <span class="err">{{ $message }}</span> @enderror
                         </label>
+                        </div>
 
                     {{-- Step 3 — Venue -----------------------------------------------}}
                     @elseif ($step === 3)
+                        <div wire:key="wizard-step-venue">
                         <h2 class="wiz-h2">Who's hosting and where?</h2>
                         <label class="field">
                             <span>Club, range or series</span>
-                            <input type="text" wire:model="host_name" required maxlength="160"
+                            <input type="text" wire:key="host-name" wire:model="host_name" required maxlength="160"
                                 placeholder="e.g. Pretoria Rifle &amp; Pistol Club">
                             <small style="color:var(--slate);font-size:12px;display:block;margin-top:4px">
                                 If we don't have this host on the register yet, we'll create a pending listing under your account.
@@ -134,12 +141,14 @@
 
                         <label class="field">
                             <span>Town (optional)</span>
-                            <input type="text" wire:model="town" maxlength="120">
+                            <input type="text" wire:key="match-town" wire:model="town" maxlength="120">
                             @error('town') <span class="err">{{ $message }}</span> @enderror
                         </label>
+                        </div>
 
                     {{-- Step 4 — Review ----------------------------------------------}}
                     @else
+                        <div wire:key="wizard-step-review">
                         <h2 class="wiz-h2">Does this look right?</h2>
                         <dl class="wiz-review">
                             <div class="wiz-review-row">
@@ -181,6 +190,7 @@
                             Submitting saves the match as a draft. Our team gets a notification and usually
                             approves within one working day.
                         </p>
+                        </div>
                     @endif
 
                     {{-- Nav row — Back on steps 2-4, Next on 1-3, Submit on 4. ------}}

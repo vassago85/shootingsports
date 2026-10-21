@@ -187,6 +187,27 @@ it('requires a title, date, club and province', function () {
         ->assertHasErrors(['title', 'starts_on', 'host_name', 'province']);
 });
 
+it('accepts an all-day match that still has a rejected time pair in state', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(SubmitMatch::class)
+        ->set('title', 'All day steel')
+        ->set('starts_on', now()->addWeek()->toDateString())
+        ->set('all_day', true)
+        ->set('starts_at_time', '14:00')
+        ->set('ends_at_time', '09:00')
+        ->set('host_name', 'New Steel Club')
+        ->set('province', Province::Gauteng->value)
+        ->call('submit')
+        ->assertHasNoErrors()
+        ->assertRedirect();
+
+    $event = Event::query()->where('title', 'All day steel')->firstOrFail();
+
+    expect($event->all_day)->toBeTrue();
+});
+
 it('rejects a match date in the past', function () {
     $user = User::factory()->create();
 
