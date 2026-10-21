@@ -1,4 +1,3 @@
-import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -9,21 +8,18 @@ import { colors, fonts } from '@/theme';
 
 /**
  * Map provider strategy:
- *   - Android: Google Maps via PROVIDER_GOOGLE. Requires an API key in
- *     app.json → android.config.googleMaps.apiKey. Without it the native
- *     view hard-crashes at mount time, so we check at runtime and swap in
- *     a placeholder.
+ *   - Android: Google Maps via PROVIDER_GOOGLE. The API key is baked
+ *     into AndroidManifest.xml at prebuild time from app.json →
+ *     android.config.googleMaps.apiKey. If a future fork ships without
+ *     a key the MapView crashes natively on mount — the fix is to add
+ *     the key to app.json, not to guard here (Constants.expoConfig
+ *     doesn't expose android.config in production builds, so a runtime
+ *     guard isn't possible).
  *   - iOS: Apple Maps (the default when `provider` is undefined). Free,
- *     no key, no billing. Enabling Google Maps on iOS requires extra pod
- *     setup (`react-native-google-maps` subspec) that the Expo managed
- *     build doesn't ship by default — not worth the complexity for a
- *     province-cluster map.
+ *     no key, no billing. Enabling Google Maps on iOS requires extra
+ *     pod setup (`react-native-google-maps` subspec) that the Expo
+ *     managed build doesn't ship by default.
  */
-const googleMapsApiKey: string =
-  (Constants.expoConfig as unknown as {
-    android?: { config?: { googleMaps?: { apiKey?: string } } };
-  })?.android?.config?.googleMaps?.apiKey ?? '';
-const hasMapProvider = Platform.OS === 'ios' || googleMapsApiKey.length > 0;
 const mapProvider = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
 
 const SOUTH_AFRICA_REGION: Region = {
@@ -58,10 +54,7 @@ export default function FindScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Skip the map fetch when Events mode isn't active, or when the
-    // Android Google Maps key is missing — in the latter case the
-    // MapView never mounts anyway and the API call would be wasted.
-    if (mode !== 'events' || !hasMapProvider) {
+    if (mode !== 'events') {
       return;
     }
 
@@ -92,14 +85,7 @@ export default function FindScreen() {
       </View>
 
       {mode === 'events' ? (
-        !hasMapProvider ? (
-          <View style={styles.center}>
-            <Text style={styles.muted}>
-              Map is temporarily unavailable. Browse the full calendar from
-              the Calendar tab in the meantime.
-            </Text>
-          </View>
-        ) : error !== null ? (
+        error !== null ? (
           <View style={styles.center}>
             <Text style={styles.error}>{error}</Text>
           </View>
