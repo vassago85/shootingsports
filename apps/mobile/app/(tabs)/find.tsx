@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -5,6 +6,26 @@ import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 
 import { fetchMap, MapPayload } from '@/api/map';
 import { colors, fonts } from '@/theme';
+
+/**
+ * `react-native-maps` with `PROVIDER_GOOGLE` on Android hard-crashes
+ * the app at native-view mount time when there's no Google Maps API
+ * key in `app.json.android.config.googleMaps.apiKey`. In Expo Go the
+ * key comes bundled; in a signed APK it does not, so we must bring
+ * our own. Until the key is wired in we read the configured value at
+ * runtime and swap the <MapView /> for a safe placeholder.
+ *
+ * To light the map up:
+ *   1. Create a Google Maps Android API key restricted to package
+ *      `com.shootingsports.app` + the EAS keystore's SHA-1.
+ *   2. Paste it into `app.json` → android.config.googleMaps.apiKey.
+ *   3. Rebuild the APK — this fallback vanishes automatically.
+ */
+const googleMapsApiKey: string =
+  (Constants.expoConfig as unknown as {
+    android?: { config?: { googleMaps?: { apiKey?: string } } };
+  })?.android?.config?.googleMaps?.apiKey ?? '';
+const hasGoogleMapsKey = googleMapsApiKey.length > 0;
 
 const SOUTH_AFRICA_REGION: Region = {
   latitude: -29.0,
@@ -38,7 +59,10 @@ export default function FindScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (mode !== 'events') {
+    // Skip the map fetch when Events mode isn't active, or when the
+    // Google Maps key is missing — in the latter case the MapView never
+    // mounts anyway and the API call would just be wasted bandwidth.
+    if (mode !== 'events' || !hasGoogleMapsKey) {
       return;
     }
 
@@ -69,7 +93,15 @@ export default function FindScreen() {
       </View>
 
       {mode === 'events' ? (
-        error !== null ? (
+        !hasGoogleMapsKey ? (
+          <View style={styles.center}>
+            <Text style={styles.muted}>
+              The province cluster map opens here once the Google Maps API
+              key is wired up. For now, browse the full calendar from the
+              Calendar tab.
+            </Text>
+          </View>
+        ) : error !== null ? (
           <View style={styles.center}>
             <Text style={styles.error}>{error}</Text>
           </View>
