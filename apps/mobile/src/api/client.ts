@@ -60,16 +60,30 @@ export async function apiFetch<T>(path: string, init: RequestInitJson = {}): Pro
     }
   }
 
-  const response = await fetch(url, {
-    ...init,
-    headers,
-    body:
-      init.body === undefined
-        ? undefined
-        : init.body instanceof FormData
-          ? init.body
-          : JSON.stringify(init.body),
-  });
+  // `fetch` on React Native throws for every transport-level failure
+  // (airplane mode, DNS failure, server unreachable, connection reset)
+  // long before it returns a Response. Those are the moments the user
+  // most wants a human-readable explanation, so we convert the raw
+  // TypeError into an ApiError with status 0 and the exact copy the
+  // spec requires for M1d (offline / network).
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...init,
+      headers,
+      body:
+        init.body === undefined
+          ? undefined
+          : init.body instanceof FormData
+            ? init.body
+            : JSON.stringify(init.body),
+    });
+  } catch {
+    throw new ApiError(
+      0,
+      "Can't reach the server. Check your connection, then try again.",
+    );
+  }
 
   const raw = await response.text();
   const parsed: unknown = raw.length > 0 ? safeJsonParse(raw) : undefined;
