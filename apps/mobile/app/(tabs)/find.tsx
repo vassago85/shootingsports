@@ -95,9 +95,8 @@ export default function FindScreen() {
         !hasMapProvider ? (
           <View style={styles.center}>
             <Text style={styles.muted}>
-              The province cluster map opens here once the Google Maps API
-              key is wired up. For now, browse the full calendar from the
-              Calendar tab.
+              Map is temporarily unavailable. Browse the full calendar from
+              the Calendar tab in the meantime.
             </Text>
           </View>
         ) : error !== null ? (
@@ -140,8 +139,8 @@ export default function FindScreen() {
       ) : (
         <View style={styles.center}>
           <Text style={styles.muted}>
-            {MODES.find((m) => m.value === mode)?.label} search opens here when its API
-            endpoint lands. For now, browse them on the website.
+            {MODES.find((m) => m.value === mode)?.label} search is coming soon.
+            For now, browse them on the website.
           </Text>
         </View>
       )}
