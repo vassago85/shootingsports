@@ -6,7 +6,10 @@
 .phpactor.json
 .phpunit.result.cache
 /.codex
-/.cursor/
+# Cursor session caches stay local. Project rules under .cursor/rules/
+# ARE tracked — they are shared workflow guidance, not personal state.
+/.cursor/*
+!/.cursor/rules/
 /.claude
 /.mcp.json
 /boost.json

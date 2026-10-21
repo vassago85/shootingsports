@@ -1,0 +1,17 @@
+---
+description: Shooting Sports app and website build rules
+globs:
+alwaysApply: true
+---
+- The build brief is docs/build-pack/BUILD_SPEC.md. Read it before any task in apps/mobile, resources/views/public/me, the Filament desk panel, or routes/api.php.
+- Design values come from docs/build-pack/design/tokens.json (mobile: docs/build-pack/design/theme.ts, web: docs/build-pack/design/tokens.css). Do not introduce new colours, fonts or radii.
+- Visual reference: docs/build-pack/mockups/shootingsports-app-mockups.html. State codes (M1a, M3c, R2 and so on) match the spec.
+- Extend the existing Laravel, Livewire and Filament app and the Expo Router scaffold. Target the latest stable versions; never downgrade a major to make code fit.
+- Read existing controllers, resources and App\Support\DeskCapabilities before calling an endpoint. Adapt the client to real shapes; don't rewrite working APIs without asking.
+- Never invent business data: no sample club, range or person names, counts, prices or distances in seeders, fixtures or UI.
+- Features marked future go behind a feature flag defaulting to off. Never stub them with hard-coded lists.
+- UI copy: "Sign in" for the way in, "Log out" for the exit. Use the exact copy in the spec for empty and error states.
+- iPhone: real safe-area insets, no fake status bar, labelled back button on every pushed screen, external pages in expo-web-browser.
+- Accessibility: 4.5:1 text contrast, 44pt minimum targets, labels on icon-only controls, visible focus on web.
+- Write Pest tests for API and web changes, and component tests for each mobile screen's states.
+- If something in docs/build-pack/BUILD_SPEC.md section 8 (open questions) blocks the task, stop and ask.

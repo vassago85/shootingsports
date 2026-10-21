@@ -1,0 +1,22 @@
+/* Website tokens. Replace the stale --base/--brass/--surface set in resources/css/app.css.
+   The live site already renders this palette; the old variables are overridden today. */
+:root {
+  --forest: #0E3328;
+  --lime: #C5E07A;
+  --ink: #10251F;
+  --page: #F7F8F5;
+  --card: #FFFFFF;
+  --rule: #DCE3DE;
+  --chip-border: #D6DAD8;
+  --control: #C6CCC9;
+  --muted: #52655E;
+  --placeholder: #6B7C74;
+  --link: #245D3F;
+  --tint: #E7EFE8;
+  --error: #B3261E;
+  --error-bg: #FBEAEA;
+  --error-border: #EBC1BE;
+  --f-display: "Saira Condensed", "Arial Narrow", sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}

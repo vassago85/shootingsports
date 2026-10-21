@@ -1,0 +1,1160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shooting Sports app and website mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Condensed:wght@600;700&display=swap">
+<style>
+:root{--forest:#0E3328;--lime:#C5E07A;--ink:#10251F;--page:#F7F8F5;--card:#FFFFFF;--muted:#52655E;--rule:#DCE3DE;--link:#245D3F;--well:#E4E9E5}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--page);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--link);outline-offset:2px}
+.pagetop{background:var(--forest);color:#fff}
+.pagetop .in{max-width:1320px;margin:0 auto;padding:40px 24px 0}
+.pagetop h1{font:700 clamp(38px,6vw,68px)/.95 'Saira Condensed','Arial Narrow',sans-serif;text-transform:uppercase;margin:0}
+.pagetop p{max-width:66ch;color:#C6CCC9;font-size:16px;line-height:1.55;margin:14px 0 0}
+.pagetop p strong{color:#fff;font-weight:600}
+.views{display:flex;gap:4px;margin-top:28px}
+.views button{border:0;background:transparent;color:#C6CCC9;padding:14px 18px 12px;font:700 17px 'Saira Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;border-bottom:3px solid transparent;min-height:48px}
+.views button[aria-selected="true"]{color:var(--lime);border-bottom-color:var(--lime)}
+.pagetop :focus-visible{outline-color:var(--lime)}
+.wrap{max-width:1320px;margin:0 auto;padding:28px 24px 80px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid #D6DAD8;background:var(--card);color:var(--ink);font-weight:500;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--forest);border-color:var(--forest);color:var(--page)}
+.seg button .c{font:600 12px 'IBM Plex Mono',monospace;color:var(--link);margin-right:6px}
+.seg button[aria-pressed="true"] .c{color:var(--lime)}
+.screens{margin-bottom:14px}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 24px;align-items:end;padding:18px 0 16px;border-bottom:1px solid var(--rule)}
+.head h2{font:700 34px/1 'Saira Condensed',sans-serif;text-transform:uppercase;margin:0}
+.head p{margin:6px 0 0;color:var(--muted);max-width:70ch;line-height:1.5}
+.api{font:500 13px 'IBM Plex Mono',monospace;color:var(--muted);margin-top:8px}
+.layout{display:flex;gap:4px;padding:4px;border:1px solid var(--rule);border-radius:999px;background:var(--card)}
+.layout button{border:0;background:transparent;border-radius:999px;padding:0 14px;min-height:40px;color:var(--muted);font-weight:500;font-size:14px}
+.layout button[aria-pressed="true"]{background:var(--ink);color:var(--page)}
+.states{margin:16px 0 22px}
+.tag{display:inline-block;font:600 10px/1 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;border-radius:999px;padding:4px 7px;margin-left:8px;vertical-align:1px}
+.tag.live{background:#E7EFE8;color:#245D3F}.tag.future{background:#FFF1D6;color:#7A4B00}
+.seg button[aria-pressed="true"] .tag.live{background:rgba(197,224,122,.2);color:var(--lime)}
+.seg button[aria-pressed="true"] .tag.future{background:#FFF1D6;color:#7A4B00}
+.stage{display:grid;grid-template-columns:auto minmax(260px,420px);gap:40px;align-items:start}
+.dev{background:var(--well);border-radius:24px;padding:32px;display:flex;justify-content:center}
+.why{position:sticky;top:20px;display:flex;flex-direction:column;gap:12px}
+.why .code{font:600 13px 'IBM Plex Mono',monospace;color:var(--link)}
+.why h3{font:700 28px/1.05 'Saira Condensed',sans-serif;text-transform:uppercase;margin:0}
+.why p{margin:0;line-height:1.6;font-size:16px}
+.why .nav{display:flex;gap:8px;margin-top:8px}
+.why .nav button{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--link);background:transparent;color:var(--link);font:700 15px 'Saira Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.why .nav button:disabled{opacity:.35;cursor:default}
+.all{display:flex;gap:40px;overflow-x:auto;background:var(--well);border-radius:24px;padding:32px;align-items:flex-start}
+.all figure{margin:0;display:flex;flex-direction:column;gap:12px;flex:none;width:390px}
+.all figcaption{font:500 13px/18px 'IBM Plex Mono',monospace;color:var(--muted)}
+.all figcaption b{color:var(--link)}
+.all figcaption em{display:block;font-style:normal;font:400 14px/1.5 'IBM Plex Sans',sans-serif;color:var(--ink);margin-top:6px}
+.webstage{display:flex;flex-direction:column;gap:16px}
+.webscroll{overflow-x:auto;padding-bottom:6px}
+.rv h2{font:700 30px/1 'Saira Condensed',sans-serif;text-transform:uppercase;margin:44px 0 14px}
+.rv h2:first-child{margin-top:8px}
+.tbl{overflow-x:auto;background:var(--card);border:1px solid var(--rule);border-radius:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:15px;line-height:1.5;min-width:720px}
+.tbl th{text-align:left;font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--rule)}
+.tbl td{padding:12px 16px;border-bottom:1px solid var(--rule);vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}.tbl td:first-child{font-weight:600;white-space:nowrap}
+code{font:13px 'IBM Plex Mono',monospace}
+.oq,.dod{max-width:80ch;line-height:1.6;padding-left:22px}.oq li,.dod li{margin-bottom:10px}
+footer{max-width:1320px;margin:0 auto;padding:24px 24px 48px;border-top:1px solid var(--rule);color:var(--muted);font-size:14px;line-height:1.6}
+@media (max-width:900px){.stage{grid-template-columns:1fr}.why{position:static}.dev{padding:16px;overflow-x:auto;justify-content:flex-start}}
+.tabbar{width:390px;height:83px;padding:0 8px 34px;background:#0E3328;display:flex;flex:none}
+.s-m1 a{color:#245D3F}
+.s-m1 a:hover{color:#10251F}
+.s-m1 .phone{width:390px;height:844px;background:#F7F8F5;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #C6CCC9;position:relative}
+.s-m1 .eyebrow{font:600 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#245D3F}
+.s-m1 .h1{font:700 40px/1 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:6px 0 0;color:#10251F}
+.s-m1 .muted{color:#52655E;font-size:15px;line-height:1.5;margin:0}
+.s-m1 .btn{appearance:none;background:#C5E07A;color:#10251F;border:1px solid #C5E07A;font:700 17px/20px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em;padding:14px 22px;border-radius:10px;min-height:52px;box-sizing:border-box;text-align:center;display:flex;align-items:center;justify-content:center;gap:10px;width:100%}
+.s-m1 .errrow{display:flex;gap:10px;align-items:flex-start;background:#FBEAEA;border:1px solid #EBC1BE;color:#B3261E;border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.45}
+.s-m1 .field{display:flex;flex-direction:column;gap:8px}
+.s-m1 .field label{font:600 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#52655E}
+.s-m1 .in{height:52px;border-radius:10px;border:1px solid #C6CCC9;background:#FFFFFF;color:#10251F;font:400 16px 'IBM Plex Sans',sans-serif;padding:0 14px;box-sizing:border-box;width:100%}
+.s-m1 .in::placeholder{color:#6B7C74}
+.s-m1 .icon{appearance:none;width:44px;height:44px;border:0;background:transparent;color:#10251F;display:flex;align-items:center;justify-content:center;border-radius:22px}
+.s-m1 .form{padding:4px 24px 0;display:flex;flex-direction:column;gap:20px}
+.s-m1 .top{display:flex;justify-content:flex-end;padding:59px 12px 0}
+.s-m1 .ext{display:inline-flex;align-items:center;gap:6px;font-size:15px;min-height:44px;align-self:flex-start}
+.s-m1 .foot{margin-top:auto;padding:20px 24px 36px;border-top:1px solid #DCE3DE}
+.s-m1 .sm{width:18px;height:18px;border-radius:50%;border:2px solid rgba(35,42,44,.35);border-top-color:#10251F;box-sizing:border-box}
+.s-m2 a{color:#245D3F}
+.s-m2 a:hover{color:#10251F}
+.s-m2 .phone{width:390px;height:844px;background:#F7F8F5;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #C6CCC9;position:relative}
+.s-m2 .body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.s-m2 .hdr{padding:63px 20px 16px}
+.s-m2 .eyebrow{font:600 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#245D3F}
+.s-m2 .h1{font:700 36px/1 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:6px 0 0;color:#10251F}
+.s-m2 .h2{font:700 20px/24px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em;margin:0;padding-bottom:8px;border-bottom:1px solid #245D3F;color:#10251F}
+.s-m2 .muted{color:#52655E;font-size:14px;line-height:1.5;margin:0}
+.s-m2 .sec{padding:0 20px;display:flex;flex-direction:column;gap:10px}
+.s-m2 .card{background:#FFFFFF;border:1px solid #DCE3DE;border-radius:14px;padding:12px 16px;display:flex;flex-direction:column;gap:3px;text-decoration:none;color:#10251F}
+.s-m2 .ct{font-weight:600;font-size:16px;line-height:1.3;color:#10251F}
+.s-m2 .meta{font:400 13px/18px 'IBM Plex Mono',monospace;color:#52655E}
+.s-m2 .tag{font:600 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#245D3F}
+.s-m2 .btn{appearance:none;background:#C5E07A;color:#10251F;border:1px solid #C5E07A;font:700 16px/20px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em;padding:13px 22px;border-radius:10px;min-height:48px;box-sizing:border-box;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:10px}
+.s-m2 .btn.ghost{background:transparent;color:#245D3F;border-color:#245D3F}
+.s-m2 .err{color:#B3261E;font-size:15px;line-height:1.5;margin:0}
+.s-m2 .center{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:0 40px;text-align:center}
+.s-m2 .spin{width:36px;height:36px;border-radius:50%;border:3px solid #C6CCC9;border-top-color:#245D3F;box-sizing:border-box}
+.s-m2 .follow{display:flex;gap:8px;flex-wrap:wrap}
+.s-m2 .ftag{border:1px solid #C6CCC9;border-radius:999px;padding:4px 12px;font:500 13px/18px 'IBM Plex Sans',sans-serif;color:#10251F}
+.s-m2 .hdr{background:#0E3328}
+.s-m2 .hdr .eyebrow{color:#C5E07A}
+.s-m2 .hdr .h1{color:#FFFFFF}
+.s-m2 .hdr .pill{border-color:#C5E07A;color:#C5E07A}
+.s-m2 .hdr .pill.pro{background:#C5E07A;color:#0E3328;border-color:#C5E07A}
+.s-m2 .hdr .ftag{border-color:rgba(255,255,255,.3);color:#F7F8F5}
+.s-m3 a{color:#245D3F}
+.s-m3 a:hover{color:#10251F}
+.s-m3 .phone{width:390px;height:844px;background:#F7F8F5;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #C6CCC9;position:relative}
+.s-m3 .body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.s-m3 .hdr{padding:63px 20px 14px}
+.s-m3 .eyebrow{font:600 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#245D3F}
+.s-m3 .h1{font:700 36px/1 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:6px 0 0;color:#10251F}
+.s-m3 .muted{color:#52655E;font-size:14px;line-height:1.5;margin:0}
+.s-m3 .bar{display:flex;align-items:center;background:#FFFFFF;border-top:1px solid #DCE3DE;border-bottom:1px solid #DCE3DE;flex:none}
+.s-m3 .scrollx{flex:1;min-width:0;overflow:hidden;display:flex;gap:8px;padding:12px 0 12px 20px}
+.s-m3 .pin{flex:none;display:flex;align-items:center;padding:0 16px 0 12px;border-left:1px solid #DCE3DE;align-self:stretch}
+.s-m3 .chip{appearance:none;flex:none;border:1px solid #C6CCC9;border-radius:999px;padding:0 16px;height:44px;display:flex;align-items:center;gap:8px;font:500 14px 'IBM Plex Sans',sans-serif;color:#10251F;background:transparent;white-space:nowrap}
+.s-m3 .chip.on{background:#0E3328;border-color:#0E3328;color:#F7F8F5}
+.s-m3 .sw{width:30px;height:18px;border-radius:9px;background:#C6CCC9;position:relative;flex:none}
+.s-m3 .sw i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#FFFFFF}
+.s-m3 .active{display:flex;align-items:center;gap:10px;padding:10px 20px;background:#FFFFFF;border-bottom:1px solid #DCE3DE;flex:none}
+.s-m3 .active span{font:600 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#52655E}
+.s-m3 .list{padding:4px 20px 0;display:flex;flex-direction:column}
+.s-m3 .month{font:600 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#52655E;padding:14px 0 4px}
+.s-m3 .row{display:flex;gap:14px;align-items:center;padding:11px 0;border-bottom:1px solid #DCE3DE;text-decoration:none;color:#10251F}
+.s-m3 .date{flex:none;width:52px;height:56px;border-radius:10px;background:#E7EFE8;display:flex;flex-direction:column;align-items:center;justify-content:center;font:700 18px/1 'Saira Condensed',sans-serif;color:#10251F}
+.s-m3 .date small{font:500 11px/14px 'IBM Plex Mono',monospace;color:#245D3F;margin-top:4px}
+.s-m3 .txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.s-m3 .ct{font-weight:600;font-size:16px;line-height:1.3;color:#10251F}
+.s-m3 .meta{font:400 13px/18px 'IBM Plex Mono',monospace;color:#52655E}
+.s-m3 .btn{appearance:none;background:#C5E07A;color:#10251F;border:1px solid #C5E07A;font:700 16px/20px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em;padding:13px 22px;border-radius:10px;min-height:48px;box-sizing:border-box;text-align:center;display:flex;align-items:center;justify-content:center}
+.s-m3 .btn.ghost{background:transparent;color:#245D3F;border-color:#245D3F}
+.s-m3 .err{color:#B3261E;font-size:15px;line-height:1.5;margin:0}
+.s-m3 .center{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:0 40px;text-align:center}
+.s-m3 .spin{width:36px;height:36px;border-radius:50%;border:3px solid #C6CCC9;border-top-color:#245D3F;box-sizing:border-box}
+.s-m3 .hdr{background:#0E3328}
+.s-m3 .hdr .eyebrow{color:#C5E07A}
+.s-m3 .hdr .h1{color:#FFFFFF}
+.s-m3 .hdr .pill{border-color:#C5E07A;color:#C5E07A}
+.s-m3 .hdr .pill.pro{background:#C5E07A;color:#0E3328;border-color:#C5E07A}
+.s-m3 .hdr .ftag{border-color:rgba(255,255,255,.3);color:#F7F8F5}
+.s-m4a a{color:#245D3F}
+.s-m4a a:hover{color:#10251F}
+.s-m4a .phone{width:390px;height:844px;background:#F7F8F5;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #C6CCC9;position:relative}
+.s-m4a .body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.s-m4a .hdr{padding:63px 20px 14px}
+.s-m4a .eyebrow{font:600 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#245D3F}
+.s-m4a .h1{font:700 36px/1 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:6px 0 0;color:#10251F}
+.s-m4a .bar{display:flex;gap:8px;padding:12px 20px;background:#FFFFFF;border-top:1px solid #DCE3DE;border-bottom:1px solid #DCE3DE;overflow:hidden;flex:none}
+.s-m4a .chip{appearance:none;flex:none;border:1px solid #C6CCC9;border-radius:999px;padding:0 16px;height:44px;display:flex;align-items:center;font:500 14px 'IBM Plex Sans',sans-serif;color:#10251F;background:transparent;white-space:nowrap}
+.s-m4a .chip.on{background:#0E3328;border-color:#0E3328;color:#F7F8F5}
+.s-m4a .mapwrap{flex:1;display:flex;align-items:center;justify-content:center;background:#E7EFE8}
+.s-m4a .map{position:relative;width:360px;height:380px}
+.s-m4a .pinb{appearance:none;position:absolute;width:44px;height:44px;border:0;padding:0;background:transparent;display:flex;align-items:center;justify-content:center}
+.s-m4a .pinb span{min-width:30px;height:30px;padding:0 6px;box-sizing:border-box;border-radius:15px;background:#0E3328;color:#C5E07A;font:700 15px/1 'Saira Condensed',sans-serif;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px rgba(14,51,40,.18)}
+.s-m4a .foot{flex:none;padding:14px 20px;background:#FFFFFF;border-top:1px solid #DCE3DE;font:500 13px/18px 'IBM Plex Mono',monospace;color:#52655E}
+.s-m4a .foot b{color:#10251F;font-weight:600}
+.s-m4a .callout{position:absolute;left:96px;top:150px;width:236px;background:#FFFFFF;border:1px solid #C6CCC9;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:4px;box-shadow:0 12px 32px rgba(16,37,31,.18)}
+.s-m4a .ct{font-weight:600;font-size:17px;line-height:1.3;color:#10251F}
+.s-m4a .meta{font:400 13px/18px 'IBM Plex Mono',monospace;color:#52655E}
+.s-m4a .btn{appearance:none;background:#C5E07A;color:#10251F;border:1px solid #C5E07A;font:700 15px/20px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em;padding:11px 16px;border-radius:10px;min-height:44px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:8px}
+.s-m4a .err{color:#B3261E;font-size:15px;line-height:1.5;margin:0}
+.s-m4a .over{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:0 48px}
+.s-m4a .spin{width:36px;height:36px;border-radius:50%;border:3px solid #C6CCC9;border-top-color:#245D3F;box-sizing:border-box}
+.s-m4a .hdr{background:#0E3328}
+.s-m4a .hdr .eyebrow{color:#C5E07A}
+.s-m4a .hdr .h1{color:#FFFFFF}
+.s-m4a .hdr .pill{border-color:#C5E07A;color:#C5E07A}
+.s-m4a .hdr .pill.pro{background:#C5E07A;color:#0E3328;border-color:#C5E07A}
+.s-m4a .hdr .ftag{border-color:rgba(255,255,255,.3);color:#F7F8F5}
+.s-m4b a{color:#245D3F}
+.s-m4b a:hover{color:#10251F}
+.s-m4b .phone{width:390px;height:844px;background:#F7F8F5;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #C6CCC9;position:relative}
+.s-m4b .body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.s-m4b .hdr{padding:63px 20px 14px}
+.s-m4b .eyebrow{font:600 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#245D3F}
+.s-m4b .h1{font:700 36px/1 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:6px 0 0;color:#10251F}
+.s-m4b .h3{font:700 18px/22px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.05em;margin:0;padding-bottom:6px;border-bottom:1px solid #245D3F;color:#10251F}
+.s-m4b .bar{background:#FFFFFF;border-top:1px solid #DCE3DE;border-bottom:1px solid #DCE3DE;overflow:hidden;flex:none}
+.s-m4b .track{display:flex;gap:8px;padding:12px 20px}
+.s-m4b .chip{appearance:none;flex:none;border:1px solid #C6CCC9;border-radius:999px;padding:0 16px;height:44px;display:flex;align-items:center;gap:6px;font:500 14px 'IBM Plex Sans',sans-serif;color:#10251F;background:transparent;white-space:nowrap}
+.s-m4b .chip.on{background:#0E3328;border-color:#0E3328;color:#F7F8F5}
+.s-m4b .sub{display:flex;gap:8px;padding:10px 20px;border-bottom:1px solid #DCE3DE;flex:none}
+.s-m4b .sub .chip{background:#FFFFFF}
+.s-m4b .muted{color:#52655E;font-size:15px;line-height:1.5;margin:0}
+.s-m4b .center{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:0 44px;text-align:center}
+.s-m4b .list{padding:0 20px;display:flex;flex-direction:column}
+.s-m4b .row{display:flex;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid #DCE3DE;text-decoration:none;color:#10251F}
+.s-m4b .ico{flex:none;width:48px;height:48px;border-radius:10px;background:#E7EFE8;display:flex;align-items:center;justify-content:center;color:#52655E}
+.s-m4b .txt{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.s-m4b .ct{font-weight:600;font-size:16px;line-height:1.3;color:#10251F}
+.s-m4b .meta{font:400 13px/18px 'IBM Plex Mono',monospace;color:#52655E}
+.s-m4b .grid{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:12px}
+.s-m4b .tile{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:#10251F}
+.s-m4b .logo{aspect-ratio:1/1;border-radius:14px;background:#FFFFFF;border:1px solid #DCE3DE;display:flex;align-items:center;justify-content:center;font:500 12px 'IBM Plex Mono',monospace;color:#52655E}
+.s-m4b .stile{border:1px solid #DCE3DE;display:flex;align-items:center;justify-content:space-between;min-height:56px;padding:0 14px;border-radius:12px;background:#FFFFFF;text-decoration:none;color:#10251F;font-weight:600;font-size:15px}
+.s-m4b .ph{padding:16px 20px 0;display:flex;flex-direction:column;gap:14px}
+.s-m4b .hdr{background:#0E3328}
+.s-m4b .hdr .eyebrow{color:#C5E07A}
+.s-m4b .hdr .h1{color:#FFFFFF}
+.s-m4b .hdr .pill{border-color:#C5E07A;color:#C5E07A}
+.s-m4b .hdr .pill.pro{background:#C5E07A;color:#0E3328;border-color:#C5E07A}
+.s-m4b .hdr .ftag{border-color:rgba(255,255,255,.3);color:#F7F8F5}
+.s-m5a a{color:#245D3F}
+.s-m5a a:hover{color:#10251F}
+.s-m5a .phone{width:390px;height:844px;background:#F7F8F5;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #C6CCC9;position:relative}
+.s-m5a .body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:26px}
+.s-m5a .hdr{padding:63px 20px 20px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.s-m5a .eyebrow{font:600 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#245D3F}
+.s-m5a .h1{font:700 36px/1 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0;color:#10251F}
+.s-m5a .h2{font:700 20px/24px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em;margin:0;padding-bottom:8px;border-bottom:1px solid #245D3F;color:#10251F}
+.s-m5a .pill{display:inline-flex;border:1px solid #245D3F;color:#245D3F;border-radius:999px;padding:3px 10px;font:500 12px/16px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em}
+.s-m5a .pill.pro{background:#0E3328;color:#C5E07A;border-color:#0E3328}
+.s-m5a .muted{color:#52655E;font-size:14px;line-height:1.5;margin:0}
+.s-m5a .sec{padding:0 20px;display:flex;flex-direction:column;gap:12px}
+.s-m5a .cap{background:#FFFFFF;border:1px solid #DCE3DE;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.s-m5a .ct{font-weight:600;font-size:16px;line-height:1.3;color:#10251F}
+.s-m5a .meta{font:400 13px/18px 'IBM Plex Mono',monospace;color:#52655E}
+.s-m5a .items{list-style:none;margin:6px 0 4px;padding:0;display:flex;flex-direction:column}
+.s-m5a .items li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #DCE3DE;font-size:14px}
+.s-m5a .btn{appearance:none;background:#C5E07A;color:#10251F;border:1px solid #C5E07A;font:700 16px/20px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em;padding:12px 20px;border-radius:10px;min-height:48px;box-sizing:border-box;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px}
+.s-m5a .saved{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #DCE3DE}
+.s-m5a .saved a{flex:1;display:flex;flex-direction:column;gap:2px;text-decoration:none;min-width:0}
+.s-m5a .icon{appearance:none;width:44px;height:44px;border:0;background:transparent;color:#245D3F;display:flex;align-items:center;justify-content:center;border-radius:22px;flex:none}
+.s-m5a .upsell{border:1px solid #0E3328;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:8px;background:#0E3328}
+.s-m5a .upsell .up-t{color:#FFFFFF}
+.s-m5a .upsell .muted{color:#C6CCC9}
+.s-m5a .upsell .eyebrow{color:#C5E07A}
+.s-m5a .up-t{font:700 26px/1 'Saira Condensed',sans-serif;text-transform:uppercase;color:#10251F;margin:0}
+.s-m5a .logout{appearance:none;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:0 20px;background:transparent;border:0;border-top:1px solid #DCE3DE;color:#10251F;font:500 15px 'IBM Plex Sans',sans-serif;text-align:left;flex:none}
+.s-m5a .center{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;padding:0 40px;text-align:center}
+.s-m5a .hdr{background:#0E3328}
+.s-m5a .hdr .eyebrow{color:#C5E07A}
+.s-m5a .hdr .h1{color:#FFFFFF}
+.s-m5a .hdr .pill{border-color:#C5E07A;color:#C5E07A}
+.s-m5a .hdr .pill.pro{background:#C5E07A;color:#0E3328;border-color:#C5E07A}
+.s-m5a .hdr .ftag{border-color:rgba(255,255,255,.3);color:#F7F8F5}
+.s-m5b a{color:#245D3F}
+.s-m5b a:hover{color:#10251F}
+.s-m5b .phone{width:390px;height:844px;background:#F7F8F5;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #C6CCC9;position:relative}
+.s-m5b .body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:26px}
+.s-m5b .hdr{padding:63px 20px 20px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.s-m5b .eyebrow{font:600 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#245D3F}
+.s-m5b .h1{font:700 36px/1 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0;color:#10251F}
+.s-m5b .h2{font:700 20px/24px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em;margin:0;padding-bottom:8px;border-bottom:1px solid #245D3F;color:#10251F}
+.s-m5b .pill{display:inline-flex;border:1px solid #245D3F;color:#245D3F;border-radius:999px;padding:3px 10px;font:500 12px/16px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em}
+.s-m5b .muted{color:#52655E;font-size:14px;line-height:1.5;margin:0}
+.s-m5b .sec{padding:0 20px;display:flex;flex-direction:column;gap:4px}
+.s-m5b .ct{font-weight:600;font-size:16px;line-height:1.3;color:#10251F}
+.s-m5b .meta{font:400 13px/18px 'IBM Plex Mono',monospace;color:#52655E}
+.s-m5b .saved{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #DCE3DE}
+.s-m5b .saved a{flex:1;display:flex;flex-direction:column;gap:2px;text-decoration:none;min-width:0}
+.s-m5b .icon{appearance:none;width:44px;height:44px;border:0;background:transparent;color:#245D3F;display:flex;align-items:center;justify-content:center;border-radius:22px;flex:none}
+.s-m5b .logout{appearance:none;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:0 20px;background:transparent;border:0;border-top:1px solid #DCE3DE;color:#10251F;font:500 15px 'IBM Plex Sans',sans-serif;text-align:left;flex:none;margin-top:auto}
+.s-m5b .center{flex:1;display:flex;align-items:center;justify-content:center}
+.s-m5b .spin{width:36px;height:36px;border-radius:50%;border:3px solid #C6CCC9;border-top-color:#245D3F;box-sizing:border-box}
+.s-m5b .errbar{padding:63px 20px 16px;background:#FBEAEA;border-bottom:1px solid #EBC1BE;display:flex;flex-direction:column;gap:4px;flex:none}
+.s-m5b .err{color:#B3261E;font-size:15px;line-height:1.5;margin:0}
+.s-m5b .ghosted{opacity:.3;pointer-events:none;display:flex;flex-direction:column;gap:26px;flex:1;min-height:0}
+.s-m5b .bone{height:14px;border-radius:7px;background:#DCE3DE}
+.s-m5b .hdr{background:#0E3328}
+.s-m5b .hdr .eyebrow{color:#C5E07A}
+.s-m5b .hdr .h1{color:#FFFFFF}
+.s-m5b .hdr .pill{border-color:#C5E07A;color:#C5E07A}
+.s-m5b .hdr .pill.pro{background:#C5E07A;color:#0E3328;border-color:#C5E07A}
+.s-m5b .hdr .ftag{border-color:rgba(255,255,255,.3);color:#F7F8F5}
+.s-m5f a{color:#245D3F}
+.s-m5f a:hover{color:#10251F}
+.s-m5f .phone{width:390px;height:1960px;background:#F7F8F5;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #C6CCC9;position:relative}
+.s-m5f .body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:26px}
+.s-m5f .hdr{padding:63px 20px 20px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.s-m5f .eyebrow{font:600 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#245D3F}
+.s-m5f .h1{font:700 36px/1 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0;color:#10251F}
+.s-m5f .h2{font:700 20px/24px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em;margin:0;padding-bottom:8px;border-bottom:1px solid #245D3F;color:#10251F}
+.s-m5f .pill{display:inline-flex;border:1px solid #245D3F;color:#245D3F;border-radius:999px;padding:3px 10px;font:500 12px/16px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em}
+.s-m5f .muted{color:#52655E;font-size:14px;line-height:1.5;margin:0}
+.s-m5f .sec{padding:0 20px;display:flex;flex-direction:column;gap:12px}
+.s-m5f .cap{background:#FFFFFF;border:1px solid #DCE3DE;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.s-m5f .ct{font-weight:600;font-size:16px;line-height:1.3;color:#10251F}
+.s-m5f .meta{font:400 13px/18px 'IBM Plex Mono',monospace;color:#52655E}
+.s-m5f .items{list-style:none;margin:6px 0 4px;padding:0;display:flex;flex-direction:column}
+.s-m5f .items li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #DCE3DE;font-size:14px}
+.s-m5f .btn{appearance:none;background:#C5E07A;color:#10251F;border:1px solid #C5E07A;font:700 16px/20px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em;padding:12px 20px;border-radius:10px;min-height:48px;box-sizing:border-box;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px}
+.s-m5f .saved{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #DCE3DE}
+.s-m5f .saved a{flex:1;display:flex;flex-direction:column;gap:2px;text-decoration:none;min-width:0}
+.s-m5f .icon{appearance:none;width:44px;height:44px;border:0;background:transparent;color:#245D3F;display:flex;align-items:center;justify-content:center;border-radius:22px;flex:none}
+.s-m5f .upsell{border:1px solid #0E3328;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:8px;background:#0E3328}
+.s-m5f .upsell .up-t{color:#FFFFFF}
+.s-m5f .upsell .muted{color:#C6CCC9}
+.s-m5f .upsell .eyebrow{color:#C5E07A}
+.s-m5f .up-t{font:700 26px/1 'Saira Condensed',sans-serif;text-transform:uppercase;color:#10251F;margin:0}
+.s-m5f .logout{appearance:none;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:0 20px;background:transparent;border:0;border-top:1px solid #DCE3DE;color:#10251F;font:500 15px 'IBM Plex Sans',sans-serif;text-align:left;flex:none;margin-top:auto}
+.s-m5f .hdr{background:#0E3328}
+.s-m5f .hdr .eyebrow{color:#C5E07A}
+.s-m5f .hdr .h1{color:#FFFFFF}
+.s-m5f .hdr .pill{border-color:#C5E07A;color:#C5E07A}
+.s-m5f .hdr .pill.pro{background:#C5E07A;color:#0E3328;border-color:#C5E07A}
+.s-m5f .hdr .ftag{border-color:rgba(255,255,255,.3);color:#F7F8F5}
+.s-r a{color:#245D3F}
+.s-r a:hover{color:#10251F}
+.s-r .phone{width:390px;height:844px;background:#F7F8F5;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px #C6CCC9;position:relative}
+.s-r .body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.s-r .band{background:#0E3328;padding:59px 0 20px;flex:none}
+.s-r .navbar{display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 8px}
+.s-r .back{display:flex;align-items:center;gap:2px;min-height:44px;min-width:44px;padding:0 8px 0 2px;color:#C5E07A;text-decoration:none;font:500 17px 'IBM Plex Sans',sans-serif}
+.s-r .navt{font:600 15px 'IBM Plex Sans',sans-serif;color:#FFFFFF;opacity:0}
+.s-r .navbtn{appearance:none;width:44px;height:44px;border:0;background:transparent;color:#C5E07A;display:flex;align-items:center;justify-content:center;border-radius:22px}
+.s-r .ttl{padding:6px 20px 0}
+.s-r .eyebrow{font:600 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#C5E07A}
+.s-r .h1{font:700 34px/1.02 'Saira Condensed',sans-serif;text-transform:uppercase;margin:6px 0 0;color:#FFFFFF}
+.s-r .sub{font:400 13px/18px 'IBM Plex Mono',monospace;color:#C6CCC9;margin:8px 0 0}
+.s-r .h2{font:700 20px/24px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em;margin:0;padding-bottom:8px;border-bottom:1px solid #245D3F;color:#10251F}
+.s-r .sec{padding:20px 20px 0;display:flex;flex-direction:column;gap:10px}
+.s-r .dl{background:#FFFFFF;border:1px solid #DCE3DE;border-radius:14px;padding:4px 16px;margin:0}
+.s-r .dl div{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid #DCE3DE;font-size:15px}
+.s-r .dl div:last-child{border-bottom:0}
+.s-r .dl dt{color:#52655E;font:500 13px/20px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em}
+.s-r .dl dd{margin:0;text-align:right;font-weight:500}
+.s-r .btn{appearance:none;background:#C5E07A;color:#10251F;border:1px solid #C5E07A;font:700 16px/20px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.08em;padding:13px 22px;border-radius:10px;min-height:48px;box-sizing:border-box;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:10px}
+.s-r .btn.ghost{background:transparent;color:#245D3F;border-color:#245D3F}
+.s-r .card{background:#FFFFFF;border:1px solid #DCE3DE;border-radius:14px;padding:12px 16px;display:flex;flex-direction:column;gap:3px;text-decoration:none;color:#10251F}
+.s-r .ct{font-weight:600;font-size:16px;line-height:1.3;color:#10251F}
+.s-r .meta{font:400 13px/18px 'IBM Plex Mono',monospace;color:#52655E}
+.s-r .grid{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:12px}
+.s-r .cover{aspect-ratio:3/4;border-radius:10px;background:#E7EFE8;border:1px solid #DCE3DE;display:flex;align-items:center;justify-content:center;font:500 12px 'IBM Plex Mono',monospace;color:#52655E}
+.s-r .sheet{position:absolute;inset:0;background:rgba(16,37,31,.45);display:flex;flex-direction:column;justify-content:flex-end}
+.s-r .sheetin{height:780px;background:#FFFFFF;border-radius:14px 14px 0 0;display:flex;flex-direction:column;overflow:hidden}
+.s-r .sbar{display:flex;align-items:center;gap:8px;height:52px;padding:0 8px;border-bottom:1px solid #DCE3DE;background:#F7F8F5}
+.s-r .done{appearance:none;min-height:44px;padding:0 10px;border:0;background:transparent;color:#245D3F;font:600 17px 'IBM Plex Sans',sans-serif}
+.s-r .addr{flex:1;text-align:center;font:500 14px 'IBM Plex Sans',sans-serif;color:#10251F;display:flex;align-items:center;justify-content:center;gap:6px}
+.s-r .web{padding:24px 20px;display:flex;flex-direction:column;gap:16px}
+.s-r .field{display:flex;flex-direction:column;gap:8px}
+.s-r .field label{font:600 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#52655E}
+.s-r .in{height:52px;border-radius:10px;border:1px solid #C6CCC9;background:#FFFFFF;color:#10251F;font:400 16px 'IBM Plex Sans',sans-serif;padding:0 14px;box-sizing:border-box;width:100%}
+.s-r .in::placeholder{color:#6B7C74}
+.s-r .grab{width:36px;height:5px;border-radius:3px;background:#C6CCC9;align-self:center;margin:6px 0 2px}
+
+.web{min-width:980px;background:#F7F8F5;color:#10251F;font-family:'IBM Plex Sans',system-ui,sans-serif;border:1px solid #C6CCC9;border-radius:14px;overflow:hidden}
+.bbar{display:flex;gap:7px;align-items:center;padding:10px 14px;background:#E4E9E5;border-bottom:1px solid #DCE3DE}
+.bbar>span{width:11px;height:11px;border-radius:50%;background:#C6CCC9}
+.url{margin-left:12px;flex:1;max-width:520px;background:#fff;border:1px solid #DCE3DE;border-radius:8px;padding:5px 12px;font:400 13px 'IBM Plex Mono',monospace;color:#52655E}
+.wnav{display:flex;align-items:center;gap:32px;height:62px;padding:0 40px;background:#0E3328;border-bottom:1px solid rgba(255,255,255,.08)}
+.wmark{font:700 24px 'Saira Condensed',sans-serif;text-transform:uppercase;color:#fff;letter-spacing:.02em}
+.wlinks{display:flex;gap:24px}.wlinks a{color:#C6CCC9;text-decoration:none;font-size:15px}
+.wacct{margin-left:auto;display:flex;align-items:center;gap:10px;color:#fff;font-size:14px}
+.wpill{display:inline-flex;border:1px solid #C5E07A;color:#C5E07A;border-radius:999px;padding:2px 10px;font:500 12px/16px 'IBM Plex Mono',monospace;text-transform:uppercase}
+.wpill.lime{margin-top:14px}.wpill.dark{border-color:#245D3F;color:#245D3F}
+.whero{background:#0E3328;padding:40px 40px 34px;display:flex;flex-direction:column;align-items:flex-start}
+.weyebrow{font:600 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#C5E07A}
+.weyebrow.dark{color:#245D3F}
+.whero h1{font:700 56px/1 'Saira Condensed',sans-serif;text-transform:uppercase;color:#fff;margin:8px 0 0}
+.wsubnav{display:flex;gap:4px;padding:0 40px;background:#fff;border-bottom:1px solid #DCE3DE}
+.wsub{padding:16px 14px 13px;color:#52655E;text-decoration:none;font-weight:500;font-size:15px;border-bottom:3px solid transparent}
+.wsub.on{color:#10251F;border-bottom-color:#0E3328;font-weight:600}
+.wbody{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:28px;padding:36px 40px 48px}
+.wcol12{grid-column:span 12}.wcol8{grid-column:span 8}.wcol7{grid-column:span 7}.wcol5{grid-column:span 5}.wcol4{grid-column:span 4}
+.wh2{font:700 22px/26px 'Saira Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em;margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid #245D3F}
+.wgrid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.wgrid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.wcard,.wcap{background:#fff;border:1px solid #DCE3DE;border-radius:12px;padding:18px}
+.wcap{display:flex;flex-direction:column;gap:6px}.wcap h3,.wupsell h3,.wnote h3{margin:0;font-size:18px;font-weight:600}
+.wmuted{color:#52655E;font-size:14px;line-height:1.5;margin:0}
+.wmeta{font:400 13px/18px 'IBM Plex Mono',monospace;color:#52655E}
+.witems{list-style:none;margin:6px 0 8px;padding:0}.witems li{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid #DCE3DE;font-size:14px}
+.wbtn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 20px;border-radius:10px;background:#C5E07A;border:1px solid #C5E07A;color:#10251F;font:700 15px 'Saira Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;box-sizing:border-box}
+.wbtn.ghost{background:transparent;border-color:#245D3F;color:#245D3F}
+.wcap .wbtn{margin-top:auto}
+.wrow{display:flex;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid #DCE3DE;text-decoration:none;color:#10251F}
+.wrow:last-of-type{border-bottom:0}
+.wdate{flex:none;width:48px;height:52px;border-radius:10px;background:#E7EFE8;display:flex;flex-direction:column;align-items:center;justify-content:center;font:700 17px/1 'Saira Condensed',sans-serif}
+.wdate small{font:500 11px 'IBM Plex Mono',monospace;color:#245D3F;margin-top:3px}
+.wtxt{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.wsave{font:500 12px 'IBM Plex Mono',monospace;color:#245D3F}
+.wlink{display:inline-block;margin-top:12px;color:#245D3F;font-weight:500}
+.wupsell{margin-top:20px;background:#0E3328;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.wupsell h3{color:#fff;font:700 26px 'Saira Condensed',sans-serif;text-transform:uppercase}.wupsell p{color:#C6CCC9;margin:0;font-size:14px}
+.wchips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:18px}
+.wchip{height:40px;padding:0 16px;border-radius:999px;border:1px solid #D6DAD8;background:#fff;color:#10251F;font:500 14px 'IBM Plex Sans',sans-serif}
+.wchip.on{background:#0E3328;border-color:#0E3328;color:#F7F8F5}
+.wsep{width:1px;height:24px;background:#DCE3DE;margin:0 4px}
+.wtable{background:#fff;border:1px solid #DCE3DE;border-radius:12px;overflow:hidden}
+.wtable table{width:100%;border-collapse:collapse;font-size:14px}
+.wtable th{text-align:left;font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#52655E;padding:12px 16px;background:#F7F8F5;border-bottom:1px solid #DCE3DE}
+.wtable td{padding:10px 16px;border-bottom:1px solid #DCE3DE}.wtable tr:last-child td{border-bottom:0}
+.wtable td a{color:#10251F;font-weight:600;text-decoration:none}.wtable .mono{font:400 13px 'IBM Plex Mono',monospace;color:#52655E;white-space:nowrap}
+.wicon{width:36px;height:36px;border:0;border-radius:18px;background:transparent;color:#245D3F;display:flex;align-items:center;justify-content:center}
+.wmonth{font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#52655E;margin:6px 0 8px}
+.wmonth~.wmonth{margin-top:20px}
+.wnote{background:#fff;border:1px dashed #C6CCC9;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.wnote p{margin:0;color:#52655E;font-size:14px;line-height:1.55}.wnote code{font:13px 'IBM Plex Mono',monospace;color:#10251F}
+.wtag{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;border-radius:999px;padding:3px 9px}
+.wtag.future{background:#FFF1D6;color:#7A4B00;border:1px solid #E7C27A}
+.wform{display:flex;flex-direction:column;gap:18px}
+.wfield{display:flex;flex-direction:column;gap:6px}.wfield label{font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#52655E}
+.wfield input{height:46px;border:1px solid #C6CCC9;border-radius:10px;padding:0 14px;font:16px 'IBM Plex Sans',sans-serif;color:#10251F;background:#fff}
+.wfield .wbtn{align-self:flex-start}
+.wplanrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:600}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+.mock a.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:49px;text-decoration:none;font-size:12px;font-weight:500;color:#C6CCC9}
+.mock a.tab.on{font-weight:600;color:#C5E07A}
+</style>
+</head>
+<body>
+<header class="pagetop"><div class="in">
+<h1>App and website mockups</h1>
+<p>Every screen and state from the mockup framework, in the live shootingsports.co.za palette. Text in <strong>[square brackets]</strong> stands in for real data, and N or M for live counts. States tagged <strong>future</strong> need endpoints that don’t exist yet.</p>
+<div class="views" role="tablist" aria-label="View">
+<button role="tab" id="v-mobile" aria-selected="true" aria-controls="p-mobile">Mobile app</button>
+<button role="tab" id="v-web" aria-selected="false" aria-controls="p-web">Website</button>
+<button role="tab" id="v-review" aria-selected="false" aria-controls="p-review">Review</button>
+</div></div></header>
+<main class="wrap">
+<section id="p-mobile" role="tabpanel" aria-labelledby="v-mobile">
+<div class="seg screens" id="screens" aria-label="Screens"></div>
+<div class="head"><div><h2 id="sname"></h2><p id="sintro"></p><div class="api" id="sapi"></div></div>
+<div class="layout" aria-label="Layout"><button id="l-one" aria-pressed="true">One state</button><button id="l-all" aria-pressed="false">All states</button></div></div>
+<div class="seg states" id="states" aria-label="States"></div>
+<div id="mstage"></div>
+</section>
+<section id="p-web" role="tabpanel" aria-labelledby="v-web" hidden>
+<div class="head" style="border:0;padding-top:0"><div><h2>Website</h2><p>The same capability payload and vocabulary as the app, with room for tables and forms. Header and hero follow the live site.</p></div></div>
+<div class="seg states" id="wstates" aria-label="Routes"></div>
+<div class="webstage"><p id="wwhy" style="margin:0;color:var(--muted);line-height:1.5"></p><div class="webscroll" id="wstage" tabindex="0" aria-label="Website mockup"></div></div>
+</section>
+<section id="p-review" role="tabpanel" aria-labelledby="v-review" hidden>
+<section class="rv">
+<h2>Decisions</h2>
+<div class="tbl"><table><thead><tr><th scope="col">Question</th><th scope="col">Decision</th><th scope="col">Why</th></tr></thead><tbody>
+<tr><td>Sign in or Log in</td><td>“Sign in” on every entry point, app and website. “Log out” stays as the exit.</td><td>The framework flagged the split. One verb for the way in reads as one product.</td></tr>
+<tr><td>Palette</td><td>Use the live shootingsports.co.za colours: forest <code>#0E3328</code>, lime <code>#C5E07A</code>, ink <code>#10251F</code>, page <code>#F7F8F5</code>, link green <code>#245D3F</code>.</td><td>The rendered site already moved off the gunmetal, olive and gold tokens the framework lists. Those variables are still in the stylesheet but are overridden. Updating the doc settles the web-versus-mobile palette question.</td></tr>
+<tr><td>Unavailable directories</td><td>Use the framework copy, “Clubs search opens here when its API endpoint lands,” and never a zero-results message or sample results.</td><td>An empty directory reads as “nobody is listed,” which is false and hurts clubs.</td></tr>
+<tr><td>Mockup data</td><td>Square-bracket placeholders and N or M for counts. No sample club names, distances or day counts.</td><td>Invented names in review mockups get copied into seed data and screenshots, and real venues end up implied as partners.</td></tr>
+<tr><td>Future states</td><td>Every future concept carries a visible tag and ships behind a feature flag.</td><td>Reviewers should never mistake a concept for shipped functionality.</td></tr>
+<tr><td>Status bar and device chrome</td><td>Not drawn, but space is reserved for it.</td><td>A fake clock and battery add noise and go out of date. The OS draws them.</td></tr>
+<tr><td>iPhone safe areas</td><td>59pt top inset above every header, 34pt home-indicator inset under the tab bar (49pt bar plus 34pt).</td><td>Without it, titles sit under the Dynamic Island and tabs sit on the home indicator.</td></tr>
+<tr><td>Back navigation</td><td>Tab roots have no back button. Every pushed screen (match detail, sport landing) has a back button labelled with its parent plus edge swipe. Sign in is a modal with a close button. Website links open in an in-app browser with Done.</td><td>iPhones have no hardware or system back button, so the app must always provide one off a tab root.</td></tr>
+<tr><td>Find to Calendar deep link</td><td>Switches tab, no back button. The removable province chip is the way out.</td><td>A tab switch is not a push. A back button there would break the iOS model.</td></tr>
+</tbody></table></div>
+
+<h2>State coverage</h2>
+<div class="tbl"><table><thead><tr><th scope="col">Surface</th><th scope="col">States drawn</th><th scope="col">API now</th><th scope="col">Future</th></tr></thead><tbody>
+<tr><td>M1 Sign in</td><td>4</td><td><code>POST /api/v1/auth/login</code></td><td>None</td></tr>
+<tr><td>M2 Home</td><td>5</td><td><code>GET /api/v1/events</code>, limit 6</td><td>Personalised feed (follows, saved searches)</td></tr>
+<tr><td>M3 Calendar</td><td>5</td><td><code>GET /api/v1/events</code> with family and Novice</td><td>Date and distance filters, once the API supports them</td></tr>
+<tr><td>M4 Find</td><td>12</td><td>Events map counts</td><td>Clubs, Ranges, Shops, Sports directories; sport landing pages</td></tr>
+<tr><td>M5 Me</td><td>8</td><td><code>/api/v1/me</code>, <code>/me/capabilities</code>, <code>/me/saved-events</code></td><td>Billing and richer role dashboards</td></tr>
+<tr><td>Website</td><td>5 routes</td><td><code>/me</code>, <code>/me/calendar</code>, <code>/me/log</code>, <code>/me/settings</code>, <code>/desk</code></td><td>Activity history on <code>/me/log</code></td></tr>
+</tbody></table></div>
+
+<h2>Open questions</h2>
+<ol class="oq">
+<li><strong>Me section order for stacked roles.</strong> The framework puts Manage above saved matches. With four capabilities that pushes saved matches about a screen and a half down (see M5f). Option: keep Manage first for one capability, and collapse to a compact capability strip once there are three or more.</li>
+<li><strong>Capability card spec.</strong> The paste cut off before it. Card items and action labels are placeholders until it’s confirmed what each card lists.</li>
+<li><strong>Pro.</strong> Price, which Free limits Pro lifts, and the copy for the upsell.</li>
+<li><strong>Trial end.</strong> What the pill and Me tab show on the last day and after expiry.</li>
+<li><strong>Error colour.</strong> The site defines none. These mockups use <code>#B3261E</code> on a <code>#FBEAEA</code> tint, which passes contrast on the light page.</li>
+<li><strong>Desk hand-off.</strong> Whether “Open club desk” in the app opens <code>/desk</code> in the browser or a scoped Filament panel per capability.</li>
+</ol>
+
+<h2>Build order</h2>
+<div class="tbl"><table><thead><tr><th scope="col">Phase</th><th scope="col">Ship</th><th scope="col">Done when</th></tr></thead><tbody>
+<tr><td>1. Foundation</td><td>Tokens, type, hero band, plan pill, section title, match card, capability card, primary and ghost buttons</td><td>App and website render the same labels and hierarchy from one token set.</td></tr>
+<tr><td>2. API surfaces</td><td>M1, M2, M3, M5 with loading, empty, error and populated states</td><td>Every request has a visible loading state and a recovery path.</td></tr>
+<tr><td>3. Role stacking</td><td>Manage cards from the shared capability payload, and the desk hand-off</td><td>Users with no capabilities and users with four are equally easy to read.</td></tr>
+<tr><td>4. Discovery</td><td>Events map; directory placeholders behind flags</td><td>No future concept looks like shipped functionality.</td></tr>
+<tr><td>5. Increments</td><td>Personalised Home, follows, saved searches, directories, activity history, sport landing pages</td><td>Each lands with its own endpoint, not a stubbed list.</td></tr>
+</tbody></table></div>
+
+<h2>Definition of done</h2>
+<ul class="dod">
+<li>Every request shows loading and offers a way to recover from failure.</li>
+<li>Every empty state says whether there is no data or the feature isn’t available yet.</li>
+<li>App and website show the same plan and capability logic.</li>
+<li>A four-capability user can reach saved matches and Log out without hunting.</li>
+<li>Text meets 4.5:1 contrast, touch targets are at least 44px, focus is visible, and icon buttons have labels.</li>
+</ul>
+</section></section>
+</main>
+<footer>Static mockups. Controls on the phones and pages don’t do anything. Colours come from the live shootingsports.co.za site, apart from the error red and the amber future tag, which the site doesn’t define.</footer>
+<template id="t-M1a"><div class="mock s-m1"><div class="phone">
+<div class="top"><button class="icon" aria-label="Close"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+<div class="form">
+<div><div class="eyebrow">Account</div><h1 class="h1">Sign in</h1><p class="muted" style="margin-top: 12px">Signed-in shooters save matches, follow sports, and manage their clubs or business.</p></div>
+<div class="field"><label for="e1">Email</label><input id="e1" class="in" type="email" placeholder="name@example.com"></div>
+<div class="field"><label for="p1">Password</label><input id="p1" class="in" type="password" placeholder="Password"></div>
+<button class="btn">Sign in</button>
+<a class="ext" href="#">Forgot password?<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg></a>
+</div>
+<div class="foot"><p class="muted">New here? <a href="#">Register on the website</a></p></div>
+</div></div></template>
+<template id="t-M1b"><div class="mock s-m1"><div class="phone">
+<div class="top"><button class="icon" aria-label="Close" disabled style="opacity: 0.4"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+<div class="form">
+<div><div class="eyebrow">Account</div><h1 class="h1">Sign in</h1><p class="muted" style="margin-top: 12px">Signed-in shooters save matches, follow sports, and manage their clubs or business.</p></div>
+<div class="field"><label for="e2">Email</label><input id="e2" class="in" type="email" value="name@example.com" disabled style="opacity: 0.6"></div>
+<div class="field"><label for="p2">Password</label><input id="p2" class="in" type="password" value="password" disabled style="opacity: 0.6"></div>
+<button class="btn" disabled style="opacity: 0.75"><span class="sm"></span>Signing in</button>
+<a class="ext" href="#" style="opacity: 0.4">Forgot password?<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg></a>
+</div>
+<div class="foot"><p class="muted">New here? <a href="#">Register on the website</a></p></div>
+</div></div></template>
+<template id="t-M1c"><div class="mock s-m1"><div class="phone">
+<div class="top"><button class="icon" aria-label="Close"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+<div class="form">
+<div><div class="eyebrow">Account</div><h1 class="h1">Sign in</h1><p class="muted" style="margin-top: 12px">Signed-in shooters save matches, follow sports, and manage their clubs or business.</p></div>
+<div class="errrow" role="alert"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg><span>That email and password don't match. Check them and try again.</span></div>
+<div class="field"><label for="e3">Email</label><input id="e3" class="in" type="email" value="name@example.com"></div>
+<div class="field"><label for="p3">Password</label><input id="p3" class="in" type="password" value="" placeholder="Password" style="border-color: #B3261E"></div>
+<button class="btn">Sign in</button>
+<a class="ext" href="#">Forgot password?<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg></a>
+</div>
+<div class="foot"><p class="muted">New here? <a href="#">Register on the website</a></p></div>
+</div></div></template>
+<template id="t-M1d"><div class="mock s-m1"><div class="phone">
+<div class="top"><button class="icon" aria-label="Close"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+<div class="form">
+<div><div class="eyebrow">Account</div><h1 class="h1">Sign in</h1><p class="muted" style="margin-top: 12px">Signed-in shooters save matches, follow sports, and manage their clubs or business.</p></div>
+<div class="errrow" role="alert"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 12.5a10 10 0 0 1 4.2-2.4M19 12.5a10 10 0 0 0-2.1-1.5M12 20h.01"></path></svg><span>Can't reach the server. Check your connection, then tap Sign in to try again.</span></div>
+<div class="field"><label for="e4">Email</label><input id="e4" class="in" type="email" value="name@example.com"></div>
+<div class="field"><label for="p4">Password</label><input id="p4" class="in" type="password" value="password"></div>
+<button class="btn">Sign in</button>
+<a class="ext" href="#">Forgot password?<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg></a>
+</div>
+<div class="foot"><p class="muted">New here? <a href="#">Register on the website</a></p></div>
+</div></div></template>
+<template id="t-M2a"><div class="mock s-m2"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">National calendar</div><h1 class="h1">Upcoming matches</h1></div>
+<div class="center" role="status" aria-label="Loading matches"><div class="spin"></div></div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M2b"><div class="mock s-m2"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">National calendar</div><h1 class="h1">Upcoming matches</h1></div>
+<div class="center">
+<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C6CCC9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg>
+<p class="muted" style="font-size: 15px">No upcoming matches yet. Pull to refresh.</p>
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M2c"><div class="mock s-m2"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">National calendar</div><h1 class="h1">Upcoming matches</h1></div>
+<div class="sec" style="gap: 20px; padding-top: 8px">
+<p class="err" role="alert">Couldn't load matches. Pull to refresh, or open the full calendar.</p>
+<a class="btn" href="#">Browse the full calendar</a>
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M2d"><div class="mock s-m2"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">National calendar</div><h1 class="h1">Upcoming matches</h1></div>
+<div class="sec">
+
+<a class="card" href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span><span class="meta">Host · [Host club]</span></a>
+
+<a class="card" href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span><span class="meta">Host · [Host club]</span></a>
+
+<a class="card" href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span><span class="meta">Host · [Host club]</span></a>
+
+<a class="card" href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span><span class="meta">Host · [Host club]</span></a>
+
+<a class="card" href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span><span class="meta">Host · [Host club]</span></a>
+
+<a class="card" href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span><span class="meta">Host · [Host club]</span></a>
+
+<a class="btn ghost" href="#" style="margin-top: 6px">Browse the full calendar</a>
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M2e"><div class="mock s-m2"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">For you</div><h1 class="h1">What's on</h1>
+<div class="follow" style="margin-top: 14px"><span class="ftag">[Sport]</span><span class="ftag">[Sport]</span><span class="ftag">[Range]</span><span class="ftag">[Province]</span></div>
+</div>
+<div class="sec" style="gap: 14px">
+<h2 class="h2">From what you follow</h2>
+<a class="card" href="#"><span class="tag">[Sport]</span><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span></a>
+<a class="card" href="#"><span class="tag">[Range]</span><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span></a>
+<a class="card" href="#"><span class="tag">[Sport]</span><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span></a>
+<h2 class="h2" style="margin-top: 8px">Also nationally</h2>
+<a class="card" href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span><span class="meta">Host · [Host club]</span></a>
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M3a"><div class="mock s-m3"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">National calendar</div><h1 class="h1">Calendar</h1></div>
+<div class="bar"><div class="scrollx"><button class="chip on" aria-pressed="true">All</button><button class="chip" aria-pressed="false">Rifle</button><button class="chip" aria-pressed="false">Handgun</button><button class="chip" aria-pressed="false">Shotgun</button></div><div class="pin"><button class="chip" aria-pressed="false"><span class="sw"><i></i></span>Novice</button></div></div>
+<div class="center" role="status" aria-label="Loading matches"><div class="spin"></div></div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M3b"><div class="mock s-m3"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">National calendar</div><h1 class="h1">Calendar</h1></div>
+<div class="bar"><div class="scrollx"><button class="chip on" aria-pressed="true">All</button><button class="chip" aria-pressed="false">Rifle</button><button class="chip" aria-pressed="false">Handgun</button><button class="chip" aria-pressed="false">Shotgun</button></div><div class="pin"><button class="chip" aria-pressed="false"><span class="sw"><i></i></span>Novice</button></div></div>
+<div class="list">
+<div class="month">[Month Year]</div>
+
+<a class="row" href="#"><span class="date">[DD]<small>[MON]</small></span><span class="txt"><span class="ct">[Match title]</span><span class="meta">[Range] · [Province]</span><span class="meta">[Host club] · [Discipline]</span></span></a>
+
+<a class="row" href="#"><span class="date">[DD]<small>[MON]</small></span><span class="txt"><span class="ct">[Match title]</span><span class="meta">[Range] · [Province]</span><span class="meta">[Host club] · [Discipline]</span></span></a>
+
+<a class="row" href="#"><span class="date">[DD]<small>[MON]</small></span><span class="txt"><span class="ct">[Match title]</span><span class="meta">[Range] · [Province]</span><span class="meta">[Host club] · [Discipline]</span></span></a>
+
+<a class="row" href="#"><span class="date">[DD]<small>[MON]</small></span><span class="txt"><span class="ct">[Match title]</span><span class="meta">[Range] · [Province]</span><span class="meta">[Host club] · [Discipline]</span></span></a>
+
+<a class="row" href="#"><span class="date">[DD]<small>[MON]</small></span><span class="txt"><span class="ct">[Match title]</span><span class="meta">[Range] · [Province]</span><span class="meta">[Host club] · [Discipline]</span></span></a>
+
+<a class="row" href="#"><span class="date">[DD]<small>[MON]</small></span><span class="txt"><span class="ct">[Match title]</span><span class="meta">[Range] · [Province]</span><span class="meta">[Host club] · [Discipline]</span></span></a>
+
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M3c"><div class="mock s-m3"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">National calendar</div><h1 class="h1">Calendar</h1></div>
+<div class="bar"><div class="scrollx"><button class="chip on" aria-pressed="true">All</button><button class="chip" aria-pressed="false">Rifle</button><button class="chip" aria-pressed="false">Handgun</button><button class="chip" aria-pressed="false">Shotgun</button></div><div class="pin"><button class="chip" aria-pressed="false"><span class="sw"><i></i></span>Novice</button></div></div>
+<div class="active"><span>Province</span><button class="chip on" aria-label="Remove Gauteng filter" style="height: 44px; padding: 0 12px 0 16px">Gauteng<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+<div class="list">
+<div class="month">[Month Year]</div>
+
+<a class="row" href="#"><span class="date">[DD]<small>[MON]</small></span><span class="txt"><span class="ct">[Match title]</span><span class="meta">[Range] · Gauteng</span><span class="meta">[Host club] · [Discipline]</span></span></a>
+
+<a class="row" href="#"><span class="date">[DD]<small>[MON]</small></span><span class="txt"><span class="ct">[Match title]</span><span class="meta">[Range] · Gauteng</span><span class="meta">[Host club] · [Discipline]</span></span></a>
+
+<a class="row" href="#"><span class="date">[DD]<small>[MON]</small></span><span class="txt"><span class="ct">[Match title]</span><span class="meta">[Range] · Gauteng</span><span class="meta">[Host club] · [Discipline]</span></span></a>
+
+<a class="row" href="#"><span class="date">[DD]<small>[MON]</small></span><span class="txt"><span class="ct">[Match title]</span><span class="meta">[Range] · Gauteng</span><span class="meta">[Host club] · [Discipline]</span></span></a>
+
+<a class="row" href="#"><span class="date">[DD]<small>[MON]</small></span><span class="txt"><span class="ct">[Match title]</span><span class="meta">[Range] · Gauteng</span><span class="meta">[Host club] · [Discipline]</span></span></a>
+
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M3d"><div class="mock s-m3"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">National calendar</div><h1 class="h1">Calendar</h1></div>
+<div class="bar"><div class="scrollx"><button class="chip" aria-pressed="false">All</button><button class="chip" aria-pressed="false">Rifle</button><button class="chip" aria-pressed="false">Handgun</button><button class="chip on" aria-pressed="true">Shotgun</button></div><div class="pin"><button class="chip on" aria-pressed="true"><span class="sw" style="background: #C5E07A"><i style="left: 14px; background: #0E3328"></i></span>Novice</button></div></div>
+<div class="center">
+<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C6CCC9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6 8v6l-4-2v-4z"></path></svg>
+<p class="muted" style="font-size: 15px">No matches match your filters.</p>
+<button class="btn ghost" style="width: 200px">Clear filters</button>
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M3e"><div class="mock s-m3"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">National calendar</div><h1 class="h1">Calendar</h1></div>
+<div class="bar"><div class="scrollx"><button class="chip on" aria-pressed="true">All</button><button class="chip" aria-pressed="false">Rifle</button><button class="chip" aria-pressed="false">Handgun</button><button class="chip" aria-pressed="false">Shotgun</button></div><div class="pin"><button class="chip" aria-pressed="false"><span class="sw"><i></i></span>Novice</button></div></div>
+<div class="center">
+<p class="err" role="alert">Couldn't load the calendar. Pull to refresh.</p>
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M4a"><div class="mock s-m4a"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">Discover</div><h1 class="h1">Find</h1></div>
+<div class="bar"><button class="chip on" aria-pressed="true">Events</button><button class="chip" aria-pressed="false">Clubs</button><button class="chip" aria-pressed="false">Ranges</button><button class="chip" aria-pressed="false">Shops</button><button class="chip" aria-pressed="false">Sports</button></div>
+<div class="mapwrap">
+<div class="map">
+<svg width="360" height="380" viewBox="0 0 360 380" aria-hidden="true"><path d="M20 195L38 248L54 312L58 352L88 368L130 349L202 346L238 324L270 287L298 251L316 217L338 189L348 144L330 133L328 74L316 21L278 13L236 46L206 94L186 116L146 116L90 88L90 189Z" fill="#FFFFFF" stroke="#C6CCC9" stroke-width="1.5" stroke-linejoin="round"></path></svg>
+<button class="pinb" aria-label="Limpopo, N upcoming matches" style="left: 256px; top: 36px"><span>N</span></button>
+<button class="pinb" aria-label="Mpumalanga, N upcoming matches" style="left: 278px; top: 89px"><span>N</span></button>
+<button class="pinb" aria-label="Gauteng, N upcoming matches" style="left: 230px; top: 103px"><span>N</span></button>
+<button class="pinb" aria-label="North West, N upcoming matches" style="left: 180px; top: 114px"><span>N</span></button>
+<button class="pinb" aria-label="Free State, N upcoming matches" style="left: 204px; top: 173px"><span>N</span></button>
+<button class="pinb" aria-label="KwaZulu-Natal, N upcoming matches" style="left: 280px; top: 184px"><span>N</span></button>
+<button class="pinb" aria-label="Northern Cape, N upcoming matches" style="left: 118px; top: 198px"><span>N</span></button>
+<button class="pinb" aria-label="Eastern Cape, N upcoming matches" style="left: 188px; top: 276px"><span>N</span></button>
+<button class="pinb" aria-label="Western Cape, N upcoming matches" style="left: 98px; top: 304px"><span>N</span></button>
+</div>
+</div>
+<div class="foot"><b>N</b> upcoming matches at <b>M</b> pinned ranges</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M4b"><div class="mock s-m4a"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">Discover</div><h1 class="h1">Find</h1></div>
+<div class="bar"><button class="chip on" aria-pressed="true">Events</button><button class="chip" aria-pressed="false">Clubs</button><button class="chip" aria-pressed="false">Ranges</button><button class="chip" aria-pressed="false">Shops</button><button class="chip" aria-pressed="false">Sports</button></div>
+<div class="mapwrap">
+<div class="map">
+<svg width="360" height="380" viewBox="0 0 360 380" aria-hidden="true"><path d="M20 195L38 248L54 312L58 352L88 368L130 349L202 346L238 324L270 287L298 251L316 217L338 189L348 144L330 133L328 74L316 21L278 13L236 46L206 94L186 116L146 116L90 88L90 189Z" fill="#FFFFFF" stroke="#C6CCC9" stroke-width="1.5" stroke-linejoin="round"></path></svg>
+<button class="pinb" aria-label="Limpopo, N upcoming matches" style="left: 256px; top: 36px; opacity: 0.45"><span>N</span></button>
+<button class="pinb" aria-label="Mpumalanga, N upcoming matches" style="left: 278px; top: 89px; opacity: 0.45"><span>N</span></button>
+<button class="pinb" aria-label="North West, N upcoming matches" style="left: 180px; top: 114px; opacity: 0.45"><span>N</span></button>
+<button class="pinb" aria-label="Free State, N upcoming matches" style="left: 204px; top: 173px; opacity: 0.45"><span>N</span></button>
+<button class="pinb" aria-label="KwaZulu-Natal, N upcoming matches" style="left: 280px; top: 184px; opacity: 0.45"><span>N</span></button>
+<button class="pinb" aria-label="Northern Cape, N upcoming matches" style="left: 118px; top: 198px; opacity: 0.45"><span>N</span></button>
+<button class="pinb" aria-label="Eastern Cape, N upcoming matches" style="left: 188px; top: 276px; opacity: 0.45"><span>N</span></button>
+<button class="pinb" aria-label="Western Cape, N upcoming matches" style="left: 98px; top: 304px; opacity: 0.45"><span>N</span></button>
+<button class="pinb" aria-label="Gauteng, N upcoming matches, selected" aria-expanded="true" style="left: 230px; top: 103px"><span style="background: #C5E07A; color: #10251F; box-shadow: 0 0 0 4px #0E3328">N</span></button>
+<div class="callout" role="dialog" aria-label="Gauteng">
+<span class="ct">Gauteng</span>
+<span class="meta">N upcoming · M ranges</span>
+<a class="btn" href="#">Open in calendar<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</div>
+</div>
+</div>
+<div class="foot"><b>N</b> upcoming matches at <b>M</b> pinned ranges</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M4c"><div class="mock s-m4a"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">Discover</div><h1 class="h1">Find</h1></div>
+<div class="bar"><button class="chip on" aria-pressed="true">Events</button><button class="chip" aria-pressed="false">Clubs</button><button class="chip" aria-pressed="false">Ranges</button><button class="chip" aria-pressed="false">Shops</button><button class="chip" aria-pressed="false">Sports</button></div>
+<div class="mapwrap">
+<div class="map">
+<svg width="360" height="380" viewBox="0 0 360 380" aria-hidden="true" style="opacity: 0.4"><path d="M20 195L38 248L54 312L58 352L88 368L130 349L202 346L238 324L270 287L298 251L316 217L338 189L348 144L330 133L328 74L316 21L278 13L236 46L206 94L186 116L146 116L90 88L90 189Z" fill="#FFFFFF" stroke="#C6CCC9" stroke-width="1.5" stroke-linejoin="round"></path></svg>
+<div class="over" role="status" aria-label="Loading map"><div class="spin"></div></div>
+</div>
+</div>
+<div class="foot">Loading upcoming matches</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M4d"><div class="mock s-m4a"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">Discover</div><h1 class="h1">Find</h1></div>
+<div class="bar"><button class="chip on" aria-pressed="true">Events</button><button class="chip" aria-pressed="false">Clubs</button><button class="chip" aria-pressed="false">Ranges</button><button class="chip" aria-pressed="false">Shops</button><button class="chip" aria-pressed="false">Sports</button></div>
+<div class="mapwrap">
+<div class="map">
+<svg width="360" height="380" viewBox="0 0 360 380" aria-hidden="true" style="opacity: 0.4"><path d="M20 195L38 248L54 312L58 352L88 368L130 349L202 346L238 324L270 287L298 251L316 217L338 189L348 144L330 133L328 74L316 21L278 13L236 46L206 94L186 116L146 116L90 88L90 189Z" fill="#FFFFFF" stroke="#C6CCC9" stroke-width="1.5" stroke-linejoin="round"></path></svg>
+<div class="over"><p class="err" role="alert">Couldn't load matches for the map. Pull to retry.</p></div>
+</div>
+</div>
+<div class="foot">No match data</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M4e"><div class="mock s-m4b"><div class="phone"><div class="body">
+<div class="hdr"><div class="eyebrow">Discover</div><h1 class="h1">Find</h1></div>
+<div class="bar"><div class="track"><button class="chip" aria-pressed="false">Events</button><button class="chip on" aria-pressed="true">Clubs</button><button class="chip" aria-pressed="false">Ranges</button><button class="chip" aria-pressed="false">Shops</button><button class="chip" aria-pressed="false">Sports</button></div></div>
+<div class="center"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C6CCC9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11a3 3 0 1 0 0-6a3 3 0 0 0 0 6zM3 20c0-3 3-5 6-5s6 2 6 5M16 5a3 3 0 0 1 0 6M18 15c2 .6 3 2.3 3 5"></path></svg><p class="muted">Clubs search opens here when its API endpoint lands.</p></div>
+</div><nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav></div></div></template>
+<template id="t-M4f"><div class="mock s-m4b"><div class="phone"><div class="body">
+<div class="hdr"><div class="eyebrow">Discover</div><h1 class="h1">Find</h1></div>
+<div class="bar"><div class="track"><button class="chip" aria-pressed="false">Events</button><button class="chip on" aria-pressed="true">Clubs</button><button class="chip" aria-pressed="false">Ranges</button><button class="chip" aria-pressed="false">Shops</button><button class="chip" aria-pressed="false">Sports</button></div></div>
+<div class="sub"><button class="chip" aria-haspopup="listbox">Province<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button><button class="chip" aria-haspopup="listbox">Discipline<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
+<div class="list">
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11a3 3 0 1 0 0-6a3 3 0 0 0 0 6zM3 20c0-3 3-5 6-5s6 2 6 5M16 5a3 3 0 0 1 0 6M18 15c2 .6 3 2.3 3 5"></path></svg></span><span class="txt"><span class="ct">[Club name]</span><span class="meta">[Town, Province]</span><span class="meta">[Disciplines]</span></span></a>
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11a3 3 0 1 0 0-6a3 3 0 0 0 0 6zM3 20c0-3 3-5 6-5s6 2 6 5M16 5a3 3 0 0 1 0 6M18 15c2 .6 3 2.3 3 5"></path></svg></span><span class="txt"><span class="ct">[Club name]</span><span class="meta">[Town, Province]</span><span class="meta">[Disciplines]</span></span></a>
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11a3 3 0 1 0 0-6a3 3 0 0 0 0 6zM3 20c0-3 3-5 6-5s6 2 6 5M16 5a3 3 0 0 1 0 6M18 15c2 .6 3 2.3 3 5"></path></svg></span><span class="txt"><span class="ct">[Club name]</span><span class="meta">[Town, Province]</span><span class="meta">[Disciplines]</span></span></a>
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11a3 3 0 1 0 0-6a3 3 0 0 0 0 6zM3 20c0-3 3-5 6-5s6 2 6 5M16 5a3 3 0 0 1 0 6M18 15c2 .6 3 2.3 3 5"></path></svg></span><span class="txt"><span class="ct">[Club name]</span><span class="meta">[Town, Province]</span><span class="meta">[Disciplines]</span></span></a>
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11a3 3 0 1 0 0-6a3 3 0 0 0 0 6zM3 20c0-3 3-5 6-5s6 2 6 5M16 5a3 3 0 0 1 0 6M18 15c2 .6 3 2.3 3 5"></path></svg></span><span class="txt"><span class="ct">[Club name]</span><span class="meta">[Town, Province]</span><span class="meta">[Disciplines]</span></span></a>
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11a3 3 0 1 0 0-6a3 3 0 0 0 0 6zM3 20c0-3 3-5 6-5s6 2 6 5M16 5a3 3 0 0 1 0 6M18 15c2 .6 3 2.3 3 5"></path></svg></span><span class="txt"><span class="ct">[Club name]</span><span class="meta">[Town, Province]</span><span class="meta">[Disciplines]</span></span></a>
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11a3 3 0 1 0 0-6a3 3 0 0 0 0 6zM3 20c0-3 3-5 6-5s6 2 6 5M16 5a3 3 0 0 1 0 6M18 15c2 .6 3 2.3 3 5"></path></svg></span><span class="txt"><span class="ct">[Club name]</span><span class="meta">[Town, Province]</span><span class="meta">[Disciplines]</span></span></a>
+
+</div>
+</div><nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav></div></div></template>
+<template id="t-M4g"><div class="mock s-m4b"><div class="phone"><div class="body">
+<div class="hdr"><div class="eyebrow">Discover</div><h1 class="h1">Find</h1></div>
+<div class="bar"><div class="track"><button class="chip" aria-pressed="false">Events</button><button class="chip" aria-pressed="false">Clubs</button><button class="chip on" aria-pressed="true">Ranges</button><button class="chip" aria-pressed="false">Shops</button><button class="chip" aria-pressed="false">Sports</button></div></div>
+<div class="center"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C6CCC9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg><p class="muted">Ranges search opens here when its API endpoint lands.</p></div>
+</div><nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav></div></div></template>
+<template id="t-M4h"><div class="mock s-m4b"><div class="phone"><div class="body">
+<div class="hdr"><div class="eyebrow">Discover</div><h1 class="h1">Find</h1></div>
+<div class="bar"><div class="track"><button class="chip" aria-pressed="false">Events</button><button class="chip" aria-pressed="false">Clubs</button><button class="chip on" aria-pressed="true">Ranges</button><button class="chip" aria-pressed="false">Shops</button><button class="chip" aria-pressed="false">Sports</button></div></div>
+<div class="sub"><button class="chip" aria-haspopup="listbox">Province<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button><button class="chip" aria-haspopup="listbox">Discipline<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
+<div class="list">
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></span><span class="txt"><span class="ct">[Range name]</span><span class="meta">[Town, Province]</span><span class="meta">[Distances · disciplines]</span></span></a>
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></span><span class="txt"><span class="ct">[Range name]</span><span class="meta">[Town, Province]</span><span class="meta">[Distances · disciplines]</span></span></a>
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></span><span class="txt"><span class="ct">[Range name]</span><span class="meta">[Town, Province]</span><span class="meta">[Distances · disciplines]</span></span></a>
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></span><span class="txt"><span class="ct">[Range name]</span><span class="meta">[Town, Province]</span><span class="meta">[Distances · disciplines]</span></span></a>
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></span><span class="txt"><span class="ct">[Range name]</span><span class="meta">[Town, Province]</span><span class="meta">[Distances · disciplines]</span></span></a>
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></span><span class="txt"><span class="ct">[Range name]</span><span class="meta">[Town, Province]</span><span class="meta">[Distances · disciplines]</span></span></a>
+
+<a class="row" href="#"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></span><span class="txt"><span class="ct">[Range name]</span><span class="meta">[Town, Province]</span><span class="meta">[Distances · disciplines]</span></span></a>
+
+</div>
+</div><nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav></div></div></template>
+<template id="t-M4i"><div class="mock s-m4b"><div class="phone"><div class="body">
+<div class="hdr"><div class="eyebrow">Discover</div><h1 class="h1">Find</h1></div>
+<div class="bar"><div class="track" style="margin-left: -96px"><button class="chip" aria-pressed="false">Events</button><button class="chip" aria-pressed="false">Clubs</button><button class="chip" aria-pressed="false">Ranges</button><button class="chip on" aria-pressed="true">Shops</button><button class="chip" aria-pressed="false">Sports</button></div></div>
+<div class="center"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C6CCC9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M9 20v-6h6v6"></path></svg><p class="muted">Shops search opens here when its API endpoint lands.</p></div>
+</div><nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav></div></div></template>
+<template id="t-M4j"><div class="mock s-m4b"><div class="phone"><div class="body">
+<div class="hdr"><div class="eyebrow">Discover</div><h1 class="h1">Find</h1></div>
+<div class="bar"><div class="track" style="margin-left: -96px"><button class="chip" aria-pressed="false">Events</button><button class="chip" aria-pressed="false">Clubs</button><button class="chip" aria-pressed="false">Ranges</button><button class="chip on" aria-pressed="true">Shops</button><button class="chip" aria-pressed="false">Sports</button></div></div>
+<div class="sub"><button class="chip" aria-haspopup="listbox">Province<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
+<div class="ph">
+<div class="grid">
+
+<a class="tile" href="#"><span class="logo">[Logo]</span><span class="txt"><span class="ct" style="font-size: 15px">[Shop name]</span><span class="meta">[Town]</span></span></a>
+
+<a class="tile" href="#"><span class="logo">[Logo]</span><span class="txt"><span class="ct" style="font-size: 15px">[Shop name]</span><span class="meta">[Town]</span></span></a>
+
+<a class="tile" href="#"><span class="logo">[Logo]</span><span class="txt"><span class="ct" style="font-size: 15px">[Shop name]</span><span class="meta">[Town]</span></span></a>
+
+<a class="tile" href="#"><span class="logo">[Logo]</span><span class="txt"><span class="ct" style="font-size: 15px">[Shop name]</span><span class="meta">[Town]</span></span></a>
+
+<a class="tile" href="#"><span class="logo">[Logo]</span><span class="txt"><span class="ct" style="font-size: 15px">[Shop name]</span><span class="meta">[Town]</span></span></a>
+
+<a class="tile" href="#"><span class="logo">[Logo]</span><span class="txt"><span class="ct" style="font-size: 15px">[Shop name]</span><span class="meta">[Town]</span></span></a>
+
+</div>
+</div>
+</div><nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav></div></div></template>
+<template id="t-M4k"><div class="mock s-m4b"><div class="phone"><div class="body">
+<div class="hdr"><div class="eyebrow">Discover</div><h1 class="h1">Find</h1></div>
+<div class="bar"><div class="track" style="margin-left: -96px"><button class="chip" aria-pressed="false">Events</button><button class="chip" aria-pressed="false">Clubs</button><button class="chip" aria-pressed="false">Ranges</button><button class="chip" aria-pressed="false">Shops</button><button class="chip on" aria-pressed="true">Sports</button></div></div>
+<div class="center"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C6CCC9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"></path></svg><p class="muted">Sports search opens here when its API endpoint lands.</p></div>
+</div><nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav></div></div></template>
+<template id="t-M4l"><div class="mock s-m4b"><div class="phone"><div class="body">
+<div class="hdr"><div class="eyebrow">Discover</div><h1 class="h1">Find</h1></div>
+<div class="bar"><div class="track" style="margin-left: -96px"><button class="chip" aria-pressed="false">Events</button><button class="chip" aria-pressed="false">Clubs</button><button class="chip" aria-pressed="false">Ranges</button><button class="chip" aria-pressed="false">Shops</button><button class="chip on" aria-pressed="true">Sports</button></div></div>
+<div class="ph" style="gap: 12px">
+<h2 class="h3">Rifle</h2>
+<div class="grid"><a class="stile" href="#">[Sport]<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a><a class="stile" href="#">[Sport]<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a><a class="stile" href="#">[Sport]<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a><a class="stile" href="#">[Sport]<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a></div>
+<h2 class="h3" style="margin-top: 8px">Handgun</h2>
+<div class="grid"><a class="stile" href="#">[Sport]<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a><a class="stile" href="#">[Sport]<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a><a class="stile" href="#">[Sport]<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a><a class="stile" href="#">[Sport]<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a></div>
+<h2 class="h3" style="margin-top: 8px">Shotgun</h2>
+<div class="grid"><a class="stile" href="#">[Sport]<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a><a class="stile" href="#">[Sport]<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a></div>
+</div>
+</div><nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav></div></div></template>
+<template id="t-M5a"><div class="mock s-m5a"><div class="phone">
+<div class="body">
+<div class="center">
+<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#C6CCC9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg>
+<p class="muted" style="font-size: 16px; color: #10251F">Sign in to see your home, save matches, and manage your clubs or business.</p>
+<a class="btn" href="#" style="width: 220px">Sign in</a>
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M5b"><div class="mock s-m5a"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">My home</div><h1 class="h1">[Shooter name]</h1><span class="pill">Free</span></div>
+<div class="sec">
+<h2 class="h2">Saved matches</h2>
+<p class="muted">Nothing saved yet. Open the calendar and save a match.</p>
+</div>
+<div class="sec">
+<div class="upsell">
+<div class="eyebrow">Pro</div>
+<p class="up-t">Go Pro</p>
+<p class="muted">Pro lifts the Free plan limits. [Pro price]</p>
+<a class="btn" href="#" style="margin-top: 6px">Upgrade to Pro</a>
+</div>
+</div>
+<button class="logout" style="margin-top: auto"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"></path></svg>Log out</button>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M5c"><div class="mock s-m5a"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">My home</div><h1 class="h1">[Shooter name]</h1><span class="pill">Free</span></div>
+<div class="sec">
+<h2 class="h2">Manage</h2>
+<div class="cap">
+<div class="eyebrow">Club</div>
+<div class="ct" style="font-size: 18px">[Club name]</div>
+<p class="muted">[One-line summary]</p>
+<ul class="items"><li><span>[Item]</span><span class="meta">[Meta]</span></li><li><span>[Item]</span><span class="meta">[Meta]</span></li><li><span>[Item]</span><span class="meta">[Meta]</span></li></ul>
+<a class="btn" href="#">Open club desk</a>
+</div>
+</div>
+<div class="sec">
+<h2 class="h2">Saved matches</h2>
+<p class="muted">Nothing saved yet. Open the calendar and save a match.</p>
+</div>
+<div class="sec">
+<div class="upsell">
+<div class="eyebrow">Pro</div>
+<p class="up-t">Go Pro</p>
+<p class="muted">Pro lifts the Free plan limits. [Pro price]</p>
+<a class="btn" href="#" style="margin-top: 6px">Upgrade to Pro</a>
+</div>
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M5d"><div class="mock s-m5a"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">My home</div><h1 class="h1">[Shooter name]</h1><span class="pill pro">Pro</span></div>
+<div class="sec" style="gap: 4px">
+<h2 class="h2" style="margin-bottom: 4px">Saved matches</h2>
+
+<div class="saved"><a href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span></a><button class="icon" aria-label="Remove from saved"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></div>
+
+<div class="saved"><a href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span></a><button class="icon" aria-label="Remove from saved"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></div>
+
+<div class="saved"><a href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span></a><button class="icon" aria-label="Remove from saved"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></div>
+
+<div class="saved"><a href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span></a><button class="icon" aria-label="Remove from saved"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></div>
+
+</div>
+<button class="logout" style="margin-top: auto"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"></path></svg>Log out</button>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M5e"><div class="mock s-m5b"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">My home</div><h1 class="h1">[Shooter name]</h1><span class="pill">Trial · N days left</span></div>
+<div class="sec">
+<h2 class="h2" style="margin-bottom: 4px">Saved matches</h2>
+
+<div class="saved"><a href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span></a><button class="icon" aria-label="Remove from saved"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></div>
+
+<div class="saved"><a href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span></a><button class="icon" aria-label="Remove from saved"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></div>
+
+<div class="saved"><a href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span></a><button class="icon" aria-label="Remove from saved"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></div>
+
+</div>
+<button class="logout"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"></path></svg>Log out</button>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M5g"><div class="mock s-m5b"><div class="phone">
+<div class="body">
+<div class="center" role="status" aria-label="Loading your home"><div class="spin"></div></div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M5h"><div class="mock s-m5b"><div class="phone">
+<div class="body" style="gap: 0">
+<div class="errbar" role="alert"><p class="err" style="font-weight: 600">Couldn't load your home.</p><p class="err">Pull to retry.</p></div>
+<div class="ghosted" aria-hidden="true" style="padding-top: 24px">
+<div class="hdr" style="padding-top: 0"><div class="eyebrow">My home</div><div class="bone" style="width: 200px; height: 30px"></div><div class="bone" style="width: 60px; height: 22px; border-radius: 11px"></div></div>
+<div class="sec" style="gap: 14px">
+<h2 class="h2">Saved matches</h2>
+<div class="bone" style="width: 85%"></div>
+<div class="bone" style="width: 60%"></div>
+<div class="bone" style="width: 75%"></div>
+</div>
+<div class="logout"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"></path></svg>Log out</div>
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-M5f"><div class="mock s-m5f"><div class="phone">
+<div class="body">
+<div class="hdr"><div class="eyebrow">My home</div><h1 class="h1">[Shooter name]</h1><span class="pill">Free</span></div>
+<div class="sec">
+<h2 class="h2">Manage</h2>
+
+<div class="cap">
+<div class="eyebrow">Club</div>
+<div class="ct" style="font-size: 18px">[Club name]</div>
+<p class="muted">[One-line summary]</p>
+<ul class="items"><li><span>[Item]</span><span class="meta">[Meta]</span></li><li><span>[Item]</span><span class="meta">[Meta]</span></li><li><span>[Item]</span><span class="meta">[Meta]</span></li></ul>
+<a class="btn" href="#">Open club desk</a>
+</div>
+
+<div class="cap">
+<div class="eyebrow">Shop</div>
+<div class="ct" style="font-size: 18px">[Shop name]</div>
+<p class="muted">[One-line summary]</p>
+<ul class="items"><li><span>[Item]</span><span class="meta">[Meta]</span></li><li><span>[Item]</span><span class="meta">[Meta]</span></li><li><span>[Item]</span><span class="meta">[Meta]</span></li></ul>
+<a class="btn" href="#">Open shop desk</a>
+</div>
+
+<div class="cap">
+<div class="eyebrow">Range</div>
+<div class="ct" style="font-size: 18px">[Range name]</div>
+<p class="muted">[One-line summary]</p>
+<ul class="items"><li><span>[Item]</span><span class="meta">[Meta]</span></li><li><span>[Item]</span><span class="meta">[Meta]</span></li><li><span>[Item]</span><span class="meta">[Meta]</span></li></ul>
+<a class="btn" href="#">Open range desk</a>
+</div>
+
+<div class="cap">
+<div class="eyebrow">Media</div>
+<div class="ct" style="font-size: 18px">[Media partner name]</div>
+<p class="muted">[One-line summary]</p>
+<ul class="items"><li><span>[Item]</span><span class="meta">[Meta]</span></li><li><span>[Item]</span><span class="meta">[Meta]</span></li><li><span>[Item]</span><span class="meta">[Meta]</span></li></ul>
+<a class="btn" href="#">Open media desk</a>
+</div>
+
+</div>
+<div class="sec" style="gap: 4px">
+<h2 class="h2" style="margin-bottom: 4px">Saved matches</h2>
+
+<div class="saved"><a href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span></a><button class="icon" aria-label="Remove from saved"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></div>
+
+<div class="saved"><a href="#"><span class="ct">[Match title]</span><span class="meta">[Sat 00 Mon] · [Range, Province]</span></a><button class="icon" aria-label="Remove from saved"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></div>
+
+</div>
+<div class="sec">
+<div class="upsell">
+<div class="eyebrow">Pro</div>
+<p class="up-t">Go Pro</p>
+<p class="muted">Pro lifts the Free plan limits. [Pro price]</p>
+<a class="btn" href="#" style="margin-top: 6px">Upgrade to Pro</a>
+</div>
+</div>
+<button class="logout"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"></path></svg>Log out</button>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-R1"><div class="mock s-r"><div class="phone">
+<div class="body">
+<div class="band">
+<div class="navbar"><a class="back" href="#" aria-label="Back to Home"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>Home</a><span class="navt" aria-hidden="true">[Match title]</span><button class="navbtn" aria-label="Share match"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"></path></svg></button></div>
+<div class="ttl"><div class="eyebrow">[Discipline]</div><h1 class="h1">[Match title]</h1><p class="sub">[Sat 00 Mon] · [Range, Province]</p></div>
+</div>
+<div class="sec">
+<dl class="dl"><div><dt>Date</dt><dd>[Sat 00 Mon Year]</dd></div><div><dt>Range</dt><dd>[Range name]</dd></div><div><dt>Province</dt><dd>[Province]</dd></div><div><dt>Host</dt><dd>[Host club]</dd></div><div><dt>Discipline</dt><dd>[Discipline]</dd></div></dl>
+<button class="btn" style="margin-top: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg>Save match</button>
+<a class="btn ghost" href="#">Open match page</a>
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-R2"><div class="mock s-r"><div class="phone">
+<div class="body">
+<div class="band">
+<div class="navbar"><a class="back" href="#" aria-label="Back to Calendar"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>Calendar</a><span class="navt" aria-hidden="true">[Match title]</span><button class="navbtn" aria-label="Share match"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"></path></svg></button></div>
+<div class="ttl"><div class="eyebrow">[Discipline]</div><h1 class="h1">[Match title]</h1><p class="sub">[Sat 00 Mon] · [Range, Province]</p></div>
+</div>
+<div class="sec">
+<dl class="dl"><div><dt>Date</dt><dd>[Sat 00 Mon Year]</dd></div><div><dt>Range</dt><dd>[Range name]</dd></div><div><dt>Province</dt><dd>[Province]</dd></div><div><dt>Host</dt><dd>[Host club]</dd></div><div><dt>Discipline</dt><dd>[Discipline]</dd></div></dl>
+<button class="btn ghost" style="margin-top: 8px" aria-pressed="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg>Saved</button>
+<a class="btn ghost" href="#">Open match page</a>
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-R3"><div class="mock s-r"><div class="phone">
+<div class="body">
+<div class="band">
+<div class="navbar"><a class="back" href="#" aria-label="Back to Find"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>Find</a><span class="navt" aria-hidden="true">[Sport]</span><span style="width: 44px"></span></div>
+<div class="ttl"><div class="eyebrow">[Family]</div><h1 class="h1">[Sport]</h1></div>
+</div>
+<div class="sec">
+<h2 class="h2">Articles</h2>
+<a class="card" href="#"><span class="ct">[Article title]</span><span class="meta">[Source] · [Date]</span></a>
+<a class="card" href="#"><span class="ct">[Article title]</span><span class="meta">[Source] · [Date]</span></a>
+</div>
+<div class="sec">
+<h2 class="h2">Magazines</h2>
+<div class="grid"><a href="#" style="text-decoration: none"><span class="cover">[Cover]</span></a><a href="#" style="text-decoration: none"><span class="cover">[Cover]</span></a></div>
+</div>
+</div>
+<nav aria-label="Main" class="tabbar"><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"></path></svg><span>Calendar</span></a><a href="#" aria-current="page" class="tab on"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM16.5 16.5L21 21"></path></svg><span>Find</span></a><a href="#" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span>Me</span></a></nav>
+</div></div></template>
+<template id="t-R4"><div class="mock s-r"><div class="phone">
+<div class="body" style="background: #0E3328"></div>
+<div class="sheet">
+<div class="sheetin" role="dialog" aria-label="Reset password on shootingsports.co.za">
+<div class="sbar"><button class="done">Done</button><span class="addr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#52655E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>shootingsports.co.za</span><span style="width: 60px"></span></div>
+<div class="web">
+<div style="font: 700 30px/1 'Saira Condensed', sans-serif; text-transform: uppercase">Reset password</div>
+<p class="meta" style="font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; line-height: 1.5">Enter your account email and we'll send a reset link.</p>
+<div class="field"><label for="r4e">Email</label><input id="r4e" class="in" type="email" placeholder="name@example.com"></div>
+<button class="btn">Send reset link</button>
+</div>
+</div>
+</div>
+</div></div></template>
+<template id="w-me"><div class="web" role="img" aria-label="Website mockup of /me">
+<div class="bbar" aria-hidden="true"><span></span><span></span><span></span><div class="url">shootingsports.co.za/me</div></div>
+<div class="wnav"><span class="wmark">Shooting Sports</span><nav class="wlinks"><a href="#">Events</a><a href="#">Sports</a><a href="#">Find</a><a href="#">Industry</a></nav><div class="wacct"><span>[Shooter name]</span><span class="wpill">Free</span></div></div>
+<div class="whero"><div class="weyebrow">My home</div><h1>[Shooter name]</h1><span class="wpill lime">Free</span></div>
+<nav class="wsubnav" aria-label="My account"><a href="#" class="wsub on" aria-current="page">My home</a><a href="#" class="wsub">Calendar</a><a href="#" class="wsub">Log</a><a href="#" class="wsub">Settings</a><a href="#" class="wsub">Manage</a></nav>
+<div class="wbody">
+<section class="wcol8"><h2 class="wh2">Manage</h2><div class="wgrid2"><div class="wcap"><div class="weyebrow dark">Club</div><h3>[Club name]</h3><p class="wmuted">[One-line summary]</p><ul class="witems"><li><span>[Item]</span><span class="wmeta">[Meta]</span></li><li><span>[Item]</span><span class="wmeta">[Meta]</span></li><li><span>[Item]</span><span class="wmeta">[Meta]</span></li></ul><a href="#" class="wbtn">Open club desk</a></div><div class="wcap"><div class="weyebrow dark">Range</div><h3>[Range name]</h3><p class="wmuted">[One-line summary]</p><ul class="witems"><li><span>[Item]</span><span class="wmeta">[Meta]</span></li><li><span>[Item]</span><span class="wmeta">[Meta]</span></li><li><span>[Item]</span><span class="wmeta">[Meta]</span></li></ul><a href="#" class="wbtn">Open range desk</a></div></div></section>
+<aside class="wcol4"><h2 class="wh2">Saved matches</h2><div class="wcard"><a href="#" class="wrow"><span class="wdate">[DD]<small>[MON]</small></span><span class="wtxt"><strong>[Match title]</strong><span class="wmeta">[Range] · [Province] · [Discipline]</span></span><span class="wsave" aria-hidden="true">Saved</span></a><a href="#" class="wrow"><span class="wdate">[DD]<small>[MON]</small></span><span class="wtxt"><strong>[Match title]</strong><span class="wmeta">[Range] · [Province] · [Discipline]</span></span><span class="wsave" aria-hidden="true">Saved</span></a><a href="#" class="wrow"><span class="wdate">[DD]<small>[MON]</small></span><span class="wtxt"><strong>[Match title]</strong><span class="wmeta">[Range] · [Province] · [Discipline]</span></span><span class="wsave" aria-hidden="true">Saved</span></a><a href="#" class="wlink">Open the calendar</a></div>
+<div class="wupsell"><div class="weyebrow">Pro</div><h3>Go Pro</h3><p>Pro lifts the Free plan limits. [Pro price]</p><a href="#" class="wbtn">Upgrade to Pro</a></div></aside></div></div></template>
+<template id="w-calendar"><div class="web" role="img" aria-label="Website mockup of /me/calendar">
+<div class="bbar" aria-hidden="true"><span></span><span></span><span></span><div class="url">shootingsports.co.za/me/calendar</div></div>
+<div class="wnav"><span class="wmark">Shooting Sports</span><nav class="wlinks"><a href="#">Events</a><a href="#">Sports</a><a href="#">Find</a><a href="#">Industry</a></nav><div class="wacct"><span>[Shooter name]</span><span class="wpill">Free</span></div></div>
+<div class="whero"><div class="weyebrow">National calendar</div><h1>Calendar</h1></div>
+<nav class="wsubnav" aria-label="My account"><a href="#" class="wsub">My home</a><a href="#" class="wsub on" aria-current="page">Calendar</a><a href="#" class="wsub">Log</a><a href="#" class="wsub">Settings</a><a href="#" class="wsub">Manage</a></nav>
+<div class="wbody">
+<section class="wcol12"><div class="wchips"><button class="wchip on" aria-pressed="true">All</button><button class="wchip" aria-pressed="false">Rifle</button><button class="wchip" aria-pressed="false">Handgun</button><button class="wchip" aria-pressed="false">Shotgun</button><span class="wsep"></span><button class="wchip" aria-pressed="false">Novice</button><span class="wsep"></span><button class="wchip on" aria-label="Remove Gauteng filter">Gauteng ×</button></div><div class="wtable"><table><thead><tr><th scope="col">Date</th><th scope="col">Match</th><th scope="col">Range</th><th scope="col">Province</th><th scope="col">Discipline</th><th scope="col">Host</th><th scope="col"><span class="sr">Save</span></th></tr></thead><tbody><tr><td class="mono">[Sat 00 Mon]</td><td><a href="#">[Match title]</a></td><td>[Range]</td><td>Gauteng</td><td>[Discipline]</td><td>[Host club]</td><td><button class="wicon" aria-label="Save match"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></td></tr><tr><td class="mono">[Sat 00 Mon]</td><td><a href="#">[Match title]</a></td><td>[Range]</td><td>Gauteng</td><td>[Discipline]</td><td>[Host club]</td><td><button class="wicon" aria-label="Save match"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></td></tr><tr><td class="mono">[Sat 00 Mon]</td><td><a href="#">[Match title]</a></td><td>[Range]</td><td>Gauteng</td><td>[Discipline]</td><td>[Host club]</td><td><button class="wicon" aria-label="Save match"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></td></tr><tr><td class="mono">[Sat 00 Mon]</td><td><a href="#">[Match title]</a></td><td>[Range]</td><td>Gauteng</td><td>[Discipline]</td><td>[Host club]</td><td><button class="wicon" aria-label="Save match"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></td></tr><tr><td class="mono">[Sat 00 Mon]</td><td><a href="#">[Match title]</a></td><td>[Range]</td><td>Gauteng</td><td>[Discipline]</td><td>[Host club]</td><td><button class="wicon" aria-label="Save match"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></td></tr><tr><td class="mono">[Sat 00 Mon]</td><td><a href="#">[Match title]</a></td><td>[Range]</td><td>Gauteng</td><td>[Discipline]</td><td>[Host club]</td><td><button class="wicon" aria-label="Save match"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></td></tr><tr><td class="mono">[Sat 00 Mon]</td><td><a href="#">[Match title]</a></td><td>[Range]</td><td>Gauteng</td><td>[Discipline]</td><td>[Host club]</td><td><button class="wicon" aria-label="Save match"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></td></tr><tr><td class="mono">[Sat 00 Mon]</td><td><a href="#">[Match title]</a></td><td>[Range]</td><td>Gauteng</td><td>[Discipline]</td><td>[Host club]</td><td><button class="wicon" aria-label="Save match"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></button></td></tr></tbody></table></div></section></div></div></template>
+<template id="w-log"><div class="web" role="img" aria-label="Website mockup of /me/log">
+<div class="bbar" aria-hidden="true"><span></span><span></span><span></span><div class="url">shootingsports.co.za/me/log</div></div>
+<div class="wnav"><span class="wmark">Shooting Sports</span><nav class="wlinks"><a href="#">Events</a><a href="#">Sports</a><a href="#">Find</a><a href="#">Industry</a></nav><div class="wacct"><span>[Shooter name]</span><span class="wpill">Free</span></div></div>
+<div class="whero"><div class="weyebrow">My home</div><h1>Log</h1></div>
+<nav class="wsubnav" aria-label="My account"><a href="#" class="wsub">My home</a><a href="#" class="wsub">Calendar</a><a href="#" class="wsub on" aria-current="page">Log</a><a href="#" class="wsub">Settings</a><a href="#" class="wsub">Manage</a></nav>
+<div class="wbody">
+<section class="wcol8"><h2 class="wh2">Saved matches</h2><div class="wmonth">[Month Year]</div><div class="wcard"><a href="#" class="wrow"><span class="wdate">[DD]<small>[MON]</small></span><span class="wtxt"><strong>[Match title]</strong><span class="wmeta">[Range] · [Province] · [Discipline]</span></span><span class="wsave" aria-hidden="true">Saved</span></a><a href="#" class="wrow"><span class="wdate">[DD]<small>[MON]</small></span><span class="wtxt"><strong>[Match title]</strong><span class="wmeta">[Range] · [Province] · [Discipline]</span></span><span class="wsave" aria-hidden="true">Saved</span></a></div><div class="wmonth">[Month Year]</div><div class="wcard"><a href="#" class="wrow"><span class="wdate">[DD]<small>[MON]</small></span><span class="wtxt"><strong>[Match title]</strong><span class="wmeta">[Range] · [Province] · [Discipline]</span></span><span class="wsave" aria-hidden="true">Saved</span></a></div></section>
+<aside class="wcol4"><div class="wnote"><span class="wtag future">Future concept</span><h3>Activity history</h3><p>Today the log is the saved-match trail from <code>/me/saved-events</code>. Results, scores and attended matches need their own endpoints and are not an empty result.</p></div></aside></div></div></template>
+<template id="w-settings"><div class="web" role="img" aria-label="Website mockup of /me/settings">
+<div class="bbar" aria-hidden="true"><span></span><span></span><span></span><div class="url">shootingsports.co.za/me/settings</div></div>
+<div class="wnav"><span class="wmark">Shooting Sports</span><nav class="wlinks"><a href="#">Events</a><a href="#">Sports</a><a href="#">Find</a><a href="#">Industry</a></nav><div class="wacct"><span>[Shooter name]</span><span class="wpill">Free</span></div></div>
+<div class="whero"><div class="weyebrow">My home</div><h1>Settings</h1></div>
+<nav class="wsubnav" aria-label="My account"><a href="#" class="wsub">My home</a><a href="#" class="wsub">Calendar</a><a href="#" class="wsub">Log</a><a href="#" class="wsub on" aria-current="page">Settings</a><a href="#" class="wsub">Manage</a></nav>
+<div class="wbody">
+<section class="wcol7"><h2 class="wh2">Account</h2><div class="wcard wform">
+<div class="wfield"><label for="w-n">Name</label><input id="w-n" placeholder="[Shooter name]"></div>
+<div class="wfield"><label for="w-e">Email</label><input id="w-e" type="email" placeholder="name@example.com"></div>
+<div class="wfield"><label for="w-p">Password</label><a href="#" class="wbtn ghost">Change password</a></div>
+<div><a href="#" class="wbtn">Save changes</a></div></div></section>
+<aside class="wcol5"><h2 class="wh2">Plan</h2><div class="wcard"><div class="wplanrow"><span>Current plan</span><span class="wpill dark">Free</span></div><p class="wmuted">Pro lifts the Free plan limits. [Pro price]</p><a href="#" class="wbtn">Upgrade to Pro</a></div>
+<div class="wcard" style="margin-top:20px"><a href="#" class="wbtn ghost">Sign out</a></div></aside></div></div></template>
+<template id="w-desk"><div class="web" role="img" aria-label="Website mockup of /desk">
+<div class="bbar" aria-hidden="true"><span></span><span></span><span></span><div class="url">shootingsports.co.za/desk</div></div>
+<div class="wnav"><span class="wmark">Shooting Sports</span><nav class="wlinks"><a href="#">Events</a><a href="#">Sports</a><a href="#">Find</a><a href="#">Industry</a></nav><div class="wacct"><span>[Shooter name]</span><span class="wpill">Free</span></div></div>
+<div class="whero"><div class="weyebrow">Manage</div><h1>Desk</h1></div>
+<nav class="wsubnav" aria-label="My account"><a href="#" class="wsub">My home</a><a href="#" class="wsub">Calendar</a><a href="#" class="wsub">Log</a><a href="#" class="wsub">Settings</a><a href="#" class="wsub on" aria-current="page">Manage</a></nav>
+<div class="wbody">
+<section class="wcol12"><p class="wmuted" style="margin:0 0 18px">Same capability payload as the app's Manage hub, in the same order. Each card opens its desk in Filament.</p><div class="wgrid4"><div class="wcap"><div class="weyebrow dark">Club</div><h3>[Club name]</h3><p class="wmuted">[One-line summary]</p><ul class="witems"><li><span>[Item]</span><span class="wmeta">[Meta]</span></li><li><span>[Item]</span><span class="wmeta">[Meta]</span></li><li><span>[Item]</span><span class="wmeta">[Meta]</span></li></ul><a href="#" class="wbtn">Open club desk</a></div><div class="wcap"><div class="weyebrow dark">Shop</div><h3>[Shop name]</h3><p class="wmuted">[One-line summary]</p><ul class="witems"><li><span>[Item]</span><span class="wmeta">[Meta]</span></li><li><span>[Item]</span><span class="wmeta">[Meta]</span></li><li><span>[Item]</span><span class="wmeta">[Meta]</span></li></ul><a href="#" class="wbtn">Open shop desk</a></div><div class="wcap"><div class="weyebrow dark">Range</div><h3>[Range name]</h3><p class="wmuted">[One-line summary]</p><ul class="witems"><li><span>[Item]</span><span class="wmeta">[Meta]</span></li><li><span>[Item]</span><span class="wmeta">[Meta]</span></li><li><span>[Item]</span><span class="wmeta">[Meta]</span></li></ul><a href="#" class="wbtn">Open range desk</a></div><div class="wcap"><div class="weyebrow dark">Media</div><h3>[Media partner name]</h3><p class="wmuted">[One-line summary]</p><ul class="witems"><li><span>[Item]</span><span class="wmeta">[Meta]</span></li><li><span>[Item]</span><span class="wmeta">[Meta]</span></li><li><span>[Item]</span><span class="wmeta">[Meta]</span></li></ul><a href="#" class="wbtn">Open media desk</a></div></div></section></div></div></template>
+<script>
+const D={"screens": {"M1": {"name": "Sign in", "api": "POST /api/v1/auth/login", "intro": "Email and password only. No social login, no SSO, no registration in the app.", "codes": ["M1a", "M1b", "M1c", "M1d"], "states": [{"code": "M1a", "label": "Resting", "future": false, "why": "Calm, empty form. Registration lives on the website, so the app links out instead of inventing a sign-up path."}, {"code": "M1b", "label": "Submitting", "future": false, "why": "Inputs and the button lock during the request so it cannot be sent twice. The button label carries progress for screen readers."}, {"code": "M1c", "label": "Invalid credentials", "future": false, "why": "The error sits above the form and stays until the next submit. It tells the shooter what to check."}, {"code": "M1d", "label": "Offline", "future": false, "why": "Network failure reads differently from bad credentials and says how to recover."}]}, "M2": {"name": "Home", "api": "GET /api/v1/events \u00b7 default filters \u00b7 limit 6", "intro": "The reason to open the app on a Friday: the next six matches nationwide.", "codes": ["M2a", "M2b", "M2c", "M2d", "M2e"], "states": [{"code": "M2a", "label": "Loading", "future": false, "why": "Loading owns the content area so stale matches never look current."}, {"code": "M2b", "label": "Empty", "future": false, "why": "An empty national calendar is a normal state with a refresh path."}, {"code": "M2c", "label": "Error", "future": false, "why": "The calendar CTA stays visible, so an error on Home still has a way forward."}, {"code": "M2d", "label": "Populated (MVP)", "future": false, "why": "The MVP loop: six matches, then a route into the denser Calendar tab. Generic national language so nobody infers personalisation."}, {"code": "M2e", "label": "Personalised (future, needs follows API)", "future": true, "why": "Labelled concept. Needs the follows and saved-search endpoints and should sit behind a feature flag."}]}, "M3": {"name": "Calendar", "api": "GET /api/v1/events \u00b7 family and Novice filters", "intro": "Information-dense, repeat-use list. Each row is one glance long.", "codes": ["M3a", "M3b", "M3c", "M3d", "M3e"], "states": [{"code": "M3a", "label": "Loading", "future": false, "why": "Filters stay usable while the list loads."}, {"code": "M3b", "label": "Default filters", "future": false, "why": "Sticky family chips with the Novice toggle pinned right, so it never scrolls out of reach."}, {"code": "M3c", "label": "Province filter (from map pin)", "future": false, "why": "The province from the Find map shows as a removable chip, so the shooter can see and undo it."}, {"code": "M3d", "label": "Empty after filter", "future": false, "why": "Filtering to nothing is normal. One action resets it."}, {"code": "M3e", "label": "Error", "future": false, "why": "Error replaces the list but keeps the filter strip in place."}]}, "M4": {"name": "Find", "api": "GET /api/v1/events for map counts \u00b7 directory endpoints not built", "intro": "One discovery surface. Events is live today; the other modes are shown honestly as placeholders, with their future lists beside them.", "codes": ["M4a", "M4b", "M4c", "M4d", "M4e", "M4f", "M4g", "M4h", "M4i", "M4j", "M4k", "M4l"], "states": [{"code": "M4a", "label": "Events \u00b7 province clusters", "future": false, "why": "Province clusters with counts. The map is a way into Calendar, not a second list."}, {"code": "M4b", "label": "Events \u00b7 pin tapped", "future": false, "why": "Tapping a pin opens a callout with one action: open Calendar filtered to that province."}, {"code": "M4c", "label": "Events \u00b7 loading", "future": false, "why": "Map loading is contained to the map area."}, {"code": "M4d", "label": "Events \u00b7 error", "future": false, "why": "Map errors keep the chip strip and tab bar so the Calendar route is still one tap away."}, {"code": "M4e", "label": "Clubs \u00b7 today", "future": false, "why": "Unavailable directories say so, instead of looking like a search with zero results."}, {"code": "M4f", "label": "Clubs \u00b7 future list", "future": true, "why": "Future list adds province and discipline filters without changing the mode chips."}, {"code": "M4g", "label": "Ranges \u00b7 today", "future": false, "why": "Same honest placeholder as Clubs."}, {"code": "M4h", "label": "Ranges \u00b7 future list", "future": true, "why": "Future range list with distances and disciplines as the third line."}, {"code": "M4i", "label": "Shops \u00b7 today", "future": false, "why": "Same honest placeholder as Clubs."}, {"code": "M4j", "label": "Shops \u00b7 future tiles", "future": true, "why": "Shops get logo tiles because storefronts are recognised by brand, not by name in a list."}, {"code": "M4k", "label": "Sports \u00b7 today", "future": false, "why": "Same honest placeholder as Clubs."}, {"code": "M4l", "label": "Sports \u00b7 future tiles by family", "future": true, "why": "Sport tiles grouped by family. Each opens a sport landing page with articles and magazines (not drawn yet)."}]}, "M5": {"name": "Me", "api": "GET /api/v1/me \u00b7 /me/capabilities \u00b7 /me/saved-events", "intro": "The shooter's home in the app. Plan state, Manage hub for role-stacked users, saved matches and account actions.", "codes": ["M5a", "M5b", "M5c", "M5d", "M5e", "M5f", "M5g", "M5h"], "states": [{"code": "M5a", "label": "Signed out", "future": false, "why": "Explains the benefit of signing in without pretending the user is signed in. One action."}, {"code": "M5b", "label": "Free \u00b7 no capabilities", "future": false, "why": "Plan, saved matches, an honest Pro upgrade path and Log out."}, {"code": "M5c", "label": "Free \u00b7 one capability (Club)", "future": false, "why": "One capability adds a Manage section without touching the four tabs. Use the dropdown in the canvas version to swap Club, Shop, Range or Media."}, {"code": "M5d", "label": "Pro \u00b7 no capabilities", "future": false, "why": "Pro removes the upsell, and saved matches get the space."}, {"code": "M5e", "label": "Trial \u00b7 no capabilities", "future": false, "why": "Trial shows time left in the plan pill, so the shooter never hunts for expiry. No upsell while on Pro features."}, {"code": "M5f", "label": "Free + all four \u00b7 full scroll", "future": false, "why": "Four capabilities in fixed order: Club, Shop, Range, Media. Cards stay short so saved matches and Log out remain reachable."}, {"code": "M5g", "label": "Loading", "future": false, "why": "Full-screen loading with the tab bar still in place."}, {"code": "M5h", "label": "Error on /me", "future": false, "why": "The recoverable error sits at the top and the skeleton stays visible but muted, so the layout does not jump on retry."}]}, "R": {"name": "Pushed routes", "api": "Match detail from the events payload \u00b7 website pages in an in-app browser", "intro": "Screens opened from a tab, with iOS back navigation. Tab roots never show a back button; anything pushed on top of them always does.", "codes": ["R1", "R2", "R3", "R4"], "states": [{"code": "R1", "label": "Match detail \u00b7 pushed from Home", "future": false, "why": "A pushed screen inside the Home stack. iPhones have no system back button, so every pushed screen gets a back button labelled with where it returns to, plus the standard edge swipe. The tab bar stays visible."}, {"code": "R2", "label": "Match detail \u00b7 saved \u00b7 from Calendar", "future": false, "why": "The same detail pushed from Calendar returns to Calendar. Saved state flips the button to Saved."}, {"code": "R3", "label": "Sport landing \u00b7 pushed from Find", "future": true, "why": "Sport tiles in Find push a landing page with articles and magazines. Back returns to Find with the Sports chip still active."}, {"code": "R4", "label": "Forgot password \u00b7 in-app browser sheet", "future": false, "why": "Forgot password opens the website in an in-app browser sheet. Done closes it and returns to Sign in; swipe down does the same."}]}}, "web": [{"code": "me", "label": "/me dashboard", "why": "Mirrors the mobile Me tab, split into Manage and saved matches. Shown with two capabilities."}, {"code": "calendar", "label": "/me/calendar", "why": "Same filters as M3 plus the province deep-link chip, as a scannable table."}, {"code": "log", "label": "/me/log", "why": "Saved-match trail today. Richer history is labelled future, not shown as missing."}, {"code": "settings", "label": "/me/settings", "why": "Account and plan forms. The app deep-links here for changes that need form space."}, {"code": "desk", "label": "/desk manage hub", "why": "All four capability cards in fixed order: Club, Shop, Range, Media."}]};
+const $=id=>document.getElementById(id);
+let scr='M1',st=0,lay='one',ws=0;
+const tag=f=>'<span class="tag '+(f?'future':'live')+'">'+(f?'future':'api')+'</span>';
+const clone=c=>document.getElementById('t-'+c).content.cloneNode(true);
+function drawScreens(){$('screens').innerHTML=Object.entries(D.screens).map(([k,v])=>'<button aria-pressed="'+(k===scr)+'" data-s="'+k+'"><span class="c">'+k+'</span>'+v.name+'</button>').join('');}
+function drawStates(){const s=D.screens[scr];$('states').hidden=lay==='all';$('states').innerHTML=s.states.map((x,i)=>'<button aria-pressed="'+(i===st)+'" data-i="'+i+'"><span class="c">'+x.code+'</span>'+x.label.replace(/\s*\(.*?\)/,'')+tag(x.future)+'</button>').join('');}
+function drawStage(){const s=D.screens[scr],m=$('mstage');m.innerHTML='';
+ if(lay==='all'){const all=document.createElement('div');all.className='all';all.tabIndex=0;all.setAttribute('aria-label','All '+s.name+' states');
+  s.states.forEach(x=>{const f=document.createElement('figure');const c=document.createElement('figcaption');c.innerHTML='<b>'+x.code+'</b> '+x.label+tag(x.future)+'<em>'+x.why+'</em>';f.appendChild(c);f.appendChild(clone(x.code));all.appendChild(f);});m.appendChild(all);return;}
+ const x=s.states[st];const g=document.createElement('div');g.className='stage';
+ const dv=document.createElement('div');dv.className='dev';dv.appendChild(clone(x.code));
+ const w=document.createElement('div');w.className='why';
+ w.innerHTML='<div class="code">'+x.code+tag(x.future)+'</div><h3>'+x.label+'</h3><p>'+x.why+'</p><div class="nav"><button id="prev"'+(st===0?' disabled':'')+'>Previous</button><button id="next"'+(st===s.states.length-1?' disabled':'')+'>Next</button></div>';
+ g.appendChild(dv);g.appendChild(w);m.appendChild(g);
+ $('prev').onclick=()=>{st--;drawAll();};$('next').onclick=()=>{st++;drawAll();};}
+function drawAll(){const s=D.screens[scr];$('sname').textContent=scr+' '+s.name;$('sintro').textContent=s.intro;$('sapi').textContent=s.api;
+ drawScreens();drawStates();drawStage();$('l-one').setAttribute('aria-pressed',lay==='one');$('l-all').setAttribute('aria-pressed',lay==='all');}
+$('screens').onclick=e=>{const b=e.target.closest('button');if(!b)return;scr=b.dataset.s;st=0;drawAll();};
+$('states').onclick=e=>{const b=e.target.closest('button');if(!b)return;st=+b.dataset.i;drawAll();};
+$('l-one').onclick=()=>{lay='one';drawAll();};$('l-all').onclick=()=>{lay='all';drawAll();};
+function drawWeb(){$('wstates').innerHTML=D.web.map((x,i)=>'<button aria-pressed="'+(i===ws)+'" data-i="'+i+'"><span class="c">W</span>'+x.label+tag(false)+'</button>').join('');
+ const x=D.web[ws];$('wwhy').textContent=x.why;$('wstage').innerHTML='';$('wstage').appendChild(document.getElementById('w-'+x.code).content.cloneNode(true));}
+$('wstates').onclick=e=>{const b=e.target.closest('button');if(!b)return;ws=+b.dataset.i;drawWeb();};
+document.querySelectorAll('.views button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.views button').forEach(x=>{const on=x===b;x.setAttribute('aria-selected',on);$(x.getAttribute('aria-controls')).hidden=!on;});});
+drawAll();drawWeb();
+</script>
+</body>
+</html>
