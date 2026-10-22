@@ -58,6 +58,10 @@ export default function TabsLayout() {
         name="find"
         options={{
           title: 'Find',
+          // M4 draws its own HeroBand + chip strip; suppress the stock
+          // tab header so the HeroBand extends under the status bar per
+          // spec §3.1.
+          headerShown: false,
           tabBarIcon: ({ color, focused, size }) => (
             <Ionicons name={focused ? 'search' : 'search-outline'} size={size} color={color} />
           ),

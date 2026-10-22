@@ -1,25 +1,43 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ComponentProps, useEffect, useState } from 'react';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 
 import { fetchMap, MapPayload } from '@/api/map';
 import { colors, fonts } from '@/theme';
+import { EmptyState, ErrorRow, FilterChip, HeroBand, Spinner } from '@/ui';
+
+type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 /**
+ * M4 Find — one surface for discovering events, clubs, ranges,
+ * shops and sports. The map backs Events today; the other four modes
+ * are placeholders that light up as their directory endpoints land.
+ * The chip-switching UX is here from day one so repeat users never
+ * have to re-learn where to look.
+ *
  * Map provider strategy:
  *   - Android: Google Maps via PROVIDER_GOOGLE. The API key is baked
  *     into AndroidManifest.xml at prebuild time from app.json →
  *     android.config.googleMaps.apiKey. If a future fork ships without
  *     a key the MapView crashes natively on mount — the fix is to add
- *     the key to app.json, not to guard here (Constants.expoConfig
- *     doesn't expose android.config in production builds, so a runtime
- *     guard isn't possible).
+ *     the key to app.json, not to guard here.
  *   - iOS: Apple Maps (the default when `provider` is undefined). Free,
  *     no key, no billing. Enabling Google Maps on iOS requires extra
  *     pod setup (`react-native-google-maps` subspec) that the Expo
  *     managed build doesn't ship by default.
+ *
+ * States per BUILD_SPEC §3.2:
+ *   M4a Events clusters    — map + pins + footer with upcoming count
+ *   M4b Events pin tapped  — default marker callout + tap handoff to
+ *                            Calendar filtered by province
+ *   M4c Events loading     — Spinner overlay on dimmed map
+ *   M4d Events error       — ErrorRow overlay on dimmed map
+ *   M4e/g/i/k Mode today   — per-mode EmptyState icon + "coming soon" copy
+ *   M4f/h/j/l (future)     — not built; backlog items (spec §6 Phase 5)
  */
+
 const mapProvider = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
 
 const SOUTH_AFRICA_REGION: Region = {
@@ -31,26 +49,26 @@ const SOUTH_AFRICA_REGION: Region = {
 
 type FindMode = 'events' | 'clubs' | 'ranges' | 'shops' | 'sports';
 
-const MODES: Array<{ value: FindMode; label: string }> = [
-  { value: 'events', label: 'Events' },
-  { value: 'clubs', label: 'Clubs' },
-  { value: 'ranges', label: 'Ranges' },
-  { value: 'shops', label: 'Shops' },
-  { value: 'sports', label: 'Sports' },
+type ModeConfig = {
+  value: FindMode;
+  label: string;
+  /** Ionicon shown inside the EmptyState for M4e/g/i/k. */
+  icon: IoniconName;
+};
+
+const MODES: ReadonlyArray<ModeConfig> = [
+  { value: 'events', label: 'Events', icon: 'map-outline' },
+  { value: 'clubs', label: 'Clubs', icon: 'people-outline' },
+  { value: 'ranges', label: 'Ranges', icon: 'navigate-outline' },
+  { value: 'shops', label: 'Shops', icon: 'storefront-outline' },
+  { value: 'sports', label: 'Sports', icon: 'trophy-outline' },
 ];
 
-/**
- * Find — one surface for discovering events, clubs, ranges, shops,
- * and sports. The map backs Events today; the chips for Clubs,
- * Ranges, Shops, and Sports are placeholders that will light up as
- * those directory endpoints land on the API. The chip-switching UX
- * is here from day one so repeat users never have to re-learn where
- * to look.
- */
 export default function FindScreen() {
   const router = useRouter();
   const [mode, setMode] = useState<FindMode>('events');
   const [payload, setPayload] = useState<MapPayload | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -59,124 +77,176 @@ export default function FindScreen() {
     }
 
     void (async () => {
+      setError(null);
+      setLoading(true);
       try {
         setPayload(await fetchMap());
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not load the map.');
+        setError(err instanceof Error ? err.message : "Couldn't load matches for the map.");
+      } finally {
+        setLoading(false);
       }
     })();
   }, [mode]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.chipBar}>
-        {MODES.map((option) => {
-          const active = mode === option.value;
-          return (
-            <TouchableOpacity
+      <HeroBand eyebrow="Discover" title="Find" />
+
+      {/* Mode chip strip — horizontally scrolling. */}
+      <View style={styles.chipStrip}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipRow}
+        >
+          {MODES.map((option) => (
+            <FilterChip
               key={option.value}
+              label={option.label}
+              selected={mode === option.value}
               onPress={() => setMode(option.value)}
-              style={[styles.chip, active && styles.chipActive]}
-            >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>{option.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
+            />
+          ))}
+        </ScrollView>
       </View>
 
       {mode === 'events' ? (
-        error !== null ? (
-          <View style={styles.center}>
-            <Text style={styles.error}>{error}</Text>
-          </View>
-        ) : payload === null ? (
-          <View style={styles.center}>
-            <ActivityIndicator color={colors.link} />
-          </View>
-        ) : (
-          <View style={styles.mapWrap}>
-            <MapView
-              style={StyleSheet.absoluteFill}
-              provider={mapProvider}
-              initialRegion={SOUTH_AFRICA_REGION}
-            >
-              {payload.pins.map((pin) => (
-                <Marker
-                  key={pin.slug}
-                  coordinate={{ latitude: pin.lat, longitude: pin.lng }}
-                  title={pin.name}
-                  description={`${pin.count} upcoming`}
-                  onCalloutPress={() => {
-                    if (pin.province_slug !== null) {
-                      router.push({ pathname: '/calendar', params: { province: pin.province_slug } });
-                    }
-                  }}
-                />
-              ))}
-            </MapView>
-
-            <View style={styles.footer} pointerEvents="none">
-              <Text style={styles.footerText}>
-                {payload.total_matches} upcoming matches at {payload.pins.length} pinned ranges
-              </Text>
-            </View>
-          </View>
-        )
+        <EventsMap
+          payload={payload}
+          loading={loading}
+          error={error}
+          onProvincePress={(provinceSlug) =>
+            router.push({ pathname: '/calendar', params: { province: provinceSlug } })
+          }
+        />
       ) : (
-        <View style={styles.center}>
-          <Text style={styles.muted}>
-            {MODES.find((m) => m.value === mode)?.label} search is coming soon.
-            For now, browse them on the website.
-          </Text>
-        </View>
+        <ModePlaceholder config={MODES.find((m) => m.value === mode) ?? MODES[0]} />
       )}
     </View>
   );
 }
 
-// TEMPORARY stylesheet — stays until the full M4 reskin lands
-// (chip strip for Events/Clubs/Ranges/Shops/Sports, states a-l,
-// placeholders say "opens here when its API endpoint lands"
-// per BUILD_SPEC §3.2). Palette matches the pack's forest/lime.
+type EventsMapProps = {
+  payload: MapPayload | null;
+  loading: boolean;
+  error: string | null;
+  onProvincePress: (provinceSlug: string) => void;
+};
+
+function EventsMap({ payload, loading, error, onProvincePress }: EventsMapProps) {
+  // M4d — error overlay with ErrorRow. Chips above stay interactive.
+  if (error !== null && payload === null) {
+    return (
+      <View style={styles.messageArea}>
+        <ErrorRow>Couldn't load matches for the map. Pull to retry.</ErrorRow>
+      </View>
+    );
+  }
+
+  // M4c — initial loading. Spinner above the dimmed map area.
+  if (loading && payload === null) {
+    return (
+      <View style={styles.messageArea}>
+        <Spinner label="Loading upcoming matches" />
+      </View>
+    );
+  }
+
+  if (payload === null) {
+    return <View style={styles.mapWrap} />;
+  }
+
+  return (
+    <View style={styles.mapWrap}>
+      <MapView
+        style={StyleSheet.absoluteFill}
+        provider={mapProvider}
+        initialRegion={SOUTH_AFRICA_REGION}
+      >
+        {payload.pins.map((pin) => (
+          <Marker
+            key={pin.slug}
+            coordinate={{ latitude: pin.lat, longitude: pin.lng }}
+            title={pin.name}
+            description={`${pin.count} upcoming · tap for calendar`}
+            onCalloutPress={() => {
+              if (pin.province_slug !== null) {
+                onProvincePress(pin.province_slug);
+              }
+            }}
+          />
+        ))}
+      </MapView>
+
+      <View style={styles.footer} pointerEvents="none">
+        <Text style={styles.footerText}>
+          {payload.total_matches} upcoming match{payload.total_matches === 1 ? '' : 'es'}
+          {' at '}
+          {payload.pins.length} pinned range{payload.pins.length === 1 ? '' : 's'}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function ModePlaceholder({ config }: { config: ModeConfig }) {
+  return (
+    <View style={styles.messageArea}>
+      <EmptyState icon={config.icon}>
+        {config.label} search is coming soon. For now, browse them on the website.
+      </EmptyState>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.page },
-  chipBar: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    padding: 12,
+
+  /* Mode chip strip under the HeroBand. Mirrors Calendar's filter strip
+   * styling so the two screens read as one visual language. */
+  chipStrip: {
     backgroundColor: colors.card,
     borderBottomWidth: 1,
     borderBottomColor: colors.rule,
-  },
-  chip: {
-    paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.chipBorder,
-    backgroundColor: colors.card,
   },
-  chipActive: { backgroundColor: colors.forest, borderColor: colors.forest },
-  chipText: { color: colors.ink, fontSize: 14, fontFamily: fonts.bodyMedium },
-  chipTextActive: { color: colors.page, fontWeight: '700' },
+  chipRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+  },
+
   mapWrap: { flex: 1 },
-  center: {
+
+  /* Centred stage used by loading / error / mode-placeholder states.
+   * Pushes content away from the chip strip and from the tab bar. */
+  messageArea: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 16,
     backgroundColor: colors.page,
-    padding: 24,
   },
-  muted: { color: colors.muted, fontSize: 15, textAlign: 'center', lineHeight: 22 },
+
+  /* M4a footer — forest band with upcoming-match count. Non-interactive
+   * so the user can tap through to the markers beneath. */
   footer: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    padding: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     backgroundColor: colors.forest,
   },
-  footerText: { color: colors.onForest, textAlign: 'center', fontSize: 12 },
-  error: { color: colors.error, textAlign: 'center' },
+  footerText: {
+    color: colors.onForest,
+    textAlign: 'center',
+    fontFamily: fonts.monoSemi,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
 });
