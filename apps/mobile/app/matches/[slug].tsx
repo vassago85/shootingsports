@@ -4,7 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
-  Pressable,
+  Image,
   ScrollView,
   Share,
   StyleSheet,
@@ -22,28 +22,25 @@ import { ErrorRow, GhostButton, HeroBand, PrimaryButton, Spinner } from '@/ui';
  * R1 / R2 Match detail — the shared deep-dive screen pushed from Home,
  * Calendar, and Me's saved list.
  *
- * Per BUILD_SPEC §3.1 the final nav shape is a single `MatchDetail`
- * component mounted inside both the Home stack and the Calendar stack
- * so Back lands on the correct parent. Phase 1 is still pre-nav-
- * restructure, so this file lives at the stack root and uses a `from`
- * param to label the back button ("‹ Home" / "‹ Calendar" / "‹ Me").
+ * Phase 2 layout:
  *
- * Spec R1/R2:
- *   - HeroBand: discipline eyebrow, match title, `date · range, province`
- *   - Details list: Date, Range, Province, Host, Discipline
- *   - Share button (native sheet) in the header right
- *   - PrimaryButton "Save match" / "Saved" (bookmark icon when saved)
- *   - GhostButton "Open match page" → website in in-app browser
- *   - Save-while-signed-out opens M1 Sign in. (Continuation of the save
- *     after sign-in is a backlog item — the user re-taps Save after
- *     signing in for now.)
+ *   [banner image, 180pt]            ← only if event.banner_url present
+ *   [HeroBand: discipline / title / date · range, province]
+ *   [host card: 48pt logo | host name / HOST eyebrow]
+ *   [details list: Date / Range / Province / Discipline]
+ *   [description prose, when present]
+ *   [primary action: Save match / Saved]
+ *   [secondary row: Open match page | Share]
+ *
+ * `from` param labels the back button ("‹ Home" / "‹ Calendar" / "‹ Me").
+ * Signed-out save routes to login — the continuation-after-signin flow
+ * is a backlog item.
  */
 
 type ParentTab = 'home' | 'calendar' | 'me';
 
 type Params = {
   slug: string;
-  /** Set by the caller so Back reads "‹ Home" etc. Falls back to "Back". */
   from?: ParentTab;
 };
 
@@ -57,7 +54,6 @@ function formatHeroDate(iso: string | null): string {
   if (iso === null) {
     return 'Date TBC';
   }
-
   const date = new Date(iso);
   const weekday = date.toLocaleDateString('en-ZA', { weekday: 'short' }).toUpperCase();
   const day = date.getDate();
@@ -69,7 +65,6 @@ function formatFullDate(iso: string | null): string {
   if (iso === null) {
     return 'TBC';
   }
-
   return new Date(iso).toLocaleDateString('en-ZA', {
     weekday: 'long',
     day: 'numeric',
@@ -86,6 +81,7 @@ export default function MatchDetailScreen() {
   const [savingToggle, setSavingToggle] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [bannerFailed, setBannerFailed] = useState(false);
 
   const load = useCallback(async () => {
     if (typeof slug !== 'string') {
@@ -99,6 +95,7 @@ export default function MatchDetailScreen() {
     try {
       const detail = await fetchEvent(slug);
       setEvent(detail);
+      setBannerFailed(false);
 
       const token = await getAuthToken();
       if (token !== null) {
@@ -125,9 +122,6 @@ export default function MatchDetailScreen() {
 
     const token = await getAuthToken();
     if (token === null) {
-      // Signed-out path per spec §3.2 R-notes: "Saving while signed out
-      // opens M1". The full continuation (auto-save after sign-in) is a
-      // backlog item.
       router.push('/login');
       return;
     }
@@ -144,7 +138,7 @@ export default function MatchDetailScreen() {
     } catch (err) {
       Alert.alert(
         'Could not update',
-        err instanceof Error ? err.message : "Please try again.",
+        err instanceof Error ? err.message : 'Please try again.',
       );
     } finally {
       setSavingToggle(false);
@@ -180,18 +174,6 @@ export default function MatchDetailScreen() {
   const headerOptions = {
     title: 'Match',
     headerBackTitle: backTitle,
-    headerRight: () =>
-      event !== null ? (
-        <Pressable
-          onPress={() => void share()}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel="Share match"
-          style={({ pressed }) => [styles.headerBtn, pressed && { opacity: 0.6 }]}
-        >
-          <Ionicons name="share-outline" size={22} color={colors.onForest} />
-        </Pressable>
-      ) : null,
   };
 
   if (loading) {
@@ -225,29 +207,66 @@ export default function MatchDetailScreen() {
 
   // All relation accesses are optional-chained — the API resource
   // uses `whenLoaded` for several of these keys, so a controller
-  // path that forgets to eager-load would drop them silently and
-  // crash the detail screen on render.
+  // path that forgets to eager-load would drop them silently.
   const discipline = event.disciplines?.[0];
   const venue = event.venue ?? null;
   const rangeName = venue?.name ?? event.venues?.[0]?.name ?? 'TBC';
   const province = venue?.province ?? event.venues?.[0]?.province ?? 'TBC';
   const hostName = event.host?.name ?? '';
+  const hostLogo = event.host?.organisation?.logo_url ?? null;
   const metaLine = `${formatHeroDate(event.starts_at)} · ${rangeName}, ${province}`;
+
+  const showBanner =
+    typeof event.banner_url === 'string' &&
+    event.banner_url.length > 0 &&
+    !bannerFailed;
 
   return (
     <>
       <Stack.Screen options={headerOptions} />
       <ScrollView style={styles.container}>
+        {showBanner && (
+          <Image
+            source={{ uri: event.banner_url as string }}
+            style={styles.banner}
+            resizeMode="cover"
+            onError={() => setBannerFailed(true)}
+            accessibilityIgnoresInvertColors
+          />
+        )}
+
         <HeroBand eyebrow={discipline?.name ?? 'Match'} title={event.title}>
           <Text style={styles.heroMeta}>{metaLine}</Text>
         </HeroBand>
 
         <View style={styles.body}>
+          {/* Host card — organisation logo + name + "HOST" eyebrow.
+              Falls back gracefully if the host has no logo yet. */}
+          <View style={styles.hostCard}>
+            {hostLogo !== null ? (
+              <Image
+                source={{ uri: hostLogo }}
+                style={styles.hostLogo}
+                resizeMode="contain"
+                accessibilityIgnoresInvertColors
+              />
+            ) : (
+              <View style={[styles.hostLogo, styles.hostLogoFallback]}>
+                <Ionicons name="shield-outline" size={22} color={colors.link} />
+              </View>
+            )}
+            <View style={styles.hostText}>
+              <Text style={styles.hostEyebrow}>HOST</Text>
+              <Text style={styles.hostName} numberOfLines={2}>
+                {hostName}
+              </Text>
+            </View>
+          </View>
+
           <View style={styles.details}>
             <DetailRow label="Date" value={formatFullDate(event.starts_at)} />
             <DetailRow label="Range" value={rangeName} />
             <DetailRow label="Province" value={province} />
-            <DetailRow label="Host" value={hostName} />
             <DetailRow label="Discipline" value={discipline?.name ?? 'TBC'} />
           </View>
 
@@ -257,21 +276,35 @@ export default function MatchDetailScreen() {
             </View>
           )}
 
-          <View style={styles.actions}>
-            {saved === true ? (
+          {/* Primary save action — full-width. */}
+          {saved === true ? (
+            <GhostButton
+              label="Saved"
+              onPress={() => void toggleSaved()}
+              accessibilityLabel="Saved. Tap to remove from saved."
+            />
+          ) : (
+            <PrimaryButton
+              label="Save match"
+              onPress={() => void toggleSaved()}
+              loading={savingToggle}
+            />
+          )}
+
+          {/* Secondary actions — side by side, both ghost. Share is
+              visible here instead of hidden in a header icon so first-
+              time users notice it. */}
+          <View style={styles.secondaryActions}>
+            <View style={styles.secondaryAction}>
+              <GhostButton label="Open match page" onPress={openMatchPage} />
+            </View>
+            <View style={styles.secondaryAction}>
               <GhostButton
-                label="Saved"
-                onPress={() => void toggleSaved()}
-                accessibilityLabel="Saved. Tap to remove from saved."
+                label="Share"
+                onPress={() => void share()}
+                accessibilityLabel="Share this match"
               />
-            ) : (
-              <PrimaryButton
-                label="Save match"
-                onPress={() => void toggleSaved()}
-                loading={savingToggle}
-              />
-            )}
-            <GhostButton label="Open match page" onPress={openMatchPage} />
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -307,6 +340,14 @@ const styles = StyleSheet.create({
     gap: 16,
   },
 
+  /* Banner — full-bleed poster shot above the HeroBand. Hidden when
+   * the API returns no banner_url, or when the image fails to load. */
+  banner: {
+    width: '100%',
+    height: 180,
+    backgroundColor: colors.forest,
+  },
+
   heroMeta: {
     fontFamily: fonts.mono,
     fontSize: 13,
@@ -316,9 +357,49 @@ const styles = StyleSheet.create({
 
   body: { padding: 16, gap: 20 },
 
+  /* Host card — logo + name. Treated as its own band to give the
+   * event its clear "who's running this" signal before the details. */
+  hostCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 14,
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.rule,
+  },
+  hostLogo: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: colors.tint,
+  },
+  hostLogoFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hostText: {
+    flex: 1,
+    gap: 2,
+  },
+  hostEyebrow: {
+    fontFamily: fonts.monoSemi,
+    fontSize: 10,
+    color: colors.muted,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+  },
+  hostName: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 15,
+    color: colors.ink,
+    lineHeight: 20,
+  },
+
   /* Details list — label / value rows with hair-rule between. The
-   * last row's own bottom border is clipped by `overflow: hidden` so
-   * the card's rounded corners stay clean. */
+   * last row's own bottom border is clipped by `overflow: hidden`
+   * so the card's rounded corners stay clean. */
   details: {
     backgroundColor: colors.card,
     borderRadius: 14,
@@ -364,10 +445,10 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
 
-  actions: { gap: 12 },
-
-  headerBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+  /* Secondary actions — Open + Share side by side, both ghost. */
+  secondaryActions: {
+    flexDirection: 'row',
+    gap: 10,
   },
+  secondaryAction: { flex: 1 },
 });

@@ -42,7 +42,12 @@ export type EventCard = {
   venue: EventVenue | null;
   host: {
     name: string;
-    organisation: { slug: string; name: string } | null;
+    organisation: {
+      slug: string;
+      name: string;
+      short_name: string | null;
+      logo_url: string | null;
+    } | null;
   };
   disciplines: EventDiscipline[];
 };
