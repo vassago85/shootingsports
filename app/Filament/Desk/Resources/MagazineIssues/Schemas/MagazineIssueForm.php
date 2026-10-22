@@ -2,8 +2,10 @@
 
 namespace App\Filament\Desk\Resources\MagazineIssues\Schemas;
 
+use App\Models\MagazineIssue;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -24,9 +26,20 @@ class MagazineIssueForm
                     ->columns(2)
                     ->schema([
                         TextInput::make('publication')
+                            ->label('Magazine')
                             ->required()
                             ->default('Targets')
-                            ->helperText('Magazine brand. Defaults to Targets.'),
+                            ->helperText('The magazine name, such as On Target.'),
+                        Placeholder::make('owner_name')
+                            ->label('Owner')
+                            ->content(function (?MagazineIssue $record): string {
+                                $name = $record?->author?->name ?? auth()->user()?->name;
+
+                                return is_string($name) && $name !== ''
+                                    ? $name
+                                    : 'The account that saves this issue';
+                            })
+                            ->helperText('Shown on the public list. Another publisher hosts theirs under their own account.'),
                         Select::make('language')
                             ->required()
                             ->default('en')

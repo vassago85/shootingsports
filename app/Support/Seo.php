@@ -189,8 +189,8 @@ final readonly class Seo
     public static function forMagazineIndex(): self
     {
         return new self(
-            title: 'Targets magazine — read every issue online',
-            description: self::clip('Every issue of Targets magazine online, in a flip-book reader with search-engine-friendly text and browser translation.'),
+            title: 'Magazines',
+            description: self::clip('Published magazines. Each issue names its owner, so more than one publisher can host here.'),
             canonical: route('magazines.index'),
         );
     }

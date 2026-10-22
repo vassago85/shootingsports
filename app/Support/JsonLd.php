@@ -361,7 +361,7 @@ class JsonLd
             $issues,
         );
 
-        return self::itemList($items, 'Targets magazine issues');
+        return self::itemList($items, 'Published magazines');
     }
 
     private static function offerAvailability(Event $event): string

@@ -35,7 +35,7 @@ class LlmsTxtController extends Controller
         ];
 
         if (MagazineIssue::query()->published()->exists()) {
-            $lines[] = '- '.route('magazines.index').' — Targets magazine';
+            $lines[] = '- '.route('magazines.index').' — Published magazines';
         }
 
         $lines = array_merge($lines, [

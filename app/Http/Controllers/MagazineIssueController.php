@@ -14,6 +14,7 @@ class MagazineIssueController extends Controller
     {
         $issues = MagazineIssue::query()
             ->published()
+            ->with('author')
             ->orderByDesc('published_at')
             ->get();
 

@@ -79,14 +79,22 @@ it('shows the text version when a page has extracted copy', function () {
         ->assertDontSee('Page 1', false);
 });
 
-it('lists published issues on the magazines index with ItemList schema', function () {
-    MagazineIssue::factory()->published()->create(['title' => 'Published issue A']);
+it('lists published issues on the magazines index with their owner', function () {
+    $owner = User::factory()->create(['name' => 'Range Desk', 'is_media_partner' => true]);
+
+    MagazineIssue::factory()->published()->create([
+        'user_id' => $owner->id,
+        'title' => 'Published issue A',
+    ]);
     MagazineIssue::factory()->draft()->create(['title' => 'Draft issue B']);
 
     $this->get(route('magazines.index'))
         ->assertOk()
+        ->assertSee('Magazines', false)
         ->assertSee('Published issue A', false)
+        ->assertSee('Owner · Range Desk', false)
         ->assertDontSee('Draft issue B', false)
+        ->assertDontSee('Targets magazine', false)
         ->assertSee('"@type":"ItemList"', false);
 });
 

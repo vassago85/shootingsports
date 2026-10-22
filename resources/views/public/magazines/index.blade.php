@@ -9,8 +9,8 @@
         <section class="page-hero">
             <div class="wrap">
                 <p class="label">Magazine</p>
-                <h1>Targets magazine</h1>
-                <p>Read every issue of Targets online. Flip through the pages, download the PDF, or switch to the text view and let your browser translate it.</p>
+                <h1>Magazines</h1>
+                <p>Published magazines only. Each issue names its owner, so more than one publisher can host here.</p>
             </div>
         </section>
 
@@ -28,6 +28,9 @@
                         <div>
                             <p class="label">{{ $issue->publication }} · {{ $issue->issue_label ?? $issue->published_at?->format('F Y') }}</p>
                             <h2><a href="{{ route('magazines.show', $issue->slug) }}">{{ $issue->title }}</a></h2>
+                            @if ($issue->author?->name)
+                                <p>Owner · {{ $issue->author->name }}</p>
+                            @endif
                             @if ($issue->description)
                                 <p>{{ $issue->description }}</p>
                             @endif
