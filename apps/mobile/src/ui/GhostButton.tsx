@@ -8,6 +8,12 @@ type Props = {
   disabled?: boolean;
   accessibilityLabel?: string;
   style?: ViewStyle;
+  /**
+   * Smaller variant for inline use next to a {@link SectionTitle}
+   * ("See all →" style). Drops the min-height and tightens padding
+   * so the button sits at section-header weight, not CTA weight.
+   */
+  compact?: boolean;
 };
 
 /**
@@ -23,6 +29,7 @@ export default function GhostButton({
   disabled = false,
   accessibilityLabel,
   style,
+  compact = false,
 }: Props) {
   return (
     <Pressable
@@ -33,12 +40,13 @@ export default function GhostButton({
       accessibilityState={{ disabled }}
       style={({ pressed }) => [
         styles.base,
+        compact && styles.compact,
         disabled && styles.disabled,
         pressed && !disabled && styles.pressed,
         style,
       ]}
     >
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, compact && styles.labelCompact]}>{label}</Text>
     </Pressable>
   );
 }
@@ -54,6 +62,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  compact: {
+    minHeight: 0,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
   pressed: {
     opacity: 0.6,
   },
@@ -66,5 +80,9 @@ const styles = StyleSheet.create({
     color: colors.link,
     textTransform: 'uppercase',
     letterSpacing: 1.3,
+  },
+  labelCompact: {
+    fontSize: 12,
+    letterSpacing: 1.0,
   },
 });
