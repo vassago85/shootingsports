@@ -50,8 +50,33 @@ it('serves a published issue to the public with the flipbook mount', function ()
         ->assertOk()
         ->assertSee('October 2026 Issue', false)
         ->assertSee('id="magazine-flipbook"', false)
+        ->assertSee('Full screen', false)
         ->assertSee('data-track="1"', false)
         ->assertDontSee('noindex,nofollow', false);
+});
+
+it('hides the text version when every extracted page is blank', function () {
+    $issue = MagazineIssue::factory()->published()->create([
+        'pages_text' => ['', '   '],
+    ]);
+
+    $this->get(route('magazines.show', $issue->slug))
+        ->assertOk()
+        ->assertDontSee('id="magazine-text"', false)
+        ->assertDontSee('Read as text', false);
+});
+
+it('shows the text version when a page has extracted copy', function () {
+    $issue = MagazineIssue::factory()->published()->create([
+        'pages_text' => ['', 'Proteas on target'],
+    ]);
+
+    $this->get(route('magazines.show', $issue->slug))
+        ->assertOk()
+        ->assertSee('id="magazine-text"', false)
+        ->assertSee('Proteas on target', false)
+        ->assertSee('Page 2', false)
+        ->assertDontSee('Page 1', false);
 });
 
 it('lists published issues on the magazines index with ItemList schema', function () {

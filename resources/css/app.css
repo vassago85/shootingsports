@@ -3555,9 +3555,52 @@ html[lang] body.ss-public .fmt-top h3 {
 }
 
 /* Targets magazine flipbook. */
+.magazine-stage { position: relative; }
+.magazine-stage__bar { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+.magazine-stage__bar .btn { min-height: 44px; }
 .magazine-flipbook { min-height: 420px; display: block; width: 100%; }
 .magazine-flipbook__loading { padding: 24px; text-align: center; color: var(--muted, #8a8a8a); }
 .magazine-flipbook:focus { outline: 2px solid var(--brass, #c7a35b); outline-offset: 4px; }
+.magazine-page { background: #fff; overflow: hidden; }
+.magazine-page img { width: 100%; height: 100%; object-fit: fill; display: block; pointer-events: none; }
+.magazine-page a { position: absolute; display: block; z-index: 2; }
+.magazine-page a:focus-visible { outline: 2px solid var(--brass, #c7a35b); outline-offset: -2px; }
+html.magazine-reading { overflow: hidden; }
+.magazine-stage.is-reading,
+.magazine-stage:fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 20px 20px;
+    background: var(--base);
+}
+.magazine-stage.is-reading .magazine-flipbook,
+.magazine-stage:fullscreen .magazine-flipbook {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+}
+.magazine-stage.is-reading .stf__wrapper,
+.magazine-stage:fullscreen .stf__wrapper {
+    height: 100% !important;
+    padding-bottom: 0 !important;
+}
+.magazine-stage.is-reading .magazine-stage__bar,
+.magazine-stage:fullscreen .magazine-stage__bar {
+    position: relative;
+    z-index: 2;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    margin: 0 0 12px;
+    order: -1;
+}
 
 /* -----------------------------------------------------------------
    /me — shooter home. The original inline styles referenced

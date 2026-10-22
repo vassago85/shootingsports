@@ -112,4 +112,20 @@ class MagazineIssue extends Model
 
         return array_values(array_map(static fn (mixed $page): string => (string) $page, $pages));
     }
+
+    /**
+     * True when at least one page yielded real text. Designed magazine
+     * PDFs sometimes come back as a list of empty strings; that is not
+     * a text version worth showing.
+     */
+    public function hasReadableText(): bool
+    {
+        foreach ($this->pagesText() as $page) {
+            if (trim($page) !== '') {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

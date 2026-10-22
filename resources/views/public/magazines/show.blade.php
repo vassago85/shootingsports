@@ -29,18 +29,30 @@
         </section>
 
         <section class="block">
-            <div class="wrap" style="max-width:1100px">
-                <div
-                    id="magazine-flipbook"
-                    class="magazine-flipbook"
-                    data-pdf-url="{{ $issue->pdfUrl() }}"
-                    data-read-url="{{ route('magazines.read', $issue->slug) }}"
-                    @if (! $preview && $issue->isPublished())
-                        data-track="1"
-                    @endif
-                    aria-label="{{ $issue->title }} flipbook"
-                >
-                    <p class="magazine-flipbook__loading">Loading the flipbook…</p>
+            <div class="wrap" style="max-width:1440px">
+                <div class="magazine-stage" id="magazine-stage">
+                    <div
+                        id="magazine-flipbook"
+                        class="magazine-flipbook"
+                        data-pdf-url="{{ $issue->pdfUrl() }}"
+                        data-read-url="{{ route('magazines.read', $issue->slug) }}"
+                        @if (! $preview && $issue->isPublished())
+                            data-track="1"
+                        @endif
+                        aria-label="{{ $issue->title }} flipbook"
+                    >
+                        <p class="magazine-flipbook__loading">Loading the flipbook…</p>
+                    </div>
+
+                    <p class="magazine-stage__bar">
+                        <button type="button" class="btn ghost" id="magazine-fullscreen" aria-pressed="false">Full screen</button>
+                        @if ($issue->pdfUrl())
+                            <a class="btn ghost" href="{{ $issue->pdfUrl() }}" download>Download PDF</a>
+                        @endif
+                        @if ($issue->hasReadableText())
+                            <a class="btn ghost" href="#magazine-text">Read as text</a>
+                        @endif
+                    </p>
                 </div>
 
                 <noscript>
@@ -50,17 +62,10 @@
                         instead or scroll down to read the magazine as text.
                     </p>
                 </noscript>
-
-                <p style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
-                    @if ($issue->pdfUrl())
-                        <a class="btn ghost" href="{{ $issue->pdfUrl() }}" download>Download PDF</a>
-                    @endif
-                    <a class="btn ghost" href="#magazine-text">Read as text</a>
-                </p>
             </div>
         </section>
 
-        @if ($issue->pagesText() !== [])
+        @if ($issue->hasReadableText())
             <section class="block" id="magazine-text">
                 <div class="wrap" style="max-width:760px">
                     <div class="sec-head">
@@ -71,6 +76,7 @@
 
                     <article class="prose" lang="{{ $issue->language }}">
                         @foreach ($issue->pagesText() as $index => $pageText)
+                            @continue(trim($pageText) === '')
                             @php
                                 $pageNumber = $index + 1;
                             @endphp

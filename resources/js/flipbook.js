@@ -22,8 +22,8 @@ import { PageFlip } from 'page-flip';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
-const RENDER_SCALE = 1.5;
-const DESKTOP_BREAKPOINT = 900;
+const MAX_RENDER_SCALE = 2.5;
+const JPEG_QUALITY = 0.92;
 
 const beaconedPages = new Set();
 
@@ -44,13 +44,24 @@ async function bootFlipbook(root) {
     const task = pdfjsLib.getDocument({ url: pdfUrl });
     const pdf = await task.promise;
 
+    const firstPage = await pdf.getPage(1);
+    const baseViewport = firstPage.getViewport({ scale: 1 });
+    const pixelRatio = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
+    const screenPage = Math.min(window.screen?.width || 1440, 2560) / 2;
+    const inlinePage = (root.clientWidth || 1000) / 2;
+    const pageCssWidth = Math.min(Math.max(screenPage, inlinePage, 360), 1400);
+    const renderScale = Math.min(
+        MAX_RENDER_SCALE,
+        Math.max(2, (pageCssWidth * pixelRatio) / baseViewport.width),
+    );
+
     const pages = [];
     const dimensions = { width: 800, height: 1100 };
 
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
         // eslint-disable-next-line no-await-in-loop
-        const page = await pdf.getPage(pageNumber);
-        const viewport = page.getViewport({ scale: RENDER_SCALE });
+        const page = pageNumber === 1 ? firstPage : await pdf.getPage(pageNumber);
+        const viewport = page.getViewport({ scale: renderScale });
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         canvas.width = viewport.width;
@@ -64,7 +75,7 @@ async function bootFlipbook(root) {
             dimensions.height = viewport.height;
         }
 
-        pages.push(canvas.toDataURL('image/jpeg', 0.82));
+        pages.push(buildPageElement(canvas.toDataURL('image/jpeg', JPEG_QUALITY), viewport, await page.getAnnotations()));
     }
 
     // Hand off to StPageFlip. The container's loading placeholder is
@@ -73,7 +84,6 @@ async function bootFlipbook(root) {
     root.innerHTML = '';
     root.setAttribute('tabindex', '0');
 
-    const isMobile = window.matchMedia(`(max-width: ${DESKTOP_BREAKPOINT - 1}px)`).matches;
     const flip = new PageFlip(root, {
         width: dimensions.width,
         height: dimensions.height,
@@ -81,9 +91,10 @@ async function bootFlipbook(root) {
         minWidth: 280,
         maxWidth: 1400,
         minHeight: 380,
-        maxHeight: 1800,
+        maxHeight: 1600,
         maxShadowOpacity: 0.5,
         showCover: true,
+        clickEventForward: true,
         mobileScrollSupport: true,
         usePortrait: true,
         drawShadow: true,
@@ -91,12 +102,7 @@ async function bootFlipbook(root) {
         startPage: 0,
     });
 
-    flip.loadFromImages(pages);
-
-    if (isMobile && typeof flip.getOrientation === 'function') {
-        // page-flip auto-switches to single-page mode when the
-        // container is narrower than two pages — nothing extra to do.
-    }
+    flip.loadFromHTML(pages);
 
     const beacon = (page) => {
         if (!trackingEnabled || !readUrl) {
@@ -137,6 +143,8 @@ async function bootFlipbook(root) {
         }
     });
 
+    mountFullscreen(root.closest('.magazine-stage'), flip);
+
     document.addEventListener('keydown', (event) => {
         if (document.activeElement && document.activeElement.closest('input, textarea, select')) {
             return;
@@ -146,6 +154,155 @@ async function bootFlipbook(root) {
             flip.flipNext();
         } else if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
             flip.flipPrev();
+        }
+    });
+}
+
+function buildPageElement(imageUrl, viewport, annotations) {
+    const page = document.createElement('div');
+    page.className = 'magazine-page';
+
+    const image = document.createElement('img');
+    image.src = imageUrl;
+    image.alt = '';
+    image.draggable = false;
+    page.appendChild(image);
+
+    for (const annotation of annotations) {
+        const link = linkForAnnotation(annotation, viewport);
+
+        if (link !== null) {
+            page.appendChild(link);
+        }
+    }
+
+    return page;
+}
+
+function linkForAnnotation(annotation, viewport) {
+    if (annotation?.subtype !== 'Link' || !Array.isArray(annotation.rect)) {
+        return null;
+    }
+
+    const href = safeHttpUrl(annotation.url || annotation.unsafeUrl);
+
+    if (href === null) {
+        return null;
+    }
+
+    const [x1, y1, x2, y2] = pdfRectToViewport(annotation.rect, viewport);
+    const boxWidth = Math.abs(x2 - x1);
+    const boxHeight = Math.abs(y2 - y1);
+
+    if (boxWidth < 1 || boxHeight < 1) {
+        return null;
+    }
+
+    const anchor = document.createElement('a');
+    anchor.href = href;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    anchor.title = href;
+    anchor.style.left = `${(Math.min(x1, x2) / viewport.width) * 100}%`;
+    anchor.style.top = `${(Math.min(y1, y2) / viewport.height) * 100}%`;
+    anchor.style.width = `${(boxWidth / viewport.width) * 100}%`;
+    anchor.style.height = `${(boxHeight / viewport.height) * 100}%`;
+
+    return anchor;
+}
+
+function pdfRectToViewport(rect, viewport) {
+    const transform = viewport?.transform;
+
+    if (!Array.isArray(transform) || transform.length < 6) {
+        return [0, 0, 0, 0];
+    }
+
+    const [a, b, c, d, e, f] = transform;
+    const project = (x, y) => [a * x + c * y + e, b * x + d * y + f];
+    const [x1, y1] = project(rect[0], rect[1]);
+    const [x2, y2] = project(rect[2], rect[3]);
+
+    return [x1, y1, x2, y2];
+}
+
+function safeHttpUrl(value) {
+    if (typeof value !== 'string' || value.trim() === '') {
+        return null;
+    }
+
+    try {
+        const url = new URL(value, window.location.href);
+
+        if (url.protocol === 'https:' || url.protocol === 'http:' || url.protocol === 'mailto:') {
+            return url.href;
+        }
+    } catch {
+        return null;
+    }
+
+    return null;
+}
+
+function mountFullscreen(stage, flip) {
+    const button = document.getElementById('magazine-fullscreen');
+
+    if (!stage || !button) {
+        return;
+    }
+
+    const isReading = () => stage.classList.contains('is-reading') || document.fullscreenElement === stage;
+
+    const refit = () => {
+        const on = isReading();
+        button.textContent = on ? 'Exit full screen' : 'Full screen';
+        button.setAttribute('aria-pressed', on ? 'true' : 'false');
+        document.documentElement.classList.toggle('magazine-reading', on);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => flip.update());
+        });
+    };
+
+    button.addEventListener('click', async () => {
+        if (isReading()) {
+            stage.classList.remove('is-reading');
+            if (document.fullscreenElement) {
+                await document.exitFullscreen().catch(() => {});
+            }
+            refit();
+            return;
+        }
+
+        stage.classList.add('is-reading');
+        const request = stage.requestFullscreen?.bind(stage) || stage.webkitRequestFullscreen?.bind(stage);
+        if (request) {
+            try {
+                await request();
+            } catch {
+                // The fixed overlay still covers the page when the
+                // browser refuses the Fullscreen API (common on iOS).
+            }
+        }
+        refit();
+    });
+
+    let usingFullscreenApi = false;
+
+    document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement === stage) {
+            usingFullscreenApi = true;
+            stage.classList.add('is-reading');
+        } else if (usingFullscreenApi) {
+            usingFullscreenApi = false;
+            stage.classList.remove('is-reading');
+        }
+        refit();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && stage.classList.contains('is-reading') && !document.fullscreenElement) {
+            stage.classList.remove('is-reading');
+            refit();
         }
     });
 }

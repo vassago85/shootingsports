@@ -37,7 +37,7 @@ class EditMagazineIssue extends EditRecord
 
         $pdfChanged = $record->pdf_path !== $this->previousPdfPath;
 
-        if ($pdfChanged) {
+        if ($pdfChanged || ! $record->hasReadableText()) {
             ExtractMagazineText::dispatch($record->id);
         }
 
