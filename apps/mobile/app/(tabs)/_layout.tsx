@@ -45,6 +45,10 @@ export default function TabsLayout() {
         name="calendar"
         options={{
           title: 'Calendar',
+          // M3 draws its own HeroBand + sticky filter strip; suppress
+          // the stock tab header so the HeroBand sits under the status
+          // bar as spec §3.1 requires.
+          headerShown: false,
           tabBarIcon: ({ color, focused, size }) => (
             <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={size} color={color} />
           ),
