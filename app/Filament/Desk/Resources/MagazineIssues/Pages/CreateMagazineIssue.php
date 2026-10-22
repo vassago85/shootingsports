@@ -3,6 +3,7 @@
 namespace App\Filament\Desk\Resources\MagazineIssues\Pages;
 
 use App\Filament\Desk\Resources\MagazineIssues\MagazineIssueResource;
+use App\Jobs\ExtractMagazineCover;
 use App\Jobs\ExtractMagazineText;
 use App\Models\MagazineIssue;
 use Filament\Resources\Pages\CreateRecord;
@@ -26,8 +27,14 @@ class CreateMagazineIssue extends CreateRecord
     {
         $record = $this->getRecord();
 
-        if ($record instanceof MagazineIssue && $record->pdf_path !== null) {
-            ExtractMagazineText::dispatch($record->id);
+        if (! $record instanceof MagazineIssue || $record->pdf_path === null) {
+            return;
+        }
+
+        ExtractMagazineText::dispatch($record->id);
+
+        if ($record->cover_path === null) {
+            ExtractMagazineCover::dispatch($record->id);
         }
     }
 }

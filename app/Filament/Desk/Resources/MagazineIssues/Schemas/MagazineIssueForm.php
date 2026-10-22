@@ -68,7 +68,7 @@ class MagazineIssueForm
                     ]),
 
                 Section::make('Files')
-                    ->description('Stored on the media volume. Keep PDFs under 100 MB — the server upload limits match this cap.')
+                    ->description('Stored on the media volume. Keep PDFs under 50 MB — the server upload limits match this cap.')
                     ->columns(2)
                     ->schema([
                         FileUpload::make('pdf_path')
@@ -78,7 +78,7 @@ class MagazineIssueForm
                             ->directory('magazines/pdf')
                             ->visibility('public')
                             ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(100 * 1024)
+                            ->maxSize(50 * 1024)
                             ->columnSpanFull(),
                         FileUpload::make('cover_path')
                             ->label('Cover image')
@@ -92,7 +92,7 @@ class MagazineIssueForm
                             ->maxSize(4096)
                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                             ->columnSpanFull()
-                            ->helperText('A square or portrait cover shown on listings and in social previews.'),
+                            ->helperText('Portrait or square cover for listings and social previews. Leave empty to auto-extract the PDF\'s first page.'),
                     ]),
             ]);
     }

@@ -3,6 +3,7 @@
 namespace App\Filament\Desk\Resources\MagazineIssues\Pages;
 
 use App\Filament\Desk\Resources\MagazineIssues\MagazineIssueResource;
+use App\Jobs\ExtractMagazineCover;
 use App\Jobs\ExtractMagazineText;
 use App\Models\MagazineIssue;
 use Filament\Actions\DeleteAction;
@@ -14,12 +15,15 @@ class EditMagazineIssue extends EditRecord
 
     protected ?string $previousPdfPath = null;
 
+    protected ?string $previousCoverPath = null;
+
     protected function beforeSave(): void
     {
         $record = $this->getRecord();
 
         if ($record instanceof MagazineIssue) {
             $this->previousPdfPath = $record->getOriginal('pdf_path');
+            $this->previousCoverPath = $record->getOriginal('cover_path');
         }
     }
 
@@ -31,8 +35,20 @@ class EditMagazineIssue extends EditRecord
             return;
         }
 
-        if ($record->pdf_path !== $this->previousPdfPath) {
+        $pdfChanged = $record->pdf_path !== $this->previousPdfPath;
+
+        if ($pdfChanged) {
             ExtractMagazineText::dispatch($record->id);
+        }
+
+        // Auto-extract a cover when (a) the PDF was swapped and the
+        // editor left the cover blank, or (b) the editor cleared an
+        // existing cover and wants a fresh one from page 1.
+        $needsCover = $record->cover_path === null
+            && ($pdfChanged || $this->previousCoverPath !== null);
+
+        if ($needsCover) {
+            ExtractMagazineCover::dispatch($record->id);
         }
     }
 
