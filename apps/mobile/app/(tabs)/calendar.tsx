@@ -81,7 +81,7 @@ function groupByMonth(events: EventCard[]): Array<{ title: string; data: EventCa
  */
 function provinceDisplayName(slug: string, events: EventCard[]): string {
   for (const event of events) {
-    const province = event.venue?.data?.province ?? null;
+    const province = event.venue?.province ?? null;
     if (province !== null && province.toLowerCase().replace(/\s+/g, '-') === slug.toLowerCase()) {
       return province;
     }

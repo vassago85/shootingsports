@@ -223,10 +223,15 @@ export default function MatchDetailScreen() {
     );
   }
 
-  const discipline = event.disciplines.data[0];
-  const venue = event.venue?.data ?? null;
-  const rangeName = venue?.name ?? event.venues.data[0]?.name ?? 'TBC';
-  const province = venue?.province ?? event.venues.data[0]?.province ?? 'TBC';
+  // All relation accesses are optional-chained — the API resource
+  // uses `whenLoaded` for several of these keys, so a controller
+  // path that forgets to eager-load would drop them silently and
+  // crash the detail screen on render.
+  const discipline = event.disciplines?.[0];
+  const venue = event.venue ?? null;
+  const rangeName = venue?.name ?? event.venues?.[0]?.name ?? 'TBC';
+  const province = venue?.province ?? event.venues?.[0]?.province ?? 'TBC';
+  const hostName = event.host?.name ?? '';
   const metaLine = `${formatHeroDate(event.starts_at)} · ${rangeName}, ${province}`;
 
   return (
@@ -242,7 +247,7 @@ export default function MatchDetailScreen() {
             <DetailRow label="Date" value={formatFullDate(event.starts_at)} />
             <DetailRow label="Range" value={rangeName} />
             <DetailRow label="Province" value={province} />
-            <DetailRow label="Host" value={event.host.name} />
+            <DetailRow label="Host" value={hostName} />
             <DetailRow label="Discipline" value={discipline?.name ?? 'TBC'} />
           </View>
 

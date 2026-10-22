@@ -1,5 +1,27 @@
 import { apiFetch } from './client';
 
+/**
+ * Shape of nested venue, host.organisation and disciplines mirrors the
+ * live `GET /api/v1/events` response. The API returns flat arrays and
+ * objects — no `{data: ...}` wrappers around relations. Only the
+ * **top-level** envelope is wrapped in `{data: ..., meta: ...}`.
+ */
+
+export type EventVenue = {
+  slug: string;
+  name: string;
+  town: string | null;
+  province: string | null;
+  lat: number | null;
+  lng: number | null;
+};
+
+export type EventDiscipline = {
+  slug: string;
+  name: string;
+  family: string | null;
+};
+
 export type EventCard = {
   id: number;
   slug: string;
@@ -16,21 +38,12 @@ export type EventCard = {
   banner_url: string | null;
   url: string;
   novice_friendly: boolean | null;
-  venue: {
-    data: {
-      slug: string;
-      name: string;
-      town: string | null;
-      province: string | null;
-      lat: number | null;
-      lng: number | null;
-    } | null;
-  } | null;
+  venue: EventVenue | null;
   host: {
     name: string;
-    organisation: { data: { slug: string; name: string } } | null;
+    organisation: { slug: string; name: string } | null;
   };
-  disciplines: { data: Array<{ slug: string; name: string; family: string | null }> };
+  disciplines: EventDiscipline[];
 };
 
 export type EventDetail = EventCard & {
@@ -39,9 +52,7 @@ export type EventDetail = EventCard & {
   round_count: number | null;
   target_count: number | null;
   stage_count: number | null;
-  venues: {
-    data: Array<{ slug: string; name: string; town: string | null; province: string | null; lat: number | null; lng: number | null }>;
-  };
+  venues: EventVenue[];
 };
 
 export type EventFilters = {

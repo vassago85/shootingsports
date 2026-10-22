@@ -27,7 +27,7 @@ export default function MatchRow({ event, onPress }: Props) {
   // API Resource, so a legacy row or a controller path that forgets
   // to eager-load drops the whole key. Without this, one such event
   // crashes the entire Calendar render.
-  const discipline = event.disciplines?.data?.[0]?.name ?? null;
+  const discipline = event.disciplines?.[0]?.name ?? null;
   const hostName = event.host?.name ?? '';
   const hostAndDiscipline = discipline !== null
     ? `${hostName} · ${discipline}`
