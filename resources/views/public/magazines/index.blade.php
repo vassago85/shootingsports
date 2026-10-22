@@ -35,7 +35,11 @@
                                 <p>{{ $issue->description }}</p>
                             @endif
                             <p style="margin-top:12px">
-                                <a class="btn" href="{{ route('magazines.show', $issue->slug) }}">Read this issue</a>
+                                @if ($issue->requiresLogin() && auth()->guest())
+                                    <a class="btn" href="{{ route('magazines.show', $issue->slug) }}">Sign in to read</a>
+                                @else
+                                    <a class="btn" href="{{ route('magazines.show', $issue->slug) }}">Read this issue</a>
+                                @endif
                             </p>
                         </div>
                     </article>

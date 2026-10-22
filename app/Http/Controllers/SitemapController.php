@@ -318,6 +318,7 @@ class SitemapController extends Controller
 
         return MagazineIssue::query()
             ->published()
+            ->where('reader_access', 'public')
             ->orderByDesc('published_at')
             ->get()
             ->map(fn (MagazineIssue $issue) => $this->safeUrl('magazines sitemap', $issue, fn (): array => [

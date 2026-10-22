@@ -33,6 +33,7 @@ class MagazineIssueFactory extends Factory
             'page_count' => $this->faker->numberBetween(24, 96),
             'pages_text' => null,
             'published_at' => null,
+            'reader_access' => 'public',
         ];
     }
 
@@ -47,6 +48,13 @@ class MagazineIssueFactory extends Factory
     {
         return $this->state(fn (): array => [
             'published_at' => null,
+        ]);
+    }
+
+    public function loginRequired(): self
+    {
+        return $this->state(fn (): array => [
+            'reader_access' => 'account',
         ]);
     }
 }

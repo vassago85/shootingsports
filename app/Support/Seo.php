@@ -206,7 +206,7 @@ final readonly class Seo
             title: $title,
             description: self::clip($description),
             canonical: route('magazines.show', $issue->slug),
-            robots: $previewing ? 'noindex,nofollow' : null,
+            robots: $previewing || $issue->requiresLogin() ? 'noindex,nofollow' : null,
         );
     }
 

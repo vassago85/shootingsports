@@ -74,6 +74,17 @@ class MagazineIssueForm
                             ->label('Publish at')
                             ->seconds(false)
                             ->helperText('Leave empty to keep this as a draft.'),
+                        Select::make('reader_access')
+                            ->label('Who can read it')
+                            ->options([
+                                'public' => 'Anyone',
+                                'account' => 'Signed-in readers',
+                            ])
+                            ->default('public')
+                            ->selectablePlaceholder(false)
+                            ->native(false)
+                            ->required()
+                            ->helperText('Anyone opens it with no account. Signed-in readers sign in once. Saving an issue to My library always needs an account.'),
                         Textarea::make('description')
                             ->rows(3)
                             ->maxLength(500)

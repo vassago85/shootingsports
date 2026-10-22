@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Storage;
 #[Fillable([
     'user_id', 'publication', 'title', 'slug', 'issue_label', 'description',
     'language', 'pdf_path', 'pdf_download_enabled', 'cover_path', 'page_count',
-    'pages_text', 'published_at',
+    'pages_text', 'published_at', 'reader_access',
 ])]
 class MagazineIssue extends Model
 {
@@ -75,6 +75,14 @@ class MagazineIssue extends Model
     public function isPublished(): bool
     {
         return $this->published_at !== null && $this->published_at->lte(now());
+    }
+
+    /**
+     * Anyone can open a public issue. Account issues ask for one sign-in.
+     */
+    public function requiresLogin(): bool
+    {
+        return $this->reader_access === 'account';
     }
 
     /**

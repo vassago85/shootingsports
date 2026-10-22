@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MagazineIssue;
 use App\Support\JsonLd;
 use App\Support\Seo;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -25,7 +26,7 @@ class MagazineIssueController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $issue): View
+    public function show(Request $request, string $issue): View|RedirectResponse
     {
         $record = MagazineIssue::query()
             ->where('slug', $issue)
@@ -39,6 +40,12 @@ class MagazineIssueController extends Controller
 
         if (! $record->isPublished() && ! $preview) {
             abort(404);
+        }
+
+        // Account issues ask for one sign-in. Public issues stay open.
+        // guest() stores this URL so sign-in returns the reader here.
+        if ($record->requiresLogin() && ! $preview && $request->user() === null) {
+            return redirect()->guest(route('login'));
         }
 
         return view('public.magazines.show', [

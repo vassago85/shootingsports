@@ -27,6 +27,10 @@ class MagazineReadController extends Controller
             return response()->json(['tracked' => false, 'reason' => 'draft']);
         }
 
+        if ($record->requiresLogin() && $request->user() === null) {
+            return response()->json(['tracked' => false, 'reason' => 'login']);
+        }
+
         if ($request->hasValidSignature()) {
             // Signed preview URLs reach this endpoint from the Desk's
             // own flipbook test — ignore so review traffic does not
