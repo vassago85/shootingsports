@@ -3,10 +3,9 @@
  *
  * PDF.js draws each page to a canvas at the size it is shown, so type
  * stays as sharp as the file. Each PDF page is shown on its own, at
- * its own shape. The cover is portrait. Later pages in this file are
- * already full spreads, so they stay landscape instead of being
- * stretched into a second column. page-flip (MIT) turns them in 3D on
- * a wide screen. The curl copies the page element, and a copied canvas
+ * its own shape. The cover is portrait. Later pages are full spreads,
+ * split at the gutter on a wide screen so page-flip curls one half
+ * to the middle. The curl copies the page element, and a copied canvas
  * is blank, so each animation frame copies the live pixels across.
  *
  * On a narrow screen the same canvases slide in 2D, one page at a time.
@@ -76,6 +75,56 @@ async function bootReader(root) {
             spread: view.width > view.height * 1.15,
         });
     }
+
+    const makeLeaf = (entry, half) => {
+        const element = document.createElement('div');
+        element.className = 'magazine-leaf';
+        element.dataset.page = String(entry.pageNumber);
+        element.dataset.half = half;
+
+        const canvas = document.createElement('canvas');
+        const links = document.createElement('div');
+        links.className = 'magazine-links';
+        element.append(canvas, links);
+
+        return { sheet: entry, half, element, canvas, links };
+    };
+
+    const sources = document.createElement('div');
+    sources.className = 'magazine-sources';
+    sources.hidden = true;
+
+    const leaves = [];
+
+    for (const entry of sheets) {
+        sources.append(entry.sheet);
+
+        if (entry.spread) {
+            leaves.push(makeLeaf(entry, 'left'), makeLeaf(entry, 'right'));
+            continue;
+        }
+
+        const leaf = makeLeaf(entry, 'full');
+
+        if (entry.pageNumber === 1 || entry.pageNumber === pdf.numPages) {
+            leaf.element.dataset.density = 'hard';
+        }
+
+        leaves.push(leaf);
+    }
+
+    const leafIndexForSheet = (sheetIndex) => {
+        const sheet = sheets[sheetIndex];
+        const index = leaves.findIndex((leaf) => leaf.sheet === sheet);
+
+        return index < 0 ? 0 : index;
+    };
+
+    const sheetIndexForLeaf = (leafIndex) => {
+        const sheetIndex = sheets.indexOf(leaves[leafIndex]?.sheet);
+
+        return sheetIndex < 0 ? 0 : sheetIndex;
+    };
 
     const spreadPage = sheets.find((entry) => entry.spread) ?? sheets[0];
     const sheetAspect = spreadPage.pdfWidth / spreadPage.pdfHeight;
@@ -186,7 +235,7 @@ async function bootReader(root) {
     };
 
     const visibleIndexes = () => {
-        const index = flip ? flip.getCurrentPageIndex() : pageIndex;
+        const index = flip ? sheetIndexForLeaf(flip.getCurrentPageIndex()) : pageIndex;
 
         return [Math.max(0, Math.min(index, sheets.length - 1))];
     };
@@ -215,33 +264,62 @@ async function bootReader(root) {
         return `Page ${slot}`;
     };
 
-    const frameFor = (entry, spec) => {
+    const frameFor = (entry, spec, boxWidth = spec.pageWidth, boxHeight = spec.pageHeight) => {
         const pageAspect = entry.pdfWidth / entry.pdfHeight;
-        let cssWidth = spec.pageWidth;
-        let cssHeight = spec.pageWidth / pageAspect;
+        let cssWidth = boxWidth;
+        let cssHeight = boxWidth / pageAspect;
 
-        if (cssHeight > spec.pageHeight) {
-            cssHeight = spec.pageHeight;
-            cssWidth = spec.pageHeight * pageAspect;
+        if (cssHeight > boxHeight) {
+            cssHeight = boxHeight;
+            cssWidth = boxHeight * pageAspect;
         }
 
         return {
             cssWidth,
             cssHeight,
-            left: (spec.pageWidth - cssWidth) / 2,
-            top: (spec.pageHeight - cssHeight) / 2,
+            left: (boxWidth - cssWidth) / 2,
+            top: (boxHeight - cssHeight) / 2,
         };
     };
 
-    const place = (entry, spec) => {
-        const frame = frameFor(entry, spec);
-
-        for (const node of [entry.canvas, entry.links]) {
+    const placeNodes = (nodes, frame, shift = 0) => {
+        for (const node of nodes) {
             node.style.position = 'absolute';
-            node.style.left = `${frame.left}px`;
+            node.style.right = 'auto';
+            node.style.bottom = 'auto';
+            node.style.left = `${frame.left - shift}px`;
             node.style.top = `${frame.top}px`;
             node.style.width = `${frame.cssWidth}px`;
             node.style.height = `${frame.cssHeight}px`;
+        }
+    };
+
+    const place = (entry, spec) => {
+        placeNodes([entry.canvas, entry.links], frameFor(entry, spec));
+    };
+
+    const placeLeaf = (leaf, spec) => {
+        const frame = leaf.half === 'full'
+            ? frameFor(leaf.sheet, spec, spec.pageWidth / 2, spec.pageHeight)
+            : frameFor(leaf.sheet, spec);
+        const shift = leaf.half === 'right' ? frame.cssWidth / 2 : 0;
+
+        placeNodes([leaf.canvas, leaf.links], frame, shift);
+    };
+
+    const syncLeafLinks = (entry) => {
+        for (const leaf of leaves) {
+            if (leaf.sheet !== entry) {
+                continue;
+            }
+
+            leaf.links.replaceChildren();
+
+            for (const anchor of entry.links.querySelectorAll('a')) {
+                const copy = anchor.cloneNode(true);
+                copy.addEventListener('click', (event) => event.stopPropagation());
+                leaf.links.append(copy);
+            }
         }
     };
 
@@ -261,13 +339,7 @@ async function bootReader(root) {
     };
 
     const copyCanvasClones = () => {
-        const parent = sheets[0]?.sheet.parentElement;
-
-        if (!parent) {
-            return;
-        }
-
-        for (const canvas of parent.querySelectorAll('canvas')) {
+        for (const canvas of root.querySelectorAll('canvas')) {
             if (canvas._live) {
                 continue;
             }
@@ -284,7 +356,11 @@ async function bootReader(root) {
                 canvas.height = source.height;
             }
 
-            canvas.getContext('2d').drawImage(source, 0, 0);
+            const context = canvas.getContext('2d');
+
+            if (context) {
+                context.drawImage(source, 0, 0);
+            }
         }
     };
 
@@ -361,6 +437,13 @@ async function bootReader(root) {
         entry.key = key;
         entry.canvas._live = true;
         place(entry, spec);
+        syncLeafLinks(entry);
+
+        for (const leaf of leaves) {
+            if (leaf.sheet === entry) {
+                placeLeaf(leaf, spec);
+            }
+        }
 
         if (!entry.linked) {
             const annotations = await page.getAnnotations();
@@ -430,7 +513,7 @@ async function bootReader(root) {
 
     const mountFlip = (spec) => {
         if (flip) {
-            pageIndex = flip.getCurrentPageIndex();
+            pageIndex = sheetIndexForLeaf(flip.getCurrentPageIndex());
             flip.destroy();
             flip = null;
         }
@@ -439,23 +522,27 @@ async function bootReader(root) {
             releaseSheet(entry.sheet);
         }
 
-        const book = document.createElement('div');
-        book.className = 'magazine-book';
-        root.replaceChildren(book);
-
-        for (const entry of sheets) {
-            book.appendChild(entry.sheet);
+        for (const leaf of leaves) {
+            releaseSheet(leaf.element);
         }
 
-        const width = Math.round(spec.pageWidth);
+        const book = document.createElement('div');
+        book.className = 'magazine-book';
+        root.replaceChildren(sources, book);
+
+        for (const leaf of leaves) {
+            book.append(leaf.element);
+        }
+
+        const leafWidth = Math.max(1, Math.round(spec.pageWidth / 2));
         const height = Math.round(spec.pageHeight);
 
         flip = new PageFlip(book, {
-            width,
+            width: leafWidth,
             height,
             size: 'fixed',
-            showCover: true,
-            usePortrait: true,
+            showCover: sheets[0] ? !sheets[0].spread : true,
+            usePortrait: false,
             autoSize: true,
             drawShadow: true,
             maxShadowOpacity: 0.35,
@@ -465,16 +552,16 @@ async function bootReader(root) {
             useMouseEvents: true,
             disableFlipByClick: false,
             showPageCorners: true,
-            startPage: pageIndex,
+            startPage: leafIndexForSheet(pageIndex),
             swipeDistance: 30,
         });
 
-        flip.loadFromHTML(sheets.map((entry) => entry.sheet));
+        flip.loadFromHTML(leaves.map((leaf) => leaf.element));
 
         flip.on('flip', (event) => {
-            pageIndex = event.data;
+            pageIndex = sheetIndexForLeaf(event.data);
             updateChrome();
-            const around = [pageIndex - 1, pageIndex, pageIndex + 1, pageIndex + 2]
+            const around = [pageIndex - 1, pageIndex, pageIndex + 1]
                 .map((index) => sheets[index])
                 .filter(Boolean);
             requestPaint(around);
@@ -487,38 +574,50 @@ async function bootReader(root) {
         });
 
         mode = 'flip';
-        pageIndex = flip.getCurrentPageIndex();
+        pageIndex = sheetIndexForLeaf(flip.getCurrentPageIndex());
 
         for (const entry of sheets) {
             place(entry, spec);
         }
 
+        for (const leaf of leaves) {
+            placeLeaf(leaf, spec);
+        }
+
+        copyCanvasClones();
         updateChrome();
     };
 
     const resizeFlip = (spec) => {
         const settings = flip.getSettings();
-        const width = Math.round(spec.pageWidth);
+        const leafWidth = Math.max(1, Math.round(spec.pageWidth / 2));
         const height = Math.round(spec.pageHeight);
-        settings.width = width;
+        const spreadWidth = leafWidth * 2;
+        settings.width = leafWidth;
         settings.height = height;
-        settings.minWidth = width;
-        settings.maxWidth = width;
+        settings.minWidth = leafWidth;
+        settings.maxWidth = leafWidth;
         settings.minHeight = height;
         settings.maxHeight = height;
 
         const book = root.querySelector('.magazine-book');
 
         if (book) {
-            book.style.minWidth = `${width}px`;
+            book.style.minWidth = `${spreadWidth}px`;
             book.style.minHeight = `${height}px`;
-            book.style.width = spec.zoom > 1 ? `${width}px` : '100%';
-            book.style.maxWidth = spec.zoom > 1 ? 'none' : `${width}px`;
+            book.style.width = spec.zoom > 1 ? `${spreadWidth}px` : '100%';
+            book.style.maxWidth = spec.zoom > 1 ? 'none' : `${spreadWidth}px`;
         }
 
         for (const entry of sheets) {
             place(entry, spec);
         }
+
+        for (const leaf of leaves) {
+            placeLeaf(leaf, spec);
+        }
+
+        copyCanvasClones();
 
         flip.update();
         updateChrome();
@@ -598,7 +697,7 @@ async function bootReader(root) {
 
     const mountSlide = (spec) => {
         if (flip) {
-            pageIndex = flip.getCurrentPageIndex();
+            pageIndex = sheetIndexForLeaf(flip.getCurrentPageIndex());
             flip.destroy();
             flip = null;
         }
@@ -666,7 +765,7 @@ async function bootReader(root) {
         paintQueue.length = 0;
         paintToken += 1;
         const token = paintToken;
-        const index = flip ? flip.getCurrentPageIndex() : pageIndex;
+        const index = flip ? sheetIndexForLeaf(flip.getCurrentPageIndex()) : pageIndex;
         const indexes = [index, index + 1];
 
         const visible = indexes.map((page) => sheets[page]).filter(Boolean);
@@ -700,7 +799,7 @@ async function bootReader(root) {
         }
 
         if (flip) {
-            const index = flip.getCurrentPageIndex();
+            const index = sheetIndexForLeaf(flip.getCurrentPageIndex());
             const ahead = [index + direction];
             const pending = ahead
                 .map((page) => sheets[page])
