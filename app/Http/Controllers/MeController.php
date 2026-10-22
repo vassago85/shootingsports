@@ -45,6 +45,11 @@ class MeController extends Controller
             ->where('starts_at', '>=', now())
             ->count();
 
+        // One count for the My library card. The unique (user_id,
+        // magazine_issue_id) index finds this reader's rows; published()
+        // then drops issues that have been taken down.
+        $savedMagazineCount = $user->savedMagazineIssues()->published()->count();
+
         return view('public.me.index', [
             'user' => $user,
             'planLabel' => $user->subscriptionStatusLabel(),
@@ -58,6 +63,7 @@ class MeController extends Controller
             'followLimit' => $followLimit,
             'upcomingSavedCount' => $upcomingSavedCount,
             'nextSavedEvents' => $nextSavedEvents,
+            'savedMagazineCount' => $savedMagazineCount,
             'proSalesOpen' => (bool) config('plans.pro_enabled'),
         ]);
     }

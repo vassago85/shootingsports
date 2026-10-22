@@ -49,6 +49,9 @@
 
                     <div class="magazine-stage__bar">
                         <button type="button" class="btn ghost magazine-control magazine-control--screen" id="magazine-fullscreen" aria-pressed="false">Full screen</button>
+                        @if (! $preview && $issue->isPublished())
+                            <livewire:save-magazine-issue :issue="$issue" :key="'save-issue-'.$issue->id" />
+                        @endif
                         @if ($issue->allowsPdfDownload())
                             <a class="btn ghost magazine-control magazine-control--download" href="{{ $issue->pdfUrl() }}" download>Download PDF</a>
                         @endif

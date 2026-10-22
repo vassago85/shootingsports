@@ -132,6 +132,7 @@
                         <li><a href="{{ route('contact') }}">Contact</a></li>
                         @auth
                             <li><a href="{{ route('my-calendar') }}">My calendar</a></li>
+                            <li><a href="{{ route('my-library') }}">My library</a></li>
                             <li><a href="{{ route('my-log') }}">My log</a></li>
                             <li><a href="{{ route('settings.notifications') }}">Email preferences</a></li>
                         @else

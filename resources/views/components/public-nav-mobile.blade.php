@@ -37,6 +37,7 @@
     @auth
         <a href="{{ route('me') }}">My home</a>
         <a href="{{ route('my-calendar') }}">My calendar</a>
+        <a href="{{ route('my-library') }}">My library</a>
         <a href="{{ route('my-log') }}">My log</a>
         <a href="{{ route('settings.notifications') }}">Notifications</a>
         @if (auth()->user()?->is_staff || auth()->user()?->hasDeskAccess())

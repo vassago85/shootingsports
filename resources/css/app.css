@@ -3590,6 +3590,8 @@ html[lang] body.ss-public .fmt-top h3 {
 .magazine-flipbook__loading { padding: 24px; text-align: center; color: var(--muted, #8a8a8a); }
 .magazine-flipbook:focus { outline: 2px solid var(--brass); outline-offset: 4px; }
 .magazine-book { margin: 0 auto; }
+.magazine-sources { display: none; }
+.magazine-leaf { overflow: hidden; background: #fff; }
 .magazine-sheet { position: relative; background: #fff; overflow: hidden; }
 .magazine-sheet canvas { display: block; width: 100%; height: 100%; }
 .magazine-links { position: absolute; inset: 0; pointer-events: none; }
@@ -3804,6 +3806,26 @@ html.magazine-reading { overflow: hidden; }
 }
 .me-saved-list .me-saved-title { font-weight: 500; }
 .me-saved-list .me-saved-venue { color: var(--slate); font-size: 12px; }
+
+.library-row {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+    margin-top: 16px;
+}
+.library-row img,
+.library-row .library-cover { width: 120px; border-radius: 6px; }
+.library-row img { height: auto; }
+.library-row .library-cover { height: 160px; background: var(--panel, #1b1b1b); }
+.library-actions { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+.library-actions .btn { min-height: 44px; }
+@media (max-width: 720px) {
+    .library-row { grid-template-columns: 88px minmax(0, 1fr); gap: 12px; }
+    .library-row img,
+    .library-row .library-cover { width: 88px; }
+    .library-row .library-cover { height: 120px; }
+}
 
 /* Bottom Upgrade strip — tighter than the generic .block section so the
    whole page sits above the fold on a laptop. */

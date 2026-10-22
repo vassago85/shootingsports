@@ -87,6 +87,17 @@
                         @endif
                     </a>
 
+                    <a class="me-card is-link" href="{{ route('my-library') }}">
+                        <h3>My library</h3>
+                        <p class="muted">
+                            @if ($savedMagazineCount === 0)
+                                Nothing saved yet
+                            @else
+                                {{ $savedMagazineCount }} saved
+                            @endif
+                        </p>
+                    </a>
+
                     <a class="me-card is-link" href="{{ route('my-log') }}">
                         <h3>My log</h3>
                         <p class="muted">

@@ -35,6 +35,7 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\FindYourDiscipline;
 use App\Livewire\Listings\SubmitClaim;
+use App\Livewire\MagazineLibrary;
 use App\Livewire\Matches\SubmitMatch;
 use App\Livewire\MyMembershipDetails;
 use App\Livewire\MyMemberships;
@@ -179,6 +180,10 @@ Route::get('/me', [MeController::class, 'show'])
 Route::get('/me/calendar', [ShooterCalendarController::class, 'mine'])
     ->middleware('auth')
     ->name('my-calendar');
+
+Route::get('/me/library', MagazineLibrary::class)
+    ->middleware('auth')
+    ->name('my-library');
 Route::redirect('/my-calendar', '/me/calendar', 301);
 Route::get('/shooters/{shooter}/calendar.ics', [IcalController::class, 'shooter'])->name('ical.shooter');
 Route::get('/shooters/{shooter}', [ShooterCalendarController::class, 'show'])->name('shooters.show');
