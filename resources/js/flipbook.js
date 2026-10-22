@@ -12,8 +12,12 @@
  * on an opaque reader hash, so page turns raise max_page and
  * pages_viewed without inflating the unique-reader count.
  */
-import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
+// Legacy build ships ES5-ish output plus polyfills (Map.getOrInsertComputed,
+// Promise.withResolvers, etc.) so the flipbook works in older browsers and
+// in Electron shells like the Cursor-embedded Chrome 144 we test against.
+// Switching back to the modern build caps us at ~Chrome 149+ / Safari 26+.
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.mjs?url';
 import { PageFlip } from 'page-flip';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
