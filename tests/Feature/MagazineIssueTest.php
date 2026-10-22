@@ -55,6 +55,31 @@ it('serves a published issue to the public with the flipbook mount', function ()
         ->assertDontSee('noindex,nofollow', false);
 });
 
+it('offers a PDF download when the issue allows it', function () {
+    $issue = MagazineIssue::factory()->published()->create([
+        'pdf_path' => 'magazines/pdf/issue.pdf',
+        'pdf_download_enabled' => true,
+    ]);
+
+    $this->get(route('magazines.show', $issue->slug))
+        ->assertOk()
+        ->assertSee('Download PDF', false)
+        ->assertSee('download the PDF', false);
+});
+
+it('hides the PDF download when the issue turns it off', function () {
+    $issue = MagazineIssue::factory()->published()->create([
+        'pdf_path' => 'magazines/pdf/issue.pdf',
+        'pdf_download_enabled' => false,
+    ]);
+
+    $this->get(route('magazines.show', $issue->slug))
+        ->assertOk()
+        ->assertDontSee('Download PDF', false)
+        ->assertDontSee('download the PDF', false)
+        ->assertSee('id="magazine-flipbook"', false);
+});
+
 it('hides the text version when every extracted page is blank', function () {
     $issue = MagazineIssue::factory()->published()->create([
         'pages_text' => ['', '   '],

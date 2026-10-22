@@ -28,6 +28,7 @@ class MagazineIssueFactory extends Factory
             'description' => $this->faker->sentence(14),
             'language' => 'en',
             'pdf_path' => null,
+            'pdf_download_enabled' => true,
             'cover_path' => null,
             'page_count' => $this->faker->numberBetween(24, 96),
             'pages_text' => null,

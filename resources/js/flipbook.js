@@ -94,22 +94,22 @@ async function bootReader(root) {
 
     const previous = document.createElement('button');
     previous.type = 'button';
-    previous.className = 'btn ghost';
+    previous.className = 'btn ghost magazine-control magazine-control--prev';
     previous.textContent = 'Previous';
 
     const next = document.createElement('button');
     next.type = 'button';
-    next.className = 'btn ghost';
+    next.className = 'btn ghost magazine-control magazine-control--next';
     next.textContent = 'Next';
 
     const zoomOut = document.createElement('button');
     zoomOut.type = 'button';
-    zoomOut.className = 'btn ghost';
+    zoomOut.className = 'btn ghost magazine-control magazine-control--zoom';
     zoomOut.textContent = 'Zoom out';
 
     const zoomIn = document.createElement('button');
     zoomIn.type = 'button';
-    zoomIn.className = 'btn ghost';
+    zoomIn.className = 'btn ghost magazine-control magazine-control--zoom';
     zoomIn.textContent = 'Zoom in';
 
     const status = document.createElement('span');
@@ -120,11 +120,19 @@ async function bootReader(root) {
     const fullscreen = document.getElementById('magazine-fullscreen');
 
     if (bar && fullscreen) {
-        bar.insertBefore(previous, fullscreen);
-        bar.insertBefore(next, fullscreen);
-        bar.insertBefore(status, fullscreen);
-        bar.insertBefore(zoomOut, fullscreen);
-        bar.insertBefore(zoomIn, fullscreen);
+        const nav = document.createElement('div');
+        nav.className = 'magazine-stage__nav';
+        nav.append(previous, status, next);
+
+        const tools = document.createElement('div');
+        tools.className = 'magazine-stage__tools';
+        tools.append(zoomOut, zoomIn);
+
+        while (bar.firstChild) {
+            tools.append(bar.firstChild);
+        }
+
+        bar.append(nav, tools);
     }
 
     const beacon = (pageNumber) => {
@@ -157,7 +165,8 @@ async function bootReader(root) {
         const reading = stage.classList.contains('is-reading') || document.fullscreenElement === stage;
         const narrow = window.matchMedia(NARROW_QUERY).matches;
         const zoom = ZOOM_LEVELS[zoomIndex];
-        const widthBudget = Math.max((reading ? stage.clientWidth : root.clientWidth) - (reading ? 40 : 0), 320);
+        const hostWidth = reading ? stage.clientWidth : root.clientWidth;
+        const widthBudget = Math.max(hostWidth - (reading ? (narrow ? 16 : 40) : 0), narrow ? 160 : 320);
         const heightBudget = reading
             ? Math.max(stage.clientHeight - (toolbar?.offsetHeight ?? 64) - 28, 280)
             : Math.min(window.innerHeight * 0.78, 1100);

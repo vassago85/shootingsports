@@ -6,7 +6,7 @@
     :image="$issue->coverUrl()"
     :json-ld="$jsonLd"
 >
-    <main id="main">
+    <main id="main" class="magazine-show">
         <section class="page-hero">
             <div class="wrap">
                 <p class="label">
@@ -47,22 +47,29 @@
                         <p class="magazine-flipbook__loading">Loading the flipbook…</p>
                     </div>
 
-                    <p class="magazine-stage__bar">
-                        <button type="button" class="btn ghost" id="magazine-fullscreen" aria-pressed="false">Full screen</button>
-                        @if ($issue->pdfUrl())
-                            <a class="btn ghost" href="{{ $issue->pdfUrl() }}" download>Download PDF</a>
+                    <div class="magazine-stage__bar">
+                        <button type="button" class="btn ghost magazine-control magazine-control--screen" id="magazine-fullscreen" aria-pressed="false">Full screen</button>
+                        @if ($issue->allowsPdfDownload())
+                            <a class="btn ghost magazine-control magazine-control--download" href="{{ $issue->pdfUrl() }}" download>Download PDF</a>
                         @endif
                         @if ($issue->hasReadableText())
-                            <a class="btn ghost" href="#magazine-text">Read as text</a>
+                            <a class="btn ghost magazine-control magazine-control--text" href="#magazine-text">Read as text</a>
                         @endif
-                    </p>
+                    </div>
                 </div>
 
                 <noscript>
                     <p class="empty" style="margin-top:16px">
-                        The flipbook needs JavaScript. You can
-                        <a href="{{ $issue->pdfUrl() }}">download the PDF</a>
-                        instead or scroll down to read the magazine as text.
+                        The flipbook needs JavaScript.
+                        @if ($issue->allowsPdfDownload())
+                            You can
+                            <a href="{{ $issue->pdfUrl() }}">download the PDF</a>
+                            @if ($issue->hasReadableText())
+                                or scroll down to read the magazine as text.
+                            @endif
+                        @elseif ($issue->hasReadableText())
+                            Scroll down to read the magazine as text.
+                        @endif
                     </p>
                 </noscript>
             </div>

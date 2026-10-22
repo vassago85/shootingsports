@@ -9,6 +9,7 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Set;
@@ -93,6 +94,12 @@ class MagazineIssueForm
                             ->acceptedFileTypes(['application/pdf'])
                             ->maxSize(50 * 1024)
                             ->columnSpanFull(),
+                        Toggle::make('pdf_download_enabled')
+                            ->label('Allow PDF download')
+                            ->inline(false)
+                            ->default(true)
+                            ->columnSpanFull()
+                            ->helperText('Shows a Download PDF button on the reader. Turn off to keep the issue in the flipbook only.'),
                         FileUpload::make('cover_path')
                             ->label('Cover image')
                             ->disk('media')

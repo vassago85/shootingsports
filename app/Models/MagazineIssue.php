@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Storage;
  */
 #[Fillable([
     'user_id', 'publication', 'title', 'slug', 'issue_label', 'description',
-    'language', 'pdf_path', 'cover_path', 'page_count', 'pages_text',
-    'published_at',
+    'language', 'pdf_path', 'pdf_download_enabled', 'cover_path', 'page_count',
+    'pages_text', 'published_at',
 ])]
 class MagazineIssue extends Model
 {
@@ -34,6 +34,7 @@ class MagazineIssue extends Model
         return [
             'pages_text' => 'array',
             'page_count' => 'integer',
+            'pdf_download_enabled' => 'boolean',
             'published_at' => 'datetime',
         ];
     }
@@ -76,6 +77,15 @@ class MagazineIssue extends Model
         return $this->pdf_path !== null
             ? Storage::disk('media')->url($this->pdf_path)
             : null;
+    }
+
+    /**
+     * Readers may save the file only when the issue offers a download
+     * and a PDF is actually stored.
+     */
+    public function allowsPdfDownload(): bool
+    {
+        return $this->pdf_download_enabled && $this->pdfUrl() !== null;
     }
 
     public function coverUrl(): ?string
