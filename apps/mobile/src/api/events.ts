@@ -12,6 +12,7 @@ export type EventVenue = {
   name: string;
   town: string | null;
   province: string | null;
+  province_slug: string | null;
   lat: number | null;
   lng: number | null;
 };
