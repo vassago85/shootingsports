@@ -94,7 +94,10 @@ export default function CalendarScreen() {
           }
           ListEmptyComponent={<Text style={styles.empty}>No matches match your filters.</Text>}
           renderItem={({ item }) => (
-            <Link href={{ pathname: '/matches/[slug]', params: { slug: item.slug } }} asChild>
+            <Link
+              href={{ pathname: '/matches/[slug]', params: { slug: item.slug, from: 'calendar' } }}
+              asChild
+            >
               <TouchableOpacity style={styles.card}>
                 <Text style={styles.cardTitle}>{item.title}</Text>
                 <Text style={styles.cardMeta}>

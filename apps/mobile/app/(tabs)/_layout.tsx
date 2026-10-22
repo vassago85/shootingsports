@@ -31,6 +31,11 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Home',
+          // M2 draws its own HeroBand that extends under the status bar
+          // (spec §3.1: "Do not draw a fake status bar"), so the stock
+          // tab header is suppressed here. Other tabs still use it
+          // until each one gets its own HeroBand reskin.
+          headerShown: false,
           tabBarIcon: ({ color, focused, size }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
           ),
@@ -58,6 +63,9 @@ export default function TabsLayout() {
         name="me"
         options={{
           title: 'Me',
+          // M5 draws its own HeroBand (and signed-out state owns its
+          // own full-screen layout). Suppress the stock header here.
+          headerShown: false,
           tabBarIcon: ({ color, focused, size }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
           ),

@@ -1,15 +1,30 @@
-import { Link, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { EventCard, listEvents } from '@/api/events';
-import { colors, fonts } from '@/theme';
+import { colors } from '@/theme';
+import { EmptyState, ErrorRow, GhostButton, HeroBand, MatchCard, Spinner } from '@/ui';
 
 /**
- * Home — the reason to open the app on a Friday. The next few
- * upcoming matches on the national calendar; following and
- * saved-event personalisation plugs in once those endpoints exist
- * (follows + saved-searches live on the website today, not the API).
+ * M2 Home — "the reason to open the app on a Friday".
+ *
+ * States per BUILD_SPEC §3.2:
+ *   - M2a Loading:   HeroBand + centred Spinner
+ *   - M2b Empty:     HeroBand + EmptyState (calendar-outline)
+ *   - M2c Error:     HeroBand + ErrorRow; "Browse the full calendar"
+ *                    button stays visible per spec
+ *   - M2d Populated: HeroBand + 6 MatchCards + ghost
+ *                    "Browse the full calendar"
+ *
+ * `GET /api/v1/events` with default filters and a limit of 6. Pull to
+ * refresh. `useFocusEffect` re-loads on tab focus so returning from a
+ * match detail or another tab shows fresh content. Tapping a card
+ * pushes R1 (match detail).
+ *
+ * Future M2e personalised (eyebrow "For you", followed-sport chips,
+ * "From what you follow" + "Also nationally" sections) is behind a
+ * flag; needs follows + saved-search endpoints that don't exist yet.
  */
 export default function HomeScreen() {
   const router = useRouter();
@@ -31,14 +46,22 @@ export default function HomeScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
+
+  const openCalendar = useCallback(() => router.push('/calendar'), [router]);
+  const openMatch = useCallback(
+    (slug: string) =>
+      router.push({ pathname: '/matches/[slug]', params: { slug, from: 'home' } }),
+    [router],
+  );
 
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ padding: 16, gap: 20 }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -46,92 +69,43 @@ export default function HomeScreen() {
             setRefreshing(true);
             void load();
           }}
+          tintColor={colors.link}
         />
       }
     >
-      <View>
-        <Text style={styles.eyebrow}>This weekend</Text>
-        <Text style={styles.h1}>What is on</Text>
+      <HeroBand eyebrow="National calendar" title="Upcoming matches" />
+
+      <View style={styles.body}>
+        {loading ? (
+          <Spinner label="Loading matches" />
+        ) : error !== null ? (
+          <>
+            <ErrorRow>
+              Couldn't load matches. Pull to refresh, or open the full calendar.
+            </ErrorRow>
+            <GhostButton label="Browse the full calendar" onPress={openCalendar} />
+          </>
+        ) : events.length === 0 ? (
+          <EmptyState icon="calendar-outline">
+            No upcoming matches yet. Pull to refresh.
+          </EmptyState>
+        ) : (
+          <>
+            <View style={styles.cards}>
+              {events.map((event) => (
+                <MatchCard key={event.id} event={event} onPress={() => openMatch(event.slug)} />
+              ))}
+            </View>
+            <GhostButton label="Browse the full calendar" onPress={openCalendar} />
+          </>
+        )}
       </View>
-
-      {loading ? (
-        <ActivityIndicator color={colors.link} />
-      ) : error !== null ? (
-        <Text style={styles.error}>{error}</Text>
-      ) : events.length === 0 ? (
-        <Text style={styles.muted}>No upcoming matches yet. Pull to refresh.</Text>
-      ) : (
-        <View style={{ gap: 10 }}>
-          {events.map((event) => (
-            <Link
-              key={event.id}
-              href={{ pathname: '/matches/[slug]', params: { slug: event.slug } }}
-              asChild
-            >
-              <TouchableOpacity style={styles.card}>
-                <Text style={styles.cardTitle}>{event.title}</Text>
-                <Text style={styles.cardMeta}>
-                  {event.starts_at !== null ? new Date(event.starts_at).toDateString() : 'TBC'}
-                </Text>
-                <Text style={styles.cardMeta}>{event.location_label}</Text>
-              </TouchableOpacity>
-            </Link>
-          ))}
-        </View>
-      )}
-
-      <TouchableOpacity style={styles.cta} onPress={() => router.push('/calendar')}>
-        <Text style={styles.ctaText}>Browse the full calendar</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
 
-// TEMPORARY stylesheet — stays until the full M2 reskin lands
-// (HeroBand + MatchCard + GhostButton primitives, states a-d per
-// docs/build-pack/BUILD_SPEC.md §3.2). Token references match the
-// pack's forest/lime light palette.
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.page },
-  eyebrow: {
-    color: colors.link,
-    fontSize: 12,
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
-    fontFamily: fonts.monoSemi,
-  },
-  h1: {
-    color: colors.ink,
-    fontSize: 28,
-    fontWeight: '700',
-    marginTop: 4,
-    fontFamily: fonts.display,
-    textTransform: 'uppercase',
-  },
-  muted: { color: colors.muted, fontSize: 14 },
-  error: { color: colors.error, fontSize: 14 },
-  card: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.rule,
-    borderRadius: 14,
-    padding: 16,
-    gap: 6,
-  },
-  cardTitle: { color: colors.ink, fontSize: 16, fontWeight: '600' },
-  cardMeta: { color: colors.muted, fontSize: 12 },
-  cta: {
-    borderWidth: 1,
-    borderColor: colors.link,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  ctaText: {
-    color: colors.link,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    fontFamily: fonts.display,
-  },
+  body: { padding: 16, gap: 16 },
+  cards: { gap: 12 },
 });

@@ -1,16 +1,89 @@
-import { useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { EventDetail, fetchEvent } from '@/api/events';
-import { saveEvent, unsaveEvent, listSavedEvents } from '@/api/saved-events';
+import { listSavedEvents, saveEvent, unsaveEvent } from '@/api/saved-events';
 import { getAuthToken } from '@/auth/store';
 import { colors, fonts } from '@/theme';
+import { ErrorRow, GhostButton, HeroBand, PrimaryButton, Spinner } from '@/ui';
+
+/**
+ * R1 / R2 Match detail — the shared deep-dive screen pushed from Home,
+ * Calendar, and Me's saved list.
+ *
+ * Per BUILD_SPEC §3.1 the final nav shape is a single `MatchDetail`
+ * component mounted inside both the Home stack and the Calendar stack
+ * so Back lands on the correct parent. Phase 1 is still pre-nav-
+ * restructure, so this file lives at the stack root and uses a `from`
+ * param to label the back button ("‹ Home" / "‹ Calendar" / "‹ Me").
+ *
+ * Spec R1/R2:
+ *   - HeroBand: discipline eyebrow, match title, `date · range, province`
+ *   - Details list: Date, Range, Province, Host, Discipline
+ *   - Share button (native sheet) in the header right
+ *   - PrimaryButton "Save match" / "Saved" (bookmark icon when saved)
+ *   - GhostButton "Open match page" → website in in-app browser
+ *   - Save-while-signed-out opens M1 Sign in. (Continuation of the save
+ *     after sign-in is a backlog item — the user re-taps Save after
+ *     signing in for now.)
+ */
+
+type ParentTab = 'home' | 'calendar' | 'me';
+
+type Params = {
+  slug: string;
+  /** Set by the caller so Back reads "‹ Home" etc. Falls back to "Back". */
+  from?: ParentTab;
+};
+
+const BACK_TITLES: Record<ParentTab, string> = {
+  home: 'Home',
+  calendar: 'Calendar',
+  me: 'Me',
+};
+
+function formatHeroDate(iso: string | null): string {
+  if (iso === null) {
+    return 'Date TBC';
+  }
+
+  const date = new Date(iso);
+  const weekday = date.toLocaleDateString('en-ZA', { weekday: 'short' }).toUpperCase();
+  const day = date.getDate();
+  const month = date.toLocaleDateString('en-ZA', { month: 'short' }).toUpperCase();
+  return `${weekday} ${day} ${month}`;
+}
+
+function formatFullDate(iso: string | null): string {
+  if (iso === null) {
+    return 'TBC';
+  }
+
+  return new Date(iso).toLocaleDateString('en-ZA', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
 
 export default function MatchDetailScreen() {
-  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const router = useRouter();
+  const { slug, from } = useLocalSearchParams<Params>();
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [saved, setSaved] = useState<boolean | null>(null);
+  const [savingToggle, setSavingToggle] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,80 +118,173 @@ export default function MatchDetailScreen() {
     void load();
   }, [load]);
 
-  async function toggleSaved() {
-    if (event === null) {
+  const toggleSaved = useCallback(async () => {
+    if (event === null || savingToggle) {
       return;
     }
 
     const token = await getAuthToken();
     if (token === null) {
-      // Screens that need auth push to /login. Detail page keeps the
-      // saved toggle disabled until then.
+      // Signed-out path per spec §3.2 R-notes: "Saving while signed out
+      // opens M1". The full continuation (auto-save after sign-in) is a
+      // backlog item.
+      router.push('/login');
       return;
     }
 
-    if (saved === true) {
-      await unsaveEvent(event.id);
-      setSaved(false);
-    } else {
-      await saveEvent(event.id);
-      setSaved(true);
+    setSavingToggle(true);
+    try {
+      if (saved === true) {
+        await unsaveEvent(event.id);
+        setSaved(false);
+      } else {
+        await saveEvent(event.id);
+        setSaved(true);
+      }
+    } catch (err) {
+      Alert.alert(
+        'Could not update',
+        err instanceof Error ? err.message : "Please try again.",
+      );
+    } finally {
+      setSavingToggle(false);
     }
-  }
+  }, [event, saved, savingToggle, router]);
+
+  const openMatchPage = useCallback(() => {
+    if (event === null) {
+      return;
+    }
+    void WebBrowser.openBrowserAsync(event.url).catch(() => {
+      Alert.alert('Could not open', 'Try opening shootingsports.co.za in your browser.');
+    });
+  }, [event]);
+
+  const share = useCallback(async () => {
+    if (event === null) {
+      return;
+    }
+    try {
+      await Share.share({
+        title: event.title,
+        message: `${event.title}\n${event.url}`,
+        url: event.url,
+      });
+    } catch {
+      // Share sheet dismissed or unavailable — no user-facing error.
+    }
+  }, [event]);
+
+  const backTitle = from !== undefined ? BACK_TITLES[from] : 'Back';
+
+  const headerOptions = {
+    title: 'Match',
+    headerBackTitle: backTitle,
+    headerRight: () =>
+      event !== null ? (
+        <Pressable
+          onPress={() => void share()}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="Share match"
+          style={({ pressed }) => [styles.headerBtn, pressed && { opacity: 0.6 }]}
+        >
+          <Ionicons name="share-outline" size={22} color={colors.onForest} />
+        </Pressable>
+      ) : null,
+  };
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={colors.link} />
-      </View>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <View style={styles.center}>
+          <Spinner label="Loading match" />
+        </View>
+      </>
     );
   }
 
   if (error !== null || event === null) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.error}>{error ?? 'Match not found.'}</Text>
-      </View>
+      <>
+        <Stack.Screen options={headerOptions} />
+        <View style={styles.centerPad}>
+          <ErrorRow>{error ?? "That match couldn't be found."}</ErrorRow>
+          <GhostButton
+            label="Try again"
+            onPress={() => {
+              setLoading(true);
+              void load();
+            }}
+          />
+        </View>
+      </>
     );
   }
 
+  const discipline = event.disciplines.data[0];
+  const venue = event.venue?.data ?? null;
+  const rangeName = venue?.name ?? event.venues.data[0]?.name ?? 'TBC';
+  const province = venue?.province ?? event.venues.data[0]?.province ?? 'TBC';
+  const metaLine = `${formatHeroDate(event.starts_at)} · ${rangeName}, ${province}`;
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 20, gap: 12 }}>
-      <Text style={styles.title}>{event.title}</Text>
-      <Text style={styles.meta}>{event.host.name}</Text>
-      <Text style={styles.meta}>
-        {event.starts_at !== null ? new Date(event.starts_at).toDateString() : 'Date TBC'}
-      </Text>
-      <Text style={styles.meta}>{event.location_label}</Text>
+    <>
+      <Stack.Screen options={headerOptions} />
+      <ScrollView style={styles.container}>
+        <HeroBand eyebrow={discipline?.name ?? 'Match'} title={event.title}>
+          <Text style={styles.heroMeta}>{metaLine}</Text>
+        </HeroBand>
 
-      {event.description !== null && event.description.length > 0 && (
-        <Text style={styles.body}>{event.description}</Text>
-      )}
+        <View style={styles.body}>
+          <View style={styles.details}>
+            <DetailRow label="Date" value={formatFullDate(event.starts_at)} />
+            <DetailRow label="Range" value={rangeName} />
+            <DetailRow label="Province" value={province} />
+            <DetailRow label="Host" value={event.host.name} />
+            <DetailRow label="Discipline" value={discipline?.name ?? 'TBC'} />
+          </View>
 
-      <View style={styles.row}>
-        {event.entry_url !== null && event.entry_url.length > 0 && (
-          <TouchableOpacity
-            onPress={() => Linking.openURL(event.entry_url as string)}
-            style={styles.primary}
-          >
-            <Text style={styles.primaryText}>Open entry link</Text>
-          </TouchableOpacity>
-        )}
+          {event.description !== null && event.description.length > 0 && (
+            <View style={styles.descBlock}>
+              <Text style={styles.descText}>{event.description}</Text>
+            </View>
+          )}
 
-        <TouchableOpacity onPress={toggleSaved} style={styles.secondary}>
-          <Text style={styles.secondaryText}>
-            {saved === true ? 'Remove from calendar' : 'Add to calendar'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <View style={styles.actions}>
+            {saved === true ? (
+              <GhostButton
+                label="Saved"
+                onPress={() => void toggleSaved()}
+                accessibilityLabel="Saved. Tap to remove from saved."
+              />
+            ) : (
+              <PrimaryButton
+                label="Save match"
+                onPress={() => void toggleSaved()}
+                loading={savingToggle}
+              />
+            )}
+            <GhostButton label="Open match page" onPress={openMatchPage} />
+          </View>
+        </View>
+      </ScrollView>
+    </>
   );
 }
 
-// TEMPORARY stylesheet — stays until the full R1/R2 reskin lands
-// (HeroBand with discipline eyebrow, details list, PrimaryButton
-// "Save match" + GhostButton "Open match page", in-app browser for
-// the external link, per BUILD_SPEC §3.2).
+type DetailRowProps = { label: string; value: string };
+
+function DetailRow({ label, value }: DetailRowProps) {
+  return (
+    <View style={styles.detailRow}>
+      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={styles.detailValue}>{value}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.page },
   center: {
@@ -127,47 +293,76 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.page,
   },
-  title: {
-    color: colors.ink,
-    fontSize: 26,
-    fontWeight: '700',
-    fontFamily: fonts.display,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  meta: { color: colors.muted, fontSize: 13, fontFamily: fonts.mono },
-  body: { color: colors.ink, fontSize: 15, lineHeight: 22, marginTop: 12 },
-  row: { flexDirection: 'row', gap: 12, marginTop: 16, flexWrap: 'wrap' },
-  primary: {
-    backgroundColor: colors.lime,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 10,
-    minHeight: 48,
+  centerPad: {
+    flex: 1,
+    alignItems: 'stretch',
     justifyContent: 'center',
+    backgroundColor: colors.page,
+    padding: 24,
+    gap: 16,
   },
-  primaryText: {
-    color: colors.ink,
-    fontWeight: '700',
-    fontFamily: fonts.display,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
+
+  heroMeta: {
+    fontFamily: fonts.mono,
+    fontSize: 13,
+    color: colors.onForestMuted,
+    marginTop: 4,
   },
-  secondary: {
+
+  body: { padding: 16, gap: 20 },
+
+  /* Details list — label / value rows with hair-rule between. The
+   * last row's own bottom border is clipped by `overflow: hidden` so
+   * the card's rounded corners stay clean. */
+  details: {
+    backgroundColor: colors.card,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.link,
-    paddingHorizontal: 18,
+    borderColor: colors.rule,
+    paddingHorizontal: 16,
+    overflow: 'hidden',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     paddingVertical: 12,
-    borderRadius: 10,
-    minHeight: 48,
-    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.rule,
+    gap: 16,
   },
-  secondaryText: {
-    color: colors.link,
-    fontWeight: '700',
-    fontFamily: fonts.display,
+  detailLabel: {
+    fontFamily: fonts.monoSemi,
+    fontSize: 11,
+    color: colors.muted,
+    letterSpacing: 1.4,
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
+    paddingTop: 2,
   },
-  error: { color: colors.error, textAlign: 'center', margin: 24 },
+  detailValue: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 15,
+    color: colors.ink,
+    flex: 1,
+    textAlign: 'right',
+    lineHeight: 20,
+  },
+
+  /* Match description — plain prose below the details list. */
+  descBlock: {
+    paddingHorizontal: 4,
+  },
+  descText: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.ink,
+  },
+
+  actions: { gap: 12 },
+
+  headerBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
 });
