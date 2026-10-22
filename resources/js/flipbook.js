@@ -1,122 +1,141 @@
 /*
- * Targets magazine flipbook.
+ * Targets magazine reader.
  *
- * Renders a PDF to canvas thumbnails with pdf.js and then hands those
- * thumbnails to StPageFlip (page-flip) to drive the page-turn
- * animation. Keeps the DOM dependency to a single container element
- * (resources/views/public/magazines/show.blade.php) so the magazine
- * show page stays serverside-authored for SEO.
+ * PDF.js draws each page to a canvas at the size it is shown, so type
+ * stays as sharp as the file. Each PDF page is shown on its own, at
+ * its own shape. The cover is portrait. Later pages in this file are
+ * already full spreads, so they stay landscape instead of being
+ * stretched into a second column. page-flip (MIT) turns them in 3D on
+ * a wide screen. The curl copies the page element, and a copied canvas
+ * is blank, so each animation frame copies the live pixels across.
  *
- * Read tracking: posts to /magazines/{slug}/read on first open and
- * each page turn via navigator.sendBeacon. The server deduplicates
- * on an opaque reader hash, so page turns raise max_page and
- * pages_viewed without inflating the unique-reader count.
+ * On a narrow screen the same canvases slide in 2D, one page at a time.
+ * Zoom throws the old bitmap away and draws the page again.
+ *
+ * Link annotations are placed on the same viewport. Read tracking posts
+ * to /magazines/{slug}/read via navigator.sendBeacon.
  */
-// Legacy build ships ES5-ish output plus polyfills (Map.getOrInsertComputed,
-// Promise.withResolvers, etc.) so the flipbook works in older browsers and
-// in Electron shells like the Cursor-embedded Chrome 144 we test against.
-// Switching back to the modern build caps us at ~Chrome 149+ / Safari 26+.
+import { PageFlip } from 'page-flip';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.mjs?url';
-import { PageFlip } from 'page-flip';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
-const MAX_RENDER_SCALE = 2.5;
-const JPEG_QUALITY = 0.92;
-
+const NARROW_QUERY = '(max-width: 700px)';
+const ZOOM_LEVELS = [1, 1.25, 1.5, 2];
 const beaconedPages = new Set();
 
 const container = document.getElementById('magazine-flipbook');
 
 if (container && container.dataset.pdfUrl) {
-    bootFlipbook(container).catch((error) => {
-        console.error('Flipbook failed to load', error);
+    bootReader(container).catch((error) => {
+        console.error('Magazine failed to load', error);
         showFallback(container);
     });
 }
 
-async function bootFlipbook(root) {
+async function bootReader(root) {
     const pdfUrl = root.dataset.pdfUrl;
     const readUrl = root.dataset.readUrl;
     const trackingEnabled = root.dataset.track === '1';
 
-    const task = pdfjsLib.getDocument({ url: pdfUrl });
-    const pdf = await task.promise;
+    const pdf = await pdfjsLib.getDocument({ url: pdfUrl }).promise;
+    const first = await pdf.getPage(1);
 
-    const firstPage = await pdf.getPage(1);
-    const baseViewport = firstPage.getViewport({ scale: 1 });
-    const pixelRatio = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
-    const screenPage = Math.min(window.screen?.width || 1440, 2560) / 2;
-    const inlinePage = (root.clientWidth || 1000) / 2;
-    const pageCssWidth = Math.min(Math.max(screenPage, inlinePage, 360), 1400);
-    const renderScale = Math.min(
-        MAX_RENDER_SCALE,
-        Math.max(2, (pageCssWidth * pixelRatio) / baseViewport.width),
-    );
-
-    const pages = [];
-    const dimensions = { width: 800, height: 1100 };
+    const sheets = [];
 
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-        // eslint-disable-next-line no-await-in-loop
-        const page = pageNumber === 1 ? firstPage : await pdf.getPage(pageNumber);
-        const viewport = page.getViewport({ scale: renderScale });
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+        const sheet = document.createElement('div');
+        sheet.className = 'magazine-sheet';
+        sheet.dataset.page = String(pageNumber);
 
-        // eslint-disable-next-line no-await-in-loop
-        await page.render({ canvasContext: context, viewport }).promise;
-
-        if (pageNumber === 1) {
-            dimensions.width = viewport.width;
-            dimensions.height = viewport.height;
+        if (pageNumber === 1 || pageNumber === pdf.numPages) {
+            sheet.dataset.density = 'hard';
         }
 
-        pages.push(buildPageElement(canvas.toDataURL('image/jpeg', JPEG_QUALITY), viewport, await page.getAnnotations()));
+        const canvas = document.createElement('canvas');
+        canvas._live = true;
+
+        const links = document.createElement('div');
+        links.className = 'magazine-links';
+        sheet.append(canvas, links);
+
+        const page = pageNumber === 1 ? first : await pdf.getPage(pageNumber);
+        const view = page.getViewport({ scale: 1 });
+
+        sheets.push({
+            pageNumber,
+            sheet,
+            canvas,
+            links,
+            task: null,
+            key: '',
+            linked: false,
+            pdfWidth: view.width,
+            pdfHeight: view.height,
+            spread: view.width > view.height * 1.15,
+        });
     }
 
-    // Hand off to StPageFlip. The container's loading placeholder is
-    // replaced; page-flip injects its own wrapper, canvas, and shadow
-    // layers inside the root element.
-    root.innerHTML = '';
+    const spreadPage = sheets.find((entry) => entry.spread) ?? sheets[0];
+    const sheetAspect = spreadPage.pdfWidth / spreadPage.pdfHeight;
+
+    let pageIndex = 0;
+    let zoomIndex = 0;
+    let flip = null;
+    let mode = '';
+    let currentSpec = null;
+    let lastLayoutKey = '';
+    let paintToken = 0;
+    let painting = false;
+    const paintQueue = [];
+
     root.setAttribute('tabindex', '0');
 
-    const flip = new PageFlip(root, {
-        width: dimensions.width,
-        height: dimensions.height,
-        size: 'stretch',
-        minWidth: 280,
-        maxWidth: 1400,
-        minHeight: 380,
-        maxHeight: 1600,
-        maxShadowOpacity: 0.5,
-        showCover: true,
-        clickEventForward: true,
-        mobileScrollSupport: true,
-        usePortrait: true,
-        drawShadow: true,
-        flippingTime: 700,
-        startPage: 0,
-    });
+    const previous = document.createElement('button');
+    previous.type = 'button';
+    previous.className = 'btn ghost';
+    previous.textContent = 'Previous';
 
-    flip.loadFromHTML(pages);
+    const next = document.createElement('button');
+    next.type = 'button';
+    next.className = 'btn ghost';
+    next.textContent = 'Next';
 
-    const beacon = (page) => {
-        if (!trackingEnabled || !readUrl) {
+    const zoomOut = document.createElement('button');
+    zoomOut.type = 'button';
+    zoomOut.className = 'btn ghost';
+    zoomOut.textContent = 'Zoom out';
+
+    const zoomIn = document.createElement('button');
+    zoomIn.type = 'button';
+    zoomIn.className = 'btn ghost';
+    zoomIn.textContent = 'Zoom in';
+
+    const status = document.createElement('span');
+    status.className = 'magazine-status';
+    status.setAttribute('aria-live', 'polite');
+
+    const bar = root.closest('.magazine-stage')?.querySelector('.magazine-stage__bar');
+    const fullscreen = document.getElementById('magazine-fullscreen');
+
+    if (bar && fullscreen) {
+        bar.insertBefore(previous, fullscreen);
+        bar.insertBefore(next, fullscreen);
+        bar.insertBefore(status, fullscreen);
+        bar.insertBefore(zoomOut, fullscreen);
+        bar.insertBefore(zoomIn, fullscreen);
+    }
+
+    const beacon = (pageNumber) => {
+        if (!trackingEnabled || !readUrl || beaconedPages.has(pageNumber)) {
             return;
         }
 
-        if (beaconedPages.has(page)) {
-            return;
-        }
-
-        beaconedPages.add(page);
+        beaconedPages.add(pageNumber);
 
         const payload = new FormData();
-        payload.append('page', String(page));
+        payload.append('page', String(pageNumber));
         payload.append('_token', csrfToken());
 
         if (typeof navigator.sendBeacon === 'function') {
@@ -124,7 +143,6 @@ async function bootFlipbook(root) {
             return;
         }
 
-        // Fallback: fire-and-forget fetch for browsers without sendBeacon.
         fetch(readUrl, {
             method: 'POST',
             body: payload,
@@ -133,50 +151,624 @@ async function bootFlipbook(root) {
         }).catch(() => {});
     };
 
-    // Open event: count the reader on first paint.
-    flip.on('init', () => beacon(1));
-    flip.on('flip', (event) => {
-        const page = Number(event?.data ?? 0) + 1;
+    const measure = () => {
+        const stage = root.closest('.magazine-stage') ?? root;
+        const toolbar = stage.querySelector('.magazine-stage__bar');
+        const reading = stage.classList.contains('is-reading') || document.fullscreenElement === stage;
+        const narrow = window.matchMedia(NARROW_QUERY).matches;
+        const zoom = ZOOM_LEVELS[zoomIndex];
+        const widthBudget = Math.max((reading ? stage.clientWidth : root.clientWidth) - (reading ? 40 : 0), 320);
+        const heightBudget = reading
+            ? Math.max(stage.clientHeight - (toolbar?.offsetHeight ?? 64) - 28, 280)
+            : Math.min(window.innerHeight * 0.78, 1100);
+        let pageWidth = widthBudget;
+        let pageHeight = pageWidth / sheetAspect;
 
-        if (Number.isFinite(page) && page >= 1) {
-            beacon(page);
+        if (pageHeight > heightBudget) {
+            pageHeight = heightBudget;
+            pageWidth = pageHeight * sheetAspect;
         }
-    });
 
-    mountFullscreen(root.closest('.magazine-stage'), flip);
+        pageWidth = Math.max(160, pageWidth * zoom);
+        pageHeight = Math.max(160, pageHeight * zoom);
+        const pixelRatio = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
+
+        return { narrow, zoom, pageWidth, pageHeight, pixelRatio };
+    };
+
+    const visibleIndexes = () => {
+        const index = flip ? flip.getCurrentPageIndex() : pageIndex;
+
+        return [Math.max(0, Math.min(index, sheets.length - 1))];
+    };
+
+    const placeName = (index) => {
+        const entry = sheets[index];
+
+        if (!entry) {
+            return '';
+        }
+
+        if (index === 0 && !entry.spread) {
+            return 'Cover';
+        }
+
+        let slot = 1;
+
+        for (let cursor = 0; cursor < index; cursor += 1) {
+            slot += sheets[cursor].spread ? 2 : 1;
+        }
+
+        if (entry.spread) {
+            return `Pages ${slot}–${slot + 1}`;
+        }
+
+        return `Page ${slot}`;
+    };
+
+    const frameFor = (entry, spec) => {
+        const pageAspect = entry.pdfWidth / entry.pdfHeight;
+        let cssWidth = spec.pageWidth;
+        let cssHeight = spec.pageWidth / pageAspect;
+
+        if (cssHeight > spec.pageHeight) {
+            cssHeight = spec.pageHeight;
+            cssWidth = spec.pageHeight * pageAspect;
+        }
+
+        return {
+            cssWidth,
+            cssHeight,
+            left: (spec.pageWidth - cssWidth) / 2,
+            top: (spec.pageHeight - cssHeight) / 2,
+        };
+    };
+
+    const place = (entry, spec) => {
+        const frame = frameFor(entry, spec);
+
+        for (const node of [entry.canvas, entry.links]) {
+            node.style.position = 'absolute';
+            node.style.left = `${frame.left}px`;
+            node.style.top = `${frame.top}px`;
+            node.style.width = `${frame.cssWidth}px`;
+            node.style.height = `${frame.cssHeight}px`;
+        }
+    };
+
+    const updateChrome = () => {
+        const indexes = visibleIndexes();
+        const zoom = ZOOM_LEVELS[zoomIndex];
+
+        status.textContent = `${placeName(indexes[0])} · ${Math.round(zoom * 100)}%`;
+        previous.disabled = indexes[0] <= 0;
+        next.disabled = indexes[0] >= sheets.length - 1;
+        zoomOut.disabled = zoomIndex <= 0;
+        zoomIn.disabled = zoomIndex >= ZOOM_LEVELS.length - 1;
+
+        for (const index of indexes) {
+            beacon(index + 1);
+        }
+    };
+
+    const copyCanvasClones = () => {
+        const parent = sheets[0]?.sheet.parentElement;
+
+        if (!parent) {
+            return;
+        }
+
+        for (const canvas of parent.querySelectorAll('canvas')) {
+            if (canvas._live) {
+                continue;
+            }
+
+            const pageNumber = Number(canvas.closest('[data-page]')?.dataset.page);
+            const source = sheets[pageNumber - 1]?.canvas;
+
+            if (!source?.width) {
+                continue;
+            }
+
+            if (canvas.width !== source.width || canvas.height !== source.height) {
+                canvas.width = source.width;
+                canvas.height = source.height;
+            }
+
+            canvas.getContext('2d').drawImage(source, 0, 0);
+        }
+    };
+
+    let watchUntil = 0;
+    let watching = false;
+
+    const watchClones = () => {
+        watchUntil = performance.now() + 900;
+
+        if (watching) {
+            return;
+        }
+
+        watching = true;
+
+        const tick = () => {
+            copyCanvasClones();
+
+            if (performance.now() < watchUntil) {
+                requestAnimationFrame(tick);
+                return;
+            }
+
+            watching = false;
+        };
+
+        requestAnimationFrame(tick);
+    };
+
+    const paint = async (entry, spec, token) => {
+        const key = `${Math.round(spec.pageWidth)}x${Math.round(spec.pageHeight)}@${spec.pixelRatio.toFixed(2)}`;
+
+        if (entry.key === key) {
+            return;
+        }
+
+        try {
+            entry.task?.cancel();
+        } catch {
+            // The previous draw had already finished.
+        }
+
+        const page = entry.pageNumber === 1 ? first : await pdf.getPage(entry.pageNumber);
+
+        if (token !== paintToken) {
+            return;
+        }
+
+        const frame = frameFor(entry, spec);
+        const viewport = page.getViewport({
+            scale: (frame.cssWidth / entry.pdfWidth) * spec.pixelRatio,
+        });
+        const context = entry.canvas.getContext('2d', { alpha: false });
+        entry.canvas.width = Math.floor(viewport.width);
+        entry.canvas.height = Math.floor(viewport.height);
+
+        const task = page.render({ canvasContext: context, viewport });
+        entry.task = task;
+
+        try {
+            await task.promise;
+        } catch (error) {
+            if (error?.name === 'RenderingCancelledException') {
+                return;
+            }
+
+            throw error;
+        }
+
+        if (token !== paintToken) {
+            return;
+        }
+
+        entry.key = key;
+        entry.canvas._live = true;
+        place(entry, spec);
+
+        if (!entry.linked) {
+            const annotations = await page.getAnnotations();
+            entry.links.replaceChildren();
+
+            for (const annotation of annotations) {
+                const anchor = linkForAnnotation(annotation, viewport);
+
+                if (anchor !== null) {
+                    anchor.addEventListener('click', (event) => event.stopPropagation());
+                    entry.links.appendChild(anchor);
+                }
+            }
+
+            entry.linked = true;
+        }
+
+        copyCanvasClones();
+    };
+
+    const drain = async () => {
+        if (painting) {
+            return;
+        }
+
+        painting = true;
+
+        try {
+            while (paintQueue.length > 0) {
+                const entry = paintQueue.shift();
+                const token = paintToken;
+                const spec = currentSpec;
+
+                if (!spec) {
+                    continue;
+                }
+
+                try {
+                    await paint(entry, spec, token);
+                } catch (error) {
+                    console.error('Magazine page failed to draw', error);
+                }
+            }
+        } finally {
+            painting = false;
+        }
+
+        if (paintQueue.length > 0) {
+            drain();
+        }
+    };
+
+    const requestPaint = (entries) => {
+        for (const entry of entries) {
+            if (entry && !paintQueue.includes(entry)) {
+                paintQueue.push(entry);
+            }
+        }
+
+        drain();
+    };
+
+    const releaseSheet = (sheet) => {
+        sheet.classList.remove('stf__item', '--hard', '--soft', '--simple', '--left', '--right');
+        sheet.style.cssText = '';
+    };
+
+    const mountFlip = (spec) => {
+        if (flip) {
+            pageIndex = flip.getCurrentPageIndex();
+            flip.destroy();
+            flip = null;
+        }
+
+        for (const entry of sheets) {
+            releaseSheet(entry.sheet);
+        }
+
+        const book = document.createElement('div');
+        book.className = 'magazine-book';
+        root.replaceChildren(book);
+
+        for (const entry of sheets) {
+            book.appendChild(entry.sheet);
+        }
+
+        const width = Math.round(spec.pageWidth);
+        const height = Math.round(spec.pageHeight);
+
+        flip = new PageFlip(book, {
+            width,
+            height,
+            size: 'fixed',
+            showCover: true,
+            usePortrait: true,
+            autoSize: true,
+            drawShadow: true,
+            maxShadowOpacity: 0.35,
+            flippingTime: 650,
+            mobileScrollSupport: true,
+            clickEventForward: true,
+            useMouseEvents: true,
+            disableFlipByClick: false,
+            showPageCorners: true,
+            startPage: pageIndex,
+            swipeDistance: 30,
+        });
+
+        flip.loadFromHTML(sheets.map((entry) => entry.sheet));
+
+        flip.on('flip', (event) => {
+            pageIndex = event.data;
+            updateChrome();
+            const around = [pageIndex - 1, pageIndex, pageIndex + 1, pageIndex + 2]
+                .map((index) => sheets[index])
+                .filter(Boolean);
+            requestPaint(around);
+        });
+
+        flip.on('changeState', (event) => {
+            if (event.data === 'flipping' || event.data === 'user_fold' || event.data === 'fold_corner') {
+                watchClones();
+            }
+        });
+
+        mode = 'flip';
+        pageIndex = flip.getCurrentPageIndex();
+
+        for (const entry of sheets) {
+            place(entry, spec);
+        }
+
+        updateChrome();
+    };
+
+    const resizeFlip = (spec) => {
+        const settings = flip.getSettings();
+        const width = Math.round(spec.pageWidth);
+        const height = Math.round(spec.pageHeight);
+        settings.width = width;
+        settings.height = height;
+        settings.minWidth = width;
+        settings.maxWidth = width;
+        settings.minHeight = height;
+        settings.maxHeight = height;
+
+        const book = root.querySelector('.magazine-book');
+
+        if (book) {
+            book.style.minWidth = `${width}px`;
+            book.style.minHeight = `${height}px`;
+            book.style.width = spec.zoom > 1 ? `${width}px` : '100%';
+            book.style.maxWidth = spec.zoom > 1 ? 'none' : `${width}px`;
+        }
+
+        for (const entry of sheets) {
+            place(entry, spec);
+        }
+
+        flip.update();
+        updateChrome();
+    };
+
+    const bindSwipe = (frame) => {
+        let startX = 0;
+        let startY = 0;
+        let tracking = false;
+
+        frame.addEventListener('pointerdown', (event) => {
+            if (event.target.closest('a')) {
+                return;
+            }
+
+            tracking = true;
+            startX = event.clientX;
+            startY = event.clientY;
+        });
+
+        frame.addEventListener('pointerup', (event) => {
+            if (!tracking) {
+                return;
+            }
+
+            tracking = false;
+            const dx = event.clientX - startX;
+            const dy = event.clientY - startY;
+
+            if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) {
+                return;
+            }
+
+            go(dx < 0 ? 1 : -1);
+        });
+    };
+
+    const showSlide = (index, direction) => {
+        const frame = root.querySelector('.magazine-slide');
+        const incoming = sheets[index]?.sheet;
+
+        if (!frame || !incoming) {
+            return;
+        }
+
+        releaseSheet(incoming);
+        incoming.style.position = 'absolute';
+        incoming.style.inset = '0';
+        incoming.style.transition = 'none';
+        incoming.style.transform = direction === 0 ? 'translateX(0)' : `translateX(${direction > 0 ? '100%' : '-100%'})`;
+        frame.appendChild(incoming);
+
+        if (currentSpec) {
+            place(sheets[index], currentSpec);
+        }
+
+        const outgoing = [...frame.children].find((node) => node !== incoming);
+
+        if (direction !== 0) {
+            requestAnimationFrame(() => {
+                incoming.style.transition = 'transform 420ms ease';
+                incoming.style.transform = 'translateX(0)';
+
+                if (outgoing) {
+                    outgoing.style.transition = 'transform 420ms ease';
+                    outgoing.style.transform = `translateX(${direction > 0 ? '-100%' : '100%'})`;
+                    outgoing.addEventListener('transitionend', () => outgoing.remove(), { once: true });
+                }
+            });
+        } else if (outgoing) {
+            outgoing.remove();
+        }
+
+        pageIndex = index;
+        updateChrome();
+    };
+
+    const mountSlide = (spec) => {
+        if (flip) {
+            pageIndex = flip.getCurrentPageIndex();
+            flip.destroy();
+            flip = null;
+        }
+
+        for (const entry of sheets) {
+            releaseSheet(entry.sheet);
+        }
+
+        const frame = document.createElement('div');
+        frame.className = 'magazine-slide';
+        frame.style.width = `${Math.round(spec.pageWidth)}px`;
+        frame.style.height = `${Math.round(spec.pageHeight)}px`;
+        root.replaceChildren(frame);
+        bindSwipe(frame);
+        mode = 'slide';
+        showSlide(Math.max(0, Math.min(pageIndex, sheets.length - 1)), 0);
+    };
+
+    const resizeSlide = (spec) => {
+        const frame = root.querySelector('.magazine-slide');
+
+        if (!frame) {
+            mountSlide(spec);
+            return;
+        }
+
+        frame.style.width = `${Math.round(spec.pageWidth)}px`;
+        frame.style.height = `${Math.round(spec.pageHeight)}px`;
+        updateChrome();
+    };
+
+    const applyMode = (spec) => {
+        root.classList.toggle('is-2d', spec.narrow);
+        root.classList.toggle('is-3d', !spec.narrow);
+        root.classList.toggle('is-zoomed', spec.zoom > 1);
+
+        if (spec.narrow) {
+            if (mode !== 'slide') {
+                mountSlide(spec);
+            } else {
+                resizeSlide(spec);
+            }
+
+            return;
+        }
+
+        if (mode !== 'flip') {
+            mountFlip(spec);
+            return;
+        }
+
+        resizeFlip(spec);
+    };
+
+    const layout = async () => {
+        const spec = measure();
+        const key = `${spec.narrow}|${Math.round(spec.pageWidth)}|${Math.round(spec.pageHeight)}|${spec.pixelRatio.toFixed(2)}`;
+
+        if (key === lastLayoutKey) {
+            return;
+        }
+
+        lastLayoutKey = key;
+        currentSpec = spec;
+        paintQueue.length = 0;
+        paintToken += 1;
+        const token = paintToken;
+        const index = flip ? flip.getCurrentPageIndex() : pageIndex;
+        const indexes = [index, index + 1];
+
+        const visible = indexes.map((page) => sheets[page]).filter(Boolean);
+
+        for (const entry of visible) {
+            await paint(entry, spec, token);
+
+            if (token !== paintToken) {
+                return;
+            }
+        }
+
+        if (token !== paintToken) {
+            return;
+        }
+
+        applyMode(spec);
+
+        if (spec.zoom <= 1) {
+            requestPaint(sheets.filter((entry) => !visible.includes(entry)));
+        }
+    };
+
+    const go = (direction) => {
+        if (direction < 0 && previous.disabled) {
+            return;
+        }
+
+        if (direction > 0 && next.disabled) {
+            return;
+        }
+
+        if (flip) {
+            const index = flip.getCurrentPageIndex();
+            const ahead = [index + direction];
+            const pending = ahead
+                .map((page) => sheets[page])
+                .filter(Boolean)
+                .map((entry) => paint(entry, currentSpec, paintToken));
+
+            Promise.all(pending).then(() => {
+                if (direction > 0) {
+                    flip.flipNext('bottom');
+                } else {
+                    flip.flipPrev('bottom');
+                }
+            }).catch((error) => {
+                console.error('Magazine page failed to draw', error);
+            });
+
+            return;
+        }
+
+        const index = Math.max(0, Math.min(sheets.length - 1, pageIndex + direction));
+        const entry = sheets[index];
+
+        if (currentSpec && entry) {
+            paint(entry, currentSpec, paintToken).then(() => showSlide(index, direction));
+            return;
+        }
+
+        showSlide(index, direction);
+    };
+
+    const setZoom = (index) => {
+        const nextIndex = Math.max(0, Math.min(ZOOM_LEVELS.length - 1, index));
+
+        if (nextIndex === zoomIndex) {
+            return;
+        }
+
+        zoomIndex = nextIndex;
+        layout();
+    };
+
+    previous.addEventListener('click', () => go(-1));
+    next.addEventListener('click', () => go(1));
+    zoomOut.addEventListener('click', () => setZoom(zoomIndex - 1));
+    zoomIn.addEventListener('click', () => setZoom(zoomIndex + 1));
 
     document.addEventListener('keydown', (event) => {
-        if (document.activeElement && document.activeElement.closest('input, textarea, select')) {
+        if (event.target instanceof Element && event.target.closest('input, textarea, select')) {
+            return;
+        }
+
+        if (!root.isConnected) {
             return;
         }
 
         if (event.key === 'ArrowRight' || event.key === 'PageDown') {
-            flip.flipNext();
+            event.preventDefault();
+            go(1);
         } else if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
-            flip.flipPrev();
+            event.preventDefault();
+            go(-1);
+        } else if (event.key === '+' || event.key === '=') {
+            setZoom(zoomIndex + 1);
+        } else if (event.key === '-' || event.key === '_') {
+            setZoom(zoomIndex - 1);
         }
     });
-}
 
-function buildPageElement(imageUrl, viewport, annotations) {
-    const page = document.createElement('div');
-    page.className = 'magazine-page';
+    let resizeTimer = 0;
+    window.addEventListener('resize', () => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(() => layout(), 150);
+    });
 
-    const image = document.createElement('img');
-    image.src = imageUrl;
-    image.alt = '';
-    image.draggable = false;
-    page.appendChild(image);
+    mountFullscreen(root.closest('.magazine-stage'), () => layout());
 
-    for (const annotation of annotations) {
-        const link = linkForAnnotation(annotation, viewport);
-
-        if (link !== null) {
-            page.appendChild(link);
-        }
-    }
-
-    return page;
+    await layout();
 }
 
 function linkForAnnotation(annotation, viewport) {
@@ -194,7 +786,7 @@ function linkForAnnotation(annotation, viewport) {
     const boxWidth = Math.abs(x2 - x1);
     const boxHeight = Math.abs(y2 - y1);
 
-    if (boxWidth < 1 || boxHeight < 1) {
+    if (boxWidth < 1 || boxHeight < 1 || viewport.width < 1 || viewport.height < 1) {
         return null;
     }
 
@@ -220,10 +812,10 @@ function pdfRectToViewport(rect, viewport) {
 
     const [a, b, c, d, e, f] = transform;
     const project = (x, y) => [a * x + c * y + e, b * x + d * y + f];
-    const [x1, y1] = project(rect[0], rect[1]);
-    const [x2, y2] = project(rect[2], rect[3]);
+    const [left, top] = project(rect[0], rect[1]);
+    const [right, bottom] = project(rect[2], rect[3]);
 
-    return [x1, y1, x2, y2];
+    return [left, top, right, bottom];
 }
 
 function safeHttpUrl(value) {
@@ -244,7 +836,7 @@ function safeHttpUrl(value) {
     return null;
 }
 
-function mountFullscreen(stage, flip) {
+function mountFullscreen(stage, onRefit) {
     const button = document.getElementById('magazine-fullscreen');
 
     if (!stage || !button) {
@@ -259,30 +851,34 @@ function mountFullscreen(stage, flip) {
         button.setAttribute('aria-pressed', on ? 'true' : 'false');
         document.documentElement.classList.toggle('magazine-reading', on);
         requestAnimationFrame(() => {
-            requestAnimationFrame(() => flip.update());
+            requestAnimationFrame(() => onRefit());
         });
     };
 
     button.addEventListener('click', async () => {
         if (isReading()) {
             stage.classList.remove('is-reading');
+
             if (document.fullscreenElement) {
                 await document.exitFullscreen().catch(() => {});
             }
+
             refit();
             return;
         }
 
         stage.classList.add('is-reading');
         const request = stage.requestFullscreen?.bind(stage) || stage.webkitRequestFullscreen?.bind(stage);
+
         if (request) {
             try {
                 await request();
             } catch {
                 // The fixed overlay still covers the page when the
-                // browser refuses the Fullscreen API (common on iOS).
+                // browser refuses the Fullscreen API.
             }
         }
+
         refit();
     });
 
@@ -296,6 +892,7 @@ function mountFullscreen(stage, flip) {
             usingFullscreenApi = false;
             stage.classList.remove('is-reading');
         }
+
         refit();
     });
 
@@ -316,7 +913,7 @@ function csrfToken() {
 function showFallback(root) {
     root.innerHTML = `
         <p class="empty">
-            We couldn't load the flipbook in this browser. Try the PDF
+            We couldn't load the magazine in this browser. Try the PDF
             or the "Read as text" view below.
         </p>
     `;
