@@ -22,11 +22,16 @@ type Props = {
  */
 export default function MatchRow({ event, onPress }: Props) {
   const { day, month } = splitDate(event.starts_at);
-  const location = event.location_label;
-  const discipline = event.disciplines.data[0]?.name ?? null;
+  const location = event.location_label ?? '';
+  // Defensive chaining: `disciplines` is marked `whenLoaded` in the
+  // API Resource, so a legacy row or a controller path that forgets
+  // to eager-load drops the whole key. Without this, one such event
+  // crashes the entire Calendar render.
+  const discipline = event.disciplines?.data?.[0]?.name ?? null;
+  const hostName = event.host?.name ?? '';
   const hostAndDiscipline = discipline !== null
-    ? `${event.host.name} · ${discipline}`
-    : event.host.name;
+    ? `${hostName} · ${discipline}`
+    : hostName;
 
   const accessibilityDate = event.starts_at !== null
     ? new Date(event.starts_at).toDateString()
