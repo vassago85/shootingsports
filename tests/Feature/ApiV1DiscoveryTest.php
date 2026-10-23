@@ -2,6 +2,7 @@
 
 use App\Enums\DisciplineFamily;
 use App\Enums\FlagFamily;
+use App\Enums\ListingStatus;
 use App\Enums\Province;
 use App\Models\Discipline;
 use App\Models\Event;
@@ -113,6 +114,78 @@ it('returns disciplines with upcoming counts', function (): void {
         ->json('data');
 
     expect(collect($data)->pluck('slug'))->toContain('prs');
+});
+
+it('lists published venues for the Find Ranges mode', function (): void {
+    $gauteng = Venue::factory()->create([
+        'name' => 'Thabazimbi Range',
+        'province' => Province::Gauteng,
+        'town' => 'Thabazimbi',
+    ]);
+    $cape = Venue::factory()->create([
+        'name' => 'Boland Range',
+        'province' => Province::WesternCape,
+        'town' => 'Paarl',
+    ]);
+
+    Event::factory()->confirmed()->create(['venue_id' => $gauteng->id]);
+    Event::factory()->confirmed()->create(['venue_id' => $gauteng->id]);
+
+    $response = $this->getJson('/api/v1/venues')
+        ->assertOk()
+        ->assertJsonStructure([
+            'data' => [[
+                'id',
+                'slug',
+                'name',
+                'town',
+                'province',
+                'province_slug',
+                'lat',
+                'lng',
+                'url',
+                'logo_url',
+                'summary',
+                'disciplines',
+                'upcoming_count',
+            ]],
+        ])
+        ->json('data');
+
+    $thabazimbi = collect($response)->firstWhere('name', 'Thabazimbi Range');
+    expect($thabazimbi)->not->toBeNull()
+        ->and($thabazimbi['upcoming_count'])->toBe(2)
+        ->and($thabazimbi['town'])->toBe('Thabazimbi');
+
+    $boland = collect($response)->firstWhere('name', 'Boland Range');
+    expect($boland)->not->toBeNull()
+        ->and($boland['upcoming_count'])->toBe(0);
+});
+
+it('honours the province filter on the venues endpoint', function (): void {
+    Venue::factory()->create(['name' => 'Thabazimbi Range', 'province' => Province::Gauteng]);
+    Venue::factory()->create(['name' => 'Boland Range', 'province' => Province::WesternCape]);
+
+    $names = collect(
+        $this->getJson('/api/v1/venues?province=gauteng')->json('data'),
+    )->pluck('name');
+
+    expect($names)->toContain('Thabazimbi Range')->not->toContain('Boland Range');
+});
+
+it('does not expose unpublished venues through the venues API', function (): void {
+    Venue::factory()->create([
+        'name' => 'Pending Range',
+        'status' => ListingStatus::Pending,
+    ]);
+    Venue::factory()->create([
+        'name' => 'Live Range',
+        'status' => ListingStatus::Published,
+    ]);
+
+    $names = collect($this->getJson('/api/v1/venues')->json('data'))->pluck('name');
+
+    expect($names)->toContain('Live Range')->not->toContain('Pending Range');
 });
 
 it('returns map pins for pinned venues with upcoming matches', function (): void {

@@ -5,6 +5,7 @@ import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 
 import { fetchMap, MapPayload } from '@/api/map';
+import RangesList from '@/find/RangesList';
 import SportsList from '@/find/SportsList';
 import { colors, fonts } from '@/theme';
 import { EmptyState, ErrorRow, FilterChip, HeroBand, Spinner } from '@/ui';
@@ -134,6 +135,8 @@ export default function FindScreen() {
             })
           }
         />
+      ) : mode === 'ranges' ? (
+        <RangesList />
       ) : mode === 'sports' ? (
         <SportsList />
       ) : (

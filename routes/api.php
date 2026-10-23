@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\ManagedPlacementController;
 use App\Http\Controllers\Api\V1\MapController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\SavedEventController;
+use App\Http\Controllers\Api\V1\VenueController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -38,6 +39,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::get('events', [EventController::class, 'index'])->name('events.index');
     Route::get('events/{event:slug}', [EventController::class, 'show'])->name('events.show');
     Route::get('disciplines', [DisciplineController::class, 'index'])->name('disciplines.index');
+    Route::get('venues', [VenueController::class, 'index'])->name('venues.index');
     Route::get('map', MapController::class)->name('map');
 
     // Shooter surface. Rate limit writes so a compromised token
