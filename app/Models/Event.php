@@ -405,7 +405,16 @@ class Event extends Model
         $host = $this->hostOrganisation;
 
         if ($host?->town || $host?->province) {
-            return collect([$host->town, $host->province?->code()])->filter()->implode(' · ');
+            $code = $host->province?->code();
+
+            // Host has a province but no town — don't emit a bare
+            // "GP" that reads as a bug on the mobile card. Keep the
+            // province signal but make the missing venue explicit.
+            if (! $host->town && $code) {
+                return 'Venue TBC · '.$code;
+            }
+
+            return collect([$host->town, $code])->filter()->implode(' · ');
         }
 
         return 'Venue TBC';

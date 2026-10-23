@@ -2,6 +2,7 @@
 
 use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
+use App\Enums\Province;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Venue;
@@ -37,6 +38,24 @@ it('single-venue matches keep their existing location label', function () {
     ]);
 
     expect($event->locationLabel())->toContain('Rayton');
+});
+
+it('location label falls back to "Venue TBC · <province>" when the host has a province but no town and no venue is set', function () {
+    // A real event in production (PR22 nationals) hit this path and
+    // showed just "GP" on the mobile card, which read as a bug.
+    // The fallback keeps the province signal but makes the missing
+    // venue explicit.
+    $host = Organisation::factory()->create([
+        'status' => ListingStatus::Published,
+        'town' => null,
+        'province' => Province::Gauteng,
+    ]);
+    $event = Event::factory()->confirmed()->create([
+        'host_organisation_id' => $host->id,
+        'venue_id' => null,
+    ]);
+
+    expect($event->locationLabel())->toBe('Venue TBC · GP');
 });
 
 // --- syncVenues keeps primary in sync ------------------------------------
