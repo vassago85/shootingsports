@@ -8,6 +8,7 @@
  */
 export { default as BottomSheet } from './BottomSheet';
 export { default as CapabilityCard } from './CapabilityCard';
+export { default as ClubRow } from './ClubRow';
 export { default as EmptyState } from './EmptyState';
 export { default as ErrorRow } from './ErrorRow';
 export { default as FilterChip } from './FilterChip';

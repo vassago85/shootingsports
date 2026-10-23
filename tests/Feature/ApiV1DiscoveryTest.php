@@ -3,6 +3,7 @@
 use App\Enums\DisciplineFamily;
 use App\Enums\FlagFamily;
 use App\Enums\ListingStatus;
+use App\Enums\OrganisationType;
 use App\Enums\Province;
 use App\Models\Discipline;
 use App\Models\Event;
@@ -171,6 +172,88 @@ it('honours the province filter on the venues endpoint', function (): void {
     )->pluck('name');
 
     expect($names)->toContain('Thabazimbi Range')->not->toContain('Boland Range');
+});
+
+it('lists published clubs for the Find Clubs mode', function (): void {
+    $gauteng = Organisation::factory()->create([
+        'name' => 'Gauteng Rifle Club',
+        'type' => OrganisationType::Club,
+        'province' => Province::Gauteng,
+        'status' => ListingStatus::Published,
+    ]);
+    Organisation::factory()->create([
+        'name' => 'Boland Rifle Club',
+        'type' => OrganisationType::Club,
+        'province' => Province::WesternCape,
+        'status' => ListingStatus::Published,
+    ]);
+
+    $response = $this->getJson('/api/v1/organisations')
+        ->assertOk()
+        ->assertJsonStructure([
+            'data' => [[
+                'id',
+                'slug',
+                'name',
+                'short_name',
+                'type',
+                'town',
+                'province',
+                'province_slug',
+                'logo_url',
+                'url',
+                'visitors_welcome',
+                'disciplines',
+            ]],
+        ])
+        ->json('data');
+
+    $names = collect($response)->pluck('name');
+    expect($names)->toContain('Gauteng Rifle Club', 'Boland Rifle Club');
+});
+
+it('excludes federations from the default organisations list', function (): void {
+    Organisation::factory()->create([
+        'name' => 'SA Shooting Federation',
+        'type' => OrganisationType::Federation,
+        'status' => ListingStatus::Published,
+    ]);
+    Organisation::factory()->create([
+        'name' => 'Gauteng Rifle Club',
+        'type' => OrganisationType::Club,
+        'status' => ListingStatus::Published,
+    ]);
+
+    $names = collect($this->getJson('/api/v1/organisations')->json('data'))
+        ->pluck('name');
+
+    // Federations are discoverable via the website's dedicated
+    // navigation. The Find Clubs mode is for the "where do I shoot"
+    // question — federations don't answer it.
+    expect($names)
+        ->toContain('Gauteng Rifle Club')
+        ->not->toContain('SA Shooting Federation');
+});
+
+it('honours the province filter on the organisations endpoint', function (): void {
+    Organisation::factory()->create([
+        'name' => 'Gauteng Rifle Club',
+        'type' => OrganisationType::Club,
+        'province' => Province::Gauteng,
+        'status' => ListingStatus::Published,
+    ]);
+    Organisation::factory()->create([
+        'name' => 'Boland Rifle Club',
+        'type' => OrganisationType::Club,
+        'province' => Province::WesternCape,
+        'status' => ListingStatus::Published,
+    ]);
+
+    $names = collect(
+        $this->getJson('/api/v1/organisations?province=gauteng')->json('data'),
+    )->pluck('name');
+
+    expect($names)->toContain('Gauteng Rifle Club')->not->toContain('Boland Rifle Club');
 });
 
 it('does not expose unpublished venues through the venues API', function (): void {

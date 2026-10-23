@@ -27,6 +27,15 @@ class OrganisationResource extends JsonResource
             'town' => $this->town,
             'logo_url' => $this->logoUrl(),
             'url' => route('clubs.show', $this->slug),
+            'visitors_welcome' => (bool) $this->visitors_welcome,
+            'disciplines' => $this->whenLoaded(
+                'disciplines',
+                fn () => $this->disciplines
+                    ->map(fn ($d) => ['slug' => $d->slug, 'name' => $d->name])
+                    ->values()
+                    ->all(),
+                [],
+            ),
         ];
     }
 }
