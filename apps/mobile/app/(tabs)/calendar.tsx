@@ -1,6 +1,7 @@
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Pressable,
   RefreshControl,
   ScrollView,
   SectionList,
@@ -9,11 +10,21 @@ import {
   View,
 } from 'react-native';
 
+import { Ionicons } from '@expo/vector-icons';
+
 import { Discipline, activeDisciplines, listDisciplines } from '@/api/disciplines';
 import { EventCard, listEvents } from '@/api/events';
 import { PROVINCES } from '@/api/provinces';
 import { colors, fonts } from '@/theme';
-import { EmptyState, ErrorRow, FilterChip, HeroBand, MatchRow, Spinner } from '@/ui';
+import {
+  BottomSheet,
+  EmptyState,
+  ErrorRow,
+  FilterChip,
+  HeroBand,
+  MatchRow,
+  Spinner,
+} from '@/ui';
 
 /**
  * M3 Calendar — information-dense, filter-first.
@@ -129,9 +140,10 @@ export default function CalendarScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // Province is driven by the route param so Find deep links continue
-  // to pre-select it. The row below lets the user change it too.
+  // to pre-select it. The sheet row below lets the user change it too.
   const activeProvince = typeof params.province === 'string' ? params.province : null;
 
   const load = useCallback(async () => {
@@ -218,6 +230,35 @@ export default function CalendarScreen() {
     filters.dateRange !== 'any' ||
     activeProvince !== null;
 
+  // "Filters" button badge: count every active sheet filter so the
+  // user can see at a glance how many are hidden behind the button.
+  // Family and Novice live inline and are not counted.
+  const sheetActiveCount =
+    (filters.discipline !== null ? 1 : 0) +
+    (activeProvince !== null ? 1 : 0) +
+    (filters.dateRange !== 'any' ? 1 : 0);
+
+  const sheetHasFilter = sheetActiveCount > 0;
+
+  const dateRangeLabel = useMemo(() => {
+    const match = DATE_RANGES.find((r) => r.value === filters.dateRange);
+    return match ? match.label : 'Any date';
+  }, [filters.dateRange]);
+
+  const activeProvinceLabel = useMemo(() => {
+    if (activeProvince === null) {
+      return null;
+    }
+    return PROVINCES.find((p) => p.slug === activeProvince)?.short ?? null;
+  }, [activeProvince]);
+
+  const activeDisciplineLabel = useMemo(() => {
+    if (filters.discipline === null) {
+      return null;
+    }
+    return disciplines.find((d) => d.slug === filters.discipline)?.name ?? null;
+  }, [disciplines, filters.discipline]);
+
   return (
     <View style={styles.container}>
       <HeroBand eyebrow="Full calendar" title="Browse matches" />
@@ -261,29 +302,112 @@ export default function CalendarScreen() {
           />
         </View>
 
-        {/* Row 2: discipline (dependent on family). Hidden if no
-            visible disciplines — avoids an empty row when the API is
-            still loading or the user picked a family with no data. */}
-        {visibleDisciplines.length > 0 && (
-          <View style={styles.filterRow}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chipScroll}
+        {/* Row 2: trigger row — compact "Filters" button + a scroll
+            of chips showing what's currently active in the sheet.
+            Keeps the main screen to two filter rows while the user
+            can still see at a glance which filters are set. */}
+        <View style={styles.filterRow}>
+          <Pressable
+            onPress={() => setSheetOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              sheetHasFilter
+                ? `Filters, ${sheetActiveCount} active`
+                : 'Open filters'
+            }
+            style={({ pressed }) => [
+              styles.sheetTrigger,
+              sheetHasFilter && styles.sheetTriggerActive,
+              pressed && styles.sheetTriggerPressed,
+            ]}
+          >
+            <Ionicons
+              name="options-outline"
+              size={16}
+              color={sheetHasFilter ? colors.page : colors.ink}
+            />
+            <Text
+              style={[
+                styles.sheetTriggerLabel,
+                sheetHasFilter && styles.sheetTriggerLabelActive,
+              ]}
             >
+              Filters
+              {sheetHasFilter ? ` · ${sheetActiveCount}` : ''}
+            </Text>
+          </Pressable>
+
+          {/* Active-sheet-filter preview — tap any chip's × to clear
+              it individually without opening the sheet. */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.scrollerFlex}
+            contentContainerStyle={styles.chipScroll}
+          >
+            {activeProvinceLabel !== null && (
+              <FilterChip
+                label={activeProvinceLabel}
+                selected
+                removable
+                onPress={() => setProvince(null)}
+                accessibilityLabel={`Clear province filter`}
+              />
+            )}
+            {activeDisciplineLabel !== null && (
+              <FilterChip
+                label={activeDisciplineLabel}
+                selected
+                removable
+                onPress={() =>
+                  setFilters((prev) => ({ ...prev, discipline: null }))
+                }
+                accessibilityLabel={`Clear discipline filter`}
+              />
+            )}
+            {filters.dateRange !== 'any' && (
+              <FilterChip
+                label={dateRangeLabel}
+                selected
+                removable
+                onPress={() =>
+                  setFilters((prev) => ({ ...prev, dateRange: 'any' }))
+                }
+                accessibilityLabel={`Clear date filter`}
+              />
+            )}
+          </ScrollView>
+        </View>
+      </View>
+
+      <BottomSheet
+        visible={sheetOpen}
+        title="Filters"
+        onClose={() => setSheetOpen(false)}
+        primaryAction={{
+          label: 'Done',
+          onPress: () => setSheetOpen(false),
+        }}
+        secondaryAction={{
+          label: 'Clear all',
+          onPress: clearFilters,
+          disabled: !hasAnyFilter,
+        }}
+      >
+        {visibleDisciplines.length > 0 && (
+          <View style={styles.sheetGroup}>
+            <Text style={styles.sheetGroupLabel}>Discipline</Text>
+            <View style={styles.sheetChipWrap}>
               <FilterChip
                 label="Any discipline"
                 selected={filters.discipline === null}
-                onPress={() => setFilters((prev) => ({ ...prev, discipline: null }))}
+                onPress={() =>
+                  setFilters((prev) => ({ ...prev, discipline: null }))
+                }
               />
               {visibleDisciplines.map((d) => (
                 <FilterChip
                   key={d.slug}
-                  // Count intentionally omitted: `upcoming_count` on
-                  // the discipline is the global count, so it would
-                  // read "6" next to a chip that returns 2 with the
-                  // current province/date filters active. Honesty
-                  // beats a misleading badge.
                   label={d.name}
                   selected={filters.discipline === d.slug}
                   onPress={() =>
@@ -291,18 +415,13 @@ export default function CalendarScreen() {
                   }
                 />
               ))}
-            </ScrollView>
+            </View>
           </View>
         )}
 
-        {/* Row 3: province chips. Short forms (EC, GP, KZN...) to keep
-            the row from blowing out horizontally. */}
-        <View style={styles.filterRow}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipScroll}
-          >
+        <View style={styles.sheetGroup}>
+          <Text style={styles.sheetGroupLabel}>Province</Text>
+          <View style={styles.sheetChipWrap}>
             <FilterChip
               label="Any province"
               selected={activeProvince === null}
@@ -319,16 +438,12 @@ export default function CalendarScreen() {
                 accessibilityLabel={p.name}
               />
             ))}
-          </ScrollView>
+          </View>
         </View>
 
-        {/* Row 4: date quick-picks. */}
-        <View style={styles.filterRow}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipScroll}
-          >
+        <View style={styles.sheetGroup}>
+          <Text style={styles.sheetGroupLabel}>Date</Text>
+          <View style={styles.sheetChipWrap}>
             {DATE_RANGES.map((option) => (
               <FilterChip
                 key={option.value}
@@ -339,9 +454,9 @@ export default function CalendarScreen() {
                 }
               />
             ))}
-          </ScrollView>
+          </View>
         </View>
-      </View>
+      </BottomSheet>
 
       {loading ? (
         <View style={styles.loadingWrap}>
@@ -472,5 +587,51 @@ const styles = StyleSheet.create({
     letterSpacing: 1.6,
     textTransform: 'uppercase',
     color: colors.link,
+  },
+
+  /* Row 2 "Filters" trigger + active-chip preview. */
+  sheetTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 36,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.chipBorder,
+    backgroundColor: colors.card,
+  },
+  sheetTriggerActive: {
+    borderColor: colors.forest,
+    backgroundColor: colors.forest,
+  },
+  sheetTriggerPressed: {
+    opacity: 0.7,
+  },
+  sheetTriggerLabel: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 13,
+    color: colors.ink,
+    letterSpacing: 0.3,
+  },
+  sheetTriggerLabelActive: {
+    color: colors.page,
+  },
+
+  /* Grouped chip stack inside the bottom sheet. */
+  sheetGroup: {
+    gap: 10,
+  },
+  sheetGroupLabel: {
+    fontFamily: fonts.monoSemi,
+    fontSize: 11,
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
+    color: colors.link,
+  },
+  sheetChipWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
 });

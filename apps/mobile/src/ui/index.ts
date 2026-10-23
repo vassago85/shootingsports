@@ -6,6 +6,7 @@
  * button, error row or empty state when a primitive here fits —
  * add a prop to the primitive instead.
  */
+export { default as BottomSheet } from './BottomSheet';
 export { default as CapabilityCard } from './CapabilityCard';
 export { default as EmptyState } from './EmptyState';
 export { default as ErrorRow } from './ErrorRow';
