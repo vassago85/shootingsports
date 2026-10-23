@@ -133,7 +133,11 @@ function groupByMonth(events: EventCard[]): Array<{ title: string; data: EventCa
 
 export default function CalendarScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ province?: string }>();
+  const params = useLocalSearchParams<{
+    province?: string;
+    venue?: string;
+    venueName?: string;
+  }>();
   const [events, setEvents] = useState<EventCard[]>([]);
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
   const [loading, setLoading] = useState(true);
@@ -142,9 +146,15 @@ export default function CalendarScreen() {
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  // Province is driven by the route param so Find deep links continue
-  // to pre-select it. The sheet row below lets the user change it too.
+  // Province + venue are driven by route params so Find deep links
+  // continue to pre-select them. Venue is the user tapping a specific
+  // range pin on the map; province is the broader scope (either
+  // explicitly set via the sheet or carried alongside a venue tap so
+  // the user has a clean "widen the search" fallback).
   const activeProvince = typeof params.province === 'string' ? params.province : null;
+  const activeVenue = typeof params.venue === 'string' ? params.venue : null;
+  const activeVenueName =
+    typeof params.venueName === 'string' ? params.venueName : null;
 
   const load = useCallback(async () => {
     setError(null);
@@ -156,6 +166,7 @@ export default function CalendarScreen() {
         discipline: filters.discipline,
         novice: filters.novice,
         province: activeProvince,
+        venue: activeVenue,
         // Fri-Sun window; the backend's `?weekend=1` flag maps to
         // `App\Support\ThisWeekend::range()` which spans Friday
         // through Sunday — the window shooters actually mean.
@@ -170,7 +181,7 @@ export default function CalendarScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [filters, activeProvince]);
+  }, [filters, activeProvince, activeVenue]);
 
   useEffect(() => {
     setLoading(true);
@@ -210,6 +221,8 @@ export default function CalendarScreen() {
   const setProvince = useCallback(
     (slug: string | null) => {
       if (slug === null) {
+        // Clearing the province also clears the venue scope: the
+        // venue filter only makes sense inside a province context.
         router.replace('/calendar');
       } else {
         router.replace({ pathname: '/calendar', params: { province: slug } });
@@ -217,6 +230,17 @@ export default function CalendarScreen() {
     },
     [router],
   );
+
+  const clearVenue = useCallback(() => {
+    // Keep the province context when the user drops the venue chip —
+    // "show me everything in this province" is a reasonable next step
+    // after tapping "× Thabazimbi".
+    if (activeProvince !== null) {
+      router.replace({ pathname: '/calendar', params: { province: activeProvince } });
+    } else {
+      router.replace('/calendar');
+    }
+  }, [router, activeProvince]);
 
   const clearFilters = useCallback(() => {
     setFilters(INITIAL_FILTERS);
@@ -228,11 +252,14 @@ export default function CalendarScreen() {
     filters.discipline !== null ||
     filters.novice ||
     filters.dateRange !== 'any' ||
-    activeProvince !== null;
+    activeProvince !== null ||
+    activeVenue !== null;
 
   // "Filters" button badge: count every active sheet filter so the
   // user can see at a glance how many are hidden behind the button.
-  // Family and Novice live inline and are not counted.
+  // Family and Novice live inline and are not counted. Venue is
+  // always surfaced as its own chip (route-driven), so it's not
+  // counted here either.
   const sheetActiveCount =
     (filters.discipline !== null ? 1 : 0) +
     (activeProvince !== null ? 1 : 0) +
@@ -261,7 +288,10 @@ export default function CalendarScreen() {
 
   return (
     <View style={styles.container}>
-      <HeroBand eyebrow="Full calendar" title="Browse matches" />
+      <HeroBand
+        eyebrow={activeVenue !== null ? 'At this range' : 'Full calendar'}
+        title={activeVenue !== null ? (activeVenueName ?? 'This range') : 'Browse matches'}
+      />
 
       <View style={styles.filters}>
         {/* Row 1: family + Novice toggle. Novice sits in its own
@@ -337,14 +367,25 @@ export default function CalendarScreen() {
             </Text>
           </Pressable>
 
-          {/* Active-sheet-filter preview — tap any chip's × to clear
-              it individually without opening the sheet. */}
+          {/* Active-filter preview — tap any chip's × to clear it
+              individually without opening the sheet. Venue sits
+              first because it's the narrowest, user-initiated scope
+              (they tapped a specific pin on the map). */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.scrollerFlex}
             contentContainerStyle={styles.chipScroll}
           >
+            {activeVenue !== null && (
+              <FilterChip
+                label={activeVenueName ?? activeVenue}
+                selected
+                removable
+                onPress={clearVenue}
+                accessibilityLabel={`Clear range filter`}
+              />
+            )}
             {activeProvinceLabel !== null && (
               <FilterChip
                 label={activeProvinceLabel}

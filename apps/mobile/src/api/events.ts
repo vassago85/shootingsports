@@ -65,6 +65,13 @@ export type EventFilters = {
   family?: string | null;
   discipline?: string | null;
   province?: string | null;
+  /**
+   * Venue slug — scopes the list to a single range. The backend
+   * dual-reads from the legacy `events.venue_id` column AND the
+   * `event_venue` pivot so Day 2 ranges on a multi-venue match are
+   * also included. See `PublicEventQuery::builder()`.
+   */
+  venue?: string | null;
   from?: string | null;
   to?: string | null;
   novice?: boolean;

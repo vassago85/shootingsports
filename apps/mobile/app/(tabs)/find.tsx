@@ -31,7 +31,9 @@ type IoniconName = ComponentProps<typeof Ionicons>['name'];
  * States per BUILD_SPEC §3.2:
  *   M4a Events clusters    — map + pins + footer with upcoming count
  *   M4b Events pin tapped  — default marker callout + tap handoff to
- *                            Calendar filtered by province
+ *                            Calendar filtered by the tapped venue
+ *                            (not the whole province — the user
+ *                            came for THIS range)
  *   M4c Events loading     — Spinner overlay on dimmed map
  *   M4d Events error       — ErrorRow overlay on dimmed map
  *   M4e/g/i/k Mode today   — per-mode EmptyState icon + "coming soon" copy
@@ -116,8 +118,19 @@ export default function FindScreen() {
           payload={payload}
           loading={loading}
           error={error}
-          onProvincePress={(provinceSlug) =>
-            router.push({ pathname: '/calendar', params: { province: provinceSlug } })
+          onPinPress={(pin) =>
+            router.push({
+              pathname: '/calendar',
+              // Pass venue first — that's what the user tapped. We
+              // also pass the venue's display name + province so the
+              // Calendar chip strip can render a labelled filter
+              // without a second round-trip to look it up.
+              params: {
+                venue: pin.slug,
+                venueName: pin.name,
+                ...(pin.province_slug !== null ? { province: pin.province_slug } : {}),
+              },
+            })
           }
         />
       ) : (
@@ -131,10 +144,10 @@ type EventsMapProps = {
   payload: MapPayload | null;
   loading: boolean;
   error: string | null;
-  onProvincePress: (provinceSlug: string) => void;
+  onPinPress: (pin: MapPayload['pins'][number]) => void;
 };
 
-function EventsMap({ payload, loading, error, onProvincePress }: EventsMapProps) {
+function EventsMap({ payload, loading, error, onPinPress }: EventsMapProps) {
   // M4d — error overlay with ErrorRow. Chips above stay interactive.
   if (error !== null && payload === null) {
     return (
@@ -169,12 +182,8 @@ function EventsMap({ payload, loading, error, onProvincePress }: EventsMapProps)
             key={pin.slug}
             coordinate={{ latitude: pin.lat, longitude: pin.lng }}
             title={pin.name}
-            description={`${pin.count} upcoming · tap for calendar`}
-            onCalloutPress={() => {
-              if (pin.province_slug !== null) {
-                onProvincePress(pin.province_slug);
-              }
-            }}
+            description={`${pin.count} upcoming · tap for matches at this range`}
+            onCalloutPress={() => onPinPress(pin)}
           />
         ))}
       </MapView>

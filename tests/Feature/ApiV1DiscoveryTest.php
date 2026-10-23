@@ -44,6 +44,38 @@ it('honours the province filter on the events endpoint', function (): void {
     expect($titles)->toContain('Highveld Steel')->not->toContain('Boland Gong');
 });
 
+it('honours the venue slug filter so the mobile map can show a single range', function (): void {
+    // Two Gauteng venues: tapping the pin for one should NOT bring up
+    // the other's matches, even though they share a province. This is
+    // the regression the user caught — the map was passing `?province=`
+    // instead of `?venue=` and collapsing both back into one list.
+    $thabazimbi = Venue::factory()->create([
+        'slug' => 'thabazimbi-range',
+        'province' => Province::Gauteng,
+    ]);
+    $wonderboom = Venue::factory()->create([
+        'slug' => 'wonderboom-range',
+        'province' => Province::Gauteng,
+    ]);
+
+    Event::factory()->confirmed()->create([
+        'title' => 'Thabazimbi Steel',
+        'venue_id' => $thabazimbi->id,
+    ]);
+    Event::factory()->confirmed()->create([
+        'title' => 'Wonderboom Precision',
+        'venue_id' => $wonderboom->id,
+    ]);
+
+    $titles = collect(
+        $this->getJson('/api/v1/events?venue=thabazimbi-range')->json('data'),
+    )->pluck('title');
+
+    expect($titles)
+        ->toContain('Thabazimbi Steel')
+        ->not->toContain('Wonderboom Precision');
+});
+
 it('returns event detail with description, venues, and match url', function (): void {
     $event = Event::factory()->confirmed()->create([
         'title' => 'National Precision',
