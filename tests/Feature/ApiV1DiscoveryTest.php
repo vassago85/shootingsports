@@ -4,11 +4,13 @@ use App\Enums\DisciplineFamily;
 use App\Enums\FlagFamily;
 use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
+use App\Enums\ProviderCategory;
 use App\Enums\Province;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Flag;
 use App\Models\Organisation;
+use App\Models\Provider;
 use App\Models\Venue;
 
 it('lists upcoming events as json for the mobile calendar', function (): void {
@@ -254,6 +256,85 @@ it('honours the province filter on the organisations endpoint', function (): voi
     )->pluck('name');
 
     expect($names)->toContain('Gauteng Rifle Club')->not->toContain('Boland Rifle Club');
+});
+
+it('lists published providers for the Find Shops mode', function (): void {
+    Provider::factory()->create([
+        'name' => 'Pretoria Gunsmith',
+        'category' => ProviderCategory::Gunsmith,
+        'province' => Province::Gauteng,
+        'status' => ListingStatus::Published,
+    ]);
+    Provider::factory()->create([
+        'name' => 'Cape Optics',
+        'category' => ProviderCategory::Optics,
+        'province' => Province::WesternCape,
+        'status' => ListingStatus::Published,
+    ]);
+
+    $response = $this->getJson('/api/v1/providers')
+        ->assertOk()
+        ->assertJsonStructure([
+            'data' => [[
+                'id',
+                'slug',
+                'name',
+                'category',
+                'category_label',
+                'town',
+                'province',
+                'province_slug',
+                'tagline',
+                'summary',
+                'logo_url',
+                'tier',
+                'url',
+            ]],
+        ])
+        ->json('data');
+
+    $names = collect($response)->pluck('name');
+    expect($names)->toContain('Pretoria Gunsmith', 'Cape Optics');
+});
+
+it('excludes distributor-only providers from the Shops list', function (): void {
+    Provider::factory()->create([
+        'name' => 'Trade Only Distributor',
+        'category' => ProviderCategory::Distributor,
+        'status' => ListingStatus::Published,
+    ]);
+    Provider::factory()->create([
+        'name' => 'Pretoria Gunsmith',
+        'category' => ProviderCategory::Gunsmith,
+        'status' => ListingStatus::Published,
+    ]);
+
+    // Distributors are advertising accounts — they don't sell to the
+    // public and have no business in a shopping surface.
+    $names = collect($this->getJson('/api/v1/providers')->json('data'))->pluck('name');
+
+    expect($names)
+        ->toContain('Pretoria Gunsmith')
+        ->not->toContain('Trade Only Distributor');
+});
+
+it('honours the category filter on the providers endpoint', function (): void {
+    Provider::factory()->create([
+        'name' => 'Pretoria Gunsmith',
+        'category' => ProviderCategory::Gunsmith,
+        'status' => ListingStatus::Published,
+    ]);
+    Provider::factory()->create([
+        'name' => 'Cape Optics',
+        'category' => ProviderCategory::Optics,
+        'status' => ListingStatus::Published,
+    ]);
+
+    $names = collect(
+        $this->getJson('/api/v1/providers?category=gunsmith')->json('data'),
+    )->pluck('name');
+
+    expect($names)->toContain('Pretoria Gunsmith')->not->toContain('Cape Optics');
 });
 
 it('does not expose unpublished venues through the venues API', function (): void {

@@ -7,9 +7,10 @@ import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { fetchMap, MapPayload } from '@/api/map';
 import ClubsList from '@/find/ClubsList';
 import RangesList from '@/find/RangesList';
+import ShopsList from '@/find/ShopsList';
 import SportsList from '@/find/SportsList';
 import { colors, fonts } from '@/theme';
-import { EmptyState, ErrorRow, FilterChip, HeroBand, Spinner } from '@/ui';
+import { ErrorRow, FilterChip, HeroBand, Spinner } from '@/ui';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -39,8 +40,10 @@ type IoniconName = ComponentProps<typeof Ionicons>['name'];
  *                            came for THIS range)
  *   M4c Events loading     — Spinner overlay on dimmed map
  *   M4d Events error       — ErrorRow overlay on dimmed map
- *   M4e/g/i/k Mode today   — per-mode EmptyState icon + "coming soon" copy
- *   M4f/h/j/l (future)     — not built; backlog items (spec §6 Phase 5)
+ *   M4f Clubs list         — `ClubsList` (`/api/v1/organisations`)
+ *   M4h Ranges list        — `RangesList` (`/api/v1/venues`)
+ *   M4j Shops tiles        — `ShopsList` (`/api/v1/providers`)
+ *   M4l Sports tiles       — `SportsList` (`/api/v1/disciplines`)
  */
 
 const mapProvider = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
@@ -57,7 +60,8 @@ type FindMode = 'events' | 'clubs' | 'ranges' | 'shops' | 'sports';
 type ModeConfig = {
   value: FindMode;
   label: string;
-  /** Ionicon shown inside the EmptyState for M4e/g/i/k. */
+  /** Ionicon used in future mode-level placeholders (reserved; the
+   *  five live modes all render their own content now). */
   icon: IoniconName;
 };
 
@@ -116,13 +120,34 @@ export default function FindScreen() {
         </ScrollView>
       </View>
 
-      {mode === 'events' ? (
+      {renderMode(mode, { payload, loading, error, router })}
+    </View>
+  );
+}
+
+/**
+ * Exhaustive switch over FindMode so adding a sixth mode to the
+ * union is a compile error until a branch is added here. Keeps the
+ * JSX in `FindScreen()` legible by hiding the per-mode wiring.
+ */
+function renderMode(
+  mode: FindMode,
+  ctx: {
+    payload: MapPayload | null;
+    loading: boolean;
+    error: string | null;
+    router: ReturnType<typeof useRouter>;
+  },
+) {
+  switch (mode) {
+    case 'events':
+      return (
         <EventsMap
-          payload={payload}
-          loading={loading}
-          error={error}
+          payload={ctx.payload}
+          loading={ctx.loading}
+          error={ctx.error}
           onPinPress={(pin) =>
-            router.push({
+            ctx.router.push({
               pathname: '/calendar',
               // Pass venue first — that's what the user tapped. We
               // also pass the venue's display name + province so the
@@ -136,17 +161,23 @@ export default function FindScreen() {
             })
           }
         />
-      ) : mode === 'clubs' ? (
-        <ClubsList />
-      ) : mode === 'ranges' ? (
-        <RangesList />
-      ) : mode === 'sports' ? (
-        <SportsList />
-      ) : (
-        <ModePlaceholder config={MODES.find((m) => m.value === mode) ?? MODES[0]} />
-      )}
-    </View>
-  );
+      );
+    case 'clubs':
+      return <ClubsList />;
+    case 'ranges':
+      return <RangesList />;
+    case 'shops':
+      return <ShopsList />;
+    case 'sports':
+      return <SportsList />;
+    default: {
+      // Compile-time exhaustiveness check — if a new FindMode value
+      // is added to the union, this `never` assignment stops typecheck
+      // until the matching case is implemented above.
+      const _exhaustive: never = mode;
+      return _exhaustive;
+    }
+  }
 }
 
 type EventsMapProps = {
@@ -204,16 +235,6 @@ function EventsMap({ payload, loading, error, onPinPress }: EventsMapProps) {
           {payload.pins.length} pinned range{payload.pins.length === 1 ? '' : 's'}
         </Text>
       </View>
-    </View>
-  );
-}
-
-function ModePlaceholder({ config }: { config: ModeConfig }) {
-  return (
-    <View style={styles.messageArea}>
-      <EmptyState icon={config.icon}>
-        {config.label} search is coming soon. For now, browse them on the website.
-      </EmptyState>
     </View>
   );
 }

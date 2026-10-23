@@ -20,5 +20,6 @@ export { default as PlanPill } from './PlanPill';
 export { default as PrimaryButton } from './PrimaryButton';
 export { default as RangeRow } from './RangeRow';
 export { default as SectionTitle } from './SectionTitle';
+export { default as ShopTile } from './ShopTile';
 export { default as SportTile } from './SportTile';
 export { default as Spinner } from './Spinner';
