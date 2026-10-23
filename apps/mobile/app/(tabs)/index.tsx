@@ -2,6 +2,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
+import { bucketEvents } from '@/api/event-buckets';
 import { EventCard, listEvents } from '@/api/events';
 import { colors } from '@/theme';
 import { EmptyState, ErrorRow, GhostButton, HeroBand, MatchCard, SectionTitle, Spinner } from '@/ui';
@@ -9,20 +10,18 @@ import { EmptyState, ErrorRow, GhostButton, HeroBand, MatchCard, SectionTitle, S
 /**
  * M2 Home — "the reason to open the app on a Friday".
  *
- * Phase 2 layout — three sections, in order of urgency:
+ * Three sections, in order of urgency:
  *
- *   1. "This weekend"  — horizontal carousel, Sat + Sun matches
- *   2. "Next 30 days"  — horizontal carousel, next 30 days (ex-weekend)
+ *   1. "This weekend"  — Fri–Sun matches (ThisWeekend window)
+ *   2. "Next 30 days"  — remaining upcoming within 30 days
  *   3. "All upcoming"  — vertical MatchCards (first 6), plus the
  *                        "Browse the full calendar" ghost button
  *
  * Sections hide themselves when they'd be empty, so a Monday with no
- * weekend matches lands straight on "All upcoming" with no awkward
- * "This weekend (0)" header.
+ * weekend matches lands straight on "All upcoming".
  *
- * One API call feeds all three sections — we fetch up to 60 upcoming
- * matches and bucket them client-side. Faster than three round-trips
- * and lets the user see counts without any UI shimmer.
+ * One API call feeds all three sections — see `bucketEvents` for the
+ * weekend-overlap and 30-day rules.
  *
  * States per BUILD_SPEC §3.2:
  *   - M2a Loading:   HeroBand + centred Spinner
@@ -31,113 +30,9 @@ import { EmptyState, ErrorRow, GhostButton, HeroBand, MatchCard, SectionTitle, S
  *   - M2d Populated: HeroBand + sections + ghost button
  */
 
-/** Max horizontal cards per section — anything beyond needs the full
- *  Calendar screen with its filters. */
-const CAROUSEL_LIMIT = 6;
-
-/** Max all-upcoming cards shown on Home — keeps the vertical scroll
- *  from eating the whole screen. */
-const ALL_UPCOMING_LIMIT = 6;
-
 /** Width of each horizontally-scrolled MatchCard. Enough for a two-
  *  line title + meta without the row feeling cramped. */
 const CARD_WIDTH = 280;
-
-/**
- * Date helpers — kept inline so Home doesn't depend on Calendar's
- * `resolveDateRange`. The two live in the same mental model: start
- * of today, start of 30 days hence, local time.
- */
-function startOfToday(): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function startOfTomorrow(): Date {
-  const d = startOfToday();
-  d.setDate(d.getDate() + 1);
-  return d;
-}
-
-/** Saturday + Sunday of the current week (today if today is Sat/Sun). */
-function thisWeekendRange(): { start: Date; end: Date } {
-  const now = new Date();
-  const dow = now.getDay(); // 0 = Sun, 6 = Sat
-  const start = startOfToday();
-
-  if (dow === 0) {
-    // Sunday today — the whole weekend window is just today.
-    const end = new Date(start);
-    end.setHours(23, 59, 59, 999);
-    return { start, end };
-  }
-
-  if (dow === 6) {
-    // Saturday today — today + tomorrow.
-    const end = new Date(start);
-    end.setDate(start.getDate() + 1);
-    end.setHours(23, 59, 59, 999);
-    return { start, end };
-  }
-
-  // Weekday — jump to this coming Sat + Sun.
-  const saturday = new Date(start);
-  saturday.setDate(start.getDate() + (6 - dow));
-  const sunday = new Date(saturday);
-  sunday.setDate(saturday.getDate() + 1);
-  sunday.setHours(23, 59, 59, 999);
-  return { start: saturday, end: sunday };
-}
-
-/**
- * Split events into weekend / next-30-ex-weekend / all. Each slice
- * is capped so the carousels never balloon beyond something you'd
- * actually scroll through on a phone.
- */
-function bucket(events: EventCard[]): {
-  weekend: EventCard[];
-  next30: EventCard[];
-  all: EventCard[];
-} {
-  const { start: weStart, end: weEnd } = thisWeekendRange();
-  const tomorrow = startOfTomorrow();
-  const in30 = new Date(startOfToday());
-  in30.setDate(in30.getDate() + 30);
-  in30.setHours(23, 59, 59, 999);
-
-  const weekend: EventCard[] = [];
-  const next30: EventCard[] = [];
-
-  for (const event of events) {
-    if (event.starts_at === null) {
-      continue;
-    }
-    const starts = new Date(event.starts_at);
-
-    if (starts >= weStart && starts <= weEnd) {
-      if (weekend.length < CAROUSEL_LIMIT) {
-        weekend.push(event);
-      }
-      continue;
-    }
-
-    // "Next 30 days" excludes anything already in the weekend bucket.
-    // We also skip events happening today when today itself isn't a
-    // weekend day — the weekday carousel is forward-looking.
-    if (starts >= tomorrow && starts <= in30) {
-      if (next30.length < CAROUSEL_LIMIT) {
-        next30.push(event);
-      }
-    }
-  }
-
-  return {
-    weekend,
-    next30,
-    all: events.slice(0, ALL_UPCOMING_LIMIT),
-  };
-}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -168,7 +63,7 @@ export default function HomeScreen() {
     }, [load]),
   );
 
-  const sections = useMemo(() => bucket(events), [events]);
+  const sections = useMemo(() => bucketEvents(events), [events]);
 
   const openCalendar = useCallback(() => router.push('/calendar'), [router]);
   const openCalendarWithDate = useCallback(

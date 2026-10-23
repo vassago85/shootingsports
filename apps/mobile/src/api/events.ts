@@ -68,6 +68,14 @@ export type EventFilters = {
   from?: string | null;
   to?: string | null;
   novice?: boolean;
+  /**
+   * Fri-Sun window using `App\Support\ThisWeekend::range()`. Mutually
+   * exclusive with `from` / `to` (if both set the server uses weekend).
+   * Prefer this flag over computing dates client-side so the Mon-Thu
+   * "upcoming Friday" and the Sat-today edge cases stay in sync with
+   * the website calendar.
+   */
+  weekend?: boolean;
   confirmed?: boolean;
   radius?: number | null;
   near?: string | null;

@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { splitMatchDate } from '@/api/dates';
 import { EventCard } from '@/api/events';
 import { colors, fonts } from '@/theme';
 
@@ -17,18 +18,26 @@ type Props = {
  *   [day in Saira        ] [range · province       ]
  *   [month in mono link  ] [host · discipline      ]
  *
- * The whole row is one tap target. For a less dense, more
- * marketing-feeling card use {@link MatchCard}.
+ * Multi-day same-month matches get a "7–8" range in the day cell so
+ * users don't plan for the wrong day. The whole row is one tap
+ * target. For a less dense, more marketing-feeling card use
+ * {@link MatchCard}.
  */
 export default function MatchRow({ event, onPress }: Props) {
-  const { day, month } = splitDate(event.starts_at);
+  const { day, month } = splitMatchDate(event.starts_at, event.ends_at);
+  // Give the date block a hair more breathing room for the "7–8"
+  // range glyph compared to a single digit.
+  const isRange = day.includes('–');
   const location = event.location_label ?? '';
   // Defensive chaining: `disciplines` is marked `whenLoaded` in the
   // API Resource, so a legacy row or a controller path that forgets
   // to eager-load drops the whole key. Without this, one such event
   // crashes the entire Calendar render.
   const discipline = event.disciplines?.[0]?.name ?? null;
-  const hostName = event.host?.name ?? '';
+  // Prefer the short organisation name on the dense list row so a
+  // long federation name doesn't push the discipline off the line.
+  const hostName =
+    event.host?.organisation?.short_name ?? event.host?.name ?? '';
   const hostAndDiscipline = discipline !== null
     ? `${hostName} · ${discipline}`
     : hostName;
@@ -45,7 +54,7 @@ export default function MatchRow({ event, onPress }: Props) {
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
       <View style={styles.dateBlock}>
-        <Text style={styles.day}>{day}</Text>
+        <Text style={isRange ? styles.dayRange : styles.day}>{day}</Text>
         <Text style={styles.month}>{month}</Text>
       </View>
 
@@ -62,22 +71,6 @@ export default function MatchRow({ event, onPress }: Props) {
       </View>
     </Pressable>
   );
-}
-
-/**
- * ISO → `{ day: '25', month: 'OCT' }`. "TBC" when the event has no
- * confirmed start date.
- */
-function splitDate(iso: string | null): { day: string; month: string } {
-  if (iso === null) {
-    return { day: '—', month: 'TBC' };
-  }
-
-  const date = new Date(iso);
-  return {
-    day: String(date.getDate()),
-    month: date.toLocaleDateString('en-ZA', { month: 'short' }).toUpperCase(),
-  };
 }
 
 const styles = StyleSheet.create({
@@ -106,6 +99,13 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: colors.ink,
     lineHeight: 24,
+  },
+  // Smaller glyph for "7–8" so the range fits inside the 52pt block.
+  dayRange: {
+    fontFamily: fonts.display,
+    fontSize: 17,
+    color: colors.ink,
+    lineHeight: 20,
   },
   month: {
     fontFamily: fonts.monoSemi,

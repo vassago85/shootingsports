@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
+import { formatMatchDate } from '@/api/dates';
 import { EventCard } from '@/api/events';
 import { colors, fonts, radius } from '@/theme';
 
@@ -19,15 +20,20 @@ type Props = {
  * For the dense Calendar list use {@link MatchRow} instead.
  */
 export default function MatchCard({ event, onPress }: Props) {
-  const date = formatCardDate(event.starts_at);
+  const date = formatMatchDate(event.starts_at, event.ends_at);
   const location = event.location_label;
   const meta = `${date} · ${location}`;
+  // Prefer the organisation short_name ("SAPRF") over the full
+  // host name ("South African Precision Rifle Federation") so the
+  // host line doesn't truncate on a card width. Falls back to the
+  // full name when short_name is missing.
+  const hostLabel = event.host.organisation?.short_name ?? event.host.name;
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${event.title}. ${meta}. Host ${event.host.name}.`}
+      accessibilityLabel={`${event.title}. ${meta}. Host ${hostLabel}.`}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
       <Text style={styles.title} numberOfLines={2}>
@@ -37,27 +43,10 @@ export default function MatchCard({ event, onPress }: Props) {
         {meta}
       </Text>
       <Text style={styles.host} numberOfLines={1}>
-        {event.host.name}
+        {hostLabel}
       </Text>
     </Pressable>
   );
-}
-
-/**
- * ISO → "SAT 25 OCT" style used in the cards. Falls back to "TBC"
- * when the event has no confirmed start date yet.
- */
-function formatCardDate(iso: string | null): string {
-  if (iso === null) {
-    return 'TBC';
-  }
-
-  const date = new Date(iso);
-  const weekday = date.toLocaleDateString('en-ZA', { weekday: 'short' }).toUpperCase();
-  const day = date.getDate();
-  const month = date.toLocaleDateString('en-ZA', { month: 'short' }).toUpperCase();
-
-  return `${weekday} ${day} ${month}`;
 }
 
 const styles = StyleSheet.create({

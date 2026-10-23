@@ -82,44 +82,20 @@ function toYmd(date: Date): string {
 }
 
 /**
- * Resolve a date-range chip to API from/to params.
- *
- * "This weekend" is: today if today is Sunday; today+tomorrow if
- * today is Saturday; otherwise next Saturday + Sunday. Keeps the
- * mental model simple — if the user taps "This weekend" on Thursday
- * they get the coming Sat/Sun; if they tap it on Sunday afternoon
- * they get Sunday only.
+ * Resolve the "next N days" quick-picks. "This weekend" is a separate
+ * server-side flag (`weekend=1`) that uses `App\Support\ThisWeekend`,
+ * which includes Friday through Sunday — the window shooters actually
+ * mean when they say "this weekend".
  */
 function resolveDateRange(range: DateRange): { from: string | null; to: string | null } {
-  if (range === 'any') {
+  if (range === 'any' || range === 'this-weekend') {
     return { from: null, to: null };
   }
 
   const now = new Date();
-
-  if (range === 'next-30' || range === 'next-90') {
-    const end = new Date(now);
-    end.setDate(now.getDate() + (range === 'next-30' ? 30 : 90));
-    return { from: toYmd(now), to: toYmd(end) };
-  }
-
-  // this-weekend
-  const dow = now.getDay(); // 0 = Sun, 6 = Sat
-  if (dow === 0) {
-    return { from: toYmd(now), to: toYmd(now) };
-  }
-  if (dow === 6) {
-    const tomorrow = new Date(now);
-    tomorrow.setDate(now.getDate() + 1);
-    return { from: toYmd(now), to: toYmd(tomorrow) };
-  }
-
-  // Weekday — jump to this coming Sat + Sun.
-  const saturday = new Date(now);
-  saturday.setDate(now.getDate() + (6 - dow));
-  const sunday = new Date(saturday);
-  sunday.setDate(saturday.getDate() + 1);
-  return { from: toYmd(saturday), to: toYmd(sunday) };
+  const end = new Date(now);
+  end.setDate(now.getDate() + (range === 'next-30' ? 30 : 90));
+  return { from: toYmd(now), to: toYmd(end) };
 }
 
 /**
@@ -168,6 +144,10 @@ export default function CalendarScreen() {
         discipline: filters.discipline,
         novice: filters.novice,
         province: activeProvince,
+        // Fri-Sun window; the backend's `?weekend=1` flag maps to
+        // `App\Support\ThisWeekend::range()` which spans Friday
+        // through Sunday — the window shooters actually mean.
+        weekend: filters.dateRange === 'this-weekend',
         from,
         to,
       });
@@ -243,11 +223,15 @@ export default function CalendarScreen() {
       <HeroBand eyebrow="Full calendar" title="Browse matches" />
 
       <View style={styles.filters}>
-        {/* Row 1: family + Novice toggle */}
+        {/* Row 1: family + Novice toggle. Novice sits in its own
+            fixed-width column on the right; the ScrollView takes the
+            remaining space with `flex: 1` so the trailing family chip
+            ("Shotgun"/"Airgun") no longer clips against the divider. */}
         <View style={styles.filterRow}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={styles.scrollerFlex}
             contentContainerStyle={styles.chipScroll}
           >
             {FAMILIES.map((option) => (
@@ -295,7 +279,12 @@ export default function CalendarScreen() {
               {visibleDisciplines.map((d) => (
                 <FilterChip
                   key={d.slug}
-                  label={`${d.name} · ${d.upcoming_count}`}
+                  // Count intentionally omitted: `upcoming_count` on
+                  // the discipline is the global count, so it would
+                  // read "6" next to a chip that returns 2 with the
+                  // current province/date filters active. Honesty
+                  // beats a misleading badge.
+                  label={d.name}
                   selected={filters.discipline === d.slug}
                   onPress={() =>
                     setFilters((prev) => ({ ...prev, discipline: d.slug }))
@@ -425,6 +414,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.rule,
     paddingVertical: 6,
+    // Keep the filter block above the SectionList so sticky section
+    // headers pin cleanly BELOW it instead of sliding under the chip
+    // rows. Both props needed: `zIndex` for iOS, `elevation` for
+    // Android's native shadow stack.
+    zIndex: 10,
+    elevation: 4,
   },
   filterRow: {
     flexDirection: 'row',
@@ -432,6 +427,11 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 12,
     paddingVertical: 4,
+  },
+  // Row 1 only — lets the family ScrollView consume the remaining
+  // space before the Novice chip sits in its fixed column.
+  scrollerFlex: {
+    flex: 1,
   },
   chipScroll: {
     flexDirection: 'row',
@@ -458,7 +458,11 @@ const styles = StyleSheet.create({
   listContent: { paddingBottom: 24 },
   monthHeaderWrap: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    // Tightened to visually "stick" cleanly below the filter stack
+    // once scrolling pins the header. The old 16/8 padding read as
+    // "half hidden" because the big top gap made the pinned header
+    // float too far from the filters.
+    paddingTop: 10,
     paddingBottom: 8,
     backgroundColor: colors.page,
   },

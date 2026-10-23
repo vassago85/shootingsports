@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 
+import { formatMatchDate, formatMatchDateFull } from '@/api/dates';
 import { EventDetail, fetchEvent } from '@/api/events';
 import { listSavedEvents, saveEvent, unsaveEvent } from '@/api/saved-events';
 import { getAuthToken } from '@/auth/store';
@@ -50,28 +51,8 @@ const BACK_TITLES: Record<ParentTab, string> = {
   me: 'Me',
 };
 
-function formatHeroDate(iso: string | null): string {
-  if (iso === null) {
-    return 'Date TBC';
-  }
-  const date = new Date(iso);
-  const weekday = date.toLocaleDateString('en-ZA', { weekday: 'short' }).toUpperCase();
-  const day = date.getDate();
-  const month = date.toLocaleDateString('en-ZA', { month: 'short' }).toUpperCase();
-  return `${weekday} ${day} ${month}`;
-}
-
-function formatFullDate(iso: string | null): string {
-  if (iso === null) {
-    return 'TBC';
-  }
-  return new Date(iso).toLocaleDateString('en-ZA', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
+/* Date rendering is centralised in `@/api/dates` so a two-day match
+ * reads the same way on Home, Calendar, and the detail hero. */
 
 export default function MatchDetailScreen() {
   const router = useRouter();
@@ -214,7 +195,7 @@ export default function MatchDetailScreen() {
   const province = venue?.province ?? event.venues?.[0]?.province ?? 'TBC';
   const hostName = event.host?.name ?? '';
   const hostLogo = event.host?.organisation?.logo_url ?? null;
-  const metaLine = `${formatHeroDate(event.starts_at)} · ${rangeName}, ${province}`;
+  const metaLine = `${formatMatchDate(event.starts_at, event.ends_at)} · ${rangeName}, ${province}`;
 
   const showBanner =
     typeof event.banner_url === 'string' &&
@@ -264,7 +245,10 @@ export default function MatchDetailScreen() {
           </View>
 
           <View style={styles.details}>
-            <DetailRow label="Date" value={formatFullDate(event.starts_at)} />
+            <DetailRow
+              label="Date"
+              value={formatMatchDateFull(event.starts_at, event.ends_at)}
+            />
             <DetailRow label="Range" value={rangeName} />
             <DetailRow label="Province" value={province} />
             <DetailRow label="Discipline" value={discipline?.name ?? 'TBC'} />
