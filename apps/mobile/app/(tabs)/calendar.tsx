@@ -137,6 +137,7 @@ export default function CalendarScreen() {
     province?: string;
     venue?: string;
     venueName?: string;
+    discipline?: string;
   }>();
   const [events, setEvents] = useState<EventCard[]>([]);
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
@@ -155,6 +156,22 @@ export default function CalendarScreen() {
   const activeVenue = typeof params.venue === 'string' ? params.venue : null;
   const activeVenueName =
     typeof params.venueName === 'string' ? params.venueName : null;
+  const deepLinkDiscipline =
+    typeof params.discipline === 'string' ? params.discipline : null;
+
+  // When Find hands off with `?discipline=`, seed the discipline
+  // filter once so the user lands on the right chip. We only run
+  // this when the slug actually changes to avoid clobbering the
+  // user's choice if they later picked another discipline manually.
+  useEffect(() => {
+    if (deepLinkDiscipline !== null) {
+      setFilters((prev) =>
+        prev.discipline === deepLinkDiscipline
+          ? prev
+          : { ...prev, discipline: deepLinkDiscipline },
+      );
+    }
+  }, [deepLinkDiscipline]);
 
   const load = useCallback(async () => {
     setError(null);
