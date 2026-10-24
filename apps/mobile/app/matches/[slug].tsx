@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Image,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -263,7 +262,7 @@ export default function MatchDetailScreen() {
   const canShowDirections = buildDirectionsUrl(event) !== null;
 
   return (
-    <>
+    <View style={styles.pageRoot}>
       <Stack.Screen options={headerOptions} />
       <ScrollView style={styles.container}>
         {showBanner && (
@@ -409,32 +408,63 @@ export default function MatchDetailScreen() {
       {/* Full-screen poster viewer. Taps anywhere dismiss. No pinch
           zoom here (that would need a native-only gesture library
           that breaks Expo Go) — contain-fit on a 90% viewport is
-          enough to read every detail on a match poster. */}
-      {showBanner && (
-        <Modal
-          visible={bannerOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setBannerOpen(false)}
-          accessibilityViewIsModal
-        >
-          <Pressable
-            style={styles.viewerBackdrop}
-            onPress={() => setBannerOpen(false)}
-            accessibilityRole="button"
-            accessibilityLabel="Close poster viewer"
-          >
-            <Image
-              source={{ uri: event.banner_url as string }}
-              style={styles.viewerImage}
-              resizeMode="contain"
-              accessibilityIgnoresInvertColors
-            />
-          </Pressable>
-        </Modal>
+          enough to read every detail on a match poster.
+          Implemented as an absolute-fill overlay instead of RN Modal
+          so react-native-web's Modal-portal stacking quirks (which
+          leave the backdrop sitting behind the ScrollView) can't
+          interfere; native sees the same tree and renders the same
+          black-over-everything overlay. */}
+      {showBanner && bannerOpen && (
+        <PosterViewer
+          uri={event.banner_url as string}
+          onClose={() => setBannerOpen(false)}
+        />
       )}
-    </>
+    </View>
   );
+}
+
+/**
+ * Full-screen poster viewer.
+ *
+ * On web, mounts into document.body via React DOM's createPortal so
+ * the backdrop escapes Expo Router's Screen stacking context — which
+ * sits inside a positioned ancestor and gives sibling z-index wars
+ * on react-native-web. On native (iOS/Android), there's no portal
+ * needed: the overlay renders inline above its parent ScrollView via
+ * `position: absolute` + `elevation`, which both platforms honour.
+ *
+ * Keeps the overlay a React tree sibling of the detail page, so
+ * state (bannerOpen) and event hooks (`onClose`) stay colocated.
+ */
+type PosterViewerProps = { uri: string; onClose: () => void };
+
+function PosterViewer({ uri, onClose }: PosterViewerProps) {
+  const overlay = (
+    <View style={styles.viewerBackdrop}>
+      <Pressable
+        style={StyleSheet.absoluteFillObject}
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Close poster viewer"
+      />
+      <Image
+        source={{ uri }}
+        style={styles.viewerImage}
+        resizeMode="contain"
+        accessibilityIgnoresInvertColors
+        pointerEvents="none"
+      />
+    </View>
+  );
+
+  if (Platform.OS === 'web' && typeof document !== 'undefined') {
+    // Lazy require react-dom only on web; native builds don't ship it.
+    const { createPortal } = require('react-dom');
+    return createPortal(overlay, document.body);
+  }
+
+  return overlay;
 }
 
 /**
@@ -511,6 +541,13 @@ function DetailRow({ label, value, isLast = false }: DetailRowProps) {
 }
 
 const styles = StyleSheet.create({
+  /* Shared parent for the scrolling detail body and the overlay —
+   * giving both a common positioned ancestor so the backdrop's
+   * `position: absolute` reliably overlays the ScrollView sibling.
+   * Without this they were implicit siblings of the Expo Router
+   * screen wrapper, which on web gave the overlay a stacking
+   * context that painted below the ScrollView content. */
+  pageRoot: { flex: 1, position: 'relative' },
   container: { flex: 1, backgroundColor: colors.page },
   center: {
     flex: 1,
@@ -559,13 +596,27 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 
-  /* Full-screen poster viewer — dark backdrop + contain-fit image. */
+  /* Full-screen poster viewer — dark backdrop + contain-fit image.
+   * `position: absolute` with 0/0/0/0 insets fills the viewport on
+   * both native (Modal already fills) and web (react-native-web
+   * portals the Modal to document.body where `flex: 1` doesn't do
+   * anything useful on its own). */
   viewerBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.92)',
+    // On web this is portaled to document.body (see PosterViewer), so
+    // `position: fixed` gives us viewport pinning; on native this is
+    // rendered inline above the ScrollView sibling, where RN treats
+    // `fixed` as `absolute` and `elevation` keeps it above on Android.
+    position: Platform.OS === 'web' ? ('fixed' as 'absolute') : 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#000',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
+    zIndex: 10,
+    elevation: 10,
   },
   viewerImage: {
     width: '100%',
