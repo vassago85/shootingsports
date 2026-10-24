@@ -65,35 +65,42 @@ describe('splitMatchDate (compact row block)', () => {
   });
 });
 
-describe('formatMatchDateFull (detail hero)', () => {
-  it('writes a single day in long form', () => {
-    expect(formatMatchDateFull('2026-10-25T08:00:00+02:00', null)).toContain(
-      'Sunday',
+describe('formatMatchDateFull (detail hero + facts row)', () => {
+  it('writes a single day with no comma', () => {
+    expect(formatMatchDateFull('2026-10-31T08:00:00+02:00', null)).toBe(
+      'Saturday 31 October 2026',
     );
-    expect(formatMatchDateFull('2026-10-25T08:00:00+02:00', null)).toContain('October');
-    expect(formatMatchDateFull('2026-10-25T08:00:00+02:00', null)).toContain('2026');
   });
 
-  it('writes a same-month range with both weekdays and one month+year', () => {
-    const label = formatMatchDateFull(
-      '2026-11-07T08:00:00+02:00',
-      '2026-11-08T17:00:00+02:00',
-    );
-    expect(label).toContain('Saturday');
-    expect(label).toContain('Sunday');
-    expect(label).toContain('November');
-    expect(label).toContain('7');
-    expect(label).toContain('8');
-    expect(label).toContain('2026');
+  it('writes a same-month range with no comma, year at the end', () => {
+    expect(
+      formatMatchDateFull('2026-10-24T08:00:00+02:00', '2026-10-25T17:00:00+02:00'),
+    ).toBe('Saturday 24 – Sunday 25 October 2026');
   });
 
-  it('writes both months when the range crosses', () => {
+  it('writes both months when the range crosses within one year', () => {
     const label = formatMatchDateFull(
       '2026-10-30T08:00:00+02:00',
       '2026-11-02T17:00:00+02:00',
     );
-    expect(label).toContain('October');
-    expect(label).toContain('November');
+    expect(label).toBe('Friday 30 October – Monday 2 November 2026');
+  });
+
+  it('writes both years when the range crosses the new year', () => {
+    const label = formatMatchDateFull(
+      '2026-12-31T08:00:00+02:00',
+      '2027-01-01T17:00:00+02:00',
+    );
+    expect(label).toContain('2026');
+    expect(label).toContain('2027');
+    expect(label).not.toContain(',');
+  });
+
+  it('never includes a comma', () => {
+    expect(formatMatchDateFull('2026-10-31T08:00:00+02:00', null)).not.toContain(',');
+    expect(
+      formatMatchDateFull('2026-10-24T08:00:00+02:00', '2026-10-25T17:00:00+02:00'),
+    ).not.toContain(',');
   });
 
   it('returns TBC when there is no start date', () => {

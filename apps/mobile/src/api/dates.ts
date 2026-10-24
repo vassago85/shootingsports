@@ -55,9 +55,15 @@ export function formatMatchDate(startIso: string | null, endIso: string | null):
 
 /**
  * Format a match's date as a verbose single line for the detail
- * screen hero ("Saturday 25 October 2026"). For ranges returns
- * "Saturday 25 – Sunday 26 October 2026" (same month) or the full
- * cross-month form.
+ * screen (hero subtitle AND facts "Date" row). Always no comma —
+ * the earlier `toLocaleDateString` output produced "Saturday, 31
+ * October 2026" which read as two clauses on a hero line already
+ * joined by " · ".
+ *
+ * - Single day:          "Saturday 31 October 2026"
+ * - Range, same month:   "Saturday 24 – Sunday 25 October 2026"
+ * - Range, cross-month:  "Saturday 31 October – Sunday 1 November 2026"
+ * - Range, cross-year:   "Sunday 31 December 2026 – Monday 1 January 2027"
  */
 export function formatMatchDateFull(startIso: string | null, endIso: string | null): string {
   if (startIso === null) {
@@ -67,27 +73,29 @@ export function formatMatchDateFull(startIso: string | null, endIso: string | nu
   const start = new Date(startIso);
   const end = endIso !== null ? new Date(endIso) : null;
 
-  const full = (d: Date): string =>
-    d.toLocaleDateString(LOCALE, {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+  const weekdayLong = (d: Date): string =>
+    d.toLocaleDateString(LOCALE, { weekday: 'long' });
+  const monthLong = (d: Date): string =>
+    d.toLocaleDateString(LOCALE, { month: 'long' });
 
   if (end === null || sameYmd(start, end)) {
-    return full(start);
+    // No comma: assemble the parts manually instead of leaning on
+    // toLocaleDateString, which inserts a locale-specific comma for
+    // en-ZA.
+    return `${weekdayLong(start)} ${start.getDate()} ${monthLong(start)} ${start.getFullYear()}`;
   }
-
-  const startWeekday = start.toLocaleDateString(LOCALE, { weekday: 'long' });
-  const endWeekday = end.toLocaleDateString(LOCALE, { weekday: 'long' });
 
   if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
-    const endMonth = end.toLocaleDateString(LOCALE, { month: 'long' });
-    return `${startWeekday} ${start.getDate()} – ${endWeekday} ${end.getDate()} ${endMonth} ${end.getFullYear()}`;
+    return `${weekdayLong(start)} ${start.getDate()} – ${weekdayLong(end)} ${end.getDate()} ${monthLong(end)} ${end.getFullYear()}`;
   }
 
-  return `${full(start)} – ${full(end)}`;
+  if (start.getFullYear() === end.getFullYear()) {
+    return `${weekdayLong(start)} ${start.getDate()} ${monthLong(start)} – ${weekdayLong(end)} ${end.getDate()} ${monthLong(end)} ${start.getFullYear()}`;
+  }
+
+  const fullDate = (d: Date): string =>
+    `${weekdayLong(d)} ${d.getDate()} ${monthLong(d)} ${d.getFullYear()}`;
+  return `${fullDate(start)} – ${fullDate(end)}`;
 }
 
 /**
