@@ -37,7 +37,7 @@ class OrganisationController extends Controller
 
         $query = Organisation::query()
             ->published()
-            ->with('disciplines')
+            ->with('disciplines.parent')
             ->when($province, fn ($q) => $q->where('province', $province))
             ->when($visitors, fn ($q) => $q->where('visitors_welcome', true))
             ->when($search !== '', function ($q) use ($search): void {

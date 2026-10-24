@@ -48,7 +48,7 @@ class ManagedEventController extends Controller
             ->whereIn('host_organisation_id', $orgIds)
             ->where('starts_at', '>=', now()->startOfDay())
             ->orderBy('starts_at')
-            ->with(['hostOrganisation.parent', 'venue', 'disciplines', 'flags', 'banner'])
+            ->with(['hostOrganisation.parent', 'venue', 'disciplines.parent', 'flags', 'banner'])
             ->limit(100)
             ->get();
 

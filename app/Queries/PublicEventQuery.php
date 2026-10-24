@@ -103,7 +103,7 @@ class PublicEventQuery
     {
         $query = Event::query()
             ->upcoming()
-            ->with(['hostOrganisation.parent', 'venue', 'disciplines', 'flags', 'banner'])
+            ->with(['hostOrganisation.parent', 'venue', 'disciplines.parent', 'flags', 'banner'])
             ->orderBy('starts_at');
 
         if ($this->confirmedOnly) {

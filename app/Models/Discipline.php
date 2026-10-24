@@ -68,6 +68,30 @@ class Discipline extends Model
         return $this->belongsTo(self::class, 'parent_id');
     }
 
+    /**
+     * Human-facing name for cards, chips, filters and detail rows.
+     *
+     * Child disciplines (e.g. the "PRS" slug nested under "Precision
+     * Rifle") display their parent's name so a shooter never sees two
+     * labels for the same sport. The underlying slug stays stable for
+     * data joins — only the display label is collapsed.
+     *
+     * Falls back to the discipline's own name when the parent relation
+     * is not loaded, which keeps the method safe in contexts (seeders,
+     * ad-hoc queries) that build Discipline instances without eager-
+     * loading `parent`.
+     */
+    public function displayName(): string
+    {
+        if ($this->parent_id === null) {
+            return $this->name;
+        }
+
+        $parent = $this->relationLoaded('parent') ? $this->parent : $this->parent()->first();
+
+        return $parent?->name ?? $this->name;
+    }
+
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id')->orderBy('sort_order');

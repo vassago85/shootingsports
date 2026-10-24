@@ -19,7 +19,11 @@ class DisciplineResource extends JsonResource
         return [
             'id' => $this->id,
             'slug' => $this->slug,
-            'name' => $this->name,
+            // Collapse child disciplines ("PRS") onto their parent's
+            // display label ("Precision Rifle") so a shooter sees one
+            // name for the sport across cards, chips, filters and the
+            // detail header. The slug stays unique for joins.
+            'name' => $this->displayName(),
             'family' => $this->family?->value,
             'family_label' => $this->family?->getLabel(),
             'short_blurb' => $this->short_blurb,

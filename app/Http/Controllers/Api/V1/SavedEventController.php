@@ -22,7 +22,7 @@ class SavedEventController extends Controller
 
         $events = $user
             ->savedEvents()
-            ->with(['hostOrganisation.parent', 'venue', 'disciplines', 'flags', 'banner'])
+            ->with(['hostOrganisation.parent', 'venue', 'disciplines.parent', 'flags', 'banner'])
             ->orderBy('starts_at')
             ->get();
 

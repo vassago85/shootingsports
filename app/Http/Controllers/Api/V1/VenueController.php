@@ -31,7 +31,7 @@ class VenueController extends Controller
 
         $venues = Venue::query()
             ->published()
-            ->with('disciplines')
+            ->with('disciplines.parent')
             ->when($province, fn ($q) => $q->where('province', $province))
             ->when($search !== '', function ($q) use ($search): void {
                 $like = '%'.addcslashes($search, '%_\\').'%';
