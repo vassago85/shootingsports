@@ -1,8 +1,11 @@
 <?php
 
 use App\Enums\DisciplineFamily;
+use App\Enums\ListingStatus;
+use App\Enums\Province;
 use App\Models\Discipline;
 use App\Models\Event;
+use App\Models\Venue;
 use App\Support\EventSpecRows;
 
 it('uses distance and rounds for precision rifle cards', function () {
@@ -64,6 +67,10 @@ it('uses targets and stands for clay cards', function () {
 });
 
 it('hides empty spec rows', function () {
+    // No venue, no round count, no entry fee -> no corresponding
+    // rows. The old assertion forced a "Venue" row with a host
+    // fallback label, which was misleading when the match genuinely
+    // had no range attached.
     $event = Event::factory()->confirmed()->create([
         'round_count' => null,
         'entry_fee_cents' => null,
@@ -72,7 +79,24 @@ it('hides empty spec rows', function () {
 
     $labels = collect(EventSpecRows::for($event->fresh(['disciplines'])))->pluck(0);
 
-    expect($labels)->toContain('Venue')
+    expect($labels)
+        ->not->toContain('Venue')
         ->not->toContain('Entry')
         ->not->toContain('Rounds');
+});
+
+it('shows the venue spec row with town and province when a venue is set', function () {
+    $venue = Venue::factory()->create([
+        'town' => 'Rayton',
+        'province' => Province::Gauteng,
+        'status' => ListingStatus::Published,
+    ]);
+    $event = Event::factory()->confirmed()->create([
+        'venue_id' => $venue->id,
+    ]);
+
+    $rows = collect(EventSpecRows::for($event->fresh(['disciplines'])));
+
+    expect($rows->firstWhere(fn ($row) => $row[0] === 'Venue')[1])
+        ->toBe('Rayton · GP');
 });
