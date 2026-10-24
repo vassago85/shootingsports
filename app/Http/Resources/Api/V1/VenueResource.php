@@ -41,7 +41,11 @@ class VenueResource extends JsonResource
             'disciplines' => $this->whenLoaded(
                 'disciplines',
                 fn () => $this->disciplines
-                    ->map(fn ($d) => ['slug' => $d->slug, 'name' => $d->name])
+                    // Same parent-name collapse + dedupe as the
+                    // Organisation resource, so a range listed for
+                    // Precision Rifle + its PRS child reads as one.
+                    ->map(fn ($d) => ['slug' => $d->slug, 'name' => $d->displayName()])
+                    ->unique('name')
                     ->values()
                     ->all(),
                 [],

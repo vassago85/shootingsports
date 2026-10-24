@@ -45,7 +45,12 @@ class OrganisationResource extends JsonResource
             'disciplines' => $this->whenLoaded(
                 'disciplines',
                 fn () => $this->disciplines
-                    ->map(fn ($d) => ['slug' => $d->slug, 'name' => $d->name])
+                    // Collapse child names onto their parent via
+                    // `displayName()` AND dedupe the result, so a club
+                    // tagged with "Precision Rifle" plus its "PRS"
+                    // child reads as a single discipline on the row.
+                    ->map(fn ($d) => ['slug' => $d->slug, 'name' => $d->displayName()])
+                    ->unique('name')
                     ->values()
                     ->all(),
                 [],
