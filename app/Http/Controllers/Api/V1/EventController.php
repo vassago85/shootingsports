@@ -35,10 +35,20 @@ class EventController extends Controller
 
         $events = $query->get();
 
+        // Empty-state copilot: when the user's filter combo returns
+        // nothing, ask the query to point at the single filter whose
+        // removal would surface the most matches. The mobile calendar
+        // renders this as "Remove Beginner-friendly to see 4 matches"
+        // next to the Clear filters button, so one tap recovers.
+        $suggestion = $events->isEmpty()
+            ? $query->suggestFilterToRemove()
+            : null;
+
         return EventResource::collection($events)->additional([
             'meta' => [
                 'count' => $events->count(),
                 'unpinned_skipped' => $query->unpinnedSkipped,
+                'suggestion' => $suggestion,
             ],
         ]);
     }
