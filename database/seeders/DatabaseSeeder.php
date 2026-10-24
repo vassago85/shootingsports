@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             SahuntersDuikerSeeder::class,
             NgGemeenteDelmasSeeder::class,
             SahuntersVaaldriehoekSeeder::class,
+            SajwvImpalaSeeder::class,
             DwarskloofNightShootSeeder::class,
             PmpscCombinedShootSeeder::class,
             StagShootingClubSeeder::class,
