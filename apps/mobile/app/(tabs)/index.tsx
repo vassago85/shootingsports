@@ -10,24 +10,26 @@ import { EmptyState, ErrorRow, GhostButton, HeroBand, MatchCard, SectionTitle, S
 /**
  * M2 Home — "the reason to open the app on a Friday".
  *
- * Three sections, in order of urgency:
+ * Two urgency bands plus a hand-off to the full calendar:
  *
  *   1. "This weekend"  — Fri–Sun matches (ThisWeekend window)
  *   2. "Next 30 days"  — remaining upcoming within 30 days
- *   3. "All upcoming"  — vertical MatchCards (first 6), plus the
- *                        "Browse the full calendar" ghost button
+ *   3. "Browse the full calendar" button
  *
- * Sections hide themselves when they'd be empty, so a Monday with no
- * weekend matches lands straight on "All upcoming".
+ * Earlier builds also rendered an "All upcoming" vertical list on
+ * Home. That turned Home into a duplicate of the Calendar screen —
+ * once a shooter scrolled past the weekend and 30-day carousels
+ * there was no reason to tap over to Calendar. Dropping the
+ * vertical list keeps Home focused on urgency and sends people to
+ * Calendar when they want to browse further.
  *
- * One API call feeds all three sections — see `bucketEvents` for the
- * weekend-overlap and 30-day rules.
+ * One API call feeds both carousels — see `bucketEvents`.
  *
  * States per BUILD_SPEC §3.2:
  *   - M2a Loading:   HeroBand + centred Spinner
  *   - M2b Empty:     HeroBand + EmptyState (calendar-outline)
  *   - M2c Error:     HeroBand + ErrorRow + "Browse the full calendar"
- *   - M2d Populated: HeroBand + sections + ghost button
+ *   - M2d Populated: HeroBand + weekend + 30-day + Browse button
  */
 
 /** Width of each horizontally-scrolled MatchCard. Enough for a two-
@@ -131,17 +133,12 @@ export default function HomeScreen() {
               />
             )}
 
-            <View style={styles.allSection}>
-              <SectionTitle>All upcoming</SectionTitle>
-              <View style={styles.cards}>
-                {sections.all.map((event) => (
-                  <MatchCard
-                    key={event.id}
-                    event={event}
-                    onPress={() => openMatch(event.slug)}
-                  />
-                ))}
-              </View>
+            {/* "Browse the full calendar" is Home's hand-off to the
+                Calendar tab. The vertical "All upcoming" list that
+                used to sit here was removed — it just duplicated
+                the Calendar screen and gave Home two scroll
+                behaviours competing for attention. */}
+            <View style={styles.ctaSection}>
               <GhostButton label="Browse the full calendar" onPress={openCalendar} />
             </View>
           </>
@@ -212,10 +209,9 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH,
   },
 
-  /* All-upcoming vertical section. */
-  allSection: {
+  /* Browse-the-full-calendar hand-off at the bottom of Home. */
+  ctaSection: {
     paddingHorizontal: 16,
-    gap: 16,
+    paddingTop: 4,
   },
-  cards: { gap: 12 },
 });
