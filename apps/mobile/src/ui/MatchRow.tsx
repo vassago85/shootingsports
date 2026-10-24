@@ -62,10 +62,15 @@ export default function MatchRow({ event, onPress }: Props) {
         <Text style={styles.title} numberOfLines={2}>
           {event.title}
         </Text>
-        <Text style={styles.meta} numberOfLines={1}>
+        {/* Allow the location line to wrap to a second row rather
+            than truncating "Rawsonville · WC" to "Rawsonville · W…".
+            The province is the single most useful token for a
+            shooter scanning the calendar for matches they can get
+            to. If the line fits on one row, it still does. */}
+        <Text style={styles.meta} numberOfLines={2}>
           {location}
         </Text>
-        <Text style={styles.meta} numberOfLines={1}>
+        <Text style={styles.meta} numberOfLines={2}>
           {hostAndDiscipline}
         </Text>
       </View>

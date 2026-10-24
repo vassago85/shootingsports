@@ -195,7 +195,14 @@ export default function MatchDetailScreen() {
   const province = venue?.province ?? event.venues?.[0]?.province ?? 'TBC';
   const hostName = event.host?.name ?? '';
   const hostLogo = event.host?.organisation?.logo_url ?? null;
-  const metaLine = `${formatMatchDate(event.starts_at, event.ends_at)} · ${rangeName}, ${province}`;
+  // Compact meta: "7 Dec 2026 · Rayton · GP" using the server's
+  // location_label (town·province-code). An earlier version
+  // concatenated the long venue name with the long province label
+  // ("Legends Adventure Farm, Gauteng") which chopped the province
+  // on narrow phones. The province is the token shooters scan for
+  // first; keep it short enough to never truncate.
+  const dateLabel = formatMatchDate(event.starts_at, event.ends_at);
+  const metaLine = `${dateLabel} · ${event.location_label}`;
 
   const showBanner =
     typeof event.banner_url === 'string' &&
@@ -217,7 +224,11 @@ export default function MatchDetailScreen() {
         )}
 
         <HeroBand eyebrow={discipline?.name ?? 'Match'} title={event.title}>
-          <Text style={styles.heroMeta}>{metaLine}</Text>
+          {/* numberOfLines=2 so a date + long multi-token location
+              can wrap rather than lose its province. */}
+          <Text style={styles.heroMeta} numberOfLines={2}>
+            {metaLine}
+          </Text>
         </HeroBand>
 
         <View style={styles.body}>
