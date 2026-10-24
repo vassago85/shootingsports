@@ -10,6 +10,7 @@ use App\Enums\EventPublication;
 use App\Enums\EventStatus;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
+use App\Enums\Province;
 use App\Models\Concerns\HasDisciplines;
 use App\Models\Concerns\HasSlug;
 use App\Observers\EventObserver;
@@ -391,33 +392,65 @@ class Event extends Model
 
         if ($venueCount > 1) {
             $primary = $this->venues->first();
+            $primaryLabel = $this->formatVenueLocation($primary);
+            $prefix = $primaryLabel === 'Venue TBC' ? ($primary?->name ?? 'Venue TBC') : $primaryLabel;
 
-            return ($primary?->town ?: $primary?->name).' + '.($venueCount - 1).' more';
+            return $prefix.' + '.($venueCount - 1).' more';
         }
 
-        if ($this->venue) {
-            return collect([
-                $this->venue->town ?: $this->venue->name,
-                $this->venue->province?->code(),
-            ])->filter()->implode(' · ');
+        return $this->formatVenueLocation($this->venue);
+    }
+
+    /**
+     * Format a single venue as "town · province-code".
+     *
+     * Falls back to just the province code when the town is missing
+     * or is actually the province name (importer bug), and to
+     * "Venue TBC" when neither town nor province is usable. The
+     * host organisation is NEVER used here: the card location must
+     * describe where the match is held, not who is hosting it.
+     */
+    private function formatVenueLocation(?Venue $venue): string
+    {
+        if ($venue === null) {
+            return 'Venue TBC';
         }
 
-        $host = $this->hostOrganisation;
+        $town = $this->sanitiseVenueTown($venue->town);
+        $code = $venue->province?->code();
 
-        if ($host?->town || $host?->province) {
-            $code = $host->province?->code();
+        $label = collect([$town, $code])->filter()->implode(' · ');
 
-            // Host has a province but no town — don't emit a bare
-            // "GP" that reads as a bug on the mobile card. Keep the
-            // province signal but make the missing venue explicit.
-            if (! $host->town && $code) {
-                return 'Venue TBC · '.$code;
+        return $label === '' ? 'Venue TBC' : $label;
+    }
+
+    /**
+     * Treat a town that is actually a province name as missing.
+     *
+     * Keeps "Gauteng · GP" and "Western Cape · WC" style labels from
+     * leaking onto cards when an importer or seeder put the province
+     * into the town column. The authoritative province signal is the
+     * `province` enum, not the free-text town.
+     */
+    private function sanitiseVenueTown(?string $town): ?string
+    {
+        $town = trim((string) $town);
+
+        if ($town === '') {
+            return null;
+        }
+
+        $normalised = mb_strtolower($town);
+
+        foreach (Province::cases() as $province) {
+            if ($normalised === mb_strtolower($province->getLabel())
+                || $normalised === $province->value
+                || $normalised === str_replace('_', ' ', $province->value)) {
+                return null;
             }
-
-            return collect([$host->town, $code])->filter()->implode(' · ');
         }
 
-        return 'Venue TBC';
+        return $town;
     }
 
     /**

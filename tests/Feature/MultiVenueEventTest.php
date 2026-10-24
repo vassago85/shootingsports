@@ -40,14 +40,14 @@ it('single-venue matches keep their existing location label', function () {
     expect($event->locationLabel())->toContain('Rayton');
 });
 
-it('location label falls back to "Venue TBC · <province>" when the host has a province but no town and no venue is set', function () {
-    // A real event in production (PR22 nationals) hit this path and
-    // showed just "GP" on the mobile card, which read as a bug.
-    // The fallback keeps the province signal but makes the missing
-    // venue explicit.
+it('location label is "Venue TBC" when no venue is set, regardless of the host club location', function () {
+    // Cards must describe where the match is held, not who is
+    // hosting it. A federation (SAPRF) can run a Gauteng match at
+    // a Western Cape range; the host's province is never a safe
+    // substitute for the venue province.
     $host = Organisation::factory()->create([
         'status' => ListingStatus::Published,
-        'town' => null,
+        'town' => 'Pretoria',
         'province' => Province::Gauteng,
     ]);
     $event = Event::factory()->confirmed()->create([
@@ -55,7 +55,7 @@ it('location label falls back to "Venue TBC · <province>" when the host has a p
         'venue_id' => null,
     ]);
 
-    expect($event->locationLabel())->toBe('Venue TBC · GP');
+    expect($event->locationLabel())->toBe('Venue TBC');
 });
 
 // --- syncVenues keeps primary in sync ------------------------------------
