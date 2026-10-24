@@ -247,9 +247,49 @@ class Organisation extends Model
         return $query->whereIn('type', [OrganisationType::Federation, OrganisationType::ProvincialBody]);
     }
 
+    /**
+     * Everything the mobile Find > Clubs screen should surface:
+     * clubs, series, associations and the national/provincial
+     * federations that shooters sign up with. Replaces the narrower
+     * default so federations like SAPRF, CTSASA and the hunting
+     * associations get their own "National" group at the top of the
+     * list instead of being invisible to shooters browsing by phone.
+     */
+    public function scopeDiscoverable($query)
+    {
+        return $query->whereIn('type', [
+            OrganisationType::Club,
+            OrganisationType::Series,
+            OrganisationType::Association,
+            OrganisationType::Federation,
+            OrganisationType::ProvincialBody,
+        ]);
+    }
+
     public function isFederationListing(): bool
     {
         return in_array($this->type, [OrganisationType::Federation, OrganisationType::ProvincialBody], true);
+    }
+
+    /**
+     * "National" means it answers the whole country, not a single
+     * region: every federation is national by definition, and so is
+     * an association with no home province (NRL Hunter SA, SAHRSA).
+     * A provincial body (CGPSA) stays province-scoped. The mobile
+     * app uses this to render a "National" group above the
+     * province groups on the Clubs tab.
+     */
+    public function isNationalBody(): bool
+    {
+        if ($this->type === OrganisationType::Federation) {
+            return true;
+        }
+
+        if ($this->type === OrganisationType::Association && $this->province === null) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

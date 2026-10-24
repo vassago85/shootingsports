@@ -12,12 +12,11 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * Public organisations directory for the mobile Find screen's Clubs
- * mode. The `scopeClubs()` helper on Organisation covers clubs,
- * associations, provincial bodies and series — the four
- * membership-adjacent types a shooter cares about on the Clubs tab.
- * Federations are intentionally excluded here; they live in their
- * own navigation space on the web and don't fit the "where do I go
- * shoot" question this list answers.
+ * mode. Default scope is `scopeDiscoverable()`, which covers every
+ * membership-adjacent body a shooter needs to find on their phone:
+ * clubs, series, associations, federations and provincial bodies.
+ * Federations and null-province associations come back first so the
+ * client can render a "National" group above the province groups.
  */
 class OrganisationController extends Controller
 {
@@ -52,12 +51,28 @@ class OrganisationController extends Controller
         if ($type !== null) {
             $query->where('type', $type);
         } else {
-            // Default view is the "clubs" family — matches the website
-            // /clubs page. Pass `?type=federation` or similar to broaden.
-            $query->clubs();
+            // Default view includes federations and associations on
+            // top of the clubs scope, so bodies like SAPRF, CTSASA
+            // and NRL Hunter SA surface in the National group at the
+            // top of the Clubs tab. Pass `?type=federation` (etc.)
+            // to narrow when a future screen needs it.
+            $query->discoverable();
         }
 
-        $organisations = $query->orderBy('name')->get();
+        // Primary sort by group so the client-side section list
+        // renders National bodies first without having to re-sort.
+        // Federations and province-less associations rank 0; every
+        // other row ranks 1.
+        $federationValue = OrganisationType::Federation->value;
+        $associationValue = OrganisationType::Association->value;
+
+        $organisations = $query
+            ->orderByRaw(
+                'CASE WHEN type = ? OR (type = ? AND province IS NULL) THEN 0 ELSE 1 END',
+                [$federationValue, $associationValue],
+            )
+            ->orderBy('name')
+            ->get();
 
         return OrganisationResource::collection($organisations);
     }

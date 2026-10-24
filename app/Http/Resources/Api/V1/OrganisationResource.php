@@ -27,6 +27,14 @@ class OrganisationResource extends JsonResource
             'town' => $this->town,
             'logo_url' => $this->logoUrl(),
             'url' => route('clubs.show', $this->slug),
+            // "national" for federations and province-less
+            // associations (NRL Hunter SA, SAHRSA). "regional" for
+            // everything else — clubs, series, provincial bodies
+            // and province-bound associations. The mobile Clubs tab
+            // uses this to render a National group at the top so
+            // bodies that cover the whole country are reachable
+            // without scrolling through 9 provinces first.
+            'group' => $this->isNationalBody() ? 'national' : 'regional',
             'visitors_welcome' => (bool) $this->visitors_welcome,
             'disciplines' => $this->whenLoaded(
                 'disciplines',

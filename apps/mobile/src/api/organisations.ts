@@ -2,13 +2,17 @@ import { apiFetch } from './client';
 
 /**
  * Published organisation (club, series, association, provincial
- * body) shape returned by `GET /api/v1/organisations`. Mirrors
- * `App\Http\Resources\Api\V1\OrganisationResource`.
+ * body, federation) shape returned by `GET /api/v1/organisations`.
+ * Mirrors `App\Http\Resources\Api\V1\OrganisationResource`.
  *
- * Default scope on the controller is `clubs()` which excludes
- * federations. Pass `type=federation` to opt in if a future screen
- * needs them.
+ * The default scope now covers every membership-adjacent type so
+ * federations like SAPRF and province-less associations like
+ * NRL Hunter SA surface alongside clubs. The `group` field tells
+ * the client which section to drop a row into: "national" bodies
+ * render above the province groups on the Clubs tab.
  */
+export type OrganisationGroup = 'national' | 'regional';
+
 export type Organisation = {
   id: number;
   slug: string;
@@ -20,6 +24,7 @@ export type Organisation = {
   province_slug: string | null;
   logo_url: string | null;
   url: string;
+  group: OrganisationGroup;
   visitors_welcome: boolean;
   disciplines: Array<{ slug: string; name: string }>;
 };

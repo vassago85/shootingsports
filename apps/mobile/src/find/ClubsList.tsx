@@ -56,7 +56,7 @@ export default function ClubsList() {
     void load();
   }, [load]);
 
-  const sections = useMemo(() => groupByProvince(organisations), [organisations]);
+  const sections = useMemo(() => groupOrganisations(organisations), [organisations]);
 
   const openClub = useCallback((organisation: Organisation) => {
     void WebBrowser.openBrowserAsync(organisation.url);
@@ -154,21 +154,59 @@ export default function ClubsList() {
   );
 }
 
-function groupByProvince(
+/**
+ * Group organisations for the Clubs tab:
+ *
+ *  1. "National" group first — federations and province-less
+ *     associations (the API tags these with `group: 'national'`).
+ *     Keeping them above the province groups means SAPRF, CTSASA,
+ *     NRL Hunter SA and friends are reachable without scrolling
+ *     through nine provinces of clubs.
+ *  2. Province groups in alphabetical order.
+ *  3. "Location to be confirmed" at the bottom for the rare
+ *     regional row that genuinely has no home province (an
+ *     unlisted club awaiting its first update).
+ */
+function groupOrganisations(
   organisations: Organisation[],
 ): Array<{ title: string; data: Organisation[] }> {
-  const map = new Map<string, Organisation[]>();
+  const national: Organisation[] = [];
+  const byProvince = new Map<string, Organisation[]>();
+  const unplaced: Organisation[] = [];
 
   for (const organisation of organisations) {
-    const key = organisation.province ?? 'Elsewhere';
-    const bucket = map.get(key) ?? [];
+    if (organisation.group === 'national') {
+      national.push(organisation);
+      continue;
+    }
+
+    if (organisation.province === null) {
+      unplaced.push(organisation);
+      continue;
+    }
+
+    const bucket = byProvince.get(organisation.province) ?? [];
     bucket.push(organisation);
-    map.set(key, bucket);
+    byProvince.set(organisation.province, bucket);
   }
 
-  return Array.from(map.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([title, data]) => ({ title, data }));
+  const sections: Array<{ title: string; data: Organisation[] }> = [];
+
+  if (national.length > 0) {
+    sections.push({ title: 'National', data: national });
+  }
+
+  for (const [title, data] of Array.from(byProvince.entries()).sort(([a], [b]) =>
+    a.localeCompare(b),
+  )) {
+    sections.push({ title, data });
+  }
+
+  if (unplaced.length > 0) {
+    sections.push({ title: 'Location to be confirmed', data: unplaced });
+  }
+
+  return sections;
 }
 
 const styles = StyleSheet.create({

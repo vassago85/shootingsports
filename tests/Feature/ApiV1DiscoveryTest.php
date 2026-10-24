@@ -214,7 +214,7 @@ it('lists published clubs for the Find Clubs mode', function (): void {
     expect($names)->toContain('Gauteng Rifle Club', 'Boland Rifle Club');
 });
 
-it('excludes federations from the default organisations list', function (): void {
+it('includes federations and clubs in the default organisations list', function (): void {
     Organisation::factory()->create([
         'name' => 'SA Shooting Federation',
         'type' => OrganisationType::Federation,
@@ -226,15 +226,16 @@ it('excludes federations from the default organisations list', function (): void
         'status' => ListingStatus::Published,
     ]);
 
+    // Default scope now covers every membership-adjacent body so
+    // the mobile Clubs tab can show a National group above the
+    // province groups. The dedicated `?type=` override still works
+    // when a screen needs to narrow further.
     $names = collect($this->getJson('/api/v1/organisations')->json('data'))
         ->pluck('name');
 
-    // Federations are discoverable via the website's dedicated
-    // navigation. The Find Clubs mode is for the "where do I shoot"
-    // question — federations don't answer it.
     expect($names)
         ->toContain('Gauteng Rifle Club')
-        ->not->toContain('SA Shooting Federation');
+        ->toContain('SA Shooting Federation');
 });
 
 it('honours the province filter on the organisations endpoint', function (): void {
