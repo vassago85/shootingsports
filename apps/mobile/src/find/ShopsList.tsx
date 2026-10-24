@@ -1,6 +1,7 @@
 import * as WebBrowser from 'expo-web-browser';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
+  FlatList,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -11,16 +12,21 @@ import {
 import { listProviders, PROVIDER_CATEGORIES, Provider } from '@/api/providers';
 import { PROVINCES } from '@/api/provinces';
 import { colors, fonts } from '@/theme';
-import { EmptyState, ErrorRow, FilterChip, ShopTile, Spinner } from '@/ui';
+import { EmptyState, ErrorRow, FilterChip, ShopRow, Spinner } from '@/ui';
 
 /**
- * M4j Find Shops — 2-column tile grid of published suppliers.
+ * M4j Find Shops — compact single-row list of published suppliers,
+ * matching the ClubRow/RangeRow pattern used elsewhere in Find.
  *
  * Two chip rows: province (optional) and category (always visible,
  * matches the ProviderCategory enum). Rows reset the list on
- * change. Tapping a tile opens the website supplier page in an
+ * change. Tapping a row opens the website supplier page in an
  * in-app browser so the shooter sees photos, services, phone and
  * email without a Safari bounce.
+ *
+ * The earlier 2-column tile grid wasted vertical space on a
+ * repetitive square logo region; the row layout fits roughly 7–8
+ * shops in a viewport that only held 4 tiles.
  */
 export default function ShopsList() {
   const [providers, setProviders] = useState<Provider[]>([]);
@@ -49,8 +55,6 @@ export default function ShopsList() {
     setLoading(true);
     void load();
   }, [load]);
-
-  const rows = useMemo(() => chunkIntoPairs(providers), [providers]);
 
   const openShop = useCallback((provider: Provider) => {
     void WebBrowser.openBrowserAsync(provider.url);
@@ -134,8 +138,10 @@ export default function ShopsList() {
           </EmptyState>
         </ScrollView>
       ) : (
-        <ScrollView
-          contentContainerStyle={styles.gridContent}
+        <FlatList
+          data={providers}
+          keyExtractor={(item) => item.slug}
+          contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
               tintColor={colors.link}
@@ -146,38 +152,16 @@ export default function ShopsList() {
               }}
             />
           }
-        >
-          {rows.map((pair, idx) => (
-            <View key={`row-${idx}`} style={styles.gridRow}>
-              {pair.map((provider) => (
-                <ShopTile
-                  key={provider.slug}
-                  provider={provider}
-                  onPress={() => openShop(provider)}
-                />
-              ))}
-              {pair.length === 1 && <View style={styles.filler} />}
-            </View>
-          ))}
-          <Text style={styles.footer}>Showing {providers.length} suppliers</Text>
-        </ScrollView>
+          renderItem={({ item }) => (
+            <ShopRow provider={item} onPress={() => openShop(item)} />
+          )}
+          ListFooterComponent={
+            <Text style={styles.footer}>Showing {providers.length} suppliers</Text>
+          }
+        />
       )}
     </View>
   );
-}
-
-/**
- * Chunk the flat provider list into pairs so the grid can render
- * one row of two tiles at a time. Keeping the chunking here (rather
- * than FlatList with numColumns={2}) lets us keep the pull-to-refresh
- * and footer in a single ScrollView.
- */
-function chunkIntoPairs<T>(items: T[]): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += 2) {
-    out.push(items.slice(i, i + 2));
-  }
-  return out;
 }
 
 const styles = StyleSheet.create({
@@ -211,21 +195,12 @@ const styles = StyleSheet.create({
     paddingVertical: 32,
   },
 
-  gridContent: {
-    padding: 12,
-    gap: 10,
-  },
-  gridRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  // Right-column filler keeps an odd final row's tile at half-width
-  // instead of stretching to fill the full row.
-  filler: {
-    flex: 1,
+  listContent: {
+    paddingBottom: 24,
   },
   footer: {
-    marginTop: 12,
+    marginTop: 16,
+    marginBottom: 24,
     textAlign: 'center',
     fontFamily: fonts.monoSemi,
     fontSize: 11,
