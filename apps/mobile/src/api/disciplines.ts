@@ -42,3 +42,61 @@ export async function listDisciplines(): Promise<Discipline[]> {
 export function activeDisciplines(all: Discipline[]): Discipline[] {
   return all.filter((d) => d.upcoming_count > 0);
 }
+
+/**
+ * Fixed display order for the discipline family headers inside the
+ * Calendar Filters sheet and the Find Sports tiles. Mirrors the
+ * FAMILIES order used on the inline family chip row so every
+ * surface reads left-to-right in the same sequence.
+ */
+export const DISCIPLINE_FAMILY_ORDER: ReadonlyArray<{
+  key: string;
+  label: string;
+}> = [
+  { key: 'rifle', label: 'Rifle' },
+  { key: 'handgun', label: 'Handgun' },
+  { key: 'shotgun', label: 'Shotgun' },
+  { key: 'airgun', label: 'Airgun' },
+  { key: 'multi', label: 'Multi' },
+];
+
+export type DisciplineGroup = {
+  key: string;
+  label: string;
+  disciplines: Discipline[];
+};
+
+/**
+ * Bucket disciplines under their family header. Shown unconditionally
+ * in the Calendar Filters sheet so the user can see every option at
+ * once without first having to narrow the family chip row outside the
+ * sheet. Families with no disciplines are omitted so empty headers
+ * never render.
+ */
+export function groupDisciplinesByFamily(
+  disciplines: Discipline[],
+): DisciplineGroup[] {
+  const byFamily = new Map<string, Discipline[]>();
+
+  for (const d of disciplines) {
+    const key = d.family ?? 'other';
+    const bucket = byFamily.get(key) ?? [];
+    bucket.push(d);
+    byFamily.set(key, bucket);
+  }
+
+  const groups = DISCIPLINE_FAMILY_ORDER.filter(
+    (f) => (byFamily.get(f.key) ?? []).length > 0,
+  ).map((f) => ({
+    key: f.key,
+    label: f.label,
+    disciplines: byFamily.get(f.key) ?? [],
+  }));
+
+  const other = byFamily.get('other') ?? [];
+  if (other.length > 0) {
+    groups.push({ key: 'other', label: 'Other', disciplines: other });
+  }
+
+  return groups;
+}

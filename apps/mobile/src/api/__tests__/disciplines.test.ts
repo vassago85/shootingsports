@@ -1,4 +1,8 @@
-import { activeDisciplines, Discipline } from '../disciplines';
+import {
+  activeDisciplines,
+  Discipline,
+  groupDisciplinesByFamily,
+} from '../disciplines';
 
 /** Factory for a discipline row with the fields the chip row touches. */
 function makeDiscipline(partial: Partial<Discipline>): Discipline {
@@ -52,5 +56,86 @@ describe('activeDisciplines', () => {
       makeDiscipline({ slug: 'b', upcoming_count: 0 }),
     ];
     expect(activeDisciplines(rows)).toEqual([]);
+  });
+});
+
+/**
+ * `groupDisciplinesByFamily` powers the Calendar Filters sheet and
+ * the Find Sports grid. The user asked us to stop hiding disciplines
+ * behind the family chip — this helper is how we show every option
+ * at once, grouped under a family header.
+ */
+describe('groupDisciplinesByFamily', () => {
+  it('groups disciplines under the Rifle / Handgun / Shotgun / Airgun / Multi order', () => {
+    const rows = [
+      makeDiscipline({
+        slug: 'ipsc',
+        name: 'IPSC',
+        family: 'handgun',
+        family_label: 'Handgun',
+      }),
+      makeDiscipline({
+        slug: 'prs',
+        name: 'PRS',
+        family: 'rifle',
+        family_label: 'Rifle',
+      }),
+      makeDiscipline({
+        slug: 'skeet',
+        name: 'Skeet',
+        family: 'shotgun',
+        family_label: 'Shotgun',
+      }),
+    ];
+
+    const groups = groupDisciplinesByFamily(rows);
+
+    expect(groups.map((g) => g.key)).toEqual(['rifle', 'handgun', 'shotgun']);
+    expect(groups[0]!.disciplines.map((d) => d.slug)).toEqual(['prs']);
+    expect(groups[1]!.disciplines.map((d) => d.slug)).toEqual(['ipsc']);
+    expect(groups[2]!.disciplines.map((d) => d.slug)).toEqual(['skeet']);
+  });
+
+  it('omits family headers that have no disciplines', () => {
+    const rows = [
+      makeDiscipline({ slug: 'prs', family: 'rifle', family_label: 'Rifle' }),
+    ];
+
+    const groups = groupDisciplinesByFamily(rows);
+
+    expect(groups.map((g) => g.key)).toEqual(['rifle']);
+  });
+
+  it('still shows a discipline with zero upcoming (browse surface)', () => {
+    // Calendar's chip row filters out ghost chips via `activeDisciplines`.
+    // The Sports / Filters-sheet surface uses THIS helper directly,
+    // without filtering, so a zero-upcoming discipline still renders.
+    const rows = [
+      makeDiscipline({
+        slug: 'quiet-rifle',
+        family: 'rifle',
+        upcoming_count: 0,
+      }),
+    ];
+
+    const groups = groupDisciplinesByFamily(rows);
+    expect(groups[0]!.disciplines).toHaveLength(1);
+  });
+
+  it('buckets an unknown family under "Other" at the end', () => {
+    const rows = [
+      makeDiscipline({ slug: 'prs', family: 'rifle' }),
+      makeDiscipline({ slug: 'mystery', family: null }),
+    ];
+
+    const groups = groupDisciplinesByFamily(rows);
+
+    expect(groups.map((g) => g.key)).toEqual(['rifle', 'other']);
+    expect(groups[1]!.label).toBe('Other');
+    expect(groups[1]!.disciplines.map((d) => d.slug)).toEqual(['mystery']);
+  });
+
+  it('returns an empty array when given no disciplines', () => {
+    expect(groupDisciplinesByFamily([])).toEqual([]);
   });
 });

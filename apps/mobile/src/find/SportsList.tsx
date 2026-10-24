@@ -2,7 +2,11 @@ import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Discipline, listDisciplines } from '@/api/disciplines';
+import {
+  Discipline,
+  groupDisciplinesByFamily,
+  listDisciplines,
+} from '@/api/disciplines';
 import { colors, fonts } from '@/theme';
 import { EmptyState, ErrorRow, Spinner, SportTile } from '@/ui';
 
@@ -13,54 +17,14 @@ import { EmptyState, ErrorRow, Spinner, SportTile } from '@/ui';
  * a browse surface, not a filter chip — but the header for a
  * completely empty family is hidden.
  *
+ * Grouping lives in `@/api/disciplines` so the Calendar Filters
+ * sheet and this grid stay in lock-step on family order + bucketing.
+ *
  * Tapping a tile deep-links to the Calendar scoped to that
  * discipline. The spec also lists an R3 `/find/sport/[slug]` page
  * (Articles + Magazines) as a future state; when that lands, swap
  * the push target.
  */
-
-/** Fixed display order per spec §3.4 "Discover" and §3.2 M3b family row. */
-const FAMILY_ORDER: ReadonlyArray<{
-  key: string;
-  label: string;
-}> = [
-  { key: 'rifle', label: 'Rifle' },
-  { key: 'handgun', label: 'Handgun' },
-  { key: 'shotgun', label: 'Shotgun' },
-  { key: 'airgun', label: 'Airgun' },
-  { key: 'multi', label: 'Multi' },
-];
-
-type Group = {
-  key: string;
-  label: string;
-  disciplines: Discipline[];
-};
-
-function groupByFamily(all: Discipline[]): Group[] {
-  const byFamily = new Map<string, Discipline[]>();
-
-  for (const d of all) {
-    const key = d.family ?? 'other';
-    const bucket = byFamily.get(key) ?? [];
-    bucket.push(d);
-    byFamily.set(key, bucket);
-  }
-
-  const groups = FAMILY_ORDER.filter((f) => (byFamily.get(f.key) ?? []).length > 0).map(
-    (f) => ({ key: f.key, label: f.label, disciplines: byFamily.get(f.key) ?? [] }),
-  );
-
-  // Trailing bucket for anything with an unknown or missing family —
-  // defensive: the API shouldn't produce this, but if it does we
-  // still show the discipline rather than dropping it on the floor.
-  const other = byFamily.get('other') ?? [];
-  if (other.length > 0) {
-    groups.push({ key: 'other', label: 'Other', disciplines: other });
-  }
-
-  return groups;
-}
 
 export default function SportsList() {
   const router = useRouter();
@@ -88,7 +52,7 @@ export default function SportsList() {
     void load();
   }, []);
 
-  const groups = useMemo(() => groupByFamily(disciplines), [disciplines]);
+  const groups = useMemo(() => groupDisciplinesByFamily(disciplines), [disciplines]);
 
   if (loading && disciplines.length === 0) {
     return (

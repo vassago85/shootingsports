@@ -12,7 +12,12 @@ import {
 
 import { Ionicons } from '@expo/vector-icons';
 
-import { Discipline, activeDisciplines, listDisciplines } from '@/api/disciplines';
+import {
+  activeDisciplines,
+  Discipline,
+  groupDisciplinesByFamily,
+  listDisciplines,
+} from '@/api/disciplines';
 import { EventCard, listEvents } from '@/api/events';
 import { PROVINCES } from '@/api/provinces';
 import { colors, fonts } from '@/theme';
@@ -220,14 +225,15 @@ export default function CalendarScreen() {
 
   const sections = useMemo(() => groupByMonth(events), [events]);
 
-  // Discipline chips filtered to the current family. When family is
-  // 'all' we show every discipline that has upcoming matches.
-  const visibleDisciplines = useMemo(() => {
-    if (filters.family === 'all') {
-      return disciplines;
-    }
-    return disciplines.filter((d) => d.family === filters.family);
-  }, [disciplines, filters.family]);
+  // All disciplines grouped by family so the sheet can show every
+  // option at once with a mono family header above each group. The
+  // user asked us to stop hiding disciplines based on the family
+  // chip outside the sheet — "it's weird to choose one then filter".
+  // Tapping a discipline now auto-sets family to match (handled in
+  // the chip's onPress below).
+  const disciplineGroups = useMemo(() => groupDisciplinesByFamily(disciplines), [
+    disciplines,
+  ]);
 
   const openMatch = useCallback(
     (slug: string) =>
@@ -328,15 +334,27 @@ export default function CalendarScreen() {
                 label={option.label}
                 selected={filters.family === option.value}
                 onPress={() =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    family: option.value,
-                    // Clear the discipline when family changes so the
-                    // user doesn't end up with an invalid combo like
-                    // family=handgun + discipline=prs.
-                    discipline:
-                      option.value !== prev.family ? null : prev.discipline,
-                  }))
+                  setFilters((prev) => {
+                    // Decoupled from discipline on purpose. If the user
+                    // currently has a Rifle discipline chosen and taps
+                    // "Handgun", we clear the discipline — the combo
+                    // family=handgun+discipline=prs returns nothing. But
+                    // we don't clear when the discipline *does* belong
+                    // to the new family (user picked PRS first, then
+                    // tapped Rifle to narrow further — keep PRS).
+                    const activeDiscipline = disciplines.find(
+                      (d) => d.slug === prev.discipline,
+                    );
+                    const shouldClear =
+                      prev.discipline !== null &&
+                      option.value !== 'all' &&
+                      activeDiscipline?.family !== option.value;
+                    return {
+                      ...prev,
+                      family: option.value,
+                      discipline: shouldClear ? null : prev.discipline,
+                    };
+                  })
                 }
               />
             ))}
@@ -452,30 +470,57 @@ export default function CalendarScreen() {
           disabled: !hasAnyFilter,
         }}
       >
-        {visibleDisciplines.length > 0 && (
-          <View style={styles.sheetGroup}>
-            <Text style={styles.sheetGroupLabel}>Discipline</Text>
+        <View style={styles.sheetGroup}>
+          <Text style={styles.sheetGroupLabel}>Discipline</Text>
+          {disciplineGroups.length === 0 ? (
+            // Disciplines are still fetching. We used to hide the
+            // whole group here, which made the sheet re-flow once the
+            // list arrived. Show a placeholder so the layout stays
+            // stable instead.
+            <Text style={styles.sheetPlaceholder}>Loading disciplines…</Text>
+          ) : (
             <View style={styles.sheetChipWrap}>
               <FilterChip
                 label="Any discipline"
                 selected={filters.discipline === null}
                 onPress={() =>
-                  setFilters((prev) => ({ ...prev, discipline: null }))
+                  setFilters((prev) => ({
+                    ...prev,
+                    discipline: null,
+                    // Don't widen family when clearing — the user
+                    // might still want their family chip to scope
+                    // the broader list.
+                  }))
                 }
               />
-              {visibleDisciplines.map((d) => (
-                <FilterChip
-                  key={d.slug}
-                  label={d.name}
-                  selected={filters.discipline === d.slug}
-                  onPress={() =>
-                    setFilters((prev) => ({ ...prev, discipline: d.slug }))
-                  }
-                />
-              ))}
             </View>
-          </View>
-        )}
+          )}
+          {disciplineGroups.map((group) => (
+            <View key={group.key} style={styles.disciplineGroup}>
+              <Text style={styles.disciplineFamilyHeader}>{group.label}</Text>
+              <View style={styles.sheetChipWrap}>
+                {group.disciplines.map((d) => (
+                  <FilterChip
+                    key={d.slug}
+                    label={d.name}
+                    selected={filters.discipline === d.slug}
+                    onPress={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        discipline: d.slug,
+                        // Auto-align the family chip so the inline
+                        // row outside the sheet reflects the user's
+                        // intent. Picking an "all"-family discipline
+                        // (unusual) leaves family untouched.
+                        family: (d.family ?? prev.family) as FamilyValue,
+                      }))
+                    }
+                  />
+                ))}
+              </View>
+            </View>
+          ))}
+        </View>
 
         <View style={styles.sheetGroup}>
           <Text style={styles.sheetGroupLabel}>Province</Text>
@@ -691,5 +736,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+  },
+  sheetPlaceholder: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.muted,
+    paddingVertical: 4,
+  },
+  /* Discipline sub-group under the Discipline sheet-group header. */
+  disciplineGroup: {
+    gap: 6,
+    marginTop: 4,
+  },
+  disciplineFamilyHeader: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: colors.muted,
   },
 });
