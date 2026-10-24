@@ -15,6 +15,8 @@ export type EventVenue = {
   province_slug: string | null;
   lat: number | null;
   lng: number | null;
+  /** Street address for the match detail Directions button fallback when no lat/lng pin exists. */
+  address: string | null;
 };
 
 export type EventDiscipline = {

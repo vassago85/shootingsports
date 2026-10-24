@@ -25,6 +25,11 @@ class VenueResource extends JsonResource
             'province_slug' => $this->province?->urlSlug(),
             'lat' => $this->lat !== null ? (float) $this->lat : null,
             'lng' => $this->lng !== null ? (float) $this->lng : null,
+            // Address text is handy on the mobile match detail
+            // Directions button: coordinates give a precise pin on
+            // Apple / Google Maps, and the address string gives a
+            // text search when the pin is missing.
+            'address' => $this->address,
             'url' => route('ranges.show', $this->slug),
             // The remaining fields are useful for list surfaces (Find
             // Ranges, website range index) and null-safe when the

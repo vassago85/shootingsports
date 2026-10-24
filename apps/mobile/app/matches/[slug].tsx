@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Linking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Image,
+  Platform,
   ScrollView,
   Share,
   StyleSheet,
@@ -135,6 +137,22 @@ export default function MatchDetailScreen() {
     });
   }, [event]);
 
+  const openDirections = useCallback(() => {
+    if (event === null) {
+      return;
+    }
+    const url = buildDirectionsUrl(event);
+    if (url === null) {
+      return;
+    }
+    void Linking.openURL(url).catch(() => {
+      Alert.alert(
+        'Could not open directions',
+        'Please check that a maps app is installed.',
+      );
+    });
+  }, [event]);
+
   const share = useCallback(async () => {
     if (event === null) {
       return;
@@ -208,6 +226,11 @@ export default function MatchDetailScreen() {
     typeof event.banner_url === 'string' &&
     event.banner_url.length > 0 &&
     !bannerFailed;
+
+  // Hide the Directions button entirely when the venue has no
+  // coordinates and no address — any URL we built would open an
+  // empty map search and look broken.
+  const canShowDirections = buildDirectionsUrl(event) !== null;
 
   return (
     <>
@@ -292,12 +315,34 @@ export default function MatchDetailScreen() {
             />
           )}
 
-          {/* Secondary actions — side by side, both ghost. Share is
-              visible here instead of hidden in a header icon so first-
-              time users notice it. */}
+          {/* Directions — hidden when the venue has no coordinates
+              AND no address. Prefers lat/lng for a precise pin;
+              falls back to a text search of the address. iOS opens
+              Apple Maps; Android opens the user's default geo:
+              handler (Google Maps, Waze, etc.). */}
+          {canShowDirections && (
+            <GhostButton
+              label="Directions"
+              onPress={openDirections}
+              iconRight="navigate-outline"
+              accessibilityLabel={`Open directions to ${rangeName}`}
+            />
+          )}
+
+          {/* Secondary actions — View on website + Share side by side,
+              both ghost. "View on website" uses expo-web-browser
+              (in-app browser chrome) and shows an external-link glyph
+              so first-time users know it leaves the app. Share is
+              visible here instead of hidden in a header icon so it's
+              discoverable. */}
           <View style={styles.secondaryActions}>
             <View style={styles.secondaryAction}>
-              <GhostButton label="Open match page" onPress={openMatchPage} />
+              <GhostButton
+                label="View on website"
+                onPress={openMatchPage}
+                iconRight="open-outline"
+                accessibilityLabel="View this match on shootingsports.co.za"
+              />
             </View>
             <View style={styles.secondaryAction}>
               <GhostButton
@@ -311,6 +356,68 @@ export default function MatchDetailScreen() {
       </ScrollView>
     </>
   );
+}
+
+/**
+ * Build a platform-appropriate maps URL for the Directions button.
+ *
+ * Preference order:
+ *
+ *   1. Venue coordinates (lat, lng)      — precise pin
+ *   2. Venue address (text search)       — approximate, user picks
+ *   3. null                              — hide the button
+ *
+ * On iOS we use the Apple Maps URL scheme (`maps://`) which the
+ * system intercepts and routes to Maps directly. On Android we use
+ * the Google-blessed `geo:` scheme which lets the user's default
+ * handler (Google Maps / Waze / HERE) resolve the pin. On web (dev
+ * mode) we fall back to the universal Google Maps HTTPS URL so the
+ * link still works outside of a mobile OS.
+ */
+function buildDirectionsUrl(event: EventDetail): string | null {
+  const venue = event.venue ?? event.venues?.[0] ?? null;
+  if (venue === null) {
+    return null;
+  }
+
+  const hasCoords =
+    typeof venue.lat === 'number' &&
+    typeof venue.lng === 'number' &&
+    Number.isFinite(venue.lat) &&
+    Number.isFinite(venue.lng);
+  const hasAddress =
+    typeof venue.address === 'string' && venue.address.trim().length > 0;
+
+  if (!hasCoords && !hasAddress) {
+    return null;
+  }
+
+  const label = encodeURIComponent(venue.name);
+
+  if (hasCoords) {
+    const lat = venue.lat as number;
+    const lng = venue.lng as number;
+
+    if (Platform.OS === 'ios') {
+      return `maps://?daddr=${lat},${lng}&q=${label}`;
+    }
+    if (Platform.OS === 'android') {
+      return `geo:${lat},${lng}?q=${lat},${lng}(${label})`;
+    }
+    return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+  }
+
+  // Address-only fallback — let the maps app search for the string.
+  const address = (venue.address as string).trim();
+  const query = encodeURIComponent(address);
+
+  if (Platform.OS === 'ios') {
+    return `maps://?q=${query}`;
+  }
+  if (Platform.OS === 'android') {
+    return `geo:0,0?q=${query}`;
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${query}`;
 }
 
 type DetailRowProps = { label: string; value: string };

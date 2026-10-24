@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
 import { colors, fonts, radius, size } from '@/theme';
 
@@ -14,6 +15,12 @@ type Props = {
    * so the button sits at section-header weight, not CTA weight.
    */
   compact?: boolean;
+  /**
+   * Optional Ionicons glyph rendered after the label. Used to signal
+   * "this leaves the app" (open-outline) or "this opens a map"
+   * (navigate-outline) without stealing from the label itself.
+   */
+  iconRight?: keyof typeof Ionicons.glyphMap;
 };
 
 /**
@@ -30,6 +37,7 @@ export default function GhostButton({
   accessibilityLabel,
   style,
   compact = false,
+  iconRight,
 }: Props) {
   return (
     <Pressable
@@ -46,7 +54,17 @@ export default function GhostButton({
         style,
       ]}
     >
-      <Text style={[styles.label, compact && styles.labelCompact]}>{label}</Text>
+      <View style={styles.row}>
+        <Text style={[styles.label, compact && styles.labelCompact]}>{label}</Text>
+        {iconRight !== undefined && (
+          <Ionicons
+            name={iconRight}
+            size={compact ? 14 : 16}
+            color={colors.link}
+            style={styles.icon}
+          />
+        )}
+      </View>
     </Pressable>
   );
 }
@@ -84,5 +102,13 @@ const styles = StyleSheet.create({
   labelCompact: {
     fontSize: 12,
     letterSpacing: 1.0,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  icon: {
+    marginTop: 1,
   },
 });
