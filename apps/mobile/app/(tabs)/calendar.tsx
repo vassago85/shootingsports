@@ -18,7 +18,12 @@ import {
   groupDisciplinesByFamily,
   listDisciplines,
 } from '@/api/disciplines';
-import { EventCard, listEvents } from '@/api/events';
+import {
+  EventCard,
+  EventFilterSuggestion,
+  EventFilterSuggestionKey,
+  listEvents,
+} from '@/api/events';
 import { PROVINCES } from '@/api/provinces';
 import { colors, fonts } from '@/theme';
 import {
@@ -159,6 +164,7 @@ export default function CalendarScreen() {
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [suggestion, setSuggestion] = useState<EventFilterSuggestion | null>(null);
 
   // Province + venue are driven by route params so Find deep links
   // continue to pre-select them. Venue is the user tapping a specific
@@ -191,7 +197,7 @@ export default function CalendarScreen() {
     const { from, to } = resolveDateRange(filters.dateRange);
 
     try {
-      const { events: rows } = await listEvents({
+      const { events: rows, suggestion: next } = await listEvents({
         family: filters.family === 'all' ? null : filters.family,
         discipline: filters.discipline,
         novice: filters.novice,
@@ -205,6 +211,11 @@ export default function CalendarScreen() {
         to,
       });
       setEvents(rows);
+      // The server returns a suggestion only when the result set
+      // is empty and a single-filter removal would recover matches.
+      // Null the state in every other case so a stale suggestion
+      // from the previous filter combo doesn't flash on screen.
+      setSuggestion(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load the calendar.');
     } finally {
@@ -280,6 +291,83 @@ export default function CalendarScreen() {
     setFilters(INITIAL_FILTERS);
     router.replace('/calendar');
   }, [router]);
+
+  /**
+   * Drop a single filter in response to the server's empty-state
+   * suggestion ("Remove Beginner-friendly to see 4 matches"). One
+   * tap recovers from a dead-end filter combo without clobbering
+   * the user's other choices.
+   */
+  const applySuggestion = useCallback(
+    (key: EventFilterSuggestionKey) => {
+      switch (key) {
+        case 'novice':
+          setFilters((prev) => ({ ...prev, novice: false }));
+          return;
+        case 'weekend':
+        case 'from':
+        case 'to':
+          setFilters((prev) => ({ ...prev, dateRange: 'any' }));
+          return;
+        case 'province':
+          setProvince(null);
+          return;
+        case 'discipline':
+          setFilters((prev) => ({ ...prev, discipline: null }));
+          return;
+        case 'family':
+          setFilters((prev) => ({ ...prev, family: 'all' }));
+          return;
+        case 'confirmed':
+        case 'kind':
+          // No chip in the sheet maps to these; the server shouldn't
+          // suggest them for the current client, but ignore safely
+          // just in case a future screen adds the filter and this
+          // code is still on an older build. Exhaustive to keep
+          // future keys from slipping through unhandled.
+          return;
+        default: {
+          const exhaustive: never = key;
+          throw new Error(`Unhandled suggestion filter: ${String(exhaustive)}`);
+        }
+      }
+    },
+    [setProvince],
+  );
+
+  /**
+   * Human-readable label matching the chip the suggestion refers to.
+   * Keeping the copy on the client (not the server) means it tracks
+   * the chip label the user is looking at even when a sheet string
+   * changes without a backend deploy.
+   */
+  const suggestionLabel = useMemo(() => {
+    if (suggestion === null) {
+      return null;
+    }
+    switch (suggestion.filter) {
+      case 'novice':
+        return 'Beginner-friendly';
+      case 'weekend':
+      case 'from':
+      case 'to':
+        return 'the date filter';
+      case 'province':
+        return 'the province filter';
+      case 'discipline':
+        return 'the discipline filter';
+      case 'family':
+        return 'the sport filter';
+      case 'confirmed':
+        return 'the confirmed-only filter';
+      case 'kind':
+        return 'the match-type filter';
+      default: {
+        const exhaustive: never = suggestion.filter;
+        throw new Error(`Unhandled suggestion filter label: ${String(exhaustive)}`);
+      }
+    }
+  }, [suggestion]);
 
   const hasAnyFilter =
     filters.family !== 'all' ||
@@ -637,7 +725,20 @@ export default function CalendarScreen() {
         >
           <EmptyState
             icon="search-outline"
-            action={hasAnyFilter ? { label: 'Clear filters', onPress: clearFilters } : undefined}
+            action={
+              // Prefer the server's one-tap suggestion over the
+              // blunt "Clear filters" action — it keeps the rest of
+              // the user's filter combo intact so the empty state
+              // isn't a punishment for picking too much.
+              suggestion !== null && suggestionLabel !== null
+                ? {
+                    label: `Remove ${suggestionLabel} to see ${suggestion.would_show} ${suggestion.would_show === 1 ? 'match' : 'matches'}`,
+                    onPress: () => applySuggestion(suggestion.filter),
+                  }
+                : hasAnyFilter
+                  ? { label: 'Clear filters', onPress: clearFilters }
+                  : undefined
+            }
           >
             {hasAnyFilter
               ? 'No matches match your filters.'

@@ -105,16 +105,43 @@ function toQuery(filters: EventFilters): string {
   return query.length > 0 ? `?${query}` : '';
 }
 
+/**
+ * Keys the API's empty-state copilot can suggest removing to recover
+ * matches. The server returns a filter key and a count ("remove this
+ * to see N matches"); the client owns the display copy so wording
+ * stays aligned with the chip label the user is looking at.
+ */
+export type EventFilterSuggestionKey =
+  | 'novice'
+  | 'weekend'
+  | 'from'
+  | 'to'
+  | 'province'
+  | 'discipline'
+  | 'family'
+  | 'confirmed'
+  | 'kind';
+
+export type EventFilterSuggestion = {
+  filter: EventFilterSuggestionKey;
+  would_show: number;
+};
+
 export async function listEvents(filters: EventFilters = {}): Promise<{
   events: EventCard[];
   count: number;
+  suggestion: EventFilterSuggestion | null;
 }> {
-  const response = await apiFetch<{ data: EventCard[]; meta: { count: number } }>(
-    `/events${toQuery(filters)}`,
-    { auth: false },
-  );
+  const response = await apiFetch<{
+    data: EventCard[];
+    meta: { count: number; suggestion: EventFilterSuggestion | null };
+  }>(`/events${toQuery(filters)}`, { auth: false });
 
-  return { events: response.data, count: response.meta.count };
+  return {
+    events: response.data,
+    count: response.meta.count,
+    suggestion: response.meta.suggestion ?? null,
+  };
 }
 
 export async function fetchEvent(slug: string): Promise<EventDetail> {
