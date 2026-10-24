@@ -32,7 +32,12 @@ export default function ShopRow({ provider, onPress }: Props) {
   const initials = computeInitials(provider.name);
   const [logoFailed, setLogoFailed] = useState(false);
   const showLogo = provider.logo_url !== null && !logoFailed;
-  const metaLine = buildMetaLine(provider);
+  // Category stays mono-uppercase (small, scanning); description
+  // moves into the body font with 2-line clamp so a shooter can
+  // actually read the shop's tagline inline instead of being told
+  // "DEALER · FIREARMS, AMMUNITION, OPTIC…" and having to tap in.
+  const category = provider.category_label?.trim().toUpperCase() ?? '';
+  const description = provider.tagline?.trim() ?? '';
   const isFeatured = provider.tier === 'featured';
 
   return (
@@ -67,9 +72,14 @@ export default function ShopRow({ provider, onPress }: Props) {
         <Text style={styles.meta} numberOfLines={1}>
           {location.length > 0 ? location : 'Nationwide'}
         </Text>
-        {metaLine.length > 0 && (
+        {category.length > 0 && (
           <Text style={styles.category} numberOfLines={1}>
-            {metaLine}
+            {category}
+          </Text>
+        )}
+        {description.length > 0 && (
+          <Text style={styles.description} numberOfLines={2}>
+            {description}
           </Text>
         )}
       </View>
@@ -86,31 +96,6 @@ function computeInitials(name: string): string {
     .slice(0, 2)
     .map((w) => w.charAt(0).toUpperCase())
     .join('');
-}
-
-/**
- * Compose the third row's mono-label line. Shape:
- *
- *   "GUNSMITH · Expert hunting rifle service"
- *   "GUNSMITH"                                   (no tagline)
- *   ""                                           (no category)
- *
- * Returning an empty string tells the row to skip rendering the
- * line entirely so the row doesn't carry a blank third gap.
- */
-function buildMetaLine(provider: Provider): string {
-  const category = provider.category_label?.toUpperCase() ?? '';
-  const tagline = provider.tagline?.trim() ?? '';
-
-  if (category === '') {
-    return tagline;
-  }
-
-  if (tagline === '') {
-    return category;
-  }
-
-  return `${category} · ${tagline}`;
 }
 
 const styles = StyleSheet.create({
@@ -172,5 +157,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 1.2,
     color: colors.link,
+  },
+  /* Shop tagline — body font, 2 lines, so a real sentence fits
+   * without a mid-word ellipsis. Sits beneath the mono category tag. */
+  description: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.ink,
+    marginTop: 2,
   },
 });
