@@ -233,15 +233,18 @@ export default function CalendarScreen() {
 
   const sections = useMemo(() => groupByMonth(events), [events]);
 
-  // All disciplines grouped by family so the sheet can show every
-  // option at once with a mono family header above each group. The
-  // user asked us to stop hiding disciplines based on the family
-  // chip outside the sheet — "it's weird to choose one then filter".
-  // Tapping a discipline now auto-sets family to match (handled in
-  // the chip's onPress below).
-  const disciplineGroups = useMemo(() => groupDisciplinesByFamily(disciplines), [
-    disciplines,
-  ]);
+  // Discipline chips are scoped to the Sport chip above them. When
+  // Sport is "All" the sheet shows every family; when Sport is a
+  // specific family (Handgun, Rifle, Shotgun…) only that family's
+  // disciplines are listed. Keeping both chips in the same visible
+  // group with a scoped list makes the relationship obvious —
+  // Sport narrows the disciplines you can pick.
+  const disciplineGroups = useMemo(() => {
+    const scoped = filters.family === 'all'
+      ? disciplines
+      : disciplines.filter((d) => d.family === filters.family);
+    return groupDisciplinesByFamily(scoped);
+  }, [disciplines, filters.family]);
 
   const openMatch = useCallback(
     (slug: string) =>
@@ -528,7 +531,13 @@ export default function CalendarScreen() {
           )}
           {disciplineGroups.map((group) => (
             <View key={group.key} style={styles.disciplineGroup}>
-              <Text style={styles.disciplineFamilyHeader}>{group.label}</Text>
+              {/* Hide the family subheader when there's only one
+                  group showing — the Sport chip above already tells
+                  the user they're looking at Handgun, so repeating
+                  "HANDGUN" here is just more things to read. */}
+              {disciplineGroups.length > 1 && (
+                <Text style={styles.disciplineFamilyHeader}>{group.label}</Text>
+              )}
               <View style={styles.sheetChipWrap}>
                 {group.disciplines.map((d) => (
                   <FilterChip
