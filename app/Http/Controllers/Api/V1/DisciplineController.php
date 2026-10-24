@@ -20,6 +20,7 @@ class DisciplineController extends Controller
         $disciplines = Discipline::query()
             ->where('is_published', true)
             ->whereNull('parent_id')
+            ->excludingVerificationFixtures()
             ->orderBy('sort_order')
             ->get()
             ->each(function (Discipline $discipline) use ($upcoming): void {

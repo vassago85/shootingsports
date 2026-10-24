@@ -33,6 +33,7 @@ class DisciplineController extends Controller
         $disciplines = Discipline::query()
             ->where('is_published', true)
             ->whereNull('parent_id')
+            ->excludingVerificationFixtures()
             ->get()
             ->map(function (Discipline $discipline) use ($upcomingCounts): Discipline {
                 $discipline->setAttribute('events_count', $upcomingCounts[$discipline->id] ?? 0);

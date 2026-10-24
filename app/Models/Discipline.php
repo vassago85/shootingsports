@@ -52,6 +52,17 @@ class Discipline extends Model
             ->where(fn (Builder $query) => $query->whereNull('body')->orWhere('body', ''));
     }
 
+    /**
+     * Hide any `verify-%` slugs that leaked from a test fixture or
+     * Playwright run. Mirrors `Event::scopeExcludingVerificationFixtures`
+     * so admin dashboards and the public API agree on what counts
+     * as real data.
+     */
+    public function scopeExcludingVerificationFixtures(Builder $query): Builder
+    {
+        return $query->where('slug', 'not like', 'verify-%');
+    }
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_id');
