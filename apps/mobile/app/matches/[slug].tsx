@@ -6,7 +6,9 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Image,
+  Modal,
   Platform,
+  Pressable,
   ScrollView,
   Share,
   StyleSheet,
@@ -14,7 +16,7 @@ import {
   View,
 } from 'react-native';
 
-import { formatMatchDate, formatMatchDateFull } from '@/api/dates';
+import { formatMatchDateFull } from '@/api/dates';
 import { EventDetail, fetchEvent } from '@/api/events';
 import { listSavedEvents, saveEvent, unsaveEvent } from '@/api/saved-events';
 import { getAuthToken } from '@/auth/store';
@@ -65,6 +67,7 @@ export default function MatchDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bannerFailed, setBannerFailed] = useState(false);
+  const [bannerOpen, setBannerOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (typeof slug !== 'string') {
@@ -170,9 +173,38 @@ export default function MatchDetailScreen() {
 
   const backTitle = from !== undefined ? BACK_TITLES[from] : 'Back';
 
+  /**
+   * Always-visible back control. When the stack has history we pop,
+   * otherwise (deep link, shared URL opened cold) we replace with Home
+   * so a shooter is never dumped onto a dead-end screen with nowhere
+   * to go. `replace` instead of `push` avoids leaving the match
+   * underneath Home in the stack, which would show a stale back arrow
+   * on Home itself.
+   */
+  const goBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/');
+  }, [router]);
+
   const headerOptions = {
     title: 'Match',
     headerBackTitle: backTitle,
+    headerBackVisible: false,
+    headerLeft: () => (
+      <Pressable
+        onPress={goBack}
+        accessibilityRole="button"
+        accessibilityLabel={`Back to ${backTitle}`}
+        hitSlop={10}
+        style={styles.headerBack}
+      >
+        <Ionicons name="chevron-back" size={26} color={colors.ink} />
+        <Text style={styles.headerBackLabel}>{backTitle}</Text>
+      </Pressable>
+    ),
   };
 
   if (loading) {
@@ -213,13 +245,11 @@ export default function MatchDetailScreen() {
   const province = venue?.province ?? event.venues?.[0]?.province ?? 'TBC';
   const hostName = event.host?.name ?? '';
   const hostLogo = event.host?.organisation?.logo_url ?? null;
-  // Compact meta: "7 Dec 2026 · Rayton · GP" using the server's
-  // location_label (town·province-code). An earlier version
-  // concatenated the long venue name with the long province label
-  // ("Legends Adventure Farm, Gauteng") which chopped the province
-  // on narrow phones. The province is the token shooters scan for
-  // first; keep it short enough to never truncate.
-  const dateLabel = formatMatchDate(event.starts_at, event.ends_at);
+  // Hero subtitle: the long verbose date so the detail header reads
+  // as a complete sentence ("Saturday 31 October 2026 · Darling · WC").
+  // The same formatter runs in the facts "Date" row below so a shooter
+  // never sees two different renderings of the match date on one page.
+  const dateLabel = formatMatchDateFull(event.starts_at, event.ends_at);
   const metaLine = `${dateLabel} · ${event.location_label}`;
 
   const showBanner =
@@ -237,13 +267,27 @@ export default function MatchDetailScreen() {
       <Stack.Screen options={headerOptions} />
       <ScrollView style={styles.container}>
         {showBanner && (
-          <Image
-            source={{ uri: event.banner_url as string }}
-            style={styles.banner}
-            resizeMode="cover"
-            onError={() => setBannerFailed(true)}
-            accessibilityIgnoresInvertColors
-          />
+          // `contain` so the match poster is never cropped — the
+          // whole image sits inside a dark forest band at the top.
+          // Tapping it opens a full-screen modal viewer; a second tap
+          // (or system back) dismisses. We stop short of pinch-zoom
+          // for Expo Go compatibility — any pinch library would pull
+          // in a native module that Go can't resolve.
+          <Pressable
+            onPress={() => setBannerOpen(true)}
+            accessibilityRole="imagebutton"
+            accessibilityLabel={`${event.title} poster. Open full screen.`}
+          >
+            <View style={styles.bannerFrame}>
+              <Image
+                source={{ uri: event.banner_url as string }}
+                style={styles.banner}
+                resizeMode="contain"
+                onError={() => setBannerFailed(true)}
+                accessibilityIgnoresInvertColors
+              />
+            </View>
+          </Pressable>
         )}
 
         <HeroBand eyebrow={discipline?.name ?? 'Match'} title={event.title}>
@@ -285,7 +329,11 @@ export default function MatchDetailScreen() {
             />
             <DetailRow label="Range" value={rangeName} />
             <DetailRow label="Province" value={province} />
-            <DetailRow label="Discipline" value={discipline?.name ?? 'TBC'} />
+            <DetailRow
+              label="Discipline"
+              value={discipline?.name ?? 'TBC'}
+              isLast
+            />
           </View>
 
           {event.description !== null && event.description.length > 0 && (
@@ -338,7 +386,10 @@ export default function MatchDetailScreen() {
           <View style={styles.secondaryActions}>
             <View style={styles.secondaryAction}>
               <GhostButton
-                label="View on website"
+                // Shortened from "View on website" so the label fits
+                // on one line in the half-width button, side by side
+                // with Share.
+                label="Website"
                 onPress={openMatchPage}
                 iconRight="open-outline"
                 accessibilityLabel="View this match on shootingsports.co.za"
@@ -354,6 +405,34 @@ export default function MatchDetailScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Full-screen poster viewer. Taps anywhere dismiss. No pinch
+          zoom here (that would need a native-only gesture library
+          that breaks Expo Go) — contain-fit on a 90% viewport is
+          enough to read every detail on a match poster. */}
+      {showBanner && (
+        <Modal
+          visible={bannerOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setBannerOpen(false)}
+          accessibilityViewIsModal
+        >
+          <Pressable
+            style={styles.viewerBackdrop}
+            onPress={() => setBannerOpen(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Close poster viewer"
+          >
+            <Image
+              source={{ uri: event.banner_url as string }}
+              style={styles.viewerImage}
+              resizeMode="contain"
+              accessibilityIgnoresInvertColors
+            />
+          </Pressable>
+        </Modal>
+      )}
     </>
   );
 }
@@ -420,11 +499,11 @@ function buildDirectionsUrl(event: EventDetail): string | null {
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
 }
 
-type DetailRowProps = { label: string; value: string };
+type DetailRowProps = { label: string; value: string; isLast?: boolean };
 
-function DetailRow({ label, value }: DetailRowProps) {
+function DetailRow({ label, value, isLast = false }: DetailRowProps) {
   return (
-    <View style={styles.detailRow}>
+    <View style={[styles.detailRow, isLast && styles.detailRowLast]}>
       <Text style={styles.detailLabel}>{label}</Text>
       <Text style={styles.detailValue}>{value}</Text>
     </View>
@@ -448,12 +527,49 @@ const styles = StyleSheet.create({
     gap: 16,
   },
 
-  /* Banner — full-bleed poster shot above the HeroBand. Hidden when
-   * the API returns no banner_url, or when the image fails to load. */
+  /* Header back — explicit chevron + label so the control is always
+   * visible, even for a cold deep-link entry where Expo Router's own
+   * back arrow would be absent. Falls back to Home in `goBack`. */
+  headerBack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 4,
+    paddingRight: 8,
+    paddingVertical: 4,
+  },
+  headerBackLabel: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 15,
+    color: colors.ink,
+    marginLeft: -2,
+  },
+
+  /* Banner — poster shot above the HeroBand. The dark forest band
+   * provides letterboxing when the poster isn't a 16:9 ratio; `contain`
+   * ensures the whole poster is visible without crop. Tap opens the
+   * full-screen viewer. Hidden when the API returns no banner_url
+   * or when the image fails to load. */
+  bannerFrame: {
+    width: '100%',
+    height: 220,
+    backgroundColor: colors.forest,
+  },
   banner: {
     width: '100%',
-    height: 180,
-    backgroundColor: colors.forest,
+    height: '100%',
+  },
+
+  /* Full-screen poster viewer — dark backdrop + contain-fit image. */
+  viewerBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  viewerImage: {
+    width: '100%',
+    height: '100%',
   },
 
   heroMeta: {
@@ -506,8 +622,10 @@ const styles = StyleSheet.create({
   },
 
   /* Details list — label / value rows with hair-rule between. The
-   * last row's own bottom border is clipped by `overflow: hidden`
-   * so the card's rounded corners stay clean. */
+   * last row explicitly drops its border (via the `isLast` prop on
+   * `<DetailRow>`) so the card doesn't carry a dead hairline above
+   * its bottom edge — the earlier `overflow: hidden` trick worked
+   * cosmetically but still allocated the pixel. */
   details: {
     backgroundColor: colors.card,
     borderRadius: 14,
@@ -524,6 +642,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.rule,
     gap: 16,
+  },
+  detailRowLast: {
+    borderBottomWidth: 0,
   },
   detailLabel: {
     fontFamily: fonts.monoSemi,
