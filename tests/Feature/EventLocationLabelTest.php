@@ -84,6 +84,32 @@ it('never falls back to the host organisation town or province', function () {
         ->not->toContain('GP');
 });
 
+it('shows just the province code when the venue has no town, never the host', function () {
+    // Haelgeweer Skietdag regression: the venue record was missing a
+    // town but the match's host organisation ("SA Jagters Impala") sat
+    // in Pretoria. The card must say "GP", never "Pretoria · GP".
+    $host = Organisation::factory()->create([
+        'status' => ListingStatus::Published,
+        'town' => 'Pretoria',
+        'province' => Province::Gauteng,
+    ]);
+
+    $venue = Venue::factory()->create([
+        'town' => null,
+        'province' => Province::Gauteng,
+        'status' => ListingStatus::Published,
+    ]);
+
+    $event = Event::factory()->confirmed()->create([
+        'host_organisation_id' => $host->id,
+        'venue_id' => $venue->id,
+    ]);
+
+    expect($event->locationLabel())
+        ->toBe('GP')
+        ->not->toContain('Pretoria');
+});
+
 it('returns "Venue TBC" when a venue instance has neither town nor province', function () {
     // Can't be persisted (NOT NULL columns) but the formatter must
     // still degrade gracefully for in-memory instances built from
