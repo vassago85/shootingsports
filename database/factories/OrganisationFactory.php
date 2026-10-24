@@ -32,7 +32,12 @@ class OrganisationFactory extends Factory
             'website_url' => fake()->optional()->url(),
             'description' => fake()->optional()->paragraph(),
             'accredited' => false,
-            'visitors_welcome' => fake()->boolean(40),
+            // `null` means "not asked yet". The Visitors badge is only
+            // shown when the column is explicitly `true`, so leaving
+            // factory rows as null keeps generated test data from
+            // forging a "yes" signal that only a real admin should
+            // give. Opt a factory row in with `->state(['visitors_welcome' => true])`.
+            'visitors_welcome' => null,
             'status' => ListingStatus::Published,
             'verification_state' => VerificationState::Unconfirmed,
             'source' => ListingSource::Staff,
