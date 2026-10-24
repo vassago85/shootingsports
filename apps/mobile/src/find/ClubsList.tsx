@@ -65,35 +65,38 @@ export default function ClubsList() {
   return (
     <View style={styles.container}>
       <View style={styles.filterStack}>
-        <View style={styles.filterRow}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.scrollerFlex}
-            contentContainerStyle={styles.chipScroll}
-          >
+        {/* Single scroll row: province chips + Visitors toggle at
+            the end. The earlier split layout had a hairline divider
+            separating a scrolling province row from a static
+            Visitors chip on the right, which clipped the last
+            province name ("Shotgun" / "Western Cape") behind the
+            divider on narrow phones. One ScrollView keeps every
+            chip reachable without clipping. */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipScroll}
+        >
+          <FilterChip
+            label="Any province"
+            selected={province === null}
+            onPress={() => setProvince(null)}
+          />
+          {PROVINCES.map((p) => (
             <FilterChip
-              label="Any province"
-              selected={province === null}
-              onPress={() => setProvince(null)}
+              key={p.slug}
+              label={p.short}
+              selected={province === p.slug}
+              onPress={() => setProvince(province === p.slug ? null : p.slug)}
+              accessibilityLabel={p.name}
             />
-            {PROVINCES.map((p) => (
-              <FilterChip
-                key={p.slug}
-                label={p.short}
-                selected={province === p.slug}
-                onPress={() => setProvince(province === p.slug ? null : p.slug)}
-                accessibilityLabel={p.name}
-              />
-            ))}
-          </ScrollView>
-          <View style={styles.divider} />
+          ))}
           <FilterChip
             label="Visitors"
             selected={visitorsOnly}
             onPress={() => setVisitorsOnly((v) => !v)}
           />
-        </View>
+        </ScrollView>
       </View>
 
       {loading && organisations.length === 0 ? (
@@ -216,30 +219,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderBottomWidth: 1,
     borderBottomColor: colors.rule,
-    paddingVertical: 6,
+    paddingVertical: 10,
     zIndex: 10,
     elevation: 4,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  scrollerFlex: {
-    flex: 1,
   },
   chipScroll: {
     flexDirection: 'row',
     gap: 8,
-    paddingRight: 4,
+    paddingHorizontal: 12,
     alignItems: 'center',
-  },
-  divider: {
-    width: 1,
-    height: 28,
-    backgroundColor: colors.rule,
   },
 
   centre: {

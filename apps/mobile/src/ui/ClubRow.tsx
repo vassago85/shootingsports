@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Organisation } from '@/api/organisations';
@@ -15,10 +16,14 @@ type Props = {
  *   [                      ] [town, province         ]
  *   [                      ] [disciplines (3 max)    ]
  *
- * If the club has set `visitors_welcome` a lime "VISITORS" pill
- * tails the name — this is the single most-asked newcomer question
- * ("can I just rock up?") and surfacing it on the row saves a tap
- * to the club page.
+ * The Visitors pill tails the name only when the club has
+ * explicitly opted in (`visitors_welcome === true`). A null
+ * value — the "not asked yet" state new rows start in — keeps the
+ * pill hidden so the badge carries a meaningful "yes" signal.
+ *
+ * When the server returns a logo_url that 404s, the row falls back
+ * to the initials tile on image error instead of leaving a blank
+ * square where the avatar should be.
  */
 export default function ClubRow({ organisation, onPress }: Props) {
   const location = [organisation.town, organisation.province]
@@ -26,21 +31,25 @@ export default function ClubRow({ organisation, onPress }: Props) {
     .join(', ');
   const disciplineLine = buildDisciplineLine(organisation);
   const initials = computeInitials(organisation.name);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const showLogo = organisation.logo_url !== null && !logoFailed;
+  const showsVisitorsPill = organisation.visitors_welcome === true;
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${organisation.name}, ${location}, ${disciplineLine}${
-        organisation.visitors_welcome ? ', visitors welcome' : ''
+        showsVisitorsPill ? ', visitors welcome' : ''
       }`}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      {organisation.logo_url !== null ? (
+      {showLogo ? (
         <Image
-          source={{ uri: organisation.logo_url }}
+          source={{ uri: organisation.logo_url as string }}
           style={styles.logoTile}
           accessibilityIgnoresInvertColors
+          onError={() => setLogoFailed(true)}
         />
       ) : (
         <View style={styles.initialsTile}>
@@ -53,7 +62,7 @@ export default function ClubRow({ organisation, onPress }: Props) {
           <Text style={styles.title} numberOfLines={2}>
             {organisation.name}
           </Text>
-          {organisation.visitors_welcome && (
+          {showsVisitorsPill && (
             <View style={styles.visitorsPill}>
               <Text style={styles.visitorsPillText}>VISITORS</Text>
             </View>

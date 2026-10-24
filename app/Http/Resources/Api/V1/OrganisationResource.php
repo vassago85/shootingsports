@@ -35,7 +35,13 @@ class OrganisationResource extends JsonResource
             // bodies that cover the whole country are reachable
             // without scrolling through 9 provinces first.
             'group' => $this->isNationalBody() ? 'national' : 'regional',
-            'visitors_welcome' => (bool) $this->visitors_welcome,
+            // Nullable boolean: null means "not asked yet", true
+            // means explicitly welcoming, false means explicitly
+            // not. The mobile app only renders the Visitors badge
+            // when this is literally true.
+            'visitors_welcome' => $this->visitors_welcome === null
+                ? null
+                : (bool) $this->visitors_welcome,
             'disciplines' => $this->whenLoaded(
                 'disciplines',
                 fn () => $this->disciplines

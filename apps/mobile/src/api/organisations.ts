@@ -25,7 +25,12 @@ export type Organisation = {
   logo_url: string | null;
   url: string;
   group: OrganisationGroup;
-  visitors_welcome: boolean;
+  /**
+   * Nullable: `null` means the club hasn't been asked yet so the
+   * mobile Visitors pill stays hidden; `true` means explicitly
+   * welcoming (pill shown); `false` means explicitly not (no pill).
+   */
+  visitors_welcome: boolean | null;
   disciplines: Array<{ slug: string; name: string }>;
 };
 
