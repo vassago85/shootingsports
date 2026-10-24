@@ -12,3 +12,8 @@ database/database.sqlite
 tests
 .phpunit.cache
 agent-transcripts
+
+# Mobile / Expo workspace lives in the monorepo but doesn't belong in the
+# PHP-FPM image. Nothing in `apps/` is served by Laravel; shipping it just
+# inflates the image. React Native source goes out via Expo Go / EAS builds.
+apps/
