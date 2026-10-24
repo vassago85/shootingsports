@@ -36,19 +36,27 @@ import {
  *
  * `GET /api/v1/events` with:
  *   - `family` chip (All / Rifle / Handgun / Shotgun / Airgun / Multi)
- *   - `discipline` chip (slug), filtered to the selected family
- *   - `novice` toggle (pinned right of family row)
+ *   - `discipline` chip (slug) — any discipline, grouped by family
+ *     under the sheet's Discipline header
+ *   - `novice` toggle
  *   - `province` chip (slug) — any of the 9 SA provinces
  *   - `from`/`to` date quick-picks: this weekend / 30d / 90d
  *
- * Phase 2 adds the discipline + province + date rows on top of the
- * Phase 1 family-only strip. Deep links from Find continue to pre-set
- * `province` via the route param so the two paths stay compatible.
+ * **Single filter surface.** Everything lives inside the bottom sheet
+ * — Sport (family), Discipline, Province, Date, Beginner. The sticky
+ * row under the HeroBand is just the Filters button plus a preview
+ * strip of currently-active chips (each individually dismissible).
+ * Earlier builds had family chips sitting *outside* the sheet which
+ * felt disconnected ("why do I set some filters here and others in a
+ * popup?"). One place keeps the model simple.
+ *
+ * Deep links from Find continue to pre-set `province` via the route
+ * param so the two paths stay compatible.
  *
  * States per BUILD_SPEC §3.2:
- *   M3a Loading           — filter stack stays usable, spinner below
- *   M3b Default           — chip stack + MatchRows grouped by month
- *   M3c Province filter   — the Province row shows the selected pill
+ *   M3a Loading           — filter row stays usable, spinner below
+ *   M3b Default           — Filters button + MatchRows grouped by month
+ *   M3c Province filter   — Province chip appears in the preview strip
  *   M3d Empty after filter — "No matches match your filters." + Clear
  *   M3e Error             — "Couldn't load the calendar. Pull to refresh."
  */
@@ -278,17 +286,25 @@ export default function CalendarScreen() {
     activeProvince !== null ||
     activeVenue !== null;
 
-  // "Filters" button badge: count every active sheet filter so the
-  // user can see at a glance how many are hidden behind the button.
-  // Family and Novice live inline and are not counted. Venue is
-  // always surfaced as its own chip (route-driven), so it's not
-  // counted here either.
+  // "Filters" button badge: count every active filter the user can
+  // reach through the sheet (sport, discipline, province, date,
+  // novice). Venue is a route-driven deep-link scope that always
+  // surfaces as its own chip, so it's not counted here.
   const sheetActiveCount =
+    (filters.family !== 'all' ? 1 : 0) +
     (filters.discipline !== null ? 1 : 0) +
     (activeProvince !== null ? 1 : 0) +
-    (filters.dateRange !== 'any' ? 1 : 0);
+    (filters.dateRange !== 'any' ? 1 : 0) +
+    (filters.novice ? 1 : 0);
 
   const sheetHasFilter = sheetActiveCount > 0;
+
+  const activeFamilyLabel = useMemo(() => {
+    if (filters.family === 'all') {
+      return null;
+    }
+    return FAMILIES.find((f) => f.value === filters.family)?.label ?? null;
+  }, [filters.family]);
 
   const dateRangeLabel = useMemo(() => {
     const match = DATE_RANGES.find((r) => r.value === filters.dateRange);
@@ -317,60 +333,11 @@ export default function CalendarScreen() {
       />
 
       <View style={styles.filters}>
-        {/* Row 1: family + Novice toggle. Novice sits in its own
-            fixed-width column on the right; the ScrollView takes the
-            remaining space with `flex: 1` so the trailing family chip
-            ("Shotgun"/"Airgun") no longer clips against the divider. */}
-        <View style={styles.filterRow}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.scrollerFlex}
-            contentContainerStyle={styles.chipScroll}
-          >
-            {FAMILIES.map((option) => (
-              <FilterChip
-                key={option.value}
-                label={option.label}
-                selected={filters.family === option.value}
-                onPress={() =>
-                  setFilters((prev) => {
-                    // Decoupled from discipline on purpose. If the user
-                    // currently has a Rifle discipline chosen and taps
-                    // "Handgun", we clear the discipline — the combo
-                    // family=handgun+discipline=prs returns nothing. But
-                    // we don't clear when the discipline *does* belong
-                    // to the new family (user picked PRS first, then
-                    // tapped Rifle to narrow further — keep PRS).
-                    const activeDiscipline = disciplines.find(
-                      (d) => d.slug === prev.discipline,
-                    );
-                    const shouldClear =
-                      prev.discipline !== null &&
-                      option.value !== 'all' &&
-                      activeDiscipline?.family !== option.value;
-                    return {
-                      ...prev,
-                      family: option.value,
-                      discipline: shouldClear ? null : prev.discipline,
-                    };
-                  })
-                }
-              />
-            ))}
-          </ScrollView>
-          <View style={styles.divider} />
-          <FilterChip
-            label="Novice"
-            selected={filters.novice}
-            onPress={() => setFilters((prev) => ({ ...prev, novice: !prev.novice }))}
-          />
-        </View>
-
-        {/* Row 2: trigger row — compact "Filters" button + a scroll
-            of chips showing what's currently active in the sheet.
-            Keeps the main screen to two filter rows while the user
-            can still see at a glance which filters are set. */}
+        {/* Single sticky filter row: Filters trigger + scrollable
+            preview of currently active chips. Each chip clears its
+            own filter without opening the sheet. Venue sits first
+            because it's the narrowest, user-initiated scope (they
+            tapped a specific pin on the map). */}
         <View style={styles.filterRow}>
           <Pressable
             onPress={() => setSheetOpen(true)}
@@ -402,10 +369,6 @@ export default function CalendarScreen() {
             </Text>
           </Pressable>
 
-          {/* Active-filter preview — tap any chip's × to clear it
-              individually without opening the sheet. Venue sits
-              first because it's the narrowest, user-initiated scope
-              (they tapped a specific pin on the map). */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -418,7 +381,7 @@ export default function CalendarScreen() {
                 selected
                 removable
                 onPress={clearVenue}
-                accessibilityLabel={`Clear range filter`}
+                accessibilityLabel="Clear range filter"
               />
             )}
             {activeProvinceLabel !== null && (
@@ -427,7 +390,29 @@ export default function CalendarScreen() {
                 selected
                 removable
                 onPress={() => setProvince(null)}
-                accessibilityLabel={`Clear province filter`}
+                accessibilityLabel="Clear province filter"
+              />
+            )}
+            {activeFamilyLabel !== null && (
+              <FilterChip
+                label={activeFamilyLabel}
+                selected
+                removable
+                onPress={() =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    family: 'all',
+                    // Clearing the sport also clears a discipline
+                    // scoped to it — otherwise the user ends up with
+                    // "Any sport · PRS" which reads nonsensically.
+                    discipline:
+                      disciplines.find((d) => d.slug === prev.discipline)
+                        ?.family === filters.family
+                        ? null
+                        : prev.discipline,
+                  }))
+                }
+                accessibilityLabel="Clear sport filter"
               />
             )}
             {activeDisciplineLabel !== null && (
@@ -438,7 +423,18 @@ export default function CalendarScreen() {
                 onPress={() =>
                   setFilters((prev) => ({ ...prev, discipline: null }))
                 }
-                accessibilityLabel={`Clear discipline filter`}
+                accessibilityLabel="Clear discipline filter"
+              />
+            )}
+            {filters.novice && (
+              <FilterChip
+                label="Beginner"
+                selected
+                removable
+                onPress={() =>
+                  setFilters((prev) => ({ ...prev, novice: false }))
+                }
+                accessibilityLabel="Clear beginner-friendly filter"
               />
             )}
             {filters.dateRange !== 'any' && (
@@ -449,7 +445,7 @@ export default function CalendarScreen() {
                 onPress={() =>
                   setFilters((prev) => ({ ...prev, dateRange: 'any' }))
                 }
-                accessibilityLabel={`Clear date filter`}
+                accessibilityLabel="Clear date filter"
               />
             )}
           </ScrollView>
@@ -470,6 +466,41 @@ export default function CalendarScreen() {
           disabled: !hasAnyFilter,
         }}
       >
+        <View style={styles.sheetGroup}>
+          <Text style={styles.sheetGroupLabel}>Sport</Text>
+          <View style={styles.sheetChipWrap}>
+            {FAMILIES.map((option) => (
+              <FilterChip
+                key={option.value}
+                label={option.label}
+                selected={filters.family === option.value}
+                onPress={() =>
+                  setFilters((prev) => {
+                    // Clear the discipline when switching to a family
+                    // the current discipline doesn't belong to — the
+                    // combination family=handgun+discipline=prs would
+                    // return nothing. Keep it when the discipline
+                    // belongs to the new family (user picked PRS then
+                    // tapped Rifle to narrow further).
+                    const activeDiscipline = disciplines.find(
+                      (d) => d.slug === prev.discipline,
+                    );
+                    const shouldClear =
+                      prev.discipline !== null &&
+                      option.value !== 'all' &&
+                      activeDiscipline?.family !== option.value;
+                    return {
+                      ...prev,
+                      family: option.value,
+                      discipline: shouldClear ? null : prev.discipline,
+                    };
+                  })
+                }
+              />
+            ))}
+          </View>
+        </View>
+
         <View style={styles.sheetGroup}>
           <Text style={styles.sheetGroupLabel}>Discipline</Text>
           {disciplineGroups.length === 0 ? (
@@ -559,6 +590,19 @@ export default function CalendarScreen() {
             ))}
           </View>
         </View>
+
+        <View style={styles.sheetGroup}>
+          <Text style={styles.sheetGroupLabel}>Beginner</Text>
+          <View style={styles.sheetChipWrap}>
+            <FilterChip
+              label="Beginner-friendly only"
+              selected={filters.novice}
+              onPress={() =>
+                setFilters((prev) => ({ ...prev, novice: !prev.novice }))
+              }
+            />
+          </View>
+        </View>
       </BottomSheet>
 
       {loading ? (
@@ -646,8 +690,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
   },
-  // Row 1 only — lets the family ScrollView consume the remaining
-  // space before the Novice chip sits in its fixed column.
+  // Lets the preview chip ScrollView consume the remaining space to
+  // the right of the Filters trigger button.
   scrollerFlex: {
     flex: 1,
   },
@@ -656,11 +700,6 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingRight: 4,
     alignItems: 'center',
-  },
-  divider: {
-    width: 1,
-    height: 28,
-    backgroundColor: colors.rule,
   },
 
   /* States below the filter stack. */
