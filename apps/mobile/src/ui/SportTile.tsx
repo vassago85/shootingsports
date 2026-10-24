@@ -7,34 +7,64 @@ type Props = {
   familyLabel: string | null;
   upcomingCount: number;
   onPress: () => void;
+  /**
+   * Set to false when the tile already sits inside a family-labelled
+   * group (Rifle, Handgun, …) on Find Sports — the group header
+   * conveys the same information, so the per-tile family pill is
+   * just visual noise. Defaults to true for callers that render
+   * tiles outside a group.
+   */
+  showFamilyLabel?: boolean;
 };
 
 /**
  * Sport tile for M4l — grouped under Rifle, Handgun, Shotgun, Airgun,
  * Multi headers in a 2-column grid. Each tile shows the discipline
- * name on top and a mono "N UPCOMING" count below.
+ * name on top and a mono "N UPCOMING" count below (or "NO UPCOMING"
+ * when the discipline has nothing scheduled, with a muted colour
+ * ramp to send tiles with upcoming matches to the top of the page).
  *
  * Tapping deep-links to Calendar scoped to that discipline. The spec
  * also lists an R3 sport page (Articles + Magazine covers) as a
  * future state — when that lands, swap the onPress handler to push
  * `/find/sport/[slug]` instead.
  */
-export default function SportTile({ name, familyLabel, upcomingCount, onPress }: Props) {
+export default function SportTile({
+  name,
+  familyLabel,
+  upcomingCount,
+  onPress,
+  showFamilyLabel = true,
+}: Props) {
+  const isMuted = upcomingCount === 0;
+  const countLabel = isMuted ? 'NO UPCOMING' : `${upcomingCount} UPCOMING`;
+
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${name}, ${upcomingCount} upcoming`}
-      style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
+      accessibilityLabel={
+        isMuted
+          ? `${name}, no upcoming matches`
+          : `${name}, ${upcomingCount} upcoming`
+      }
+      style={({ pressed }) => [
+        styles.tile,
+        isMuted && styles.tileMuted,
+        pressed && styles.pressed,
+      ]}
     >
-      <Text style={styles.name} numberOfLines={2}>
+      <Text
+        style={[styles.name, isMuted && styles.nameMuted]}
+        numberOfLines={2}
+      >
         {name}
       </Text>
       <View style={styles.footerRow}>
-        <Text style={styles.count}>
-          {upcomingCount} UPCOMING
+        <Text style={[styles.count, isMuted && styles.countMuted]}>
+          {countLabel}
         </Text>
-        {familyLabel !== null && (
+        {showFamilyLabel && familyLabel !== null && (
           <View style={styles.familyPill}>
             <Text style={styles.familyPillText}>{familyLabel}</Text>
           </View>
@@ -53,6 +83,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.forest,
     justifyContent: 'space-between',
   },
+  // Dark-but-dimmed card for disciplines with nothing on the
+  // calendar yet. Still tappable (the Calendar scope still works)
+  // but visually clearly a "come back later" option so active
+  // tiles rise to the top of the page.
+  tileMuted: {
+    backgroundColor: colors.tint,
+  },
   pressed: {
     opacity: 0.85,
   },
@@ -63,6 +100,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.6,
     lineHeight: 24,
+  },
+  nameMuted: {
+    color: colors.muted,
   },
   footerRow: {
     flexDirection: 'row',
@@ -75,6 +115,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 1.3,
     color: colors.lime,
+  },
+  countMuted: {
+    color: colors.link,
   },
   familyPill: {
     paddingHorizontal: 8,

@@ -52,7 +52,21 @@ export default function SportsList() {
     void load();
   }, []);
 
-  const groups = useMemo(() => groupDisciplinesByFamily(disciplines), [disciplines]);
+  const groups = useMemo(() => {
+    // Sort each family group by upcoming count (desc) then name
+    // (asc) so disciplines with matches on the calendar rise to the
+    // top of their family. The 0-upcoming tiles still render
+    // (muted) at the bottom — people browsing Rifle want to see
+    // every option, not just the ones with content this month.
+    const grouped = groupDisciplinesByFamily(disciplines);
+    return grouped.map((group) => ({
+      ...group,
+      disciplines: [...group.disciplines].sort((a, b) => {
+        const diff = (b.upcoming_count ?? 0) - (a.upcoming_count ?? 0);
+        return diff !== 0 ? diff : a.name.localeCompare(b.name);
+      }),
+    }));
+  }, [disciplines]);
 
   if (loading && disciplines.length === 0) {
     return (
@@ -113,6 +127,11 @@ export default function SportsList() {
                   name={discipline.name}
                   familyLabel={discipline.family_label}
                   upcomingCount={discipline.upcoming_count}
+                  // The group header above this tile already says
+                  // Rifle / Handgun / etc — the per-tile pill is
+                  // redundant inside family groups and reads as
+                  // visual noise.
+                  showFamilyLabel={false}
                   onPress={() =>
                     router.push({
                       pathname: '/calendar',

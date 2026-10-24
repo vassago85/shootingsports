@@ -109,7 +109,9 @@ describe('SportsList', () => {
 
   it('still renders a discipline with a zero upcoming count (browse surface)', async () => {
     // Unlike Calendar's chip row, Sports is a browse surface — we
-    // keep the tile even when it would return no matches today.
+    // keep the tile even when it would return no matches today,
+    // but render it muted with a "NO UPCOMING" footer so active
+    // tiles rise visually to the top of the page.
     listMock.mockResolvedValueOnce([
       makeDiscipline({
         slug: 'prs',
@@ -123,7 +125,7 @@ describe('SportsList', () => {
     await render(<SportsList />);
 
     await waitFor(() => expect(screen.getByText('PRS')).toBeTruthy());
-    expect(screen.getByText('0 UPCOMING')).toBeTruthy();
+    expect(screen.getByText('NO UPCOMING')).toBeTruthy();
   });
 
   it('pushes to Calendar with the discipline slug when a tile is tapped', async () => {
@@ -135,7 +137,7 @@ describe('SportsList', () => {
 
     await waitFor(() => expect(screen.getByText('PRS')).toBeTruthy());
 
-    fireEvent.press(screen.getByLabelText('PRS, 0 upcoming'));
+    fireEvent.press(screen.getByLabelText('PRS, no upcoming matches'));
 
     expect(pushMock).toHaveBeenCalledWith({
       pathname: '/calendar',
