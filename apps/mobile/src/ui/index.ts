@@ -14,6 +14,7 @@ export { default as ErrorRow } from './ErrorRow';
 export { default as FilterChip } from './FilterChip';
 export { default as GhostButton } from './GhostButton';
 export { default as HeroBand } from './HeroBand';
+export { default as LinkableText } from './LinkableText';
 export { default as MatchCard } from './MatchCard';
 export { default as MatchRow } from './MatchRow';
 export { default as PlanPill } from './PlanPill';

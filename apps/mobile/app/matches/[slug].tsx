@@ -17,7 +17,7 @@ import { EventDetail, fetchEvent } from '@/api/events';
 import { listSavedEvents, saveEvent, unsaveEvent } from '@/api/saved-events';
 import { getAuthToken } from '@/auth/store';
 import { colors, fonts } from '@/theme';
-import { ErrorRow, GhostButton, HeroBand, PrimaryButton, Spinner } from '@/ui';
+import { ErrorRow, GhostButton, HeroBand, LinkableText, PrimaryButton, Spinner } from '@/ui';
 
 /**
  * R1 / R2 Match detail — the shared deep-dive screen pushed from Home,
@@ -267,7 +267,13 @@ export default function MatchDetailScreen() {
 
           {event.description !== null && event.description.length > 0 && (
             <View style={styles.descBlock}>
-              <Text style={styles.descText}>{event.description}</Text>
+              {/* LinkableText turns SA phone numbers and emails in
+                  the prose into tap targets so a shooter can call
+                  the MD or email the host without copy-pasting out
+                  of the paragraph. */}
+              <LinkableText style={styles.descText}>
+                {event.description}
+              </LinkableText>
             </View>
           )}
 
