@@ -18,7 +18,8 @@ function makeOrganisation(
     province_slug: 'gauteng',
     logo_url: null,
     url: 'https://shootingsports.co.za/clubs/gauteng-rifle-club',
-    visitors_welcome: false,
+    group: 'regional',
+    visitors_welcome: null,
     disciplines: [],
   };
   return { ...base, ...partial };
@@ -100,6 +101,71 @@ describe('ClubRow', () => {
     );
 
     expect(screen.getByText('GR')).toBeTruthy();
+  });
+
+  it('shows "National body" for a national row with no HQ town', async () => {
+    await render(
+      <ClubRow
+        organisation={makeOrganisation({
+          name: 'SA Precision Rifle Federation',
+          group: 'national',
+          town: null,
+          province: null,
+        })}
+        onPress={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText('National body')).toBeTruthy();
+    expect(screen.queryByText('Location to be confirmed')).toBeNull();
+  });
+
+  it('keeps the HQ town for a national body that has one (CTSASA)', async () => {
+    await render(
+      <ClubRow
+        organisation={makeOrganisation({
+          name: 'CTSASA',
+          group: 'national',
+          town: 'Mossel Bay',
+          province: 'Western Cape',
+        })}
+        onPress={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Mossel Bay, Western Cape')).toBeTruthy();
+    expect(screen.queryByText('National body')).toBeNull();
+  });
+
+  it('hides the Visitors pill on national bodies even if visitors_welcome=true', async () => {
+    await render(
+      <ClubRow
+        organisation={makeOrganisation({
+          name: 'SA Precision Rifle Federation',
+          group: 'national',
+          visitors_welcome: true,
+        })}
+        onPress={jest.fn()}
+      />,
+    );
+
+    expect(screen.queryByText('VISITORS')).toBeNull();
+  });
+
+  it('keeps "Location to be confirmed" for regional rows with no town', async () => {
+    await render(
+      <ClubRow
+        organisation={makeOrganisation({
+          name: 'New Local Club',
+          group: 'regional',
+          town: null,
+          province: null,
+        })}
+        onPress={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Location to be confirmed')).toBeTruthy();
   });
 
   it('fires onPress when tapped', async () => {

@@ -33,7 +33,29 @@ export default function ClubRow({ organisation, onPress }: Props) {
   const initials = computeInitials(organisation.name);
   const [logoFailed, setLogoFailed] = useState(false);
   const showLogo = organisation.logo_url !== null && !logoFailed;
-  const showsVisitorsPill = organisation.visitors_welcome === true;
+  // National bodies (federations, country-wide associations) never
+  // show the Visitors pill — the concept applies to individual clubs,
+  // not umbrella orgs. For every other row the pill shows only when
+  // the admin has explicitly ticked `visitors_welcome`.
+  const isNational = organisation.group === 'national';
+  const showsVisitorsPill =
+    !isNational && organisation.visitors_welcome === true;
+  // Meta line fallback:
+  //   - national body with a HQ town  -> "Mossel Bay, Western Cape"
+  //   - national body with no town    -> "National body"
+  //   - regional club with a town     -> "Pretoria, Gauteng"
+  //   - regional club with no town    -> "Location to be confirmed"
+  // The empty-national fallback carries real information (this is a
+  // country-wide federation, not a missing-data row) so we don't want
+  // to lump it with the "unknown" copy a regional club uses.
+  let metaLine: string;
+  if (location.length > 0) {
+    metaLine = location;
+  } else if (isNational) {
+    metaLine = 'National body';
+  } else {
+    metaLine = 'Location to be confirmed';
+  }
 
   return (
     <Pressable
@@ -48,6 +70,10 @@ export default function ClubRow({ organisation, onPress }: Props) {
         <Image
           source={{ uri: organisation.logo_url as string }}
           style={styles.logoTile}
+          // `contain` so wordmarks (CTSASA, SAPRF) are never cropped
+          // or stretched on the 48pt tile. Keeps the padded light
+          // background from `styles.logoTile` visible around the mark.
+          resizeMode="contain"
           accessibilityIgnoresInvertColors
           onError={() => setLogoFailed(true)}
         />
@@ -69,7 +95,7 @@ export default function ClubRow({ organisation, onPress }: Props) {
           )}
         </View>
         <Text style={styles.meta} numberOfLines={1}>
-          {location.length > 0 ? location : 'Location to be confirmed'}
+          {metaLine}
         </Text>
         {disciplineLine.length > 0 && (
           <Text style={styles.meta} numberOfLines={1}>
