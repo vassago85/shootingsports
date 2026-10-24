@@ -17,7 +17,7 @@ import { login } from '@/api/auth';
 import { ApiError } from '@/api/client';
 import { registerForPushNotifications } from '@/push/register';
 import { colors, fonts, radius, size } from '@/theme';
-import { ErrorRow, GhostButton, HeroBand, PrimaryButton } from '@/ui';
+import { ErrorRow, HeroBand, PrimaryButton } from '@/ui';
 
 /**
  * M1 Sign in.
@@ -218,11 +218,21 @@ export default function LoginScreen() {
               style={styles.submit}
             />
 
-            <GhostButton
-              label="Forgot password?"
-              onPress={openResetLink}
-              style={styles.forgotBtn}
-            />
+            {/* Forgot password — plain text link below Sign In.
+                Promoting this from a GhostButton (CTA weight) to a
+                tertiary link keeps the Sign In button the single
+                primary focus of the screen and matches the Register
+                link in weight at the bottom. */}
+            <View style={styles.forgotRow}>
+              <Pressable
+                onPress={openResetLink}
+                hitSlop={10}
+                accessibilityRole="link"
+                accessibilityLabel="Reset password on the website"
+              >
+                <Text style={styles.forgotLink}>Forgot password?</Text>
+              </Pressable>
+            </View>
 
             <View style={styles.registerRow}>
               <Text style={styles.registerLead}>New here?</Text>
@@ -299,7 +309,19 @@ const styles = StyleSheet.create({
   },
 
   submit: { marginTop: 8 },
-  forgotBtn: { alignSelf: 'stretch' },
+
+  /* Forgot password — tertiary text link below Sign In so the
+   * primary action keeps the user's visual focus. */
+  forgotRow: {
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  forgotLink: {
+    fontFamily: fonts.bodySemi,
+    fontSize: 15,
+    color: colors.link,
+    paddingVertical: 10,
+  },
 
   registerRow: {
     marginTop: 24,
