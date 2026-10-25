@@ -25,7 +25,7 @@ use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable([
-    'name', 'email', 'password', 'calendar_slug', 'home_province', 'travel_radius_km',
+    'name', 'email', 'password', 'calendar_slug', 'home_province', 'extra_provinces', 'travel_radius_km',
     'digest_frequency', 'association_membership_number',
     'role', 'is_staff', 'is_match_director', 'is_media_partner',
     'md_requested_at', 'md_approved_at', 'md_rejected_at', 'md_rejection_reason',
@@ -52,6 +52,14 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'home_province' => Province::class,
+            // Stored as a JSON array of Province enum values (e.g.
+            // ["gauteng","western_cape"]). Not cast to an enum
+            // collection because Laravel's AsEnumCollection utility
+            // would force every read through enum hydration; keeping
+            // it as array keeps the data lightweight and matches how
+            // other json columns (notification prefs, saved_searches
+            // params) are stored in this app.
+            'extra_provinces' => 'array',
             'travel_radius_km' => 'integer',
             'digest_frequency' => DigestFrequency::class,
             'role' => UserRole::class,

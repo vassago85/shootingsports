@@ -50,6 +50,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     // cannot spam the pivot table.
     Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('me')->name('me.')->group(function (): void {
         Route::get('/', [MeController::class, 'show'])->name('show');
+        Route::patch('/', [MeController::class, 'update'])->name('update');
 
         Route::get('saved-events', [SavedEventController::class, 'index'])->name('saved-events.index');
         Route::post('saved-events', [SavedEventController::class, 'store'])->name('saved-events.store');

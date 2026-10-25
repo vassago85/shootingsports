@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Enums\Province;
 use App\Models\User;
 use App\Support\DeskCapabilities;
 use Illuminate\Http\Request;
@@ -35,6 +36,19 @@ class UserResource extends JsonResource
             'calendar_slug' => $this->calendar_slug,
             'home_province' => $this->home_province?->getLabel(),
             'home_province_slug' => $this->home_province?->urlSlug(),
+            // Secondary provinces for the /me/feed discipline-follow
+            // scoping. Returned as [{label, slug}] mirroring the
+            // single home_province representation above so the mobile
+            // client doesn't need to re-enum anything client-side.
+            'extra_provinces' => collect($this->extra_provinces ?? [])
+                ->map(fn (string $value) => Province::tryFrom($value))
+                ->filter()
+                ->map(fn (Province $province) => [
+                    'label' => $province->getLabel(),
+                    'slug' => $province->urlSlug(),
+                ])
+                ->values()
+                ->all(),
             'travel_radius_km' => $this->travel_radius_km,
             'plan' => $this->plan?->value,
             'is_pro' => $this->isPro(),
