@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\ManagedEventController;
 use App\Http\Controllers\Api\V1\ManagedPlacementController;
 use App\Http\Controllers\Api\V1\MapController;
 use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\MeFeedController;
 use App\Http\Controllers\Api\V1\MeFollowController;
 use App\Http\Controllers\Api\V1\OrganisationController;
 use App\Http\Controllers\Api\V1\ProviderController;
@@ -61,6 +62,11 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::delete('follows/{type}/{id}', [MeFollowController::class, 'destroy'])
             ->where(['type' => '[a-z]+', 'id' => '[0-9]+'])
             ->name('follows.destroy');
+
+        // Personalised home — saved + followed-club/discipline-sourced
+        // matches in the weekend and 30-day windows. See the controller
+        // docblock for the full union logic.
+        Route::get('feed', [MeFeedController::class, 'show'])->name('feed.show');
 
         Route::get('saved-events', [SavedEventController::class, 'index'])->name('saved-events.index');
         Route::post('saved-events', [SavedEventController::class, 'store'])->name('saved-events.store');
