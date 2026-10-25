@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\Event;
+use App\Support\HomeWindows;
 use App\Support\PublicCounts;
 use App\Support\ThisWeekend;
 use Illuminate\Support\Carbon;
@@ -18,7 +19,7 @@ class HomeController extends Controller
         // and any empty-state copy always agree.
         $stats = PublicCounts::all();
 
-        [$weekendFrom, $weekendTo] = ThisWeekend::range();
+        [$weekendFrom, $weekendTo] = HomeWindows::weekend();
         $weekend = $this->railEventsBetween($weekendFrom, $weekendTo);
 
         if ($weekend->isNotEmpty()) {
@@ -44,10 +45,11 @@ class HomeController extends Controller
             }
         }
 
+        [, $thirtyDayEnd] = HomeWindows::next30Days();
         $upcoming = Event::query()
             ->upcoming()
             ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
-            ->where('starts_at', '<=', now()->addDays(30))
+            ->where('starts_at', '<=', $thirtyDayEnd)
             ->orderBy('starts_at')
             ->limit(10)
             ->get();
