@@ -8,7 +8,6 @@ import { fetchMap, MapPayload } from '@/api/map';
 import ClubsList from '@/find/ClubsList';
 import RangesList from '@/find/RangesList';
 import ShopsList from '@/find/ShopsList';
-import SportsList from '@/find/SportsList';
 import { colors, fonts } from '@/theme';
 import { ErrorRow, FilterChip, HeroBand, Spinner } from '@/ui';
 
@@ -43,7 +42,11 @@ type IoniconName = ComponentProps<typeof Ionicons>['name'];
  *   M4f Clubs list         — `ClubsList` (`/api/v1/organisations`)
  *   M4h Ranges list        — `RangesList` (`/api/v1/venues`)
  *   M4j Shops tiles        — `ShopsList` (`/api/v1/providers`)
- *   M4l Sports tiles       — `SportsList` (`/api/v1/disciplines`)
+ *
+ * The Sports mode (M4l) was removed in 2026-10 — it duplicated the
+ * Calendar's discipline filter without adding anything a user couldn't
+ * already do from there. Discipline browsing lives on the Calendar
+ * filter sheet; Find is now a pure "where things are" directory.
  */
 
 const mapProvider = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
@@ -55,7 +58,7 @@ const SOUTH_AFRICA_REGION: Region = {
   longitudeDelta: 12,
 };
 
-type FindMode = 'events' | 'clubs' | 'ranges' | 'shops' | 'sports';
+type FindMode = 'events' | 'clubs' | 'ranges' | 'shops';
 
 type ModeConfig = {
   value: FindMode;
@@ -70,7 +73,6 @@ const MODES: ReadonlyArray<ModeConfig> = [
   { value: 'clubs', label: 'Clubs', icon: 'people-outline' },
   { value: 'ranges', label: 'Ranges', icon: 'navigate-outline' },
   { value: 'shops', label: 'Shops', icon: 'storefront-outline' },
-  { value: 'sports', label: 'Sports', icon: 'trophy-outline' },
 ];
 
 export default function FindScreen() {
@@ -168,8 +170,6 @@ function renderMode(
       return <RangesList />;
     case 'shops':
       return <ShopsList />;
-    case 'sports':
-      return <SportsList />;
     default: {
       // Compile-time exhaustiveness check — if a new FindMode value
       // is added to the union, this `never` assignment stops typecheck

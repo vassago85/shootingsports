@@ -4,7 +4,6 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import ClubsList from '@/find/ClubsList';
 import RangesList from '@/find/RangesList';
 import ShopsList from '@/find/ShopsList';
-import SportsList from '@/find/SportsList';
 import { colors } from '@/theme';
 import { FilterChip, HeroBand } from '@/ui';
 
@@ -16,13 +15,17 @@ import { FilterChip, HeroBand } from '@/ui';
  * matters when someone browses the Expo web preview.
  *
  * The map centroids aren't useful on a desktop viewport anyway, so web
- * exposes the four directory modes directly — Sports, Clubs, Ranges,
- * Shops — using the same shared list components the native screen
- * renders. The chip strip, HeroBand and colour tokens all come from the
- * same primitives so native and web stay visually consistent.
+ * exposes the three directory modes directly — Clubs, Ranges, Shops —
+ * using the same shared list components the native screen renders. The
+ * chip strip, HeroBand and colour tokens all come from the same
+ * primitives so native and web stay visually consistent.
+ *
+ * The Sports mode was removed in 2026-10 — browsing by discipline now
+ * lives on the Calendar filter sheet, where the same picker also
+ * narrows by date / province.
  */
 
-type FindMode = 'sports' | 'clubs' | 'ranges' | 'shops';
+type FindMode = 'clubs' | 'ranges' | 'shops';
 
 type ModeConfig = {
   value: FindMode;
@@ -30,14 +33,13 @@ type ModeConfig = {
 };
 
 const MODES: ReadonlyArray<ModeConfig> = [
-  { value: 'sports', label: 'Sports' },
   { value: 'clubs', label: 'Clubs' },
   { value: 'ranges', label: 'Ranges' },
   { value: 'shops', label: 'Shops' },
 ];
 
 export default function FindScreenWeb() {
-  const [mode, setMode] = useState<FindMode>('sports');
+  const [mode, setMode] = useState<FindMode>('clubs');
 
   return (
     <View style={styles.container}>
@@ -66,14 +68,12 @@ export default function FindScreenWeb() {
 }
 
 /**
- * Exhaustive switch over FindMode — adding a fifth value is a compile
+ * Exhaustive switch over FindMode — adding a fourth value is a compile
  * error until a branch lands here. Mirrors the pattern used in the
  * native Find screen.
  */
 function renderMode(mode: FindMode) {
   switch (mode) {
-    case 'sports':
-      return <SportsList />;
     case 'clubs':
       return <ClubsList />;
     case 'ranges':

@@ -73,12 +73,11 @@ const STEPS = [
     },
   },
   {
-    file: '06-find-sports.png',
-    path: '/find',
-    wait: 4500,
-    // Sports is the default mode on the web Find page.
-  },
-  {
+    // Shot 06 (previously Sports) was retired in 2026-10 when the
+    // Sports mode was removed from Find. Clubs is now the web
+    // default, captured as 07-find-clubs below. Numbering kept
+    // sparse on purpose so prior references (docs, PRs, emails)
+    // don't skew by renumbering.
     file: '07-find-clubs.png',
     path: '/find',
     wait: 4500,
