@@ -29,6 +29,7 @@ function makeEvent(partial: {
     venue: null,
     host: { name: 'Host', organisation: null },
     disciplines: [],
+    last_material_change_at: null,
   };
 }
 

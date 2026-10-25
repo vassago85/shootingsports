@@ -3,17 +3,23 @@ import { render, screen, waitFor } from '@testing-library/react-native';
 import HomeScreen from '../index';
 
 /**
- * Home screen state tests — per BUILD_SPEC §3.2 M2 states:
+ * Home screen state tests — per BUILD_SPEC §3.2 M2 states + M2e.
  *
+ * Signed-out branch (M2a–M2d):
  *   M2a Loading   — HeroBand + centred Spinner
  *   M2b Empty     — HeroBand + EmptyState (calendar-outline)
  *   M2c Error     — HeroBand + ErrorRow + "Browse the full calendar"
  *   M2d Populated — HeroBand + sections + ghost button
  *
- * Expo Router hooks and the events API are mocked so Home renders
- * in isolation. The real `useFocusEffect` is a no-op outside a tab
- * navigator — we replace it with a plain `useEffect` so the data
- * fetch still runs when the component mounts in a test.
+ * Signed-in branch (M2e):
+ *   · "For you / What's on" eyebrow + H1 when has_follows:true
+ *   · Nudge card when has_follows:false (still generic layout)
+ *   · needs_province nudge when the user follows a discipline but no province
+ *   · Reasons strips appear under personalised cards
+ *
+ * Expo Router hooks and both APIs are mocked. The real useFocusEffect
+ * is a no-op outside a tab navigator — we replace it with a plain
+ * useEffect so the data fetch still runs when the component mounts.
  */
 
 jest.mock('expo-router', () => {
@@ -28,32 +34,54 @@ jest.mock('@/api/events', () => ({
   listEvents: jest.fn(),
 }));
 
+jest.mock('@/api/me-feed', () => ({
+  fetchMeFeed: jest.fn(),
+}));
+
+jest.mock('@/auth/store', () => ({
+  getAuthToken: jest.fn(),
+}));
+
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 44, bottom: 34, left: 0, right: 0 }),
   SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-// Reach into the mock after jest.mock has hoisted — `.mocked` keeps
-// the TS types correct.
 import { listEvents } from '@/api/events';
-const mockListEvents = jest.mocked(listEvents);
+import { fetchMeFeed } from '@/api/me-feed';
+import { getAuthToken } from '@/auth/store';
 
-describe('HomeScreen states', () => {
+const mockListEvents = jest.mocked(listEvents);
+const mockFetchMeFeed = jest.mocked(fetchMeFeed);
+const mockGetAuthToken = jest.mocked(getAuthToken);
+
+beforeEach(() => {
+  mockListEvents.mockReset();
+  mockFetchMeFeed.mockReset();
+  mockGetAuthToken.mockReset();
+});
+
+/* ============================================================
+ * Signed-out branch (M2a–M2d)
+ * ========================================================= */
+
+describe('HomeScreen — signed out', () => {
   beforeEach(() => {
-    mockListEvents.mockReset();
+    mockGetAuthToken.mockResolvedValue(null);
   });
 
   it('M2a: shows the loading spinner while the fetch is in flight', async () => {
-    // Return an unresolved promise so loading stays true.
     mockListEvents.mockImplementation(() => new Promise(() => {}));
 
     await render(<HomeScreen />);
 
-    expect(screen.getByLabelText('Loading matches')).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByLabelText('Loading matches')).toBeTruthy();
+    });
   });
 
   it('M2b: shows the empty state when the API returns zero rows', async () => {
-    mockListEvents.mockResolvedValue({ events: [], count: 0 });
+    mockListEvents.mockResolvedValue({ events: [], count: 0, suggestion: null });
 
     await render(<HomeScreen />);
 
@@ -72,4 +100,171 @@ describe('HomeScreen states', () => {
     });
     expect(screen.getByText(/Browse the full calendar/i)).toBeTruthy();
   });
+
+  it('uses the generic "National calendar / Upcoming matches" hero copy', async () => {
+    mockListEvents.mockResolvedValue({ events: [], count: 0, suggestion: null });
+
+    await render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText('National calendar')).toBeTruthy();
+      expect(screen.getByText('Upcoming matches')).toBeTruthy();
+    });
+  });
+
+  it('does NOT show the "Follow a club" nudge when signed out', async () => {
+    mockListEvents.mockResolvedValue({ events: [sampleEvent()], count: 1, suggestion: null });
+
+    await render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Follow a club or discipline/i)).toBeNull();
+    });
+  });
 });
+
+/* ============================================================
+ * Signed-in branch (M2e)
+ * ========================================================= */
+
+describe('HomeScreen — signed in', () => {
+  beforeEach(() => {
+    mockGetAuthToken.mockResolvedValue('mock-token');
+  });
+
+  it('shows the "For you / What\'s on" hero when has_follows is true', async () => {
+    mockFetchMeFeed.mockResolvedValue({
+      data: { saved: [], this_weekend: [], next_30_days: [sampleFeedEntry()] },
+      meta: { has_follows: true, needs_province: false },
+    });
+
+    await render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText('For you')).toBeTruthy();
+      expect(screen.getByText("What's on")).toBeTruthy();
+    });
+  });
+
+  it('renders the Saved section (with a Changed badge when flagged)', async () => {
+    mockFetchMeFeed.mockResolvedValue({
+      data: {
+        saved: [{ ...sampleEvent(), id: 42, title: 'Steel Sunday', changed: true }],
+        this_weekend: [],
+        next_30_days: [],
+      },
+      meta: { has_follows: true, needs_province: false },
+    });
+
+    await render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Saved')).toBeTruthy();
+      expect(screen.getByText('Steel Sunday')).toBeTruthy();
+      expect(screen.getByText('CHANGED')).toBeTruthy();
+    });
+  });
+
+  it('renders reasons strips under personalised cards', async () => {
+    mockFetchMeFeed.mockResolvedValue({
+      data: {
+        saved: [],
+        this_weekend: [],
+        next_30_days: [sampleFeedEntry()],
+      },
+      meta: { has_follows: true, needs_province: false },
+    });
+
+    await render(<HomeScreen />);
+
+    await waitFor(() => {
+      // Reason text is `${name} · ${province}` — matches "SAPRF · Gauteng".
+      expect(screen.getByText(/SAPRF · Gauteng/i)).toBeTruthy();
+    });
+  });
+
+  it('shows the "Pick your home province" nudge when needs_province is true', async () => {
+    mockFetchMeFeed.mockResolvedValue({
+      data: { saved: [], this_weekend: [], next_30_days: [] },
+      meta: { has_follows: true, needs_province: true },
+    });
+
+    await render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Pick your home province/i)).toBeTruthy();
+    });
+  });
+
+  it('falls back to the generic layout + nudge when has_follows is false', async () => {
+    mockFetchMeFeed.mockResolvedValue({
+      data: { saved: [], this_weekend: [], next_30_days: [] },
+      meta: { has_follows: false, needs_province: false },
+    });
+    mockListEvents.mockResolvedValue({ events: [sampleEvent()], count: 1, suggestion: null });
+
+    await render(<HomeScreen />);
+
+    // has_follows=false lands in the personalised branch's guard
+    // (which also renders the nudge). The server returns empty
+    // buckets so we just see the nudge + the "Browse" CTA.
+    await waitFor(() => {
+      expect(screen.getByText(/Follow a club or discipline/i)).toBeTruthy();
+    });
+  });
+
+  it('falls back to generic events + inline error when /me/feed fails', async () => {
+    mockFetchMeFeed.mockRejectedValue(new Error('server glitch'));
+    mockListEvents.mockResolvedValue({ events: [sampleEvent()], count: 1, suggestion: null });
+
+    await render(<HomeScreen />);
+
+    await waitFor(() => {
+      // The generic layout should appear with our sample event.
+      expect(screen.getByText('WC Provincial')).toBeTruthy();
+    });
+  });
+});
+
+/* ============================================================
+ * Fixtures
+ * ========================================================= */
+
+function sampleEvent() {
+  return {
+    id: 1,
+    slug: 'wc-provincial',
+    title: 'WC Provincial',
+    starts_at: '2026-10-31T00:00:00+00:00',
+    ends_at: null,
+    all_day: true,
+    level: 'provincial',
+    status: 'entries_open',
+    entry_url: null,
+    entry_fee_cents: 80000,
+    member_fee_cents: null,
+    location_label: 'Atlantis · WC',
+    banner_url: null,
+    url: 'https://example.test/events/x',
+    novice_friendly: false,
+    venue: null,
+    host: {
+      name: 'SAPRF',
+      organisation: {
+        slug: 'saprf',
+        name: 'South African Precision Rifle Federation',
+        short_name: 'SAPRF',
+        logo_url: null,
+      },
+    },
+    disciplines: [],
+    last_material_change_at: null,
+  };
+}
+
+function sampleFeedEntry() {
+  return {
+    ...sampleEvent(),
+    reasons: [{ type: 'club' as const, name: 'SAPRF', province: 'Gauteng' }],
+  };
+}
