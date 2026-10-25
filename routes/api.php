@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\MapController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MeFeedController;
 use App\Http\Controllers\Api\V1\MeFollowController;
+use App\Http\Controllers\Api\V1\MeFollowSuggestionController;
 use App\Http\Controllers\Api\V1\OrganisationController;
 use App\Http\Controllers\Api\V1\ProviderController;
 use App\Http\Controllers\Api\V1\SavedEventController;
@@ -67,6 +68,12 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         // matches in the weekend and 30-day windows. See the controller
         // docblock for the full union logic.
         Route::get('feed', [MeFeedController::class, 'show'])->name('feed.show');
+
+        // Discovery / onboarding helper: which clubs should I follow
+        // if I shoot these sports in this province? Returns clubs with
+        // upcoming matches matching the criteria, ranked by match count.
+        Route::get('follow-suggestions', [MeFollowSuggestionController::class, 'show'])
+            ->name('follow-suggestions.show');
 
         Route::get('saved-events', [SavedEventController::class, 'index'])->name('saved-events.index');
         Route::post('saved-events', [SavedEventController::class, 'store'])->name('saved-events.store');
