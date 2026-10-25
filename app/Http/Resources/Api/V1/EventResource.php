@@ -47,6 +47,20 @@ class EventResource extends JsonResource
             'disciplines' => DisciplineResource::collection($this->whenLoaded('disciplines')),
             'banner_url' => $this->coverImageUrl(),
             'url' => $this->publicUrl(),
+            // Null for events that have never been materially edited.
+            // The mobile client uses this + the save-pivot timestamp
+            // to decide whether to show a "Something changed" badge.
+            'last_material_change_at' => $this->last_material_change_at?->toIso8601String(),
+            // Only emitted when this resource was reached via the
+            // saved-events pivot (either /me/saved-events or the
+            // /me/feed `saved` bucket). True when the material-change
+            // clock has ticked since the shooter hit Save.
+            'changed' => $this->whenPivotLoaded(
+                'saved_events',
+                fn (): bool => $this->last_material_change_at !== null
+                    && $this->pivot->created_at !== null
+                    && $this->last_material_change_at->greaterThan($this->pivot->created_at),
+            ),
         ];
     }
 }

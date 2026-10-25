@@ -32,6 +32,26 @@ use Illuminate\Support\Facades\Mail;
  */
 class EventObserver
 {
+    /**
+     * Fields that constitute a "material" change for the mobile feed's
+     * change badge. A description tweak or banner swap deliberately
+     * does not flip this clock — only date, venue, and status move it.
+     */
+    private const MATERIAL_KEYS = ['starts_at', 'ends_at', 'venue_id', 'status'];
+
+    public function updating(Event $event): void
+    {
+        foreach (self::MATERIAL_KEYS as $key) {
+            if ($event->isDirty($key)) {
+                // Set the timestamp on the same UPDATE query — no
+                // extra round-trip, no second observer firing.
+                $event->last_material_change_at = now();
+
+                return;
+            }
+        }
+    }
+
     public function updated(Event $event): void
     {
         if (! $event->wasChanged('status')) {

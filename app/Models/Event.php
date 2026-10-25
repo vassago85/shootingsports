@@ -36,6 +36,7 @@ use Illuminate\Support\Facades\Storage;
     'entries_taken', 'round_count', 'target_count', 'stage_count',
     'results_url', 'banner_media_id', 'banner_path', 'description', 'created_by',
     'source', 'last_verified_at', 'import_notes', 'needs_review',
+    'last_material_change_at',
 ])]
 class Event extends Model
 {
@@ -68,6 +69,7 @@ class Event extends Model
             'source' => ListingSource::class,
             'last_verified_at' => 'immutable_datetime',
             'needs_review' => 'boolean',
+            'last_material_change_at' => 'immutable_datetime',
         ];
     }
 
