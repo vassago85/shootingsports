@@ -52,6 +52,20 @@ export type EventCard = {
     } | null;
   };
   disciplines: EventDiscipline[];
+  /**
+   * ISO timestamp of the last material edit (date, venue, or status
+   * change). Null for events that have never been materially edited.
+   * The /me/feed Saved section uses this + the save-pivot timestamp
+   * to decide whether to show a "Changed" badge.
+   */
+  last_material_change_at: string | null;
+  /**
+   * Only present when the event was fetched via the saved-events
+   * pivot (either /me/saved-events or /me/feed's `saved` bucket).
+   * True when the material-change clock has ticked since the shooter
+   * tapped Save.
+   */
+  changed?: boolean;
 };
 
 export type EventDetail = EventCard & {
