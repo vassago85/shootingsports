@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\ManagedEventController;
 use App\Http\Controllers\Api\V1\ManagedPlacementController;
 use App\Http\Controllers\Api\V1\MapController;
 use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\MeFollowController;
 use App\Http\Controllers\Api\V1\OrganisationController;
 use App\Http\Controllers\Api\V1\ProviderController;
 use App\Http\Controllers\Api\V1\SavedEventController;
@@ -51,6 +52,15 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('me')->name('me.')->group(function (): void {
         Route::get('/', [MeController::class, 'show'])->name('show');
         Route::patch('/', [MeController::class, 'update'])->name('update');
+
+        // Mobile follows CRUD. The web Livewire FollowButton writes
+        // to the same `follows` table so a follow created on either
+        // surface shows up on the other.
+        Route::get('follows', [MeFollowController::class, 'index'])->name('follows.index');
+        Route::post('follows', [MeFollowController::class, 'store'])->name('follows.store');
+        Route::delete('follows/{type}/{id}', [MeFollowController::class, 'destroy'])
+            ->where(['type' => '[a-z]+', 'id' => '[0-9]+'])
+            ->name('follows.destroy');
 
         Route::get('saved-events', [SavedEventController::class, 'index'])->name('saved-events.index');
         Route::post('saved-events', [SavedEventController::class, 'store'])->name('saved-events.store');

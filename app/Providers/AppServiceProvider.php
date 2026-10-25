@@ -168,6 +168,7 @@ class AppServiceProvider extends ServiceProvider
 
         Relation::enforceMorphMap([
             'organisation' => Organisation::class,
+            'discipline' => Discipline::class,
             'venue' => Venue::class,
             'event' => Event::class,
             'provider' => Provider::class,
