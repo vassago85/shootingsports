@@ -200,7 +200,10 @@ export default function MatchDetailScreen() {
         hitSlop={10}
         style={styles.headerBack}
       >
-        <Ionicons name="chevron-back" size={26} color={colors.ink} />
+        {/* White on the forest-green header — the previous `colors.ink`
+         *  (near-black) rendered the chevron and label effectively
+         *  invisible against the dark background. */}
+        <Ionicons name="chevron-back" size={26} color={colors.onForest} />
         <Text style={styles.headerBackLabel}>{backTitle}</Text>
       </Pressable>
     ),
@@ -577,7 +580,8 @@ const styles = StyleSheet.create({
   headerBackLabel: {
     fontFamily: fonts.bodySemi,
     fontSize: 15,
-    color: colors.ink,
+    // White on the forest-green header. Matches the Ionicons tint.
+    color: colors.onForest,
     marginLeft: -2,
   },
 
