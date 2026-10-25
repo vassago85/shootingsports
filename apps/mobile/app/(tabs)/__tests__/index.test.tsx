@@ -42,6 +42,10 @@ jest.mock('@/auth/store', () => ({
   getAuthToken: jest.fn(),
 }));
 
+jest.mock('@/flags', () => ({
+  isHomePersonalisedEnabled: jest.fn(),
+}));
+
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 44, bottom: 34, left: 0, right: 0 }),
   SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
@@ -50,15 +54,20 @@ jest.mock('react-native-safe-area-context', () => ({
 import { listEvents } from '@/api/events';
 import { fetchMeFeed } from '@/api/me-feed';
 import { getAuthToken } from '@/auth/store';
+import { isHomePersonalisedEnabled } from '@/flags';
 
 const mockListEvents = jest.mocked(listEvents);
 const mockFetchMeFeed = jest.mocked(fetchMeFeed);
 const mockGetAuthToken = jest.mocked(getAuthToken);
+const mockIsHomePersonalisedEnabled = jest.mocked(isHomePersonalisedEnabled);
 
 beforeEach(() => {
   mockListEvents.mockReset();
   mockFetchMeFeed.mockReset();
   mockGetAuthToken.mockReset();
+  mockIsHomePersonalisedEnabled.mockReset();
+  // Default off, matching production. Signed-in M2e tests opt in.
+  mockIsHomePersonalisedEnabled.mockReturnValue(false);
 });
 
 /* ============================================================
@@ -124,12 +133,48 @@ describe('HomeScreen — signed out', () => {
 });
 
 /* ============================================================
+ * Signed-in branch with the M2e flag OFF (production default)
+ * ========================================================= */
+
+describe('HomeScreen — signed in with M2e flag OFF (default)', () => {
+  beforeEach(() => {
+    mockGetAuthToken.mockResolvedValue('mock-token');
+    // Flag defaults to false in the top-level beforeEach, kept
+    // explicit here for the reader.
+    mockIsHomePersonalisedEnabled.mockReturnValue(false);
+  });
+
+  it('does not call /me/feed when the flag is off', async () => {
+    mockListEvents.mockResolvedValue({ events: [sampleEvent()], count: 1, suggestion: null });
+
+    await render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText('WC Provincial')).toBeTruthy();
+    });
+    expect(mockFetchMeFeed).not.toHaveBeenCalled();
+  });
+
+  it('still uses the generic "National calendar" hero when signed in but flag off', async () => {
+    mockListEvents.mockResolvedValue({ events: [sampleEvent()], count: 1, suggestion: null });
+
+    await render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText('National calendar')).toBeTruthy();
+      expect(screen.queryByText('For you')).toBeNull();
+    });
+  });
+});
+
+/* ============================================================
  * Signed-in branch (M2e)
  * ========================================================= */
 
-describe('HomeScreen — signed in', () => {
+describe('HomeScreen — signed in with M2e flag ON', () => {
   beforeEach(() => {
     mockGetAuthToken.mockResolvedValue('mock-token');
+    mockIsHomePersonalisedEnabled.mockReturnValue(true);
   });
 
   it('shows the "For you / What\'s on" hero when has_follows is true', async () => {

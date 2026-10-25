@@ -7,6 +7,7 @@ import { bucketEvents } from '@/api/event-buckets';
 import { EventCard, listEvents } from '@/api/events';
 import { fetchMeFeed, FeedEntry, FeedReason, MeFeedResponse } from '@/api/me-feed';
 import { getAuthToken } from '@/auth/store';
+import { isHomePersonalisedEnabled } from '@/flags';
 import { colors, fonts, radius } from '@/theme';
 import {
   EmptyState,
@@ -71,14 +72,19 @@ export default function HomeScreen() {
     // useFocusEffect in the mounted-but-not-yet-settled window.
     const token = await getAuthToken();
     const signedIn = token !== null;
+    // M2e lives behind a flag defaulting off (BUILD_SPEC §3.2 marks
+    // it "Future"). When the flag is off the signed-in experience
+    // falls back to the generic national calendar, same as a signed
+    // out visitor — zero behavioural drift until we flip the flag.
+    const usePersonalised = signedIn && isHomePersonalisedEnabled();
 
     try {
-      if (signedIn) {
+      if (usePersonalised) {
         const feed = await fetchMeFeed();
         setState({ kind: 'personalised', feed, error: null });
       } else {
         const { events } = await listEvents({ limit: 60 });
-        setState({ kind: 'generic', events, error: null, signedIn: false });
+        setState({ kind: 'generic', events, error: null, signedIn });
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not load matches.';
@@ -86,7 +92,7 @@ export default function HomeScreen() {
       // On a signed-in failure fall through to a generic view with
       // the error shown — the user still gets *something* on Home
       // instead of a bare error screen.
-      if (signedIn) {
+      if (usePersonalised) {
         try {
           const { events } = await listEvents({ limit: 60 });
           setState({ kind: 'generic', events, error: message, signedIn: true });
@@ -94,7 +100,7 @@ export default function HomeScreen() {
           setState({ kind: 'generic', events: [], error: message, signedIn: true });
         }
       } else {
-        setState({ kind: 'generic', events: [], error: message, signedIn: false });
+        setState({ kind: 'generic', events: [], error: message, signedIn });
       }
     } finally {
       setRefreshing(false);
