@@ -17,7 +17,22 @@ const VIEWPORT = { width: 390, height: 844 };
  * mode chip, etc. `wait` is extra idle time after navigation.
  */
 const STEPS = [
-  { file: '01-home.png', path: '/', wait: 4000 },
+  {
+    file: '01-home.png',
+    path: '/',
+    wait: 4000,
+    // Home does a cold /events?limit=... fetch and the first paint is
+    // the loading spinner. Wait for the "This weekend" / "Next 30 days"
+    // headings so the capture gets real cards, not the shimmer.
+    prep: async (page) => {
+      await page
+        .getByText(/This weekend|Next 30 days/i)
+        .first()
+        .waitFor({ timeout: 8000 })
+        .catch(() => {});
+      await page.waitForTimeout(400);
+    },
+  },
   { file: '02-calendar.png', path: '/calendar', wait: 4500 },
   {
     file: '03-calendar-filters-all.png',
