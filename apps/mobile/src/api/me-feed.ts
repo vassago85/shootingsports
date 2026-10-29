@@ -8,19 +8,26 @@ import { EventCard } from './events';
  *                         (regular club, provincial body, or federation).
  * - `type: "discipline"` — the shooter follows this discipline AND the
  *                         match venue is in their home or extra province.
+ * - `type: "near_you"`  — the match venue is within travel_radius_km of
+ *                         the shooter's chosen home range. `name` reads
+ *                         like "42 km from Alberton Range"; `distance_km`
+ *                         carries the raw integer for sorting / testing.
  *
  * The server pre-sorts reasons so clubs appear first and deduplicates
  * on (type, name) — the mobile client renders the array as-is.
  */
 export type FeedReason = {
-  type: 'club' | 'discipline';
+  type: 'club' | 'discipline' | 'near_you';
   name: string;
   /**
    * For a club reason: the club's own province. For a discipline reason:
-   * the match venue's province. Null when the entity isn't scoped to a
-   * province (e.g. national federations like SAPRF have null).
+   * the match venue's province. For a near_you reason: null (distance
+   * replaces province as the useful context). Null when the entity
+   * isn't scoped to a province (e.g. national federations like SAPRF).
    */
   province: string | null;
+  /** Set only on `near_you` reasons. Rounded whole kilometres. */
+  distance_km?: number;
 };
 
 /**
@@ -38,6 +45,12 @@ export type MeFeedResponse = {
     saved: EventCard[];
     /** Fri–Sun window per server-side HomeWindows::weekend(). */
     this_weekend: FeedEntry[];
+    /**
+     * Within `travel_radius_km` of the shooter's picked home range.
+     * Empty when no home range is set — the mobile UI shows a nudge
+     * driven by `meta.has_home_venue` instead of a stale section.
+     */
+    near_you: FeedEntry[];
     /** Rolling 30-day window per HomeWindows::next30Days(). */
     next_30_days: FeedEntry[];
   };
@@ -50,6 +63,8 @@ export type MeFeedResponse = {
      * the user to pick a province.
      */
     needs_province: boolean;
+    /** True when a home range venue is picked (near_you may still be empty). */
+    has_home_venue: boolean;
   };
 };
 

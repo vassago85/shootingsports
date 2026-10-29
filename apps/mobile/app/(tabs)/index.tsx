@@ -15,6 +15,7 @@ import {
   GhostButton,
   HeroBand,
   MatchCard,
+  MatchRow,
   SectionTitle,
   Spinner,
 } from '@/ui';
@@ -189,10 +190,25 @@ function PersonalisedBody({
   onOpenMe: () => void;
   onOpenFind: () => void;
 }) {
-  const { saved, this_weekend: thisWeekend, next_30_days: next30 } = feed.data;
-  const { has_follows: hasFollows, needs_province: needsProvince } = feed.meta;
+  // Defaulting lets the client keep working against an older backend
+  // (pre-near_you deploy) where `near_you` and `has_home_venue` are
+  // absent. `has_home_venue` defaults to `true` on an older server
+  // so the "Pick a home range" nudge stays silent until the server
+  // can actually accept a home_venue_id.
+  const {
+    saved = [],
+    this_weekend: thisWeekend = [],
+    near_you: nearYou = [],
+    next_30_days: next30 = [],
+  } = feed.data;
+  const {
+    has_follows: hasFollows,
+    needs_province: needsProvince,
+    has_home_venue: hasHomeVenue = true,
+  } = feed.meta;
 
   const totalFollowed = thisWeekend.length + next30.length;
+  const totalRows = totalFollowed + nearYou.length + saved.length;
 
   return (
     <>
@@ -206,7 +222,7 @@ function PersonalisedBody({
         // generic branch. Guard anyway so a schema drift doesn't
         // leave the user staring at a blank Home.
         <NudgeCard
-          icon="heart-outline"
+          icon="business-outline"
           title="Follow a club or discipline"
           body="Your personal home lights up once you follow something."
           actionLabel="Discover clubs"
@@ -219,6 +235,20 @@ function PersonalisedBody({
           icon="location-outline"
           title="Pick your home province"
           body="So matches in the disciplines you follow can show up here."
+          actionLabel="Open profile"
+          onPress={onOpenMe}
+        />
+      )}
+
+      {!hasHomeVenue && (
+        // Only nudge once per session; low-key copy so it reads as
+        // an invite not a demand. If the shooter never picks one,
+        // the Near-you section just stays hidden — the other three
+        // buckets carry the feed.
+        <NudgeCard
+          icon="navigate-outline"
+          title="Pick a home range"
+          body="So nearby matches can show up here, no matter who hosts them."
           actionLabel="Open profile"
           onPress={onOpenMe}
         />
@@ -243,6 +273,15 @@ function PersonalisedBody({
         />
       )}
 
+      {nearYou.length > 0 && (
+        <PersonalisedSection
+          title="Near you"
+          events={nearYou}
+          onMatchPress={onMatchPress}
+          showReasons
+        />
+      )}
+
       {next30.length > 0 && (
         <PersonalisedSection
           title="Next 30 days"
@@ -252,7 +291,7 @@ function PersonalisedBody({
         />
       )}
 
-      {hasFollows && totalFollowed === 0 && saved.length === 0 && (
+      {hasFollows && totalRows === 0 && (
         <EmptyState icon="calendar-outline">
           Nothing from your follows in the next 30 days. Browse the full calendar for other matches.
         </EmptyState>
@@ -318,7 +357,7 @@ function GenericBody({
         // back has_follows:false and we're rendering generic. Nudge
         // the user toward Find so the next session can be personal.
         <NudgeCard
-          icon="heart-outline"
+          icon="business-outline"
           title="Follow a club or discipline"
           body="Your personal home lights up once you follow something."
           actionLabel="Discover clubs"
@@ -405,37 +444,59 @@ function PersonalisedSection({
   showReasons: boolean;
   showChangedBadge?: boolean;
 }) {
+  // Personalised feed sections render as a vertical stack of
+  // full-width rows, not a horizontal carousel. A shooter looking at
+  // their own feed wants to see every match without swiping — same
+  // reason the Calendar list and the Me > Saved list already use
+  // full-width rows. Carousels still make sense on the generic home
+  // (section-of-many), but once we're inside "FOR YOU" the pattern
+  // flips to scannable rows + a readable reasons strip underneath.
   return (
     <View style={styles.section}>
       <View style={styles.sectionHead}>
         <SectionTitle>{title}</SectionTitle>
       </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.carousel}
-      >
+      <View style={styles.personalisedList}>
         {events.map((event) => (
-          <View key={event.id} style={styles.carouselCard}>
+          <View key={event.id} style={styles.personalisedRow}>
             {showChangedBadge && event.changed === true && (
               <View style={styles.changedBadge} accessibilityLabel="This match has changed since you saved it">
                 <Text style={styles.changedBadgeText}>CHANGED</Text>
               </View>
             )}
-            <MatchCard event={event} onPress={() => onMatchPress(event.slug)} />
+            <MatchRow event={event} onPress={() => onMatchPress(event.slug)} />
             {showReasons && event.reasons.length > 0 && (
               <ReasonsStrip reasons={event.reasons} />
             )}
           </View>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 }
 
 /**
+ * Icon name per reason kind. Centralised so the pill, the nudge
+ * cards, and any future "why" surfaces stay visually consistent.
+ */
+function iconForReason(type: FeedReason['type']): keyof typeof Ionicons.glyphMap {
+  switch (type) {
+    case 'club':
+      return 'business-outline';
+    case 'discipline':
+      return 'locate-outline';
+    case 'near_you':
+      return 'navigate-outline';
+    default: {
+      const _exhaustive: never = type;
+      return _exhaustive;
+    }
+  }
+}
+
+/**
  * The per-match reasons strip. Mono tint pills with icon + name.
- * E.g. "♥ SAPRF · GP" or "⌾ Precision Rifle · GP".
+ * E.g. "🏢 SAPRF · GP" or "⌖ Precision Rifle · GP" or "➤ 42 km from Alberton".
  */
 function ReasonsStrip({ reasons }: { reasons: FeedReason[] }) {
   return (
@@ -443,7 +504,11 @@ function ReasonsStrip({ reasons }: { reasons: FeedReason[] }) {
       {reasons.map((reason, i) => (
         <View key={`${reason.type}-${reason.name}-${i}`} style={styles.reasonPill}>
           <Ionicons
-            name={reason.type === 'club' ? 'heart' : 'ellipse-outline'}
+            // Three kinds of pill, three glyphs:
+            //   business-outline → club/federation follow
+            //   locate-outline   → discipline follow (crosshair)
+            //   navigate-outline → near-you (compass needle, distance context)
+            name={iconForReason(reason.type)}
             size={12}
             color={colors.link}
             style={styles.reasonIcon}
@@ -507,13 +572,25 @@ const styles = StyleSheet.create({
   carousel: { paddingHorizontal: 16, gap: 12 },
   carouselCard: { width: CARD_WIDTH, gap: 8 },
 
+  /* Vertical stack used by PersonalisedSection — full-width rows,
+     one per match, with the reasons strip sitting flush under its
+     row (indented to line up with the row body, not the date block). */
+  personalisedList: { gap: 4 },
+  personalisedRow: { gap: 6, paddingBottom: 8 },
+
   ctaSection: { paddingHorizontal: 16, paddingTop: 4 },
 
-  /* ---- Reasons strip under personalised cards ---- */
+  /* ---- Reasons strip under personalised rows ----
+     Left-indented to line up with the MatchRow body (date block
+     is 52pt wide + 12pt gap + 16pt row padding = 80pt). This keeps
+     the pill visually grouped with the match title it describes. */
   reasonsStrip: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
+    paddingLeft: 80,
+    paddingRight: 16,
+    paddingTop: 2,
   },
   reasonPill: {
     flexDirection: 'row',

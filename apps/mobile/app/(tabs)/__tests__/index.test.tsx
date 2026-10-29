@@ -178,10 +178,9 @@ describe('HomeScreen — signed in with M2e flag ON', () => {
   });
 
   it('shows the "For you / What\'s on" hero when has_follows is true', async () => {
-    mockFetchMeFeed.mockResolvedValue({
-      data: { saved: [], this_weekend: [], next_30_days: [sampleFeedEntry()] },
-      meta: { has_follows: true, needs_province: false },
-    });
+    mockFetchMeFeed.mockResolvedValue(
+      makeFeed({ next_30_days: [sampleFeedEntry()] }, { has_follows: true, has_home_venue: true }),
+    );
 
     await render(<HomeScreen />);
 
@@ -192,14 +191,12 @@ describe('HomeScreen — signed in with M2e flag ON', () => {
   });
 
   it('renders the Saved section (with a Changed badge when flagged)', async () => {
-    mockFetchMeFeed.mockResolvedValue({
-      data: {
-        saved: [{ ...sampleEvent(), id: 42, title: 'Steel Sunday', changed: true }],
-        this_weekend: [],
-        next_30_days: [],
-      },
-      meta: { has_follows: true, needs_province: false },
-    });
+    mockFetchMeFeed.mockResolvedValue(
+      makeFeed(
+        { saved: [{ ...sampleEvent(), id: 42, title: 'Steel Sunday', changed: true }] },
+        { has_follows: true, has_home_venue: true },
+      ),
+    );
 
     await render(<HomeScreen />);
 
@@ -211,14 +208,9 @@ describe('HomeScreen — signed in with M2e flag ON', () => {
   });
 
   it('renders reasons strips under personalised cards', async () => {
-    mockFetchMeFeed.mockResolvedValue({
-      data: {
-        saved: [],
-        this_weekend: [],
-        next_30_days: [sampleFeedEntry()],
-      },
-      meta: { has_follows: true, needs_province: false },
-    });
+    mockFetchMeFeed.mockResolvedValue(
+      makeFeed({ next_30_days: [sampleFeedEntry()] }, { has_follows: true, has_home_venue: true }),
+    );
 
     await render(<HomeScreen />);
 
@@ -228,11 +220,49 @@ describe('HomeScreen — signed in with M2e flag ON', () => {
     });
   });
 
-  it('shows the "Pick your home province" nudge when needs_province is true', async () => {
-    mockFetchMeFeed.mockResolvedValue({
-      data: { saved: [], this_weekend: [], next_30_days: [] },
-      meta: { has_follows: true, needs_province: true },
+  it('renders the Near-you section with distance pills when near_you has entries', async () => {
+    const nearYouEntry = {
+      ...sampleEvent(),
+      id: 99,
+      title: 'Local Steel Challenge',
+      reasons: [
+        {
+          type: 'near_you' as const,
+          name: '42 km from Alberton Range',
+          province: null,
+          distance_km: 42,
+        },
+      ],
+    };
+    mockFetchMeFeed.mockResolvedValue(
+      makeFeed({ near_you: [nearYouEntry] }, { has_follows: true, has_home_venue: true }),
+    );
+
+    await render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Near you')).toBeTruthy();
+      expect(screen.getByText('Local Steel Challenge')).toBeTruthy();
+      expect(screen.getByText(/42 km from Alberton Range/i)).toBeTruthy();
     });
+  });
+
+  it('shows the "Pick a home range" nudge when has_home_venue is false', async () => {
+    mockFetchMeFeed.mockResolvedValue(
+      makeFeed({}, { has_follows: true, has_home_venue: false }),
+    );
+
+    await render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Pick a home range/i)).toBeTruthy();
+    });
+  });
+
+  it('shows the "Pick your home province" nudge when needs_province is true', async () => {
+    mockFetchMeFeed.mockResolvedValue(
+      makeFeed({}, { has_follows: true, needs_province: true, has_home_venue: true }),
+    );
 
     await render(<HomeScreen />);
 
@@ -242,10 +272,9 @@ describe('HomeScreen — signed in with M2e flag ON', () => {
   });
 
   it('falls back to the generic layout + nudge when has_follows is false', async () => {
-    mockFetchMeFeed.mockResolvedValue({
-      data: { saved: [], this_weekend: [], next_30_days: [] },
-      meta: { has_follows: false, needs_province: false },
-    });
+    mockFetchMeFeed.mockResolvedValue(
+      makeFeed({}, { has_follows: false, has_home_venue: true }),
+    );
     mockListEvents.mockResolvedValue({ events: [sampleEvent()], count: 1, suggestion: null });
 
     await render(<HomeScreen />);
@@ -311,5 +340,40 @@ function sampleFeedEntry() {
   return {
     ...sampleEvent(),
     reasons: [{ type: 'club' as const, name: 'SAPRF', province: 'Gauteng' }],
+  };
+}
+
+/**
+ * Full `/me/feed` response shape. Each test overrides only the
+ * buckets / meta flags it cares about; everything else is set to
+ * the "nothing to show" neutral default.
+ */
+function makeFeed(
+  dataOverrides: Partial<{
+    saved: ReturnType<typeof sampleEvent>[];
+    this_weekend: ReturnType<typeof sampleFeedEntry>[];
+    near_you: ReturnType<typeof sampleFeedEntry>[];
+    next_30_days: ReturnType<typeof sampleFeedEntry>[];
+  }> = {},
+  metaOverrides: Partial<{
+    has_follows: boolean;
+    needs_province: boolean;
+    has_home_venue: boolean;
+  }> = {},
+) {
+  return {
+    data: {
+      saved: [],
+      this_weekend: [],
+      near_you: [],
+      next_30_days: [],
+      ...dataOverrides,
+    },
+    meta: {
+      has_follows: false,
+      needs_province: false,
+      has_home_venue: false,
+      ...metaOverrides,
+    },
   };
 }
