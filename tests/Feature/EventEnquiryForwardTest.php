@@ -2,6 +2,7 @@
 
 use App\Enums\EnquiryStatus;
 use App\Enums\EnquiryType;
+use App\Filament\Resources\Enquiries\Pages\EditEnquiry;
 use App\Mail\EnquiryFollowUpMail;
 use App\Mail\EnquiryForwardedMail;
 use App\Mail\EnquiryReceivedMail;
@@ -11,7 +12,9 @@ use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\User;
 use App\Services\Enquiries\RecordEnquiryReply;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Mail;
+use Livewire\Livewire;
 
 beforeEach(function () {
     $this->withoutVite();
@@ -46,8 +49,104 @@ it('forwards an event enquiry to the organiser from shooting sports and keeps a 
         return $mail->hasTo('organiser@club.test')
             && $mail->envelope()->from->address === config('mail.from.address')
             && $mail->envelope()->replyTo === []
+            && $mail->envelope()->cc === []
+            && $mail->copyEnquirer === false
             && str_contains($mail->render(), 'Can you send me a link for the entry please.')
             && str_contains($mail->render(), 'sent through Shooting Sports');
+    });
+});
+
+it('lets staff resend an enquiry to the organiser with the enquirer copied', function () {
+    Mail::fake();
+
+    $staff = User::factory()->staff()->create(['email' => 'staff@shootingsports.test']);
+    $event = Event::factory()->create([
+        'title' => '2 Man Gong Challenge',
+        'contact_email' => 'organiser@club.test',
+    ]);
+    $enquiry = Enquiry::query()->create([
+        'type' => EnquiryType::Listing,
+        'name' => 'Mark Kalell',
+        'email' => 'mark@example.test',
+        'body' => 'Can you send me a link for the entry please.',
+        'about_type' => 'event',
+        'about_id' => $event->id,
+        'status' => EnquiryStatus::Read,
+    ]);
+
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+    Livewire::actingAs($staff)
+        ->test(EditEnquiry::class, ['record' => $enquiry->getRouteKey()])
+        ->callAction('forward_to_organiser')
+        ->assertNotified();
+
+    Mail::assertQueued(EnquiryForwardedMail::class, function (EnquiryForwardedMail $mail): bool {
+        $cc = $mail->envelope()->cc;
+
+        return $mail->hasTo('organiser@club.test')
+            && $mail->copyEnquirer === true
+            && $mail->envelope()->replyTo === []
+            && count($cc) === 1
+            && $cc[0]->address === 'mark@example.test'
+            && str_contains($mail->render(), 'Mark Kalell is copied on this email');
+    });
+
+    expect($enquiry->fresh()->status)->toBe(EnquiryStatus::Read);
+});
+
+it('hides the forward action when the event and host club have no email', function () {
+    $staff = User::factory()->staff()->create();
+    $club = Organisation::factory()->create(['email' => null]);
+    $event = Event::factory()->create([
+        'contact_email' => null,
+        'host_organisation_id' => $club->id,
+    ]);
+    $enquiry = Enquiry::query()->create([
+        'type' => EnquiryType::Listing,
+        'name' => 'Mark Kalell',
+        'email' => 'mark@example.test',
+        'body' => 'Can you send me a link for the entry please.',
+        'about_type' => 'event',
+        'about_id' => $event->id,
+        'status' => EnquiryStatus::Read,
+    ]);
+
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+    Livewire::actingAs($staff)
+        ->test(EditEnquiry::class, ['record' => $enquiry->getRouteKey()])
+        ->assertActionHidden('forward_to_organiser');
+});
+
+it('skips the enquirer cc when the organiser is the same address', function () {
+    Mail::fake();
+
+    $staff = User::factory()->staff()->create();
+    $event = Event::factory()->create([
+        'title' => 'Self-run match',
+        'contact_email' => 'mark@example.test',
+    ]);
+    $enquiry = Enquiry::query()->create([
+        'type' => EnquiryType::Listing,
+        'name' => 'Mark Kalell',
+        'email' => 'mark@example.test',
+        'body' => 'Testing my own form.',
+        'about_type' => 'event',
+        'about_id' => $event->id,
+        'status' => EnquiryStatus::Read,
+    ]);
+
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+    Livewire::actingAs($staff)
+        ->test(EditEnquiry::class, ['record' => $enquiry->getRouteKey()])
+        ->callAction('forward_to_organiser')
+        ->assertNotified();
+
+    Mail::assertQueued(EnquiryForwardedMail::class, function (EnquiryForwardedMail $mail): bool {
+        return $mail->hasTo('mark@example.test')
+            && $mail->envelope()->cc === [];
     });
 });
 
