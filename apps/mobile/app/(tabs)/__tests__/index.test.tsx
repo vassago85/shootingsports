@@ -1,6 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react-native';
 
 import HomeScreen from '../index';
+import type { EventCard } from '@/api/events';
+import type { FeedEntry } from '@/api/me-feed';
 
 /**
  * Home screen state tests — per BUILD_SPEC §3.2 M2 states + M2e.
@@ -304,7 +306,7 @@ describe('HomeScreen — signed in with M2e flag ON', () => {
  * Fixtures
  * ========================================================= */
 
-function sampleEvent() {
+function sampleEvent(): EventCard {
   return {
     id: 1,
     slug: 'wc-provincial',
@@ -336,10 +338,10 @@ function sampleEvent() {
   };
 }
 
-function sampleFeedEntry() {
+function sampleFeedEntry(): FeedEntry {
   return {
     ...sampleEvent(),
-    reasons: [{ type: 'club' as const, name: 'SAPRF', province: 'Gauteng' }],
+    reasons: [{ type: 'club', name: 'SAPRF', province: 'Gauteng' }],
   };
 }
 
@@ -350,10 +352,10 @@ function sampleFeedEntry() {
  */
 function makeFeed(
   dataOverrides: Partial<{
-    saved: ReturnType<typeof sampleEvent>[];
-    this_weekend: ReturnType<typeof sampleFeedEntry>[];
-    near_you: ReturnType<typeof sampleFeedEntry>[];
-    next_30_days: ReturnType<typeof sampleFeedEntry>[];
+    saved: EventCard[];
+    this_weekend: FeedEntry[];
+    near_you: FeedEntry[];
+    next_30_days: FeedEntry[];
   }> = {},
   metaOverrides: Partial<{
     has_follows: boolean;

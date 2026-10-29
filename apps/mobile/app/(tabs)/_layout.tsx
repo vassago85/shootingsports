@@ -37,7 +37,10 @@ export default function TabsLayout() {
           // until each one gets its own HeroBand reskin.
           headerShown: false,
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+            // RN 0.88 widened `color` to include ProcessedColorValue (number).
+            // Expo Router's tab bar hands us string tokens from the theme, so a
+            // narrowing cast is safe and keeps Ionicons' typed `color` prop happy.
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color as string} />
           ),
         }}
       />
@@ -50,7 +53,7 @@ export default function TabsLayout() {
           // bar as spec §3.1 requires.
           headerShown: false,
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={size} color={color} />
+            <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={size} color={color as string} />
           ),
         }}
       />
@@ -63,7 +66,7 @@ export default function TabsLayout() {
           // spec §3.1.
           headerShown: false,
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'search' : 'search-outline'} size={size} color={color} />
+            <Ionicons name={focused ? 'search' : 'search-outline'} size={size} color={color as string} />
           ),
         }}
       />
@@ -75,7 +78,7 @@ export default function TabsLayout() {
           // own full-screen layout). Suppress the stock header here.
           headerShown: false,
           tabBarIcon: ({ color, focused, size }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color as string} />
           ),
         }}
       />

@@ -446,7 +446,7 @@ function PosterViewer({ uri, onClose }: PosterViewerProps) {
   const overlay = (
     <View style={styles.viewerBackdrop}>
       <Pressable
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         onPress={onClose}
         accessibilityRole="button"
         accessibilityLabel="Close poster viewer"

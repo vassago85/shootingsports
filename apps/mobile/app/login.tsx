@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ElementRef } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -84,7 +84,10 @@ function deviceLabel(): string {
 
 export default function LoginScreen() {
   const router = useRouter();
-  const passwordRef = useRef<TextInput>(null);
+  // RN 0.88 split the TextInput value and type — the ref instance type is
+  // extracted from the component via ElementRef so native methods like
+  // focus() stay available.
+  const passwordRef = useRef<ElementRef<typeof TextInput>>(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
