@@ -9,6 +9,7 @@ use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\User;
+use App\Support\Geo;
 use App\Support\HomeWindows;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -101,15 +102,28 @@ class MeFeedController extends Controller
             $followedDisciplines,
         );
 
+        // Near-you is a geo stream, not a follows stream — any
+        // upcoming match within travel_radius_km of the shooter's
+        // home range surfaces regardless of who hosts it or what
+        // discipline it carries. Dedupes against everything above
+        // so a saved SAPRF match never shows four times.
+        $alreadyShown = $savedIds
+            ->merge($thisWeekend->pluck('id'))
+            ->merge($next30->pluck('id'));
+
+        $nearYou = $this->buildNearYouBucket($user, $alreadyShown, $thirtyDayEnd);
+
         return response()->json([
             'data' => [
                 'saved' => EventResource::collection($saved)->resolve(),
                 'this_weekend' => $this->toResource($thisWeekend),
+                'near_you' => $this->toResource($nearYou),
                 'next_30_days' => $this->toResource($next30),
             ],
             'meta' => [
                 'has_follows' => $hasFollows,
                 'needs_province' => $needsProvince,
+                'has_home_venue' => $user->home_venue_id !== null,
             ],
         ]);
     }
@@ -236,6 +250,85 @@ class MeFeedController extends Controller
     }
 
     /**
+     * Build the "Near you" bucket — upcoming matches whose venue is
+     * within `travel_radius_km` of the shooter's home range. Returns
+     * an empty collection when either the home venue or its coords
+     * are missing (null + a nudge is a better UX than silently
+     * surfacing nothing). Follows the applyRadius() pattern from
+     * PublicEventQuery: SQL window + has-venue, then haversine in
+     * PHP collection. Keeps the DB layer portable.
+     *
+     * @param  Collection<int, int>  $alreadyShown  ids already surfaced in another bucket
+     * @return Collection<int, array{event: Event, reasons: array<int, array<string, mixed>>}>
+     */
+    private function buildNearYouBucket(User $user, Collection $alreadyShown, Carbon $to): Collection
+    {
+        if ($user->home_venue_id === null) {
+            return collect();
+        }
+
+        $home = $user->homeVenue;
+
+        if ($home === null || ! $home->hasCoordinates()) {
+            return collect();
+        }
+
+        // Fallback radius — matches the default we show on the Me
+        // screen (200km) when a shooter has never explicitly set
+        // one. Zero is treated as "no radius" and bails out.
+        $radiusKm = $user->travel_radius_km ?? 200;
+
+        if ($radiusKm <= 0) {
+            return collect();
+        }
+
+        $homeLat = (float) $home->lat;
+        $homeLng = (float) $home->lng;
+        $homeName = $home->name;
+
+        $candidates = Event::query()
+            ->upcoming()
+            ->with(self::EAGER)
+            ->whereBetween('starts_at', [Carbon::now(), $to])
+            ->whereNotIn('id', $alreadyShown->all())
+            ->whereHas('venue', function (Builder $v): void {
+                $v->whereNotNull('lat')->whereNotNull('lng');
+            })
+            ->orderBy('starts_at')
+            ->get();
+
+        return $candidates
+            ->filter(function (Event $event) use ($homeLat, $homeLng, $radiusKm): bool {
+                $venue = $event->venue;
+                if ($venue === null || $venue->lat === null || $venue->lng === null) {
+                    return false;
+                }
+
+                return Geo::haversineKm($homeLat, $homeLng, (float) $venue->lat, (float) $venue->lng) <= $radiusKm;
+            })
+            ->map(function (Event $event) use ($homeLat, $homeLng, $homeName): array {
+                $venue = $event->venue;
+                $distanceKm = (int) round(
+                    Geo::haversineKm($homeLat, $homeLng, (float) $venue->lat, (float) $venue->lng),
+                );
+
+                return [
+                    'event' => $event,
+                    'reasons' => [[
+                        'type' => 'near_you',
+                        // Short + scannable on the pill: "42 km from
+                        // Alberton Range" — the shooter instantly knows
+                        // the context without re-reading the venue line.
+                        'name' => "{$distanceKm} km from {$homeName}",
+                        'province' => null,
+                        'distance_km' => $distanceKm,
+                    ]],
+                ];
+            })
+            ->values();
+    }
+
+    /**
      * Build the per-match reasons list. Club reasons first, then
      * disciplines. Deduped on (type, name) so a match tagged with
      * both the parent and child of a followed discipline doesn't
@@ -257,7 +350,11 @@ class MeFeedController extends Controller
             $org = $followedOrgs->get($event->host_organisation_id);
             $reasons[] = [
                 'type' => 'club',
-                'name' => $org->name,
+                // Prefer the short name so the pill reads "SAPRF ·
+                // Gauteng" on a narrow row instead of truncating
+                // "South African Precision Rifle Federa…". Falls
+                // back to the full name when no short form exists.
+                'name' => $org->short_name ?? $org->name,
                 'province' => $org->province?->getLabel(),
             ];
         }

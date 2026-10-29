@@ -68,7 +68,10 @@ it('returns empty buckets and has_follows=false when the user follows nothing', 
 });
 
 it('includes matches hosted by a followed club in the weekend bucket', function (): void {
-    $club = Organisation::factory()->create(['name' => 'Followed Club']);
+    // Pin short_name to null so the reasons pill falls back to the
+    // full `name` and the asserted shape stays deterministic across
+    // runs (the factory's `short_name` is `optional()` by default).
+    $club = Organisation::factory()->create(['name' => 'Followed Club', 'short_name' => null]);
     createFollow($this->user, 'organisation', $club->id);
 
     $match = matchOnWeekend(['host_organisation_id' => $club->id]);
@@ -132,7 +135,10 @@ it('discipline follows are scoped by home + extra provinces', function (): void 
 it('federation follows pick up matches hosted by that federation', function (): void {
     $federation = Organisation::factory()->create([
         'type' => OrganisationType::Federation,
-        'name' => 'SAPRF',
+        'name' => 'South African Precision Rifle Federation',
+        // Pin the short name so the reasons pill assertion below
+        // doesn't rely on the factory's optional random short_name.
+        'short_name' => 'SAPRF',
     ]);
     createFollow($this->user, 'organisation', $federation->id);
 
@@ -256,4 +262,109 @@ it('surfaces the changed flag on saved matches that were materially edited', fun
 
 it('requires authentication', function (): void {
     $this->getJson('/api/v1/me/feed')->assertStatus(401);
+});
+
+/* ============================================================
+ * Near-you bucket (home-range geo filter)
+ * ========================================================= */
+
+/**
+ * Set up a home range + travel radius on the signed-in user. Returns
+ * the venue so individual tests can position matches around it.
+ */
+function giveUserHomeRange(float $lat = -26.0, float $lng = 28.0, int $radiusKm = 100): Venue
+{
+    /** @var Venue $home */
+    $home = Venue::factory()->create([
+        'name' => 'Home Range',
+        'lat' => $lat,
+        'lng' => $lng,
+    ]);
+    test()->user->update(['home_venue_id' => $home->id, 'travel_radius_km' => $radiusKm]);
+
+    return $home;
+}
+
+it('returns an empty near_you bucket + has_home_venue=false by default', function (): void {
+    $json = callFeed()->assertOk()->json();
+
+    expect($json['data']['near_you'])->toBe([])
+        ->and($json['meta']['has_home_venue'])->toBeFalse();
+});
+
+it('surfaces matches within the travel radius of the home range', function (): void {
+    giveUserHomeRange(-26.0, 28.0, 100);
+
+    // ~10km east of the home point — well inside 100km.
+    $closeVenue = Venue::factory()->create(['lat' => -26.0, 'lng' => 28.1]);
+    $closeMatch = matchOnWeekend(['venue_id' => $closeVenue->id]);
+
+    // ~500km away — well outside 100km.
+    $farVenue = Venue::factory()->create(['lat' => -22.0, 'lng' => 28.0]);
+    matchOnWeekend(['venue_id' => $farVenue->id]);
+
+    $json = callFeed()->assertOk()->json();
+
+    expect(collect($json['data']['near_you'])->pluck('id'))->toContain($closeMatch->id)
+        ->and($json['meta']['has_home_venue'])->toBeTrue();
+
+    $farIds = collect($json['data']['near_you'])->pluck('id');
+    expect($farIds)->not->toContain(matchOnWeekend(['venue_id' => $farVenue->id])->id);
+});
+
+it('attaches a near_you reason with distance_km and the home-range name', function (): void {
+    $home = giveUserHomeRange(-26.0, 28.0, 200);
+
+    // ~44km due south-east (0.3° lat ≈ 33km + 0.3° lng ≈ 30km → ~44km).
+    $venue = Venue::factory()->create(['lat' => -26.3, 'lng' => 28.3]);
+    matchOnWeekend(['venue_id' => $venue->id]);
+
+    $entries = callFeed()->assertOk()->json('data.near_you');
+    expect($entries)->toHaveCount(1);
+
+    $reason = $entries[0]['reasons'][0];
+    expect($reason['type'])->toBe('near_you')
+        ->and($reason['distance_km'])->toBeInt()->toBeGreaterThan(30)->toBeLessThan(60)
+        ->and($reason['name'])->toContain("km from {$home->name}");
+});
+
+it('ignores venues without coordinates even if nominally in range', function (): void {
+    giveUserHomeRange();
+
+    $noCoords = Venue::factory()->create(['lat' => null, 'lng' => null]);
+    matchOnWeekend(['venue_id' => $noCoords->id]);
+
+    expect(callFeed()->assertOk()->json('data.near_you'))->toBe([]);
+});
+
+it('dedupes near_you against saved, this_weekend, and next_30_days', function (): void {
+    $club = Organisation::factory()->create(['name' => 'My Club']);
+    createFollow($this->user, 'organisation', $club->id);
+
+    giveUserHomeRange(-26.0, 28.0, 500);
+
+    $venue = Venue::factory()->create(['lat' => -26.1, 'lng' => 28.1]);
+    // Same match qualifies via BOTH followed club AND near-you radius.
+    $match = matchOnWeekend(['venue_id' => $venue->id, 'host_organisation_id' => $club->id]);
+
+    $json = callFeed()->assertOk()->json();
+
+    expect(collect($json['data']['this_weekend'])->pluck('id'))->toContain($match->id)
+        ->and(collect($json['data']['near_you'])->pluck('id'))->not->toContain($match->id);
+});
+
+it('skips the near_you bucket when the picked home range has no coordinates', function (): void {
+    /** @var Venue $home */
+    $home = Venue::factory()->create(['lat' => null, 'lng' => null]);
+    $this->user->update(['home_venue_id' => $home->id, 'travel_radius_km' => 100]);
+
+    $venue = Venue::factory()->create(['lat' => -26.0, 'lng' => 28.0]);
+    matchOnWeekend(['venue_id' => $venue->id]);
+
+    $json = callFeed()->assertOk()->json();
+
+    expect($json['data']['near_you'])->toBe([])
+        // has_home_venue stays true — the shooter picked one, the
+        // data gap is on our side (missing geocode), not theirs.
+        ->and($json['meta']['has_home_venue'])->toBeTrue();
 });

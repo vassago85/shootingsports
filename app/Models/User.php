@@ -16,6 +16,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -26,6 +27,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable([
     'name', 'email', 'password', 'calendar_slug', 'home_province', 'extra_provinces', 'travel_radius_km',
+    'home_venue_id',
     'digest_frequency', 'association_membership_number',
     'role', 'is_staff', 'is_match_director', 'is_media_partner',
     'md_requested_at', 'md_approved_at', 'md_rejected_at', 'md_rejection_reason',
@@ -515,6 +517,19 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function savedEvents(): BelongsToMany
     {
         return $this->belongsToMany(Event::class, 'saved_events')->withTimestamps();
+    }
+
+    /**
+     * The shooter's chosen home range. Used by the `/me/feed`
+     * "Near you" bucket as the radius centre for geo filtering —
+     * null when the user has not picked one yet, in which case the
+     * near-you bucket stays empty and the mobile UI shows a nudge.
+     *
+     * @return BelongsTo<Venue, $this>
+     */
+    public function homeVenue(): BelongsTo
+    {
+        return $this->belongsTo(Venue::class);
     }
 
     /**

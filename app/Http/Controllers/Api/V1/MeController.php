@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\Province;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
+use App\Models\Venue;
 use Illuminate\Http\Request;
 
 class MeController extends Controller
@@ -33,6 +34,11 @@ class MeController extends Controller
             'extra_provinces' => ['sometimes', 'nullable', 'array'],
             'extra_provinces.*' => ['string'],
             'travel_radius_km' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:2000'],
+            // Home range — accept either the venue id (int) or the
+            // venue slug (string). The feed uses this + the above
+            // travel_radius_km to populate the Near-you bucket.
+            'home_venue_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'home_venue_slug' => ['sometimes', 'nullable', 'string'],
         ]);
 
         $user = $request->user();
@@ -47,6 +53,13 @@ class MeController extends Controller
 
         if (array_key_exists('travel_radius_km', $data)) {
             $user->travel_radius_km = $data['travel_radius_km'];
+        }
+
+        if (array_key_exists('home_venue_id', $data) || array_key_exists('home_venue_slug', $data)) {
+            $user->home_venue_id = $this->resolveHomeVenueId(
+                $data['home_venue_id'] ?? null,
+                $data['home_venue_slug'] ?? null,
+            );
         }
 
         $user->save();
@@ -90,5 +103,29 @@ class MeController extends Controller
             ->all();
 
         return $resolved === [] ? null : $resolved;
+    }
+
+    /**
+     * Resolve the picked home-range venue, preferring an explicit
+     * id over a slug lookup. Returning null is a legitimate clear
+     * ("stop using a home range"). An unknown id/slug 422s so a
+     * typo doesn't silently wipe the setting.
+     */
+    private function resolveHomeVenueId(?int $id, ?string $slug): ?int
+    {
+        if ($id !== null) {
+            abort_unless(Venue::query()->whereKey($id)->exists(), 422, "Unknown venue id: {$id}");
+
+            return $id;
+        }
+
+        if ($slug !== null && $slug !== '') {
+            $venue = Venue::query()->where('slug', $slug)->first();
+            abort_if($venue === null, 422, "Unknown venue slug: {$slug}");
+
+            return $venue->id;
+        }
+
+        return null;
     }
 }

@@ -50,6 +50,19 @@ class UserResource extends JsonResource
                 ->values()
                 ->all(),
             'travel_radius_km' => $this->travel_radius_km,
+            // Home range — the geo anchor for the `/me/feed`
+            // "Near you" bucket. Null until the shooter picks one.
+            // Only emits coords when the venue has them; a venue
+            // row without lat/lng is a geocoding gap, not a config
+            // bug, so the mobile side treats both the same.
+            'home_venue' => $this->homeVenue !== null ? [
+                'id' => $this->homeVenue->id,
+                'slug' => $this->homeVenue->slug,
+                'name' => $this->homeVenue->name,
+                'town' => $this->homeVenue->town,
+                'province_slug' => $this->homeVenue->province?->urlSlug(),
+                'has_coordinates' => $this->homeVenue->hasCoordinates(),
+            ] : null,
             'plan' => $this->plan?->value,
             'is_pro' => $this->isPro(),
             'on_trial' => $this->isOnTrial(),

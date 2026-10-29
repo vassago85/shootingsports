@@ -2,6 +2,7 @@
 
 use App\Enums\Province;
 use App\Models\User;
+use App\Models\Venue;
 
 beforeEach(function (): void {
     $this->user = User::factory()->create([
@@ -112,4 +113,77 @@ it('deduplicates duplicate provinces in extra_provinces', function (): void {
 it('requires authentication for PATCH /me', function (): void {
     $this->patchJson('/api/v1/me', ['home_province' => 'gauteng'])
         ->assertStatus(401);
+});
+
+it('exposes home_venue on GET /me when set', function (): void {
+    /** @var Venue $venue */
+    $venue = Venue::factory()->create([
+        'slug' => 'home-range',
+        'name' => 'Home Range',
+        'town' => 'Alberton',
+        'lat' => -26.3,
+        'lng' => 28.1,
+    ]);
+    $this->user->update(['home_venue_id' => $venue->id]);
+
+    $json = $this->withHeader('Authorization', 'Bearer '.$this->token)
+        ->getJson('/api/v1/me')
+        ->assertOk()
+        ->json('data.home_venue');
+
+    expect($json['slug'])->toBe('home-range')
+        ->and($json['name'])->toBe('Home Range')
+        ->and($json['town'])->toBe('Alberton')
+        ->and($json['has_coordinates'])->toBeTrue();
+});
+
+it('returns null home_venue when not set', function (): void {
+    $json = $this->withHeader('Authorization', 'Bearer '.$this->token)
+        ->getJson('/api/v1/me')
+        ->assertOk()
+        ->json('data');
+
+    expect($json)->toHaveKey('home_venue')
+        ->and($json['home_venue'])->toBeNull();
+});
+
+it('updates home_venue_id via PATCH /me', function (): void {
+    /** @var Venue $venue */
+    $venue = Venue::factory()->create();
+
+    $this->withHeader('Authorization', 'Bearer '.$this->token)
+        ->patchJson('/api/v1/me', ['home_venue_id' => $venue->id])
+        ->assertOk()
+        ->assertJsonPath('data.home_venue.id', $venue->id);
+
+    expect($this->user->refresh()->home_venue_id)->toBe($venue->id);
+});
+
+it('accepts home_venue_slug on PATCH /me', function (): void {
+    /** @var Venue $venue */
+    $venue = Venue::factory()->create(['slug' => 'picked-by-slug']);
+
+    $this->withHeader('Authorization', 'Bearer '.$this->token)
+        ->patchJson('/api/v1/me', ['home_venue_slug' => 'picked-by-slug'])
+        ->assertOk();
+
+    expect($this->user->refresh()->home_venue_id)->toBe($venue->id);
+});
+
+it('rejects an unknown home_venue_id with 422', function (): void {
+    $this->withHeader('Authorization', 'Bearer '.$this->token)
+        ->patchJson('/api/v1/me', ['home_venue_id' => 999999])
+        ->assertStatus(422);
+});
+
+it('clears the home_venue when passed a null id', function (): void {
+    /** @var Venue $venue */
+    $venue = Venue::factory()->create();
+    $this->user->update(['home_venue_id' => $venue->id]);
+
+    $this->withHeader('Authorization', 'Bearer '.$this->token)
+        ->patchJson('/api/v1/me', ['home_venue_id' => null])
+        ->assertOk();
+
+    expect($this->user->refresh()->home_venue_id)->toBeNull();
 });
