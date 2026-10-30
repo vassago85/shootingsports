@@ -1,13 +1,32 @@
 <?php
 
 use App\Enums\ListingStatus;
+use App\Enums\MembershipRole;
+use App\Enums\MembershipStatus;
 use App\Enums\OrganisationType;
+use App\Enums\OrganisationUserRole;
+use App\Filament\Desk\Resources\Organisations\OrganisationResource;
+use App\Filament\Desk\Resources\Venues\VenueResource;
 use App\Models\Event;
 use App\Models\Organisation;
+use App\Models\OrganisationUser;
 use App\Models\User;
 use App\Models\Venue;
+use App\Models\VenueMembership;
 use App\Support\EmbedTheme;
 use App\Support\EmbedUrl;
+
+function grantClubSeat(User $user, Organisation $club, OrganisationUserRole $role, MembershipStatus $status = MembershipStatus::Approved): void
+{
+    OrganisationUser::query()->create([
+        'user_id' => $user->id,
+        'organisation_id' => $club->id,
+        'role' => $role->value,
+        'status' => $status->value,
+        'approved_at' => $status === MembershipStatus::Approved ? now() : null,
+        'granted_at' => now(),
+    ]);
+}
 
 beforeEach(function () {
     $this->withoutVite();
@@ -98,47 +117,176 @@ it('serves embed script attributes for club styling', function () {
         ->assertSee('font');
 });
 
-it('hides embed snippets from guests and shows them when signed in', function () {
+it('hides club admin tools from guests and from people who do not run that club', function () {
+    $owner = User::factory()->create();
     $club = Organisation::factory()->create([
         'slug' => 'snippet-club',
         'name' => 'Snippet Club',
         'status' => ListingStatus::Published,
         'type' => OrganisationType::Club,
+        'claimed_by' => $owner->id,
     ]);
+    grantClubSeat($owner, $club, OrganisationUserRole::Admin);
+
+    $this->get(route('clubs.show', $club->slug))
+        ->assertOk()
+        ->assertDontSee('For club administrators')
+        ->assertDontSee('Director login')
+        ->assertDontSee('Sign in to embed this calendar on your own site')
+        ->assertDontSee('WordPress URL')
+        ->assertDontSee('embed/calendar?club=snippet-club', false);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('clubs.show', $club->slug))
+        ->assertOk()
+        ->assertDontSee('For club administrators')
+        ->assertDontSee('embed/calendar?club=snippet-club', false);
+
+    $this->actingAs(User::factory()->matchDirector()->create())
+        ->get(route('clubs.show', $club->slug))
+        ->assertOk()
+        ->assertDontSee('For club administrators')
+        ->assertDontSee('embed/calendar?club=snippet-club', false);
+});
+
+it('shows club admin tools only to a match director or club admin of that club', function () {
+    $matchDirector = User::factory()->create();
+    $clubAdmin = User::factory()->create();
+    $editor = User::factory()->create();
+    $secretary = User::factory()->create();
+    $pendingDirector = User::factory()->create();
+    $club = Organisation::factory()->create([
+        'slug' => 'snippet-club',
+        'name' => 'Snippet Club',
+        'status' => ListingStatus::Published,
+        'type' => OrganisationType::Club,
+        'claimed_by' => $clubAdmin->id,
+    ]);
+    $other = Organisation::factory()->create([
+        'slug' => 'other-snippet-club',
+        'status' => ListingStatus::Published,
+        'type' => OrganisationType::Club,
+        'claimed_by' => $matchDirector->id,
+    ]);
+
+    grantClubSeat($matchDirector, $club, OrganisationUserRole::MatchDirector);
+    grantClubSeat($matchDirector, $other, OrganisationUserRole::MatchDirector);
+    grantClubSeat($clubAdmin, $club, OrganisationUserRole::Admin);
+    grantClubSeat($editor, $club, OrganisationUserRole::Editor);
+    grantClubSeat($secretary, $club, OrganisationUserRole::Secretary);
+    grantClubSeat($pendingDirector, $club, OrganisationUserRole::MatchDirector, MembershipStatus::Pending);
+
+    $manageUrl = OrganisationResource::getUrl('edit', ['record' => $club], panel: 'desk');
+
+    $this->actingAs($matchDirector)
+        ->get(route('clubs.show', $club->slug))
+        ->assertOk()
+        ->assertSee('For club administrators')
+        ->assertSee('embed/calendar?club=snippet-club', false)
+        ->assertSee('WordPress URL')
+        ->assertSee('Iframe')
+        ->assertSee('Copy')
+        ->assertSee('Manage this club')
+        ->assertSee($manageUrl, false)
+        ->assertDontSee('Director login')
+        ->assertDontSee('embed/calendar?club=other-snippet-club', false);
+
+    $this->actingAs($matchDirector)
+        ->get(route('clubs.show', $other->slug))
+        ->assertOk()
+        ->assertSee('embed/calendar?club=other-snippet-club', false)
+        ->assertDontSee('embed/calendar?club=snippet-club', false);
+
+    $this->actingAs($clubAdmin)
+        ->get(route('clubs.show', $club->slug))
+        ->assertOk()
+        ->assertSee('embed/calendar?club=snippet-club', false)
+        ->assertSee('Manage this club');
+
+    $this->actingAs($editor)
+        ->get(route('clubs.show', $club->slug))
+        ->assertOk()
+        ->assertDontSee('For club administrators')
+        ->assertDontSee('embed/calendar?club=snippet-club', false);
+
+    $this->actingAs($secretary)
+        ->get(route('clubs.show', $club->slug))
+        ->assertOk()
+        ->assertDontSee('For club administrators');
+
+    $this->actingAs($pendingDirector)
+        ->get(route('clubs.show', $club->slug))
+        ->assertOk()
+        ->assertDontSee('For club administrators')
+        ->assertDontSee('embed/calendar?club=snippet-club', false);
+});
+
+it('keeps the claim link on an unclaimed club and still hides the embed', function () {
+    $club = Organisation::factory()->create([
+        'slug' => 'unclaimed-snippet-club',
+        'status' => ListingStatus::Published,
+        'type' => OrganisationType::Club,
+        'claimed_by' => null,
+    ]);
+
+    $this->get(route('clubs.show', $club->slug))
+        ->assertOk()
+        ->assertSee('This is my club')
+        ->assertDontSee('WordPress URL')
+        ->assertDontSee('embed/calendar?club=unclaimed-snippet-club', false)
+        ->assertDontSee('Director login');
+});
+
+it('shows range and federation embed tools only to the owner of that listing', function () {
+    $stranger = User::factory()->create();
+    $rangeOwner = User::factory()->create();
+    $federationAdmin = User::factory()->create();
     $venue = Venue::factory()->create([
         'slug' => 'snippet-range',
         'name' => 'Snippet Range',
         'status' => ListingStatus::Published,
+        'claimed_by' => $rangeOwner->id,
+    ]);
+    VenueMembership::query()->create([
+        'venue_id' => $venue->id,
+        'user_id' => $rangeOwner->id,
+        'role' => MembershipRole::Owner->value,
+        'status' => MembershipStatus::Approved->value,
+        'approved_at' => now(),
     ]);
     $federation = Organisation::factory()->create([
         'slug' => 'snippet-fed',
         'name' => 'Snippet Federation',
         'status' => ListingStatus::Published,
         'type' => OrganisationType::Federation,
+        'claimed_by' => $federationAdmin->id,
     ]);
+    grantClubSeat($federationAdmin, $federation, OrganisationUserRole::Admin);
 
-    $this->get(route('clubs.show', $club->slug))
-        ->assertOk()
-        ->assertSee('Sign in to embed this calendar on your own site')
-        ->assertDontSee('embed/calendar?club=snippet-club', false);
-
-    $this->actingAs(User::factory()->create())
-        ->get(route('clubs.show', $club->slug))
-        ->assertOk()
-        ->assertSee('embed/calendar?club=snippet-club', false)
-        ->assertSee('WordPress URL')
-        ->assertSee('Iframe')
-        ->assertSee('Copy');
-
-    $this->actingAs(User::factory()->create())
+    $this->actingAs($stranger)
         ->get(route('ranges.show', $venue->slug))
         ->assertOk()
-        ->assertSee('embed/calendar?venue=snippet-range', false);
+        ->assertDontSee('For range operators')
+        ->assertDontSee('embed/calendar?venue=snippet-range', false);
 
-    $this->actingAs(User::factory()->create())
+    $this->actingAs($rangeOwner)
+        ->get(route('ranges.show', $venue->slug))
+        ->assertOk()
+        ->assertSee('embed/calendar?venue=snippet-range', false)
+        ->assertSee('Manage this range')
+        ->assertSee(VenueResource::getUrl('edit', ['record' => $venue], panel: 'desk'), false);
+
+    $this->actingAs($stranger)
         ->get(route('federations.show', $federation->slug))
         ->assertOk()
-        ->assertSee('embed/calendar?organisation=snippet-fed', false);
+        ->assertDontSee('For federation administrators')
+        ->assertDontSee('embed/calendar?organisation=snippet-fed', false);
+
+    $this->actingAs($federationAdmin)
+        ->get(route('federations.show', $federation->slug))
+        ->assertOk()
+        ->assertSee('embed/calendar?organisation=snippet-fed', false)
+        ->assertSee('Manage this federation');
 });
 
 it('advertises oEmbed discovery and allows the calendar to be framed', function () {

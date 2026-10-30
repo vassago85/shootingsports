@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Enums\Division;
 use App\Enums\ListingStatus;
 use App\Enums\Province;
+use App\Filament\Desk\Resources\Organisations\OrganisationResource;
 use App\Models\Discipline;
 use App\Models\Organisation;
+use App\Models\User;
 use App\Queries\PublicEventQuery;
 use App\Services\Discovery\DiscoveryStats;
 use App\Support\JsonLd;
@@ -132,6 +134,8 @@ class OrganisationController extends Controller
         return view('public.clubs.show', [
             'organisation' => $organisation,
             'events' => $events,
+            'canAdminister' => $this->viewerAdministersOrganisation($organisation),
+            'manageUrl' => OrganisationResource::getUrl('edit', ['record' => $organisation], panel: 'desk'),
             'seo' => Seo::forOrganisation($organisation),
             // Disciplines derived from event history + explicit pivot,
             // so a club that has run three PRS matches shows the PRS
@@ -161,6 +165,8 @@ class OrganisationController extends Controller
         return view('public.federations.show', [
             'organisation' => $organisation,
             'events' => $events,
+            'canAdminister' => $this->viewerAdministersOrganisation($organisation),
+            'manageUrl' => OrganisationResource::getUrl('edit', ['record' => $organisation], panel: 'desk'),
             'seo' => Seo::forOrganisation($organisation),
             'inferredDisciplines' => $this->stats->inferredDisciplinesForOrganisation($organisation),
             'commonRanges' => $this->stats->commonRangesForOrganisation($organisation),
@@ -173,6 +179,13 @@ class OrganisationController extends Controller
                 ]),
             ],
         ]);
+    }
+
+    private function viewerAdministersOrganisation(Organisation $organisation): bool
+    {
+        $viewer = auth()->user();
+
+        return $viewer instanceof User && $viewer->administersOrganisation($organisation);
     }
 
     private function assertPublished(Organisation $organisation): void

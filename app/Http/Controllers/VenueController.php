@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Enums\Division;
 use App\Enums\Province;
 use App\Enums\VenueAccess;
+use App\Filament\Desk\Resources\Venues\VenueResource;
 use App\Models\Discipline;
+use App\Models\User;
 use App\Models\Venue;
 use App\Queries\PublicEventQuery;
 use App\Services\Discovery\DiscoveryStats;
@@ -126,9 +128,13 @@ class VenueController extends Controller
 
         $events = (new PublicEventQuery(venueId: $venue->id))->get();
 
+        $viewer = auth()->user();
+
         return view('public.ranges.show', [
             'venue' => $venue,
             'events' => $events,
+            'canAdminister' => $viewer instanceof User && $viewer->administersVenue($venue),
+            'manageUrl' => VenueResource::getUrl('edit', ['record' => $venue], panel: 'desk'),
             'seo' => Seo::forVenue($venue),
             // Same derivation story as clubs: disciplines a range has
             // actually hosted, plus the clubs that have hosted here.

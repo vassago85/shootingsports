@@ -53,7 +53,9 @@
                     </div>
                 @endif
                 <x-calendar-subscribe :ics="route('ical.shooter', $user->calendar_slug)" />
-                <x-embed-snippet :shooter="$user->calendar_slug" />
+                @if (auth()->id() === $user->id && $user->can('custom-calendar'))
+                    <x-embed-snippet :shooter="$user->calendar_slug" />
+                @endif
             </div>
         </section>
     </main>

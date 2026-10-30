@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DigestFrequency;
+use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Enums\OrganisationUserRole;
 use App\Enums\Plan;
@@ -507,6 +508,45 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         }
 
         return $this->holdsOrganisationRole($organisation, OrganisationUserRole::canManageMembers());
+    }
+
+    /**
+     * Match director or club admin of this organisation, or the person
+     * recorded as its owner. Editors, secretaries, pending seats, and
+     * a match-director flag with no seat on this club do not qualify.
+     */
+    public function administersOrganisation(Organisation $organisation): bool
+    {
+        if ($organisation->claimed_by !== null && (int) $organisation->claimed_by === $this->id) {
+            return true;
+        }
+
+        return $this->organisationMemberships()
+            ->where('organisation_id', $organisation->id)
+            ->where('status', MembershipStatus::Approved->value)
+            ->whereIn('role', [
+                OrganisationUserRole::MatchDirector->value,
+                OrganisationUserRole::Admin->value,
+            ])
+            ->exists();
+    }
+
+    /**
+     * Owner of this range. An approved owner seat or the legacy
+     * claimed_by column both count; an editor seat on a range
+     * someone else owns does not.
+     */
+    public function administersVenue(Venue $venue): bool
+    {
+        if ($venue->claimed_by !== null && (int) $venue->claimed_by === $this->id) {
+            return true;
+        }
+
+        return $this->venueMemberships()
+            ->where('venue_id', $venue->id)
+            ->where('status', MembershipStatus::Approved->value)
+            ->where('role', MembershipRole::Owner->value)
+            ->exists();
     }
 
     public function clubMemberships(): HasMany

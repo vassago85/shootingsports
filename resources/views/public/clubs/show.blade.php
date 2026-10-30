@@ -93,21 +93,28 @@
                     </ul>
                 @endif
 
-                {{-- Owner / director tools live at the bottom so
-                     shooter-facing content stays on top. Only the
-                     controls that are actually available render. --}}
-                <x-owner-panel title="For club administrators">
-                    <p>Manage this club — update information, publish events, or embed the calendar on your site.</p>
-                    <div class="owner-actions">
-                        @if ($organisation->claimed_by === null)
+                {{-- Owner tools stay at the bottom. Match directors and
+                     club admins only see the club they actually run.
+                     Everyone else gets the claim link, and only while
+                     the listing has no owner. --}}
+                @if ($canAdminister)
+                    <x-owner-panel title="For club administrators">
+                        <p>Manage this club — update information, publish events, or embed the calendar on your site.</p>
+                        <div class="owner-actions">
+                            <a class="btn ghost" href="{{ $manageUrl }}">Manage this club</a>
+                        </div>
+                        <div class="owner-embed">
+                            <x-embed-snippet :club="$organisation->slug" />
+                        </div>
+                    </x-owner-panel>
+                @elseif ($organisation->claimed_by === null)
+                    <x-owner-panel title="For club administrators">
+                        <p>Recognise this club? Claim it to update the listing and publish its matches.</p>
+                        <div class="owner-actions">
                             <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'club', 'slug' => $organisation->slug]) }}">This is my club</a>
-                        @endif
-                        <a class="btn ghost" href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}">Director login</a>
-                    </div>
-                    <div class="owner-embed">
-                        <x-embed-snippet :club="$organisation->slug" />
-                    </div>
-                </x-owner-panel>
+                        </div>
+                    </x-owner-panel>
+                @endif
             </div>
         </section>
     </main>

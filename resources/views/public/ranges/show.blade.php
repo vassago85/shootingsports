@@ -151,18 +151,24 @@
                     </ul>
                 @endif
 
-                <x-owner-panel title="For range operators">
-                    <p>Manage this range — update details, publish events at this venue, or embed the calendar on your site.</p>
-                    <div class="owner-actions">
-                        @if ($venue->claimed_by === null)
+                @if ($canAdminister)
+                    <x-owner-panel title="For range operators">
+                        <p>Manage this range — update details, publish events at this venue, or embed the calendar on your site.</p>
+                        <div class="owner-actions">
+                            <a class="btn ghost" href="{{ $manageUrl }}">Manage this range</a>
+                        </div>
+                        <div class="owner-embed">
+                            <x-embed-snippet :venue="$venue->slug" />
+                        </div>
+                    </x-owner-panel>
+                @elseif ($venue->claimed_by === null)
+                    <x-owner-panel title="For range operators">
+                        <p>Recognise this range? Claim it to update the listing and publish matches held here.</p>
+                        <div class="owner-actions">
                             <a class="btn ghost" href="{{ route('listings.claim', ['type' => 'range', 'slug' => $venue->slug]) }}">This is my range</a>
-                        @endif
-                        <a class="btn ghost" href="{{ route('login') }}?redirect={{ urlencode(url()->current()) }}">Operator login</a>
-                    </div>
-                    <div class="owner-embed">
-                        <x-embed-snippet :venue="$venue->slug" />
-                    </div>
-                </x-owner-panel>
+                        </div>
+                    </x-owner-panel>
+                @endif
             </div>
         </section>
     </main>

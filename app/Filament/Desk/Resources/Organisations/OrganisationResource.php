@@ -77,15 +77,23 @@ class OrganisationResource extends Resource
         $user = Auth::user();
 
         // Staff / platform owner see every club. Everyone else is
-        // scoped to the clubs they're linked to.
+        // scoped to the clubs they're linked to. claimed_by stays so
+        // an owner whose pivot row is missing can still open the
+        // listing they own.
         if ($user?->is_staff) {
             return $query;
         }
 
-        return $query->whereHas(
-            'users',
-            fn (Builder $q) => $q->where('users.id', $user?->id),
-        );
+        if ($user === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $q) use ($user): void {
+            $q->whereHas(
+                'users',
+                fn (Builder $pivot) => $pivot->where('users.id', $user->id),
+            )->orWhere('organisations.claimed_by', $user->id);
+        });
     }
 
     public static function canViewAny(): bool
