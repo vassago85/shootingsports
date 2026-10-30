@@ -43,8 +43,17 @@ class MembershipsRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('email')
                     ->searchable(),
+                // `role` exists on both the User (site-wide UserRole) and
+                // on the organisation_user pivot (OrganisationUserRole).
+                // Reading via column name alone resolves to the User's
+                // own role column — which crashes when the user is a
+                // plain shooter (role=user) because Filament tries to
+                // cast "user" against OrganisationUserRole. Pull from
+                // the pivot explicitly so the column shows the actual
+                // membership role (match_director/admin/editor/secretary).
                 TextColumn::make('role')
                     ->badge()
+                    ->state(fn ($record): ?OrganisationUserRole => $record->pivot?->role)
                     ->formatStateUsing(function ($state): string {
                         if ($state instanceof OrganisationUserRole) {
                             return $state->getLabel();
