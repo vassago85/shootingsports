@@ -117,8 +117,11 @@ it('lets a supplier see impressions and clicks for their own placements only', f
         'click_url' => 'https://example.test/other',
         'starts_on' => now()->subDay()->toDateString(),
         'ends_on' => now()->addMonth()->toDateString(),
-        'impressions' => 999,
-        'clicks' => 99,
+        // Distinctive 7-digit values so a chance appearance in a
+        // Livewire snapshot checksum (hex, 64 chars) doesn't make the
+        // "does not leak" assertion flake.
+        'impressions' => 9876543,
+        'clicks' => 7654321,
         'is_active' => true,
         'rate_cents' => 0,
     ]);
@@ -133,7 +136,8 @@ it('lets a supplier see impressions and clicks for their own placements only', f
         ->assertSee('204')
         ->assertSee('16')
         ->assertDontSee('Other advert')
-        ->assertDontSee('999');
+        ->assertDontSee('9876543')
+        ->assertDontSee('7654321');
 });
 
 it('scopes desk enquiries to the supplier own listing', function () {
