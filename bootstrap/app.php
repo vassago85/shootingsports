@@ -3,6 +3,7 @@
 use App\Http\Middleware\ApplySecurityHeaders;
 use App\Http\Middleware\CanonicalHost;
 use App\Http\Middleware\EnsureComingSoonAccess;
+use App\Http\Middleware\RedirectLegacyWordPressUrls;
 use App\Http\Middleware\RedirectRetiredAdminUrls;
 use App\Http\Middleware\RestrictHealthEndpoint;
 use Illuminate\Foundation\Application;
@@ -34,6 +35,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // /up is registered without the web stack, so this must be global.
         $middleware->append(RestrictHealthEndpoint::class);
+
+        // Old WordPress URLs (sample-page, wp-admin, /?p=…, /category/*,
+        // /tag/*) are not matched by any Laravel route, so the `web`
+        // group never runs on them. Register globally so the 301/410
+        // responses fire before the router can emit a plain 404.
+        $middleware->append(RedirectLegacyWordPressUrls::class);
 
         // Lets the /api/v1 routes read the signed-in web session cookie
         // (via Sanctum's EnsureFrontendRequestsAreStateful) so a user
