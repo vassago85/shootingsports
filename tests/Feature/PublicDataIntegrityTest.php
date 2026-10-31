@@ -4,6 +4,7 @@ use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\ListingStatus;
 use App\Enums\Province;
+use App\Enums\VerificationState;
 use App\Imports\CalendarImporter;
 use App\Imports\ImportedMatch;
 use App\Models\Event;
@@ -60,7 +61,7 @@ it('keeps a multi-venue import string off the range directory and out of new ven
         ->and(Venue::query()->where('name', 'Day 1 - Papaberg / Day 2 - Legends Adv Farm')->count())->toBe(1);
 });
 
-it('links a feed to the one existing range of that name instead of creating a second province', function () {
+it('refuses to link to a verified namesake in a different province and does not write an alias', function () {
     $westernCape = Venue::factory()->create([
         'name' => 'Kraaifontein',
         'province' => Province::WesternCape,
@@ -81,9 +82,34 @@ it('links a feed to the one existing range of that name instead of creating a se
     $event = Event::query()->where('slug', 'audit-kraai-1')->firstOrFail();
 
     expect(Venue::query()->whereRaw('LOWER(name) = ?', ['kraaifontein'])->count())->toBe(1)
-        ->and($event->venue_id)->toBe($westernCape->id)
+        ->and($event->venue_id)->toBeNull()
         ->and($event->needs_review)->toBeTrue()
-        ->and($event->import_notes)->toContain('does not match');
+        ->and($event->import_notes)->toContain('left unlinked')
+        ->and($westernCape->aliases()->count())->toBe(0);
+});
+
+it('links a feed to the one existing namesake when the provinces agree', function () {
+    $mpumalanga = Venue::factory()->create([
+        'name' => 'Teks',
+        'province' => Province::Mpumalanga,
+        'town' => 'Teks',
+        'lat' => -26.0,
+        'lng' => 29.0,
+        'status' => ListingStatus::Published,
+    ]);
+
+    $host = Organisation::factory()->create();
+
+    app(CalendarImporter::class)->persist($host, [publicDataIntegrityMatch(
+        'audit-teks-1',
+        'Teks',
+        Province::Mpumalanga,
+    )]);
+
+    $event = Event::query()->where('slug', 'audit-teks-1')->firstOrFail();
+
+    expect($event->venue_id)->toBe($mpumalanga->id)
+        ->and($event->needs_review)->toBeFalse();
 });
 
 it('does not create a third range when the same name already exists in two provinces', function () {
@@ -116,6 +142,62 @@ it('does not create a third range when the same name already exists in two provi
         ->and($event->venue_id)->toBe($mpumalanga->id)
         ->and($event->needs_review)->toBeTrue()
         ->and($event->import_notes)->toContain('More than one range');
+});
+
+it('leaves the match unlinked when a namesake exists in two provinces and neither matches the feed', function () {
+    Venue::factory()->create([
+        'name' => 'Kraaifontein',
+        'province' => Province::WesternCape,
+        'town' => 'Kraaifontein',
+    ]);
+    Venue::factory()->create([
+        'name' => 'Kraaifontein',
+        'province' => Province::Mpumalanga,
+        'town' => 'Kraaifontein',
+    ]);
+
+    $host = Organisation::factory()->create();
+
+    app(CalendarImporter::class)->persist($host, [publicDataIntegrityMatch(
+        'audit-kraai-3',
+        'Kraaifontein',
+        Province::Gauteng,
+    )]);
+
+    $event = Event::query()->where('slug', 'audit-kraai-3')->firstOrFail();
+
+    expect(Venue::query()->whereRaw('LOWER(name) = ?', ['kraaifontein'])->count())->toBe(2)
+        ->and($event->venue_id)->toBeNull()
+        ->and($event->needs_review)->toBeTrue()
+        ->and($event->import_notes)->toContain('left unlinked');
+});
+
+it('does not overwrite a verified range when a feed row has the same name', function () {
+    $verified = Venue::factory()->create([
+        'name' => 'Teks',
+        'province' => Province::Mpumalanga,
+        'town' => 'Teks',
+        'address' => 'Verified street address',
+        'lat' => -26.123,
+        'lng' => 29.456,
+        'verification_state' => VerificationState::Verified,
+        'last_verified_at' => now(),
+    ]);
+
+    $host = Organisation::factory()->create();
+
+    app(CalendarImporter::class)->persist($host, [publicDataIntegrityMatch(
+        'audit-teks-2',
+        'Teks',
+        Province::Mpumalanga,
+    )]);
+
+    $after = $verified->fresh();
+
+    expect($after->address)->toBe('Verified street address')
+        ->and((float) $after->lat)->toBe(-26.123)
+        ->and((float) $after->lng)->toBe(29.456)
+        ->and($after->verification_state)->toBe(VerificationState::Verified);
 });
 
 it('tells the map reader when an upcoming match has no linked range', function () {

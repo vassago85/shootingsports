@@ -42,36 +42,17 @@ class CalendarImporter
                 continue;
             }
 
-            $scheduleFragment = filled($match->venueName) && VenueNames::isScheduleFragment($match->venueName);
-            $venue = $this->venue($match);
-            $provinceDisagrees = $venue !== null
-                && $match->province !== null
-                && $venue->province !== null
-                && $venue->province !== $match->province;
-            $ambiguousName = ! $scheduleFragment
-                && filled($match->venueName)
-                && $this->publishedNamesakes($match->venueName) > 1;
-
+            $outcome = $this->resolveVenue($match);
             $notes = $match->importNotes;
 
-            if ($scheduleFragment) {
-                $notes = trim(($notes !== null && $notes !== '' ? $notes."\n" : '')
-                    .'Multi-venue source string, left unlinked: '.$match->venueName);
-            } elseif ($provinceDisagrees) {
-                $notes = trim(($notes !== null && $notes !== '' ? $notes."\n" : '')
-                    .'Feed province '.$match->province->getLabel().' does not match the linked range '.$venue->province->getLabel().'.');
-            } elseif ($ambiguousName && $venue !== null) {
-                $notes = trim(($notes !== null && $notes !== '' ? $notes."\n" : '')
-                    .'More than one range is named "'.$match->venueName.'". The import kept the '.$venue->province?->getLabel().' row. Confirm which range is correct.');
-            } elseif ($ambiguousName) {
-                $notes = trim(($notes !== null && $notes !== '' ? $notes."\n" : '')
-                    .'More than one range is named "'.$match->venueName.'". The match was left unlinked.');
+            if ($outcome['note'] !== null) {
+                $notes = trim(($notes !== null && $notes !== '' ? $notes."\n" : '').$outcome['note']);
             }
 
             $payload = [
                 'title' => $match->title,
                 'host_organisation_id' => $host->id,
-                'venue_id' => $venue?->id,
+                'venue_id' => $outcome['venue']?->id,
                 'starts_at' => $match->startsAt,
                 'ends_at' => $match->endsAt,
                 'all_day' => true,
@@ -83,7 +64,7 @@ class CalendarImporter
                 'source' => ListingSource::Import,
                 'last_verified_at' => now(),
                 'import_notes' => $notes,
-                'needs_review' => $match->needsReview || $scheduleFragment || $provinceDisagrees || $ambiguousName,
+                'needs_review' => $match->needsReview || $outcome['needsReview'],
             ];
 
             if ($existing) {
@@ -128,84 +109,133 @@ class CalendarImporter
         );
     }
 
-    private function venue(ImportedMatch $match): ?Venue
+    /**
+     * @return array{venue: ?Venue, note: ?string, needsReview: bool}
+     */
+    private function resolveVenue(ImportedMatch $match): array
     {
-        if (! filled($match->venueName) || VenueNames::isScheduleFragment($match->venueName)) {
-            return null;
+        if (! filled($match->venueName)) {
+            return ['venue' => null, 'note' => null, 'needsReview' => false];
+        }
+
+        if (VenueNames::isScheduleFragment($match->venueName)) {
+            return [
+                'venue' => null,
+                'note' => 'Multi-venue source string, left unlinked: '.$match->venueName,
+                'needsReview' => true,
+            ];
         }
 
         // Prefer an alias-driven match before creating a new venue.
         // "Legends" / "Legends Adventure Farm" / "Legends Rayton" all
         // collapse onto the same canonical row once an alias exists.
         $resolver = app(VenueResolver::class);
-        $venue = $resolver->findByName($match->venueName);
+        $viaAlias = $resolver->findByName($match->venueName);
 
-        if ($venue === null) {
-            $named = Venue::query()
-                ->whereRaw('LOWER(name) = ?', [Str::lower(trim($match->venueName))])
-                ->where('status', '!=', ListingStatus::Archived)
-                ->get();
+        if ($viaAlias !== null) {
+            return ['venue' => $this->ensureGeocoded($viaAlias), 'note' => null, 'needsReview' => false];
+        }
 
-            if ($named->count() === 1) {
-                // One range already uses this name. Attach the match to
-                // it even when the feed's province is the federation's
-                // home province rather than the range's.
-                $venue = $named->first();
-            } elseif ($named->count() > 1) {
-                // Do not mint a third row. Prefer the namesake whose
-                // province matches the feed; otherwise leave the match
-                // unlinked for a person to resolve.
-                $venue = $match->province === null
-                    ? null
-                    : $named->first(fn (Venue $row): bool => $row->province === $match->province);
+        $named = Venue::query()
+            ->whereRaw('LOWER(name) = ?', [Str::lower(trim($match->venueName))])
+            ->where('status', '!=', ListingStatus::Archived)
+            ->get();
 
-                if ($venue === null) {
-                    return null;
-                }
-            } elseif ($match->province === null) {
-                return null;
-            } else {
-                $venue = Venue::query()->firstOrCreate(
-                    [
-                        'name' => $match->venueName,
-                        'province' => $match->province,
-                    ],
-                    [
-                        'town' => $match->venueTown ?? $match->venueName,
-                        'access' => VenueAccess::GuestByArrangement,
-                        'status' => ListingStatus::Published,
-                        'verification_state' => VerificationState::Unconfirmed,
-                        'source' => ListingSource::Import,
-                    ],
-                );
+        if ($named->count() >= 2) {
+            $sameProvince = $match->province === null
+                ? null
+                : $named->first(fn (Venue $row): bool => $row->province === $match->province);
+
+            if ($sameProvince === null) {
+                $provinces = $named->map(fn (Venue $row): ?string => $row->province?->getLabel())
+                    ->filter()
+                    ->implode(', ');
+
+                return [
+                    'venue' => null,
+                    'note' => 'More than one range is named "'.$match->venueName.'" ('.$provinces.'). Match left unlinked for review.',
+                    'needsReview' => true,
+                ];
             }
+
+            $this->rememberAlias($sameProvince, $match->venueName);
+
+            return [
+                'venue' => $this->ensureGeocoded($sameProvince),
+                'note' => 'More than one range is named "'.$match->venueName.'". Linked the '.$sameProvince->province->getLabel().' row. Confirm this is correct.',
+                'needsReview' => true,
+            ];
         }
 
-        if ($venue->name !== $match->venueName) {
-            // Alias resolved but the incoming string is a new spelling
-            // we have not seen before — record it so the *next* import
-            // is a direct hit rather than a fuzzy fingerprint later.
-            $resolver->rememberAliasName($venue, $match->venueName);
+        if ($named->count() === 1) {
+            $existing = $named->first();
+            $provinceDisagrees = $match->province !== null
+                && $existing->province !== null
+                && $existing->province !== $match->province;
+
+            if ($provinceDisagrees) {
+                // A verified range already carries this name in another
+                // province. Do not auto-link, do not write an alias that
+                // would lock the mistake in. Leave venue_id null so staff
+                // can confirm whether this is the same place.
+                return [
+                    'venue' => null,
+                    'note' => 'A range named "'.$match->venueName.'" exists in '.$existing->province->getLabel().' but the feed says '.$match->province->getLabel().'. Match left unlinked for review.',
+                    'needsReview' => true,
+                ];
+            }
+
+            $this->rememberAlias($existing, $match->venueName);
+
+            return ['venue' => $this->ensureGeocoded($existing), 'note' => null, 'needsReview' => false];
         }
 
-        // Soft geocode on first create / when still unpinned. Staff
-        // pins are never overwritten by VenueGeocoder.
+        if ($match->province === null) {
+            return [
+                'venue' => null,
+                'note' => 'Feed did not say which province the range "'.$match->venueName.'" is in. Match left unlinked.',
+                'needsReview' => true,
+            ];
+        }
+
+        $created = Venue::query()->firstOrCreate(
+            [
+                'name' => $match->venueName,
+                'province' => $match->province,
+            ],
+            [
+                'town' => $match->venueTown ?? $match->venueName,
+                'access' => VenueAccess::GuestByArrangement,
+                'status' => ListingStatus::Published,
+                'verification_state' => VerificationState::Unconfirmed,
+                'source' => ListingSource::Import,
+            ],
+        );
+
+        return ['venue' => $this->ensureGeocoded($created), 'note' => null, 'needsReview' => false];
+    }
+
+    private function rememberAlias(Venue $venue, string $incomingName): void
+    {
+        if ($venue->name === $incomingName) {
+            return;
+        }
+
+        app(VenueResolver::class)->rememberAliasName($venue, $incomingName);
+    }
+
+    private function ensureGeocoded(Venue $venue): Venue
+    {
+        // Staff pins are protected by VenueGeocoder; this only fills
+        // coordinates on a venue that still has none.
         if (! $venue->hasCoordinates()) {
             try {
                 app(VenueGeocoder::class)->fill($venue);
             } catch (\Throwable) {
-                // Import must not fail because Nominatim is slow/down.
+                // Import must not fail because Nominatim is slow or down.
             }
         }
 
         return $venue->fresh();
-    }
-
-    private function publishedNamesakes(string $name): int
-    {
-        return Venue::query()
-            ->whereRaw('LOWER(name) = ?', [Str::lower(trim($name))])
-            ->where('status', '!=', ListingStatus::Archived)
-            ->count();
     }
 }
