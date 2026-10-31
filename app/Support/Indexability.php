@@ -62,6 +62,7 @@ class Indexability
     public static function venues(Builder $query): Builder
     {
         return $query->published()
+            ->omitScheduleFragments()
             ->where(function (Builder $located): void {
                 $located->whereNotNull('province')
                     ->whereNotNull('town')

@@ -7,7 +7,10 @@
     <main id="main">
         <div class="wrap dir-page">
             <x-dir-hero page="matches" kicker="Matches" title="Map">
-                {{ $totalMatches }} upcoming {{ $totalMatches === 1 ? 'match' : 'matches' }}.
+                {{ $totalMatches }} upcoming {{ $totalMatches === 1 ? 'match' : 'matches' }} with a linked range.
+                @if (($unlinkedMatches ?? 0) > 0)
+                    {{ $unlinkedMatches }} upcoming {{ $unlinkedMatches === 1 ? 'match has' : 'matches have' }} no linked range, so {{ $unlinkedMatches === 1 ? 'it is' : 'they are' }} not on this map.
+                @endif
                 Select a pin to see what is shot there.
             </x-dir-hero>
         </div>
@@ -20,7 +23,7 @@
                             Matches
                             <small>
                                 {{ $totalMatches }} {{ $totalMatches === 1 ? 'match' : 'matches' }}
-                                · {{ count($pins) }} {{ count($pins) === 1 ? 'range' : 'ranges' }}
+                                · {{ count($pins) }} pinned {{ count($pins) === 1 ? 'range' : 'ranges' }}
                             </small>
                         </h2>
                         <div class="view-toggle" role="group" aria-label="Matches view">

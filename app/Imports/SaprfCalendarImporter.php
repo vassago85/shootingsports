@@ -7,6 +7,7 @@ use App\Enums\EventStatus;
 use App\Enums\ListingSource;
 use App\Enums\Province;
 use App\Models\Event;
+use App\Support\VenueNames;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
@@ -244,11 +245,7 @@ class SaprfCalendarImporter
      */
     private function looksMultiVenue(string $name): bool
     {
-        if (str_contains($name, '/')) {
-            return true;
-        }
-
-        return preg_match('/\bday\s*\d+\b/i', $name) === 1;
+        return VenueNames::isScheduleFragment($name);
     }
 
     /**

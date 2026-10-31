@@ -35,7 +35,7 @@ class PublicCounts
                 // conflating the two mental models a shooter has.
                 'clubs' => Organisation::query()->published()->where('type', OrganisationType::Club)->count(),
                 'series' => Organisation::query()->published()->where('type', OrganisationType::Series)->count(),
-                'ranges' => Venue::query()->published()->count(),
+                'ranges' => Venue::query()->published()->omitScheduleFragments()->count(),
                 // Count what visitors can actually reach on /calendar
                 // right now. `published()` would inflate this with
                 // Completed/Cancelled rows a visitor cannot open.

@@ -44,6 +44,7 @@ class VenueController extends Controller
 
         $venues = Venue::query()
             ->published()
+            ->omitScheduleFragments()
             ->with('disciplines')
             ->withCount(['events as upcoming_matches_count' => fn ($query) => $query->upcoming()])
             ->when($province, fn ($q) => $q->where('province', $province))

@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\Province;
 use App\Http\Controllers\Controller;
-use App\Models\Event;
 use App\Models\Venue;
 use App\Support\Geo;
 use App\Support\PublicCache;
+use App\Support\UpcomingVenueCounts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
@@ -24,15 +24,12 @@ class MapController extends Controller
             PublicCache::key('api.v1.map.venue-pins'),
             300,
             function (): array {
-                $counts = Event::query()
-                    ->upcoming()
-                    ->whereNotNull('venue_id')
-                    ->selectRaw('venue_id, count(*) as c')
-                    ->groupBy('venue_id')
-                    ->pluck('c', 'venue_id');
+                $tally = UpcomingVenueCounts::tally();
+                $counts = $tally['byVenue'];
 
                 $venues = Venue::query()
                     ->published()
+                    ->omitScheduleFragments()
                     ->whereNotNull('lat')
                     ->whereNotNull('lng')
                     ->orderBy('name')
@@ -54,7 +51,7 @@ class MapController extends Controller
 
                 return [
                     'pins' => $pins,
-                    'total_matches' => (int) $counts->sum(),
+                    'total_matches' => $tally['linked'],
                 ];
             }
         );

@@ -11,6 +11,9 @@
             <div class="wrap">
                 <p class="label">{{ collect(['Range', $venue->province?->getLabel()])->filter()->implode(' · ') }}</p>
                 <h1>{{ $venue->name }} <x-listing-tier-badge :listing="$venue" /></h1>
+                @if (\App\Support\VenueNames::isScheduleFragment($venue->name))
+                    <p>This name was imported from a match line that lists more than one place. It stays off the range directory until someone confirms the real ranges.</p>
+                @endif
                 @if (filled($venue->address ?: $venue->town))
                     <p>{{ $venue->address ?: $venue->town }}</p>
                 @endif

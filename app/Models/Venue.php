@@ -17,9 +17,11 @@ use App\Models\Concerns\HasVerification;
 use App\Observers\IndexNowObserver;
 use App\Support\Geo;
 use App\Support\Indexability;
+use App\Support\VenueNames;
 use Database\Factories\VenueFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -194,6 +196,28 @@ class Venue extends Model
     public function scopePublished($query)
     {
         return $query->where('status', ListingStatus::Published);
+    }
+
+    /**
+     * Hide timetable strings that were imported as if they were ranges.
+     * One extra id/name read; the public directory is small and cached
+     * on the pages that count it.
+     *
+     * @param  Builder<Venue>  $query
+     * @return Builder<Venue>
+     */
+    public function scopeOmitScheduleFragments(Builder $query): Builder
+    {
+        $ids = static::query()
+            ->pluck('name', 'id')
+            ->filter(fn (string $name): bool => VenueNames::isScheduleFragment($name))
+            ->keys();
+
+        if ($ids->isEmpty()) {
+            return $query;
+        }
+
+        return $query->whereNotIn($query->getModel()->getQualifiedKeyName(), $ids->all());
     }
 
     public function scopeMissingGps($query)

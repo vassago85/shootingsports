@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Province;
-use App\Models\Event;
 use App\Models\Venue;
 use App\Support\Geo;
 use App\Support\JsonLd;
 use App\Support\PublicCache;
+use App\Support\UpcomingVenueCounts;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
@@ -25,15 +25,12 @@ class MapController extends Controller
             PublicCache::key('map.venue-pins'),
             300,
             function (): array {
-                $counts = Event::query()
-                    ->upcoming()
-                    ->whereNotNull('venue_id')
-                    ->selectRaw('venue_id, count(*) as c')
-                    ->groupBy('venue_id')
-                    ->pluck('c', 'venue_id');
+                $tally = UpcomingVenueCounts::tally();
+                $counts = $tally['byVenue'];
 
                 $venues = Venue::query()
                     ->published()
+                    ->omitScheduleFragments()
                     ->whereNotNull('lat')
                     ->whereNotNull('lng')
                     ->orderBy('name')
@@ -70,12 +67,13 @@ class MapController extends Controller
 
                 $unpinned = Venue::query()
                     ->published()
+                    ->omitScheduleFragments()
                     ->where(function ($q): void {
                         $q->whereNull('lat')->orWhereNull('lng');
                     })
                     ->whereIn('id', $counts->keys())
                     ->orderBy('name')
-                    ->get(['slug', 'name', 'town'])
+                    ->get(['id', 'slug', 'name', 'town'])
                     ->map(fn (Venue $v): array => [
                         'label' => $v->name,
                         'town' => $v->town,
@@ -87,7 +85,8 @@ class MapController extends Controller
                 return [
                     'pins' => $pins,
                     'unpinned' => $unpinned,
-                    'totalMatches' => (int) $counts->sum(),
+                    'totalMatches' => $tally['linked'],
+                    'unlinkedMatches' => $tally['unlinked'],
                 ];
             }
         );
@@ -117,6 +116,7 @@ class MapController extends Controller
             'pins' => $payload['pins'],
             'unpinned' => $payload['unpinned'],
             'totalMatches' => $payload['totalMatches'],
+            'unlinkedMatches' => $payload['unlinkedMatches'] ?? 0,
             'provinces' => Province::cases(),
             'centroids' => $centroids,
             'selectedProvince' => $selectedProvince,

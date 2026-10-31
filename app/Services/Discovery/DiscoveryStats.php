@@ -112,6 +112,7 @@ class DiscoveryStats
 
         return Venue::query()
             ->published()
+            ->omitScheduleFragments()
             ->when($province, fn (Builder $q) => $q->where('province', $province))
             ->where(function (Builder $q) use ($treeIds): void {
                 $q->whereHas('disciplines', fn (Builder $d) => $d->whereIn('disciplines.id', $treeIds))

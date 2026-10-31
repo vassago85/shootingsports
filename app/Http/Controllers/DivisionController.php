@@ -30,7 +30,7 @@ class DivisionController extends Controller
             'division' => $divisionEnum,
             'sports' => $sports,
             'clubs' => Organisation::query()->published()->clubs()->inDivision($divisionEnum)->orderBy('name')->limit(8)->get(),
-            'ranges' => Venue::query()->published()->inDivision($divisionEnum)->orderBy('name')->limit(8)->get(),
+            'ranges' => Venue::query()->published()->omitScheduleFragments()->inDivision($divisionEnum)->orderBy('name')->limit(8)->get(),
             'matches' => Event::query()->upcoming()->inDivision($divisionEnum)->orderBy('starts_at')->limit(6)->get(),
             'suppliers' => Provider::query()->published()->listed()->inDivision($divisionEnum)->orderBy('name')->limit(8)->get(),
         ]);
