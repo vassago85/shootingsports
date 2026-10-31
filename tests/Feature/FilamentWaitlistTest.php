@@ -61,7 +61,10 @@ it('groups waitlist enquiries by trigger for the current month', function () {
         'status' => EnquiryStatus::New,
     ]);
     $oldRow->timestamps = false;
-    $oldRow->forceFill(['created_at' => now()->subMonth()->startOfMonth()])->save();
+    // subMonthNoOverflow so a late-month "today" (31 Oct → Carbon's
+    // overflow lands on 1 Oct, inside this month) still backdates to
+    // the previous calendar month.
+    $oldRow->forceFill(['created_at' => now()->subMonthNoOverflow()->startOfMonth()])->save();
 
     // Non-waitlist enquiry — should be excluded
     Enquiry::query()->create([
