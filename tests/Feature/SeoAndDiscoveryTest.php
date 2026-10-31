@@ -222,16 +222,17 @@ it('keeps the embed calendar tracker-free and noindexed', function () {
         ->assertDontSee('og:site_name', false);
 });
 
-it('ships a robots.txt with the sitemap and no admin path advertisements', function () {
+it('ships a robots.txt that allows the site and disallows private prefixes', function () {
     config()->set('seo.indexable', true);
 
     $this->get('/robots.txt')
         ->assertOk()
         ->assertHeader('content-type', 'text/plain; charset=UTF-8')
-        ->assertSee('Sitemap: '.url('/sitemap.xml'), false)
-        ->assertDontSee('Disallow: /desk', false)
-        ->assertDontSee('Disallow: /admin', false)
-        ->assertDontSee('Disallow: /me', false);
+        ->assertSee('Allow: /', false)
+        ->assertSee('Disallow: /admin', false)
+        ->assertSee('Disallow: /desk', false)
+        ->assertSee('Disallow: /me', false)
+        ->assertSee('Sitemap: '.url('/sitemap.xml'), false);
 });
 
 it('serves the pages sitemap with static URLs and skips private surfaces', function () {
@@ -244,7 +245,7 @@ it('serves the pages sitemap with static URLs and skips private surfaces', funct
         ->assertSee(route('calendar.month'), false)
         ->assertSee(route('privacy'), false)
         ->assertSee(route('terms'), false)
-        ->assertSee('<lastmod>', false)
+        ->assertDontSee('<lastmod>', false)
         ->assertDontSee('/embed', false)
         ->assertDontSee('/claim', false)
         ->assertDontSee('/desk', false)

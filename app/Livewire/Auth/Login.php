@@ -113,6 +113,9 @@ class Login extends Component
     public function render()
     {
         return view('livewire.auth.login')
-            ->layout('components.layouts.public', ['title' => 'Log in']);
+            ->layout('components.layouts.public', [
+                'title' => 'Log in',
+                'robots' => 'noindex, nofollow',
+            ]);
     }
 }

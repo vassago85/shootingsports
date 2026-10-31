@@ -64,6 +64,17 @@ return [
         'website_id' => env('UMAMI_WEBSITE_ID'),
     ],
 
+    // IndexNow key is public (it lives in /public/{key}.txt). Production
+    // pings on listing changes unless INDEXNOW_ENABLED is set false.
+    // An empty INDEXNOW_KEY keeps the shipped key so the file and the
+    // ping stay in sync without a server env edit.
+    'indexnow' => [
+        'key' => env('INDEXNOW_KEY') ?: 'cc62820955164261944e17736b6d3752',
+        'enabled' => env('INDEXNOW_ENABLED') === null || env('INDEXNOW_ENABLED') === ''
+            ? env('APP_ENV') === 'production'
+            : filter_var(env('INDEXNOW_ENABLED'), FILTER_VALIDATE_BOOLEAN),
+    ],
+
     // Optional CARTO basemap key for /map. When blank, the map falls
     // back to free OSM tiles with a CSS mute — CARTO watermarks
     // "API KEY REQUIRED" without a key.

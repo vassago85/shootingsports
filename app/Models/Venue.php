@@ -14,10 +14,12 @@ use App\Enums\VerificationState;
 use App\Models\Concerns\HasDisciplines;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\HasVerification;
+use App\Observers\IndexNowObserver;
 use App\Support\Geo;
 use App\Support\Indexability;
 use Database\Factories\VenueFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+#[ObservedBy([IndexNowObserver::class])]
 #[Fillable([
     'slug', 'name', 'province', 'town', 'metro', 'lat', 'lng', 'address',
     'geocode_source', 'geocoded_at',

@@ -13,9 +13,11 @@ use App\Enums\VerificationState;
 use App\Models\Concerns\HasDisciplines;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\HasVerification;
+use App\Observers\IndexNowObserver;
 use App\Support\Indexability;
 use Database\Factories\ProviderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +30,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+#[ObservedBy([IndexNowObserver::class])]
 #[Fillable([
     'slug', 'name', 'category', 'services', 'province', 'town', 'metro', 'lat', 'lng',
     'email', 'phone', 'website_url', 'logo_path', 'tagline', 'description', 'tier', 'status',

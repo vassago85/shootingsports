@@ -7,9 +7,9 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * SEO: collapse duplicate hosts and trailing-slash URLs onto APP_URL.
- * Edge redirects (Nginx / Cloudflare) should still do www→apex; this
- * is the in-app safety net so canonicals never self-vouch for www.
+ * SEO: collapse duplicate hosts, plain http, and trailing slashes onto APP_URL.
+ * Edge redirects (Nginx / Cloudflare) should still do www and http; this
+ * is the in-app safety net so canonicals never self-vouch for www or http.
  */
 class CanonicalHost
 {
@@ -37,14 +37,20 @@ class CanonicalHost
         }
 
         $path = $request->getPathInfo();
+        $scheme = strtolower((string) ($canonical['scheme'] ?? 'https'));
+        $requestScheme = strtolower($request->getScheme());
         $needsHostFix = $requestHost !== $canonicalHost;
         $needsSlashFix = $path !== '/' && str_ends_with($path, '/');
+        // Only upgrade schemes. Never redirect an https request down to
+        // http, even when a dev APP_URL is still http — that would blow
+        // HSTS away and send the browser back out through the plaintext
+        // round-trip we were trying to collapse.
+        $needsSchemeFix = $scheme === 'https' && $requestScheme === 'http';
 
-        if (! $needsHostFix && ! $needsSlashFix) {
+        if (! $needsHostFix && ! $needsSlashFix && ! $needsSchemeFix) {
             return $next($request);
         }
 
-        $scheme = $canonical['scheme'] ?? 'https';
         $targetPath = $needsSlashFix ? rtrim($path, '/') : $path;
 
         if ($targetPath === '') {

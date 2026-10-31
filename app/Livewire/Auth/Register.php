@@ -187,6 +187,9 @@ class Register extends Component
     public function render()
     {
         return view('livewire.auth.register')
-            ->layout('components.layouts.public', ['title' => 'Create your account']);
+            ->layout('components.layouts.public', [
+                'title' => 'Create your account',
+                'robots' => 'noindex, nofollow',
+            ]);
     }
 }

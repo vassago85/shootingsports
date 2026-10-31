@@ -11,10 +11,12 @@ use App\Enums\VerificationState;
 use App\Models\Concerns\HasDisciplines;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\HasVerification;
+use App\Observers\IndexNowObserver;
 use App\Support\Indexability;
 use Carbon\CarbonImmutable;
 use Database\Factories\OrganisationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
+#[ObservedBy([IndexNowObserver::class])]
 #[Fillable([
     'slug', 'name', 'short_name', 'type', 'parent_id', 'province', 'town',
     'email', 'phone', 'website_url', 'facebook_url', 'description',

@@ -13,6 +13,7 @@ use App\Models\Venue;
 use App\Queries\PublicEventQuery;
 use App\Support\PublicCache;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -94,8 +95,6 @@ class SitemapController extends Controller
             return collect();
         }
 
-        $now = now()->toAtomString();
-
         $pages = [
             'home',
             'calendar',
@@ -117,7 +116,6 @@ class SitemapController extends Controller
 
         return collect($pages)->map(fn (string $name): array => [
             'loc' => route($name),
-            'lastmod' => $now,
         ]);
     }
 
@@ -251,41 +249,31 @@ class SitemapController extends Controller
         }
 
         $urls = new Collection;
-        $now = now()->toAtomString();
         $minimum = (int) config('seo.landing_min');
 
         foreach (ProviderCategory::publicCases() as $category) {
-            $nationalCount = Provider::query()
-                ->published()
-                ->listed()
-                ->offering($category)
-                ->count();
+            $national = $this->providerListingStats($category);
 
-            if ($nationalCount < 1) {
+            if ($national['count'] < 1) {
                 continue;
             }
 
-            $urls->push([
+            $urls->push(array_filter([
                 'loc' => route('suppliers.category', $category->urlSlug()),
-                'lastmod' => $now,
-            ]);
+                'lastmod' => $national['lastmod'],
+            ]));
 
             foreach (Province::cases() as $province) {
-                $provinceCount = Provider::query()
-                    ->published()
-                    ->listed()
-                    ->offering($category)
-                    ->where('province', $province)
-                    ->count();
+                $slice = $this->providerListingStats($category, $province);
 
-                if ($provinceCount < $minimum) {
+                if ($slice['count'] < $minimum) {
                     continue;
                 }
 
-                $urls->push([
+                $urls->push(array_filter([
                     'loc' => route('suppliers.province', [$category->urlSlug(), $province->urlSlug()]),
-                    'lastmod' => $now,
-                ]);
+                    'lastmod' => $slice['lastmod'],
+                ]));
             }
         }
 
@@ -380,6 +368,39 @@ class SitemapController extends Controller
         return response($body, 200, [
             'Content-Type' => 'application/xml; charset=UTF-8',
         ]);
+    }
+
+    /**
+     * @return array{count: int, lastmod: string|null}
+     */
+    private function providerListingStats(ProviderCategory $category, ?Province $province = null): array
+    {
+        $query = Provider::query()
+            ->published()
+            ->listed()
+            ->offering($category)
+            ->when($province, fn ($builder) => $builder->where('province', $province));
+
+        $query->getQuery()->columns = null;
+
+        $stats = $query
+            ->selectRaw('count(*) as listing_count, max(updated_at) as latest_change')
+            ->toBase()
+            ->first();
+
+        return [
+            'count' => (int) ($stats->listing_count ?? 0),
+            'lastmod' => $this->atom($stats->latest_change ?? null),
+        ];
+    }
+
+    private function atom(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return Carbon::parse($value)->timezone((string) config('app.timezone'))->toAtomString();
     }
 
     private function disciplineProvinceListingCount(Discipline $discipline, Province $province): int

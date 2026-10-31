@@ -161,11 +161,12 @@ it('serves robots and a schema-valid sitemap in both indexability states', funct
     $open = $this->get('/robots.txt');
     $open->assertOk()
         ->assertSee('Allow: /', false)
+        ->assertSee('Disallow: /admin', false)
+        ->assertSee('Disallow: /desk', false)
+        ->assertSee('Disallow: /me', false)
         ->assertSee('Sitemap: '.url('/sitemap.xml'), false);
-    expect($open->getContent())
-        ->not->toContain('Disallow: /admin')
-        ->not->toContain('Disallow: /desk')
-        ->not->toContain('Disallow: /me');
+    expect(preg_split('/\r\n|\n/', trim($open->getContent())))
+        ->not->toContain('Disallow: /');
 
     $index = $this->get('/sitemap.xml')->assertOk();
     expect(sitemapRoot($index->getContent()))->toBe('sitemapindex');

@@ -27,6 +27,18 @@ it('redirects www host to the APP_URL apex', function () {
         ->and($response->headers->get('Location'))->toBe('https://shootingsports.co.za/calendar');
 });
 
+it('redirects plain http on the apex to the https APP_URL', function () {
+    config(['app.url' => 'https://shootingsports.co.za']);
+
+    $request = Request::create('http://shootingsports.co.za/calendar', 'GET');
+    $middleware = new CanonicalHost;
+
+    $response = $middleware->handle($request, fn () => response('ok'));
+
+    expect($response->getStatusCode())->toBe(301)
+        ->and($response->headers->get('Location'))->toBe('https://shootingsports.co.za/calendar');
+});
+
 it('leaves unrelated hosts alone', function () {
     config(['app.url' => 'https://shootingsports.co.za']);
 
