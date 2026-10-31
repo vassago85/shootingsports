@@ -59,6 +59,24 @@ class Geo
             && $lng <= self::SA_LNG_MAX;
     }
 
+    public static function nearestProvince(float $lat, float $lng): Province
+    {
+        $nearest = Province::Gauteng;
+        $nearestKm = INF;
+
+        foreach (Province::cases() as $province) {
+            [$provinceLat, $provinceLng] = self::provinceCentroid($province);
+            $km = self::haversineKm($lat, $lng, $provinceLat, $provinceLng);
+
+            if ($km < $nearestKm) {
+                $nearestKm = $km;
+                $nearest = $province;
+            }
+        }
+
+        return $nearest;
+    }
+
     public static function haversineKm(float $lat1, float $lng1, float $lat2, float $lng2): float
     {
         $earthKm = 6371.0;

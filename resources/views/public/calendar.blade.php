@@ -9,6 +9,13 @@
             <x-dir-hero page="matches" kicker="South Africa" title="Shooting events">
                 Every listed match on one calendar. Filter by sport, province and date.
             </x-dir-hero>
+            @if ($featuredDisciplines->isNotEmpty())
+                <p>
+                    @foreach ($featuredDisciplines as $hub)
+                        <a href="{{ route('disciplines.show', $hub->slug) }}">{{ $hub->name }} matches</a>@if (! $loop->last) · @endif
+                    @endforeach
+                </p>
+            @endif
 
             @if (auth()->user()?->is_staff && filled(config('product-backlog.items')))
                 <section class="build-list" aria-labelledby="build-list-heading">

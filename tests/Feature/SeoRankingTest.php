@@ -108,12 +108,12 @@ it('301s a changed club slug and serves the ranking landing on the new path', fu
     $this->get('/clubs/old-ipsc-club')
         ->assertRedirect(route('clubs.show', 'new-ipsc-club'));
 
-    $this->get(route('disciplines.province', ['ipsc', 'gauteng']))
-        ->assertRedirect(route('clubs.landing', ['gauteng', 'ipsc']));
-
     $this->get(route('clubs.landing', ['gauteng', 'ipsc']))
+        ->assertRedirect(route('disciplines.province', ['ipsc', 'gauteng']));
+
+    $this->get(route('disciplines.province', ['ipsc', 'gauteng']))
         ->assertOk()
-        ->assertSee('IPSC Clubs in Gauteng — Ranges, Matches &amp; Contacts', false);
+        ->assertSee('IPSC matches in Gauteng: 0 upcoming', false);
 });
 
 it('puts an ISO offset and venue id on match schema', function () {
@@ -134,7 +134,7 @@ it('puts an ISO offset and venue id on match schema', function () {
 
     $this->get(route('events.show', $event->slug))
         ->assertOk()
-        ->assertSee('Schema Match — ', false)
+        ->assertSee('Schema Match · ', false)
         ->assertSee($event->schemaId(), false)
         ->assertSee($venue->schemaId(), false)
         ->assertSee('+02:00', false)
@@ -194,8 +194,8 @@ it('emits the clubs landing URL shape in the disciplines sitemap, not the legacy
 
     $this->get('/sitemaps/disciplines.xml')
         ->assertOk()
-        ->assertSee('/clubs/gauteng/shape-check', false)
-        ->assertDontSee('/disciplines/shape-check/gauteng', false);
+        ->assertSee('/disciplines/shape-check/gauteng', false)
+        ->assertDontSee('/clubs/gauteng/shape-check', false);
 });
 
 it('chunks a sitemap type once it passes the configured limit', function () {
@@ -223,7 +223,7 @@ it('does not add a query per club on a province landing', function () {
 
     DB::flushQueryLog();
     DB::enableQueryLog();
-    $this->get(route('clubs.landing', ['gauteng', $discipline->slug]))->assertOk();
+    $this->get(route('disciplines.province', [$discipline->slug, 'gauteng']))->assertOk();
     $few = count(DB::getQueryLog());
 
     foreach (range(2, 6) as $i) {
@@ -235,7 +235,7 @@ it('does not add a query per club on a province landing', function () {
     }
 
     DB::flushQueryLog();
-    $this->get(route('clubs.landing', ['gauteng', $discipline->slug]))->assertOk();
+    $this->get(route('disciplines.province', [$discipline->slug, 'gauteng']))->assertOk();
     $many = count(DB::getQueryLog());
 
     expect($many)->toBeLessThanOrEqual($few + 2);

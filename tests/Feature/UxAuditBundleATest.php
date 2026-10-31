@@ -96,7 +96,7 @@ it('empty discipline match list prompts follow', function () {
 
     $this->get(route('disciplines.show', $discipline->slug))
         ->assertOk()
-        ->assertSee('Nobody has listed a Field Target match yet')
+        ->assertSee('No upcoming Field Target match is listed in South Africa.')
         ->assertSee('Follow this discipline');
 });
 

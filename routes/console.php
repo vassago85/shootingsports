@@ -34,3 +34,11 @@ Schedule::command('club-members:send-renewal-reminders')->dailyAt('07:35');
 // days (default 60, 30 and 7 — i.e. 1 Sep, 1 Oct, 24 Oct when the
 // cycle ends 31 Oct). Idempotent per cycle end.
 Schedule::command('dedicated:send-reminders')->dailyAt('07:40');
+
+// Answer pages, /llms-full.txt and sitemap lastmod share one daily
+// stamp. IndexNow pings the landing URLs when the integration is on.
+Schedule::command('answers:refresh')->dailyAt('05:10')->withoutOverlapping();
+
+// Venue, title, and import-source problems. Output is also written
+// to the log for whoever is watching the scheduler.
+Schedule::command('data-quality:report')->dailyAt('05:40')->withoutOverlapping();

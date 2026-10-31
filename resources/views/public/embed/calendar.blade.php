@@ -40,6 +40,7 @@
             <p class="empty">No upcoming matches.</p>
         @endforelse
         <p style="margin-top:16px"><a class="label" href="{{ route('calendar') }}" target="_blank" rel="noopener" style="border-bottom:1px solid var(--brass);text-decoration:none">Open the full calendar →</a></p>
+        <p><a href="{{ $creditUrl }}" target="_blank" rel="noopener">Calendar by ShootingSports</a></p>
     </main>
 </body>
 </html>

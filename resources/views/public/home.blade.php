@@ -13,6 +13,13 @@
                     <p class="hero-weekend">
                         <a class="btn lime" href="{{ route('calendar', ['weekend' => 1]) }}">What's shooting this weekend?</a>
                     </p>
+                    @if ($featuredDisciplines->isNotEmpty())
+                        <p>
+                            @foreach ($featuredDisciplines as $hub)
+                                <a href="{{ route('disciplines.show', $hub->slug) }}">{{ $hub->name }} matches</a>@if (! $loop->last) · @endif
+                            @endforeach
+                        </p>
+                    @endif
                 </div>
                 <div class="hero-rail">
                     <div class="rail-head">

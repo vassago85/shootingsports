@@ -53,7 +53,7 @@ it('allows every crawler and disallows only private prefixes', function () {
         'Google-Extended',
         'Applebot',
     ] as $agent) {
-        expect($body)->not->toContain($agent);
+        expect($body)->toContain('User-agent: '.$agent);
     }
 });
 
@@ -81,10 +81,14 @@ it('serves a schema-valid sitemap index of https urls', function () {
 });
 
 it('omits a fake lastmod on static sitemap pages', function () {
-    $this->get('/sitemaps/pages.xml')
+    $xml = $this->get('/sitemaps/pages.xml')
         ->assertOk()
         ->assertSee('https://shootingsports.co.za', false)
-        ->assertDontSee('<lastmod>', false);
+        ->getContent();
+
+    expect($xml)->not->toMatch('/<loc>https:\/\/shootingsports\.co\.za<\/loc>\s*<lastmod>/')
+        ->and($xml)->toContain('<loc>https://shootingsports.co.za/this-weekend</loc>')
+        ->and($xml)->toContain('<lastmod>');
 });
 
 it('leaves key public routes indexable with a canonical on the https host', function (string $path) {

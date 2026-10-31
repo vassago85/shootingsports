@@ -43,8 +43,16 @@ class JsonLd
                     ],
                 ],
                 [
-                    '@type' => 'SportsOrganization',
+                    '@type' => 'Organization',
                     '@id' => $siteUrl.'#organization',
+                    'url' => $siteUrl,
+                    'name' => 'Shooting Sports',
+                    'description' => 'Shooting sports in South Africa. The independent national register of clubs, ranges, suppliers and every match on the calendar.',
+                    'logo' => asset('images/og-default.png'),
+                ],
+                [
+                    '@type' => 'SportsOrganization',
+                    '@id' => $siteUrl.'#sports',
                     'url' => $siteUrl,
                     'name' => 'Shooting Sports',
                     'description' => 'Shooting sports in South Africa. The independent national register of clubs, ranges, suppliers and every match on the calendar.',
@@ -420,7 +428,7 @@ class JsonLd
     {
         return array_filter([
             '@context' => 'https://schema.org',
-            '@type' => 'SportsActivityLocation',
+            '@type' => ['Place', 'SportsActivityLocation'],
             '@id' => $venue->schemaId(),
             'name' => $venue->name,
             'url' => route('ranges.show', $venue->slug),

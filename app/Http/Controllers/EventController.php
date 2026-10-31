@@ -22,6 +22,7 @@ class EventController extends Controller
             'hostOrganisation.parent',
             'venue',
             'venues',
+            'disciplines.parent',
             'disciplines.divisionLinks',
             'flags',
             'banner',

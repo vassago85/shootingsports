@@ -104,10 +104,10 @@ it('shows a published discipline page and noindexes thin province slices', funct
         ->assertSee('Precision Rifle')
         ->assertDontSee('<meta name="robots" content="noindex,follow">', false);
 
-    $this->get(route('disciplines.province', [$discipline->slug, 'gauteng']))
-        ->assertRedirect(route('clubs.landing', ['gauteng', $discipline->slug]));
-
     $this->get(route('clubs.landing', ['gauteng', $discipline->slug]))
+        ->assertRedirect(route('disciplines.province', [$discipline->slug, 'gauteng']));
+
+    $this->get(route('disciplines.province', [$discipline->slug, 'gauteng']))
         ->assertOk()
         ->assertSee('in Gauteng')
         ->assertSee('<meta name="robots" content="noindex,follow">', false);

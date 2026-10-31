@@ -9,6 +9,7 @@ use App\Models\MagazineIssue;
 use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\Venue;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -51,6 +52,10 @@ final readonly class Seo
         if (filled($organisation->description)) {
             $sentence .= ' '.$organisation->description;
         }
+
+        $sentence = UpcomingCopy::facts(
+            Event::query()->upcoming()->where('host_organisation_id', $organisation->id),
+        ).' '.$sentence;
 
         $canonical = $organisation->isFederationListing()
             ? route('federations.show', $organisation->slug)
@@ -106,6 +111,8 @@ final readonly class Seo
             $sentence .= ' '.$venue->notes;
         }
 
+        $sentence = UpcomingCopy::facts(self::eventsAtVenue($venue)).' '.$sentence;
+
         return new self(
             title: $title,
             description: self::clip($sentence),
@@ -120,26 +127,26 @@ final readonly class Seo
 
         $discipline = $event->primaryDiscipline()?->name ?? $event->disciplines->first()?->name;
         $date = $event->starts_at?->timezone(config('app.timezone'))->format('j M Y');
-        $venue = $event->venue?->name;
+        $place = collect([$event->venue?->name, $event->venue?->town])->filter()->implode(', ');
 
-        $detail = collect([
-            $discipline !== null ? $discipline.' Match' : 'Shooting match',
-            $date,
-            $venue,
-        ])->filter()->implode(', ');
+        $title = collect([$event->title, $place !== '' ? $place : null, $date])->filter()->implode(' · ');
 
-        $sentence = $event->title.' is a '.$detail.'.';
+        $entry = match (true) {
+            $event->entry_fee_cents !== null => 'Entry is R'.number_format($event->entry_fee_cents / 100, 2, '.', '').'.',
+            filled($event->entry_url) => 'Entry details are linked from the event page.',
+            default => 'Entry details are on the event page.',
+        };
 
-        if ($event->hostOrganisation !== null) {
-            $sentence .= ' Hosted by '.$event->hostOrganisation->name.'.';
-        }
-
-        if (filled($event->description)) {
-            $sentence .= ' '.$event->description;
-        }
+        $sentence = collect([
+            $event->hostOrganisation !== null ? 'Hosted by '.$event->hostOrganisation->name.'.' : null,
+            $discipline !== null ? $discipline.' match.' : null,
+            $event->status !== null ? 'Status: '.$event->status->getLabel().'.' : null,
+            $entry,
+            filled($event->description) ? $event->description : null,
+        ])->filter()->implode(' ');
 
         return new self(
-            title: $event->title.' — '.$detail,
+            title: $title,
             description: self::clip($sentence),
             canonical: $event->publicUrl(),
             robots: Indexability::allows($event) ? null : 'noindex,follow',
@@ -167,20 +174,20 @@ final readonly class Seo
         );
     }
 
-    public static function landing(Discipline $discipline, Province $province, string $description, bool $thin): self
+    public static function landing(Discipline $discipline, Province $province, string $description, bool $thin, int $upcoming): self
     {
         return new self(
-            title: $discipline->name.' Clubs in '.$province->getLabel().' — Ranges, Matches & Contacts',
+            title: DisciplinePages::title($discipline, $province, $upcoming),
             description: self::clip($description),
-            canonical: route('clubs.landing', [$province->urlSlug(), $discipline->slug]),
+            canonical: route('disciplines.province', [$discipline->slug, $province->urlSlug()]),
             robots: $thin ? 'noindex,follow' : null,
         );
     }
 
-    public static function discipline(Discipline $discipline, string $description): self
+    public static function discipline(Discipline $discipline, string $description, int $upcoming): self
     {
         return new self(
-            title: $discipline->name,
+            title: DisciplinePages::title($discipline, null, $upcoming),
             description: self::clip($description),
             canonical: route('disciplines.show', $discipline->slug),
         );
@@ -239,6 +246,19 @@ final readonly class Seo
         }
 
         return rtrim($cut, " \t.,;:-");
+    }
+
+    /**
+     * @return Builder<Event>
+     */
+    private static function eventsAtVenue(Venue $venue): Builder
+    {
+        return Event::query()
+            ->upcoming()
+            ->where(function (Builder $query) use ($venue): void {
+                $query->where('venue_id', $venue->id)
+                    ->orWhereHas('venues', fn (Builder $venues) => $venues->where('venues.id', $venue->id));
+            });
     }
 
     /**

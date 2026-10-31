@@ -139,7 +139,8 @@ it('links the sport organisation short name to its website', function () {
 
     $this->get(route('disciplines.show', $discipline->slug))
         ->assertOk()
-        ->assertDontSee('https://saprf.co.za', false);
+        ->assertSee('https://saprf.co.za', false)
+        ->assertSee('South African Precision Rifle Federation');
 });
 
 it('keeps the short description and matches on the sport page and the longer write-up on its own page', function () {
@@ -153,7 +154,7 @@ it('keeps the short description and matches on the sport page and the longer wri
         ->assertOk()
         ->assertSee('Knockdown targets with a spring rifle.')
         ->assertSee('More about this sport')
-        ->assertSee('Next Field Target matches')
+        ->assertSee('Upcoming matches')
         ->assertDontSee('unsupported positions');
 
     $this->get(route('disciplines.about', $discipline->slug))

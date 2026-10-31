@@ -7,9 +7,30 @@ use Illuminate\Http\Response;
 class RobotsController extends Controller
 {
     /**
-     * Paths that are sign-in, account, or operator surfaces. One
-     * User-agent: * group covers Googlebot, Bingbot and the AI
-     * fetchers. They are not named, and they are not blocked from /.
+     * One group, many user-agents. `*` covers anything not named.
+     * The named crawlers are listed so a host-level bot rule cannot
+     * claim we never addressed them. Every agent gets Allow: / and
+     * the same private-path disallows.
+     *
+     * @var list<string>
+     */
+    private const AGENTS = [
+        '*',
+        'Googlebot',
+        'Bingbot',
+        'Applebot',
+        'ClaudeBot',
+        'Claude-User',
+        'Claude-SearchBot',
+        'GPTBot',
+        'OAI-SearchBot',
+        'ChatGPT-User',
+        'PerplexityBot',
+        'Google-Extended',
+    ];
+
+    /**
+     * Paths that are sign-in, account, or operator surfaces.
      *
      * @var list<string>
      */
@@ -34,7 +55,11 @@ class RobotsController extends Controller
 
     public function __invoke(): Response
     {
-        $lines = ['User-agent: *'];
+        $lines = [];
+
+        foreach (self::AGENTS as $agent) {
+            $lines[] = 'User-agent: '.$agent;
+        }
 
         if (config('seo.indexable')) {
             $lines[] = 'Allow: /';

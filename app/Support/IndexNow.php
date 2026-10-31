@@ -2,7 +2,9 @@
 
 namespace App\Support;
 
+use App\Enums\Province;
 use App\Jobs\PingIndexNow;
+use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Provider;
@@ -16,6 +18,44 @@ use App\Models\Venue;
  */
 class IndexNow
 {
+    public static function ping(string $url): void
+    {
+        if (! config('services.indexnow.enabled') || blank(config('services.indexnow.key')) || $url === '') {
+            return;
+        }
+
+        PingIndexNow::dispatch($url)->afterCommit();
+    }
+
+    public static function pingEventSurfaces(Event $event): void
+    {
+        if (! config('services.indexnow.enabled') || blank(config('services.indexnow.key'))) {
+            return;
+        }
+
+        $event->loadMissing(['disciplines.parent', 'venue', 'hostOrganisation']);
+        $province = $event->venue?->province ?? ($event->venue_id === null ? $event->hostOrganisation?->province : null);
+        $urls = [];
+
+        foreach ($event->disciplines as $discipline) {
+            $hub = $discipline->is_published ? $discipline : $discipline->parent;
+
+            if (! $hub instanceof Discipline || ! $hub->is_published) {
+                continue;
+            }
+
+            $urls[] = route('disciplines.show', $hub->slug);
+
+            if ($province instanceof Province) {
+                $urls[] = route('disciplines.province', [$hub->slug, $province->urlSlug()]);
+            }
+        }
+
+        foreach (array_unique($urls) as $url) {
+            self::ping($url);
+        }
+    }
+
     public static function dispatchFor(Event|Organisation|Venue|Provider $record): void
     {
         if (! config('services.indexnow.enabled') || blank(config('services.indexnow.key'))) {

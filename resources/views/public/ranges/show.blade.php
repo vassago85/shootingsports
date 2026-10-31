@@ -118,7 +118,12 @@
                 @if ($inferredDisciplines->isNotEmpty())
                     <div class="club-tags" style="margin-bottom:28px">
                         @foreach ($inferredDisciplines as $discipline)
-                            <a class="tag" href="{{ route('disciplines.show', $discipline->slug) }}">{{ $discipline->name }}</a>
+                            @if ($discipline->is_published)
+                                <a class="tag" href="{{ route('disciplines.show', $discipline->slug) }}">{{ $discipline->name }}</a>
+                                @if ($venue->province)
+                                    <a class="tag" href="{{ route('disciplines.province', [$discipline->slug, $venue->province->urlSlug()]) }}">{{ $discipline->name }} in {{ $venue->province->getLabel() }}</a>
+                                @endif
+                            @endif
                         @endforeach
                     </div>
                 @endif

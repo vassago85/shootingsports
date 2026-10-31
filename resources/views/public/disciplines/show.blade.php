@@ -16,9 +16,13 @@
                     @endif
                     &nbsp;/&nbsp; <b>{{ $discipline->name }}</b>
                 </p>
-                <h1>@if ($province){{ $discipline->name }} Clubs in {{ $province->getLabel() }}@else{{ $discipline->name }}@endif</h1>
+                <h1>{{ $seo->title }}</h1>
+                <p class="lede">{{ $answer }}</p>
+                @if ($introHtml)
+                    <div class="discipline-intro">{!! $introHtml !!}</div>
+                @endif
                 @if (filled($discipline->short_blurb))
-                    <p class="lede">{{ $discipline->short_blurb }}</p>
+                    <p>{{ $discipline->short_blurb }}</p>
                 @endif
                 <p style="margin-top:18px">
                     <a class="sport-link" href="{{ route('disciplines.about', $discipline->slug) }}">More about this sport →</a>
@@ -67,68 +71,73 @@
         </div>
 
         <div class="wrap">
-            @if ($discipline->videos->isNotEmpty())
-                <section id="videos" class="block" style="padding-bottom:0">
-                    <div class="sec-head">
-                        <p class="label">Watch</p>
-                        <h2>Videos</h2>
-                    </div>
-                    <div class="sport-videos">
-                        @foreach ($discipline->videos as $video)
-                            <a class="sport-video" href="{{ $video->watchUrl() }}" target="_blank" rel="noopener noreferrer">
-                                <img src="{{ $video->thumbnailUrl() }}" alt="">
-                                <span>{{ $video->title }} · YouTube</span>
-                            </a>
-                        @endforeach
-                    </div>
-                </section>
-            @endif
-
             <section id="matches" class="block">
                 <div class="sec-head">
                     <p class="label">Calendar</p>
-                    <h2>Next {{ $discipline->name }} matches</h2>
+                    <h2>Upcoming matches</h2>
                 </div>
-                @forelse ($events as $event)
-                    <a class="match-row" href="{{ route('events.show', $event->slug) }}">
-                        <div class="m-date">
-                            <span class="dow">{{ \App\Support\EventDate::weekday($event->starts_at, $event->ends_at) }}</span>
-                            <b>{{ \App\Support\EventDate::dayOfMonth($event->starts_at, $event->ends_at) }}</b>
-                            <span class="mo">{{ \App\Support\EventDate::monthWithYear($event->starts_at, $event->ends_at) }}</span>
-                        </div>
-                        <div class="m-body">
-                            <div class="t">{{ $event->title }}</div>
-                            @php
-                                $matchMeta = collect([$event->listedHost(), $event->listedLocation()])->filter();
-                            @endphp
-                            @if ($matchMeta->isNotEmpty())
-                                <div class="m">{{ $matchMeta->implode(' · ') }}</div>
-                            @endif
-                        </div>
-                        <div class="m-pills">
-                            @if ($format = $event->primaryDiscipline() ?? $event->disciplines->first())
-                                <span class="pill confirmed">{{ $format->name }}</span>
-                            @endif
-                            <x-event-status-pill :event="$event" />
-                        </div>
-                    </a>
+                @forelse ($events->groupBy(fn ($event) => $event->starts_at->timezone(config('app.timezone'))->format('Y-m')) as $monthEvents)
+                    <h3>{{ $monthEvents->first()->starts_at->timezone(config('app.timezone'))->format('F Y') }}</h3>
+                    @foreach ($monthEvents as $event)
+                        <a class="match-row" href="{{ route('events.show', $event->slug) }}">
+                            <div class="m-date">
+                                <span class="dow">{{ \App\Support\EventDate::weekday($event->starts_at, $event->ends_at) }}</span>
+                                <b>{{ \App\Support\EventDate::dayOfMonth($event->starts_at, $event->ends_at) }}</b>
+                                <span class="mo">{{ \App\Support\EventDate::monthWithYear($event->starts_at, $event->ends_at) }}</span>
+                            </div>
+                            <div class="m-body">
+                                <div class="t">{{ $event->title }}</div>
+                                @php
+                                    $matchMeta = collect([$event->listedHost(), $event->listedLocation()])->filter();
+                                @endphp
+                                @if ($matchMeta->isNotEmpty())
+                                    <div class="m">{{ $matchMeta->implode(' · ') }}</div>
+                                @endif
+                            </div>
+                            <div class="m-pills">
+                                @if ($format = $event->primaryDiscipline() ?? $event->disciplines->first())
+                                    <span class="pill confirmed">{{ $format->name }}</span>
+                                @endif
+                                <x-event-status-pill :event="$event" />
+                            </div>
+                        </a>
+                    @endforeach
                 @empty
-                    <p class="empty">
-                        Nobody has listed a {{ $discipline->name }} match yet.
-                        Follow this discipline and we’ll surface it when one lands.
-                    </p>
+                    <p class="empty">No upcoming {{ $discipline->name }} match is listed{{ $province ? ' in '.$province->getLabel() : ' in South Africa' }}.</p>
+                    @if ($nationalUpcoming->isNotEmpty())
+                        <h3>Next matches nationally</h3>
+                        @foreach ($nationalUpcoming as $event)
+                            <p><a href="{{ route('events.show', $event->slug) }}">{{ $event->title }}</a></p>
+                        @endforeach
+                        <p><a class="sport-link" href="{{ route('disciplines.show', $discipline->slug) }}">All {{ $discipline->name }} matches in South Africa</a></p>
+                    @endif
                 @endforelse
-                <p style="margin-top:18px">
-                    <a class="sport-link" href="{{ route('calendar', ['discipline' => $discipline->slug, 'province' => $province?->urlSlug()]) }}">Open in the calendar →</a>
-                    <a class="sport-link" href="{{ route('ical.discipline', $discipline->slug) }}">iCal feed →</a>
-                </p>
+            </section>
+
+            <section id="provinces" class="block">
+                <div class="sec-head">
+                    <p class="label">Map</p>
+                    <h2>Where to shoot by province</h2>
+                </div>
+                @if ($provinceDirectory === [])
+                    <p class="empty">No club or range lists {{ $discipline->name }} yet.</p>
+                @else
+                    <ul>
+                        @foreach ($provinceDirectory as $row)
+                            <li>
+                                <a href="{{ $row['url'] }}">{{ $row['label'] }}</a>
+                                — {{ $row['clubs'] }} {{ \Illuminate\Support\Str::plural('club', $row['clubs']) }}, {{ $row['ranges'] }} {{ \Illuminate\Support\Str::plural('range', $row['ranges']) }}
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
             </section>
 
             @if (($clubs ?? collect())->isNotEmpty())
                 <section id="clubs" class="block">
                     <div class="sec-head">
                         <p class="label">Where to shoot</p>
-                        <h2>Clubs that run {{ $discipline->name }}@if ($province) in {{ $province->getLabel() }}@endif</h2>
+                        <h2>Clubs that run this discipline</h2>
                     </div>
                     <div class="dope-grid">
                         @foreach ($clubs as $club)
@@ -147,7 +156,7 @@
                 <section id="ranges" class="block">
                     <div class="sec-head">
                         <p class="label">Facilities</p>
-                        <h2>Ranges that host {{ $discipline->name }}@if ($province) in {{ $province->getLabel() }}@endif</h2>
+                        <h2>Ranges that host it</h2>
                     </div>
                     <div class="dope-grid">
                         @foreach ($ranges as $range)
@@ -156,6 +165,59 @@
                                 @if ($range->province)
                                     <p class="meta">{{ $range->province->getLabel() }}</p>
                                 @endif
+                            </a>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+
+            <section id="results" class="block">
+                <div class="sec-head">
+                    <p class="label">Scoreboard</p>
+                    <h2>Recent results</h2>
+                </div>
+                @forelse ($recentResults as $event)
+                    <p><a href="{{ route('events.show', $event->slug) }}">{{ $event->title }}</a></p>
+                @empty
+                    <p class="empty">No completed {{ $discipline->name }} match is listed{{ $province ? ' in '.$province->getLabel() : '' }}.</p>
+                @endforelse
+            </section>
+
+            <section id="governing-body" class="block">
+                <div class="sec-head">
+                    <p class="label">Authority</p>
+                    <h2>Governing body and links</h2>
+                </div>
+                @if ($discipline->federation)
+                    <p>
+                        @if ($discipline->federation->status === \App\Enums\ListingStatus::Published)
+                            <a href="{{ route('federations.show', $discipline->federation->slug) }}">{{ $discipline->federation->name }}</a>
+                        @else
+                            {{ $discipline->federation->name }}
+                        @endif
+                    </p>
+                    @if (filled($discipline->federation->website_url))
+                        <p><a href="{{ $discipline->federation->website_url }}" rel="noopener noreferrer">{{ $discipline->federation->website_url }}</a></p>
+                    @endif
+                @endif
+                <p>
+                    <a class="sport-link" href="{{ route('calendar', ['discipline' => $discipline->slug, 'province' => $province?->urlSlug()]) }}">Open in the calendar</a>
+                    <a class="sport-link" href="{{ route('ical.discipline', $discipline->slug) }}">iCal feed</a>
+                    <a class="sport-link" href="{{ route('disciplines.about', $discipline->slug) }}">More information</a>
+                </p>
+            </section>
+
+            @if ($discipline->videos->isNotEmpty())
+                <section id="videos" class="block" style="padding-bottom:0">
+                    <div class="sec-head">
+                        <p class="label">Watch</p>
+                        <h2>Videos</h2>
+                    </div>
+                    <div class="sport-videos">
+                        @foreach ($discipline->videos as $video)
+                            <a class="sport-video" href="{{ $video->watchUrl() }}" target="_blank" rel="noopener noreferrer">
+                                <img src="{{ $video->thumbnailUrl() }}" alt="">
+                                <span>{{ $video->title }} · YouTube</span>
                             </a>
                         @endforeach
                     </div>

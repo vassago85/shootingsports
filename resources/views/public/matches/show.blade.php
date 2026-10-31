@@ -48,6 +48,23 @@
                         @endif
                     </p>
                 @endif
+                @php
+                    $eventProvince = $event->venue?->province ?? ($event->venue_id === null ? $event->hostOrganisation?->province : null);
+                    $hubs = $event->disciplines
+                        ->map(fn ($discipline) => $discipline->is_published ? $discipline : $discipline->parent)
+                        ->filter(fn ($discipline) => $discipline?->is_published)
+                        ->unique('id');
+                @endphp
+                @if ($hubs->isNotEmpty())
+                    <p>
+                        @foreach ($hubs as $hub)
+                            <a href="{{ route('disciplines.show', $hub->slug) }}">{{ $hub->name }}</a>
+                            @if ($eventProvince)
+                                <a href="{{ route('disciplines.province', [$hub->slug, $eventProvince->urlSlug()]) }}">{{ $hub->name }} in {{ $eventProvince->getLabel() }}</a>
+                            @endif
+                        @endforeach
+                    </p>
+                @endif
                 <div class="pill-row" style="position:static;margin-top:16px">
                     <x-event-status-pill :event="$event" />
                 </div>

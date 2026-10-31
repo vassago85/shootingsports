@@ -147,6 +147,11 @@ class DisciplineResource extends Resource
                     ->maxLength(320)
                     ->columnSpanFull()
                     ->helperText('Shown on the sport page, with the events and videos.'),
+                Textarea::make('intro')
+                    ->label('Intro')
+                    ->rows(6)
+                    ->columnSpanFull()
+                    ->helperText('Optional markdown under the live summary: what the sport is, typical round count, equipment, and how to enter. Leave blank to hide it.'),
                 Textarea::make('body')
                     ->label('More information')
                     ->rows(8)

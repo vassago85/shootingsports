@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Provider;
@@ -23,6 +24,17 @@ class IndexNowObserver
     public function saved(Model $record): void
     {
         $this->ping($record, deleted: false);
+
+        if ($record instanceof Event && $this->shouldPing($record)) {
+            IndexNow::pingEventSurfaces($record);
+        }
+    }
+
+    public function deleting(Model $record): void
+    {
+        if ($record instanceof Event && $record->status !== EventStatus::Draft) {
+            IndexNow::pingEventSurfaces($record);
+        }
     }
 
     public function deleted(Model $record): void

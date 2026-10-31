@@ -6,13 +6,14 @@ use App\Enums\Province;
 use App\Models\Article;
 use App\Models\Discipline;
 use App\Models\Event;
-use App\Models\Organisation;
 use App\Queries\PublicEventQuery;
 use App\Services\Discovery\DiscoveryStats;
+use App\Support\DisciplinePages;
 use App\Support\JsonLd;
 use App\Support\Rankings;
 use App\Support\Seo;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class DisciplineController extends Controller
@@ -112,16 +113,11 @@ class DisciplineController extends Controller
         return view('public.disciplines.about', $data);
     }
 
-    public function landing(string $province, Discipline $discipline): View
-    {
-        return $this->show($discipline, $province);
-    }
-
-    public function redirectLegacyProvince(Discipline $discipline, string $province): RedirectResponse
+    public function landing(string $province, Discipline $discipline): RedirectResponse
     {
         abort_unless(Province::fromUrlSlug($province) !== null, 404);
 
-        return redirect()->route('clubs.landing', [$province, $discipline->slug], 301);
+        return redirect()->route('disciplines.province', [$discipline->slug, $province], 301);
     }
 
     /**
@@ -148,8 +144,16 @@ class DisciplineController extends Controller
         // as clubs.
         $ranges = $this->stats->rangesForDiscipline($discipline, $province);
 
-        $listingCount = $clubs->count() + $events->count() + $ranges->count();
-        $noindex = $province !== null && $listingCount < (int) config('seo.landing_min');
+        $noindex = $province !== null && ! DisciplinePages::hasPublicRecord($discipline, $province);
+
+        $directoryClubs = $province === null ? $clubs : $this->stats->clubsForDiscipline($discipline);
+        $directoryRanges = $province === null ? $ranges : $this->stats->rangesForDiscipline($discipline);
+        $clubProvinces = $clubs
+            ->pluck('province')
+            ->filter()
+            ->unique(fn (Province $item): string => $item->value)
+            ->sortBy(fn (Province $item): string => $item->getLabel())
+            ->values();
 
         $familySiblings = Discipline::query()
             ->where('is_published', true)
@@ -182,7 +186,7 @@ class DisciplineController extends Controller
         // 4 clubs in Gauteng." Numbers change over time; keeping them
         // in the description (not the title) avoids CTR volatility
         // from Google re-rendering title tags.
-        $seoDescription = $this->composeDescription($discipline, $province, $events->count(), $clubs->count());
+        $seoDescription = $this->composeDescription($discipline, $province, $events->count(), $events->first());
 
         $crumbs = [
             ['name' => 'Home', 'url' => route('home')],
@@ -193,23 +197,19 @@ class DisciplineController extends Controller
         if ($province !== null) {
             $crumbs[] = [
                 'name' => $province->getLabel(),
-                'url' => route('clubs.landing', [$province->urlSlug(), $discipline->slug]),
+                'url' => route('disciplines.province', [$discipline->slug, $province->urlSlug()]),
             ];
         }
 
-        $members = $clubs->map(fn (Organisation $club): array => [
-            'name' => $club->name,
-            'url' => route('clubs.show', $club->slug),
-            'id' => $club->schemaId(),
-        ])->concat($events->map(fn (Event $event): array => [
+        $members = $events->map(fn (Event $event): array => [
             'name' => $event->title,
             'url' => $event->publicUrl(),
             'id' => $event->schemaId(),
-        ]))->values()->all();
+        ])->values()->all();
 
         $seo = $province !== null
-            ? Seo::landing($discipline, $province, $seoDescription, $noindex)
-            : Seo::discipline($discipline, $seoDescription);
+            ? Seo::landing($discipline, $province, $seoDescription, $noindex, $events->count())
+            : Seo::discipline($discipline, $seoDescription, $events->count());
 
         return [
             'discipline' => $discipline,
@@ -220,6 +220,13 @@ class DisciplineController extends Controller
             'familySiblings' => $familySiblings,
             'related' => $related,
             'sponsorDivisions' => $discipline->divisions()->take(3)->values(),
+            'answer' => DisciplinePages::paragraph($discipline, $province, $events, $clubProvinces, $discipline->federation),
+            'introHtml' => filled($discipline->intro) ? Str::markdown($discipline->intro) : null,
+            'provinceDirectory' => DisciplinePages::directory($directoryClubs, $directoryRanges, $discipline),
+            'recentResults' => DisciplinePages::recentResults($discipline, $province),
+            'nationalUpcoming' => $province !== null && $events->isEmpty()
+                ? DisciplinePages::nationalUpcoming($discipline)
+                : collect(),
             'noindex' => $noindex,
             'figures' => [
                 'matches' => $events->count(),
@@ -238,31 +245,32 @@ class DisciplineController extends Controller
                 ->get(),
             'jsonLd' => array_values(array_filter([
                 $members !== [] ? JsonLd::itemList($members, $seo->title) : null,
+                ...$events->map(fn (Event $event): array => JsonLd::event($event))->all(),
                 JsonLd::breadcrumbs($crumbs),
             ])),
         ];
     }
 
-    private function composeDescription(Discipline $discipline, ?Province $province, int $matchCount, int $clubCount): string
+    private function composeDescription(Discipline $discipline, ?Province $province, int $matchCount, ?Event $next): string
     {
         $where = $province ? ' in '.$province->getLabel() : ' across South Africa';
-
-        $matches = match ($matchCount) {
-            0 => 'no matches on the calendar right now',
-            1 => '1 upcoming match',
-            default => "{$matchCount} upcoming matches",
-        };
-
-        $clubs = match ($clubCount) {
-            0 => '',
-            1 => ' at 1 listed club',
-            default => " at {$clubCount} listed clubs",
-        };
-
+        $when = $next?->starts_at?->timezone((string) config('app.timezone'))->format('j M Y');
         $blurb = $discipline->short_blurb
-            ? ' '.rtrim($discipline->short_blurb, '.').'.'
+            ? ' '.rtrim((string) $discipline->short_blurb, '.').'.'
             : '';
 
-        return $discipline->name.$where.'. '.$matches.$clubs.'.'.$blurb;
+        if ($matchCount === 0) {
+            return 'No upcoming '.$discipline->name.' match is listed'.$where.' yet.'.$blurb;
+        }
+
+        $listed = $matchCount === 1
+            ? 'There is 1 upcoming '.$discipline->name.' match'.$where.'.'
+            : 'There are '.$matchCount.' upcoming '.$discipline->name.' matches'.$where.'.';
+
+        $nextSentence = $next !== null && $when !== null
+            ? ' The next is '.$next->title.' on '.$when.'.'
+            : '';
+
+        return $listed.$nextSentence.$blurb;
     }
 }

@@ -10,7 +10,8 @@ use App\Models\MagazineIssue;
 use App\Models\Organisation;
 use App\Models\Provider;
 use App\Models\Venue;
-use App\Queries\PublicEventQuery;
+use App\Support\AnswerPages;
+use App\Support\DisciplinePages;
 use App\Support\PublicCache;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
@@ -116,7 +117,7 @@ class SitemapController extends Controller
 
         return collect($pages)->map(fn (string $name): array => [
             'loc' => route($name),
-        ]);
+        ])->merge(AnswerPages::sitemapUrls());
     }
 
     /**
@@ -199,7 +200,6 @@ class SitemapController extends Controller
             ->get();
 
         $urls = new Collection;
-        $minimum = (int) config('seo.landing_min');
 
         foreach ($disciplines as $discipline) {
             $root = $this->safeUrl('disciplines sitemap', $discipline, fn (): array => [
@@ -221,13 +221,13 @@ class SitemapController extends Controller
             }
 
             foreach (Province::cases() as $province) {
-                if ($this->disciplineProvinceListingCount($discipline, $province) < $minimum) {
+                if (! DisciplinePages::hasPublicRecord($discipline, $province)) {
                     continue;
                 }
 
                 $slice = $this->safeUrl('disciplines province sitemap', $discipline, fn (): array => [
-                    'loc' => route('clubs.landing', [$province->urlSlug(), $discipline->slug]),
-                    'lastmod' => $discipline->updated_at?->toAtomString(),
+                    'loc' => route('disciplines.province', [$discipline->slug, $province->urlSlug()]),
+                    'lastmod' => DisciplinePages::lastmod($discipline, $province),
                 ]);
 
                 if ($slice !== null) {
@@ -401,31 +401,6 @@ class SitemapController extends Controller
         }
 
         return Carbon::parse($value)->timezone((string) config('app.timezone'))->toAtomString();
-    }
-
-    private function disciplineProvinceListingCount(Discipline $discipline, Province $province): int
-    {
-        $treeIds = $discipline->treeIds();
-
-        $events = (new PublicEventQuery(
-            disciplineSlug: $discipline->slug,
-            provinceSlug: $province->urlSlug(),
-        ))->builder()->count();
-
-        $clubs = Organisation::query()
-            ->published()
-            ->clubs()
-            ->whereHas('disciplines', fn ($q) => $q->whereIn('disciplines.id', $treeIds))
-            ->where('province', $province)
-            ->count();
-
-        $ranges = Venue::query()
-            ->published()
-            ->whereHas('disciplines', fn ($q) => $q->whereIn('disciplines.id', $treeIds))
-            ->where('province', $province)
-            ->count();
-
-        return $events + $clubs + $ranges;
     }
 
     /**

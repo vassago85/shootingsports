@@ -145,7 +145,7 @@
                         <ul>
                             @foreach (\App\Enums\Province::cases() as $item)
                                 <li>
-                                    <a href="{{ route('clubs.landing', [$item->urlSlug(), $discipline->slug]) }}">{{ $item->getLabel() }}</a>
+                                    <a href="{{ route('disciplines.province', [$discipline->slug, $item->urlSlug()]) }}">{{ $item->getLabel() }}</a>
                                     <span>{{ $item->code() }}</span>
                                 </li>
                             @endforeach

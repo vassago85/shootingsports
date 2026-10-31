@@ -2,6 +2,7 @@
 
 use App\Enums\ProviderCategory;
 use App\Enums\Province;
+use App\Http\Controllers\AnswerPageController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CalendarMonthController;
 use App\Http\Controllers\ComingSoonInterestController;
@@ -11,9 +12,11 @@ use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\EmbedController;
 use App\Http\Controllers\EnquiryController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventsJsonController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IcalController;
+use App\Http\Controllers\LlmsFullTxtController;
 use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\MagazineIssueController;
 use App\Http\Controllers\MagazineReadController;
@@ -68,6 +71,14 @@ Route::get('/coming-soon/confirm/{token}', [ComingSoonInterestController::class,
 
 Route::get('/', HomeController::class)->name('home');
 Route::get('/calendar', CalendarController::class)->name('calendar');
+Route::get('/this-weekend', [AnswerPageController::class, 'national'])->name('answers.this-weekend');
+Route::get('/events.json', EventsJsonController::class)->name('events.json');
+Route::get('/{province}/this-weekend', [AnswerPageController::class, 'provinceThis'])
+    ->where('province', $provincePattern)
+    ->name('answers.province-this-weekend');
+Route::get('/{province}/next-weekend', [AnswerPageController::class, 'provinceNext'])
+    ->where('province', $provincePattern)
+    ->name('answers.province-next-weekend');
 Route::get('/calendar/month', CalendarMonthController::class)->name('calendar.month');
 
 /*
@@ -86,9 +97,12 @@ Route::get('/divisions/{division}', [DivisionController::class, 'show'])
 Route::get('/disciplines/{discipline:slug}/calendar.ics', [IcalController::class, 'discipline'])->name('ical.discipline');
 Route::get('/disciplines/{discipline:slug}/about', [DisciplineController::class, 'about'])->name('disciplines.about');
 Route::get('/disciplines/{discipline:slug}/rankings', [DisciplineController::class, 'rankings'])->name('disciplines.rankings');
-Route::get('/disciplines/{discipline:slug}/{province}', [DisciplineController::class, 'redirectLegacyProvince'])
+Route::get('/disciplines/{discipline:slug}/{province}', [DisciplineController::class, 'show'])
     ->where('province', $provincePattern)
     ->name('disciplines.province');
+Route::redirect('/prs', '/disciplines/precision-rifle', 301);
+Route::redirect('/pr22', '/disciplines/pr22-rimfire', 301);
+Route::redirect('/precision-rifle', '/disciplines/precision-rifle', 301);
 Route::get('/disciplines/{discipline:slug}', [DisciplineController::class, 'show'])->name('disciplines.show');
 
 Route::get('/clubs', [OrganisationController::class, 'index'])->name('clubs.index');
@@ -233,6 +247,7 @@ Route::get('/sitemaps/providers.xml', [SitemapController::class, 'providers'])->
 Route::get('/sitemaps/magazines.xml', [SitemapController::class, 'magazines'])->name('sitemap.magazines');
 
 Route::get('/llms.txt', LlmsTxtController::class)->name('llms');
+Route::get('/llms-full.txt', LlmsFullTxtController::class)->name('llms.full');
 Route::get('/robots.txt', RobotsController::class)->name('robots');
 
 // Public auth. Filament still owns /admin/login and /desk/login as
@@ -365,5 +380,9 @@ Route::redirect('/settings/notifications', '/me/settings', 301);
 // The old /me/settings/notifications URL (which some drafts of the
 // spec and a few external emails referenced) 301s to the real page.
 Route::redirect('/me/settings/notifications', '/me/settings', 301);
+
+Route::get('/{discipline}/{province}', [AnswerPageController::class, 'discipline'])
+    ->where('province', $provincePattern)
+    ->name('answers.discipline');
 
 require __DIR__.'/mockups.php';

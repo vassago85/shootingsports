@@ -26,6 +26,7 @@ class EmbedController extends Controller
             'events' => $events,
             'theme' => $theme,
             'listingName' => $this->listingName($request),
+            'creditUrl' => $this->creditUrl($request),
             'discipline' => $request->string('discipline')->toString() ?: null,
             'oembedUrl' => route('oembed', ['url' => $embed?->calendarUrl ?? url('/embed/calendar')]),
         ]);
@@ -117,5 +118,37 @@ JS;
         }
 
         return null;
+    }
+
+    /**
+     * Followed credit link. Club embeds point at that club's page;
+     * range embeds point at the range; anything else points at the calendar.
+     */
+    private function creditUrl(Request $request): string
+    {
+        $orgSlug = $request->string('organisation')->toString()
+            ?: $request->string('club')->toString();
+
+        if ($orgSlug !== '') {
+            $organisation = Organisation::query()->published()->where('slug', $orgSlug)->first();
+
+            if ($organisation instanceof Organisation) {
+                return $organisation->isFederationListing()
+                    ? route('federations.show', $organisation->slug)
+                    : route('clubs.show', $organisation->slug);
+            }
+        }
+
+        $venueSlug = $request->string('venue')->toString();
+
+        if ($venueSlug !== '') {
+            $venue = Venue::query()->published()->where('slug', $venueSlug)->first();
+
+            if ($venue instanceof Venue) {
+                return route('ranges.show', $venue->slug);
+            }
+        }
+
+        return route('calendar');
     }
 }

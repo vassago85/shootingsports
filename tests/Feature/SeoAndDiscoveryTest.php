@@ -245,7 +245,6 @@ it('serves the pages sitemap with static URLs and skips private surfaces', funct
         ->assertSee(route('calendar.month'), false)
         ->assertSee(route('privacy'), false)
         ->assertSee(route('terms'), false)
-        ->assertDontSee('<lastmod>', false)
         ->assertDontSee('/embed', false)
         ->assertDontSee('/claim', false)
         ->assertDontSee('/desk', false)

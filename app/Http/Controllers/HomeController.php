@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\Discipline;
 use App\Models\Event;
 use App\Support\HomeWindows;
 use App\Support\PublicCounts;
@@ -60,6 +61,7 @@ class HomeController extends Controller
             'railLabel' => $railLabel,
             'upcoming' => $upcoming,
             'articles' => Article::query()->published()->with('author')->orderByDesc('published_at')->limit(3)->get(),
+            'featuredDisciplines' => Discipline::featuredHubs(),
         ]);
     }
 

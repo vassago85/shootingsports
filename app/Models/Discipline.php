@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'slug', 'name', 'family', 'parent_id', 'federation_organisation_id',
-    'short_blurb', 'image_path', 'body', 'typical_distances', 'equipment_rules',
+    'short_blurb', 'intro', 'image_path', 'body', 'typical_distances', 'equipment_rules',
     'sort_order', 'is_published',
 ])]
 class Discipline extends Model
@@ -81,6 +81,24 @@ class Discipline extends Model
      * ad-hoc queries) that build Discipline instances without eager-
      * loading `parent`.
      */
+    /**
+     * Published hubs named on the homepage and calendar. Centrefire PRS
+     * is the precision-rifle page; the unpublished `prs` child is not a URL.
+     *
+     * @return Collection<int, self>
+     */
+    public static function featuredHubs(): Collection
+    {
+        $order = ['precision-rifle' => 0, 'pr22-rimfire' => 1];
+
+        return self::query()
+            ->where('is_published', true)
+            ->whereIn('slug', array_keys($order))
+            ->get()
+            ->sortBy(fn (self $discipline): int => $order[$discipline->slug] ?? 9)
+            ->values();
+    }
+
     public function displayName(): string
     {
         if ($this->parent_id === null) {

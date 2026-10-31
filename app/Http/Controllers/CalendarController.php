@@ -31,12 +31,13 @@ class CalendarController extends Controller
         // Radius filter is post-query (applyRadius) so builder->count
         // slightly over-reports when radius is set; not worth solving —
         // radius is a UI-only filter and is stripped from the canonical.
-        $matchCount = (new PublicEventQuery(
-            disciplineSlug: $discipline?->slug,
-            provinceSlug: $province?->urlSlug(),
-        ))->builder()->count();
+        // Same filters as the list below, including kind=training, so the
+        // description does not name a match the page has hidden.
+        $matchQuery = PublicEventQuery::fromRequest($request)->builder();
+        $matchCount = (clone $matchQuery)->count();
+        $nextMatch = (clone $matchQuery)->reorder()->orderBy('starts_at')->first();
 
-        [$seoTitle, $seoDescription] = $this->composeMeta($discipline, $province, $matchCount);
+        [$seoTitle, $seoDescription] = $this->composeMeta($discipline, $province, $matchCount, $nextMatch);
 
         // BreadcrumbList: Home › Calendar (› Discipline)? (› Province)?
         // Deepest filter wins position 3 to keep the strip readable in
@@ -92,6 +93,7 @@ class CalendarController extends Controller
             'novice' => $request->boolean('novice'),
             'confirmed' => $request->boolean('confirmed'),
             'weekend' => $request->boolean('weekend'),
+            'featuredDisciplines' => Discipline::featuredHubs(),
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,
             'canonical' => $this->canonical($discipline, $province),
@@ -111,38 +113,38 @@ class CalendarController extends Controller
      *
      * @return array{0: string, 1: string}
      */
-    private function composeMeta(?Discipline $discipline, ?Province $province, int $matchCount): array
+    private function composeMeta(?Discipline $discipline, ?Province $province, int $matchCount, ?Event $next): array
     {
+        $when = $next?->starts_at?->timezone((string) config('app.timezone'))->format('j M Y');
+        $facts = $matchCount === 0
+            ? 'No upcoming match is listed yet.'
+            : ($matchCount === 1 ? 'There is 1 upcoming match.' : 'There are '.$matchCount.' upcoming matches.')
+                .($next !== null && $when !== null ? ' The next is '.$next->title.' on '.$when.'.' : '');
+
         if ($discipline === null && $province === null) {
             return [
                 'Shooting events in South Africa',
-                'Shooting events in South Africa. Every listed match on one calendar, filterable by sport, province and date.',
+                'Shooting events in South Africa. '.$facts,
             ];
         }
-
-        $countPhrase = match ($matchCount) {
-            0 => 'no upcoming matches right now',
-            1 => '1 upcoming match',
-            default => "{$matchCount} upcoming matches",
-        };
 
         if ($discipline !== null && $province !== null) {
             return [
                 $discipline->name.' in '.$province->getLabel(),
-                $discipline->name.' matches in '.$province->getLabel().'. '.$countPhrase.' on the South African calendar.',
+                $discipline->name.' matches in '.$province->getLabel().'. '.$facts,
             ];
         }
 
         if ($discipline !== null) {
             return [
                 $discipline->name.' matches',
-                $discipline->name.' matches across South Africa. '.$countPhrase.' from every listed club.',
+                $discipline->name.' matches across South Africa. '.$facts,
             ];
         }
 
         return [
             'Shooting matches in '.$province->getLabel(),
-            'Every shooting match in '.$province->getLabel().'. '.$countPhrase.' across all disciplines.',
+            'Shooting matches in '.$province->getLabel().'. '.$facts,
         ];
     }
 
