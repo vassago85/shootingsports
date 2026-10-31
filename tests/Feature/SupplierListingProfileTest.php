@@ -53,6 +53,10 @@ it('hides a stored picture until the listing is enhanced', function () {
     $provider = Provider::factory()->create([
         'slug' => 'free-with-file',
         'name' => 'Free With File',
+        // Pin a public category; the factory's random pick can land on
+        // Distributor, which the public controller 404s on and would
+        // flake this assertion.
+        'category' => ProviderCategory::Instructor,
         'logo_path' => 'provider-logos/hidden.png',
         'tier' => ProviderTier::Free,
         'status' => ListingStatus::Published,
