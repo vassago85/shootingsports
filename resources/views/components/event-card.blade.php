@@ -15,7 +15,10 @@
         $venue?->town,
         $venue?->province?->getLabel() ?? $venue?->province?->code(),
     ])->filter()->implode(' · ');
-    $fee = \App\Support\Money::rand($event->entry_fee_cents);
+    $fee = collect(\App\Support\PublicEventFacts::for($event)->priceRows())
+        ->map(fn (array $row): string => $row[0] === 'Entry' ? $row[1] : $row[0].' '.$row[1])
+        ->implode(' · ');
+    $fee = $fee !== '' ? $fee : null;
     $rounds = $event->round_count ? $event->round_count.' rounds' : null;
     $highlight = collect([$rounds, $fee])->filter()->implode(' · ');
     // Spec rows already cover venue / rounds / fee — drop those labels
@@ -116,7 +119,8 @@
              unexplained /login redirect. Wrapped in a container that
              overlays the whole-card link so the popover clicks fire. --}}
         <div class="dope-save-gate">
-            <x-auth-gate action="save" label="Add to my calendar" />
+            <a href="{{ route('ical.event', $event) }}">Add to calendar</a>
+            <x-auth-gate action="save" label="Save to my Shooting Sports account" />
         </div>
     @endauth
 </article>

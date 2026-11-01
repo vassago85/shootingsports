@@ -34,8 +34,10 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StaticPageController;
 use App\Http\Controllers\UnsubscribeController;
 use App\Http\Controllers\VenueController;
+use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
+use App\Livewire\Auth\ResetPassword;
 use App\Livewire\FindYourDiscipline;
 use App\Livewire\Listings\SubmitClaim;
 use App\Livewire\MagazineLibrary;
@@ -94,6 +96,7 @@ Route::get('/disciplines', [DisciplineController::class, 'index'])->name('discip
 Route::get('/divisions/{division}', [DivisionController::class, 'show'])
     ->where('division', 'handgun|bolt-action-rifle|self-loading-rifle|shotgun|air-rifle')
     ->name('divisions.show');
+Route::get('/events/{event:slug}/calendar.ics', [IcalController::class, 'event'])->name('ical.event');
 Route::get('/disciplines/{discipline:slug}/calendar.ics', [IcalController::class, 'discipline'])->name('ical.discipline');
 Route::get('/disciplines/{discipline:slug}/about', [DisciplineController::class, 'about'])->name('disciplines.about');
 Route::get('/disciplines/{discipline:slug}/rankings', [DisciplineController::class, 'rankings'])->name('disciplines.rankings');
@@ -257,6 +260,8 @@ Route::get('/robots.txt', RobotsController::class)->name('robots');
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', Login::class)->name('login');
     Route::get('/register', Register::class)->name('register');
+    Route::get('/forgot-password', ForgotPassword::class)->name('password.request');
+    Route::get('/reset-password/{token}', ResetPassword::class)->name('password.reset');
 });
 
 // Legacy signup bookmarks. The public site used to have three

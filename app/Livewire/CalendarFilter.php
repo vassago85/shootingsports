@@ -6,6 +6,7 @@ use App\Enums\Division;
 use App\Enums\EventKind;
 use App\Enums\Province;
 use App\Exceptions\PlanLimitExceeded;
+use App\Livewire\Concerns\BuildsCalendarViewLinks;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\SavedSearch;
@@ -19,6 +20,8 @@ use Livewire\Component;
 
 class CalendarFilter extends Component
 {
+    use BuildsCalendarViewLinks;
+
     #[Url]
     public string $family = 'all';
 
@@ -363,10 +366,12 @@ class CalendarFilter extends Component
 
         foreach ($events as $event) {
             $startsAt = $event->starts_at->timezone($tz);
+            $endsAt = ($event->ends_at ?? $event->starts_at)->timezone($tz);
+            $overlaps = fn (Carbon $windowStart, Carbon $windowEnd): bool => $startsAt->lte($windowEnd) && $endsAt->gte($windowStart);
 
-            if ($startsAt->gte($weekendStart) && $startsAt->lte($weekendEnd)) {
+            if ($overlaps($weekendStart, $weekendEnd)) {
                 $thisWeekend->push($event);
-            } elseif ($startsAt->gte($nextWeekendStart) && $startsAt->lte($nextWeekendEnd)) {
+            } elseif ($overlaps($nextWeekendStart, $nextWeekendEnd)) {
                 $nextWeekend->push($event);
             } else {
                 $key = $startsAt->format('Y-m');

@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Enums\Division;
 use App\Enums\Province;
 use App\Exceptions\PlanLimitExceeded;
+use App\Livewire\Concerns\BuildsCalendarViewLinks;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\SavedSearch;
@@ -17,6 +18,8 @@ use Livewire\Component;
 
 class CalendarMonth extends Component
 {
+    use BuildsCalendarViewLinks;
+
     #[Url]
     public string $family = 'all';
 

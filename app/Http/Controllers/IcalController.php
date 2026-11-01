@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EventStatus;
 use App\Enums\ListingStatus;
 use App\Models\Discipline;
 use App\Models\Event;
@@ -30,6 +31,13 @@ class IcalController extends Controller
         $events = (new PublicEventQuery(disciplineSlug: $discipline->slug))->get();
 
         return $this->feed($discipline->name.' matches', $events);
+    }
+
+    public function event(Event $event): Response
+    {
+        abort_if($event->status === EventStatus::Draft, 404);
+
+        return $this->feed($event->title, [$event]);
     }
 
     public function shooter(string $shooter): Response

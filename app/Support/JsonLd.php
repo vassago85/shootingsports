@@ -21,7 +21,6 @@ class JsonLd
     public static function site(): array
     {
         $siteUrl = rtrim(url('/'), '/').'/';
-        $calendarUrl = route('calendar');
 
         return [
             '@context' => 'https://schema.org',
@@ -33,14 +32,6 @@ class JsonLd
                     'name' => 'Shooting Sports',
                     'alternateName' => 'Find your sport, your club, your match',
                     'inLanguage' => 'en-ZA',
-                    'potentialAction' => [
-                        '@type' => 'SearchAction',
-                        'target' => [
-                            '@type' => 'EntryPoint',
-                            'urlTemplate' => $calendarUrl.'?q={search_term_string}',
-                        ],
-                        'query-input' => 'required name=search_term_string',
-                    ],
                 ],
                 [
                     '@type' => 'Organization',
@@ -73,6 +64,8 @@ class JsonLd
     public static function event(Event $event): array
     {
         $event->loadMissing(['hostOrganisation.parent', 'venue', 'banner']);
+        $facts = PublicEventFacts::for($event);
+        $description = $facts->machineDescription();
 
         $payload = [
             '@context' => 'https://schema.org',
@@ -82,17 +75,16 @@ class JsonLd
             'url' => $event->publicUrl(),
             'startDate' => self::startDateFor($event),
             'endDate' => self::endDateFor($event),
-            'eventStatus' => self::eventStatus($event->status),
             'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
-            'description' => $event->description ?: $event->locationLabel(),
-            // Google Search Console (Rich Results) flags Events without
-            // `performer` and `offers` as non-critical issues. Both are
-            // populated below with sensible defaults so every event
-            // renders as valid structured data even when the underlying
-            // record has no explicit performers list or entry fee.
-            'performer' => self::performerFor($event),
+            'description' => $description !== '' ? $description : null,
             'offers' => self::offersFor($event),
         ];
+
+        $status = self::eventStatus($event->status);
+
+        if ($status !== null) {
+            $payload['eventStatus'] = $status;
+        }
 
         if ($event->hostOrganisation) {
             $organizer = self::organisation($event->hostOrganisation);
@@ -120,6 +112,10 @@ class JsonLd
                 ]))
                 ->values()
                 ->all();
+        }
+
+        if (($payload['description'] ?? null) === null) {
+            unset($payload['description']);
         }
 
         return $payload;
@@ -190,61 +186,17 @@ class JsonLd
     }
 
     /**
-     * Google requires `performer` even for events without an explicit
-     * roster. For open competitions the host organisation is the
-     * closest honest fit — they're the group putting on the event and
-     * fielding stage crew / RSOs. Falls back to a generic PerformingGroup
-     * when we have no host on record (imported events with only a venue).
+     * One offer is an object. Two prices (general entry and member
+     * entry) stay a list so the member price is not published as the
+     * only admission price.
      *
-     * @return array<string, mixed>
-     */
-    private static function performerFor(Event $event): array
-    {
-        if ($event->hostOrganisation) {
-            return [
-                '@type' => 'SportsOrganization',
-                'name' => $event->hostOrganisation->name,
-                'url' => $event->hostOrganisation->isFederationListing()
-                    ? route('federations.show', $event->hostOrganisation->slug)
-                    : route('clubs.show', $event->hostOrganisation->slug),
-            ];
-        }
-
-        return [
-            '@type' => 'PerformingGroup',
-            'name' => 'Competitive shooters',
-        ];
-    }
-
-    /**
-     * Google requires `offers` on Event. Emit url + availability always;
-     * only include price when we actually know the fee. A fabricated
-     * "0.00" claims free entry in rich results and is usually wrong.
-     *
-     * @return array<string, mixed>
+     * @return array<string, mixed>|list<array<string, mixed>>
      */
     private static function offersFor(Event $event): array
     {
-        $priceCents = $event->member_fee_cents ?? $event->entry_fee_cents;
+        $offers = PublicEventFacts::for($event)->schemaOffers();
 
-        // validFrom must be in the past for Google to accept the
-        // offer as "buyable now". Use the event's created_at when
-        // available so historical offers make sense in the timeline.
-        $validFrom = self::iso($event->created_at ?? now());
-
-        $offer = [
-            '@type' => 'Offer',
-            'url' => $event->entry_url ?: $event->publicUrl(),
-            'priceCurrency' => 'ZAR',
-            'availability' => self::offerAvailability($event),
-            'validFrom' => $validFrom,
-        ];
-
-        if ($priceCents !== null) {
-            $offer['price'] = number_format(((int) $priceCents) / 100, 2, '.', '');
-        }
-
-        return $offer;
+        return count($offers) === 1 ? $offers[0] : $offers;
     }
 
     /**
@@ -353,6 +305,14 @@ class JsonLd
         return array_filter($payload, fn (mixed $value): bool => $value !== null && $value !== '');
     }
 
+    public static function encode(mixed $value): string
+    {
+        return json_encode(
+            $value,
+            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_THROW_ON_ERROR,
+        );
+    }
+
     /**
      * ItemList of the published magazine issues on the index page.
      *
@@ -372,42 +332,14 @@ class JsonLd
         return self::itemList($items, 'Published magazines');
     }
 
-    private static function offerAvailability(Event $event): string
-    {
-        // Match the outer eventStatus for cancelled / postponed events
-        // so structured data doesn't contradict itself.
-        if ($event->status === EventStatus::Cancelled) {
-            return 'https://schema.org/Discontinued';
-        }
-
-        if ($event->status === EventStatus::Postponed) {
-            return 'https://schema.org/PreOrder';
-        }
-
-        $capacity = (int) ($event->capacity ?? 0);
-        $taken = (int) ($event->entries_taken ?? 0);
-
-        if ($capacity > 0 && $taken >= $capacity) {
-            return 'https://schema.org/SoldOut';
-        }
-
-        if ($capacity > 0 && $taken >= (int) ($capacity * 0.9)) {
-            return 'https://schema.org/LimitedAvailability';
-        }
-
-        return 'https://schema.org/InStock';
-    }
-
     /**
      * @return array<string, mixed>
      */
     public static function organisation(Organisation $organisation): array
     {
-        $placed = filled($organisation->town) || $organisation->province !== null;
-
         return array_filter([
             '@context' => 'https://schema.org',
-            '@type' => $placed ? ['SportsOrganization', 'SportsActivityLocation'] : 'SportsOrganization',
+            '@type' => 'SportsOrganization',
             '@id' => $organisation->schemaId(),
             'name' => $organisation->name,
             'url' => explode('#', $organisation->schemaId(), 2)[0],
@@ -490,11 +422,12 @@ class JsonLd
         return $label !== '' ? $label : null;
     }
 
-    private static function eventStatus(?EventStatus $status): string
+    private static function eventStatus(?EventStatus $status): ?string
     {
         return match ($status) {
             EventStatus::Cancelled => 'https://schema.org/EventCancelled',
             EventStatus::Postponed => 'https://schema.org/EventPostponed',
+            EventStatus::Planned => null,
             default => 'https://schema.org/EventScheduled',
         };
     }

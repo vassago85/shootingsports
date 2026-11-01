@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\EventStatus;
 use App\Models\Event;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -56,17 +57,51 @@ final class EventFeed
         }
 
         foreach ($events as $event) {
-            $when = $event->starts_at?->timezone((string) config('app.timezone'))->format('j M Y') ?? 'Date to be confirmed';
-            $lines[] = collect([
-                $when,
-                $event->title,
-                $event->hostOrganisation?->name,
-                collect([$event->venue?->name, $event->venue?->town, $event->venue?->province?->getLabel()])->filter()->implode(', '),
-                $event->publicUrl(),
-            ])->filter()->implode(' — ');
+            $lines[] = self::plainLine($event);
         }
 
         return implode("\n", $lines)."\n";
+    }
+
+    private static function plainLine(Event $event): string
+    {
+        $timezone = (string) config('app.timezone');
+        $start = $event->starts_at?->timezone($timezone);
+        $end = $event->ends_at?->timezone($timezone);
+        $when = 'Date to be confirmed';
+
+        if ($start instanceof Carbon) {
+            $when = $start->format('j M Y');
+
+            if ($end instanceof Carbon && ! $end->isSameDay($start)) {
+                $when .= '–'.$end->format('j M Y');
+            }
+
+            $today = now()->timezone($timezone)->startOfDay();
+
+            if ($end instanceof Carbon && $start->lt($today) && $end->endOfDay()->gte($today)) {
+                $when .= ' (ongoing)';
+            }
+        }
+
+        if ($event->status === EventStatus::Planned) {
+            $when .= ' (provisional)';
+        }
+
+        $facts = PublicEventFacts::for($event);
+        $checked = $event->last_verified_at?->timezone($timezone)->format('j M Y');
+
+        return collect([
+            $when,
+            $event->title,
+            $event->hostOrganisation?->name,
+            $facts->venueLine(),
+            $facts->provinceLabel(),
+            $facts->priceSentence(),
+            $event->source?->getLabel(),
+            $checked !== null ? 'checked '.$checked : null,
+            $event->publicUrl(),
+        ])->filter()->unique()->implode(' — ');
     }
 
     /**

@@ -28,6 +28,9 @@
                         <input type="password" wire:model.blur="password" required autocomplete="current-password" maxlength="255">
                         @error('password') <span class="err">{{ $message }}</span> @enderror
                     </label>
+                    <p style="margin:0">
+                        <a href="{{ route('password.request') }}">Forgot password?</a>
+                    </p>
                     <label class="field" style="flex-direction:row;align-items:center;gap:10px">
                         <input type="checkbox" wire:model="remember" style="width:auto">
                         <span style="letter-spacing:0;text-transform:none;font-family:inherit;font-size:14px;color:inherit">Keep me signed in on this device</span>

@@ -64,7 +64,8 @@ it('gives a club a query-matching title, canonical and connected schema', functi
         ->assertSee('Pretoria Precision — Precision Rifle Shooting Club, Pretoria, Gauteng', false)
         ->assertSee('<link rel="canonical" href="'.route('clubs.show', $club->slug).'">', false)
         ->assertSee($club->schemaId(), false)
-        ->assertSee('SportsActivityLocation', false)
+        ->assertSee('"@type":"SportsOrganization"', false)
+        ->assertDontSee('SportsActivityLocation', false)
         ->assertDontSee('<meta name="robots"', false);
 });
 

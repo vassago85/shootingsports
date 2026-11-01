@@ -90,7 +90,7 @@
 
                 @if ($events->isEmpty() && $past->isEmpty())
                     @if ($user->can('custom-calendar'))
-                        <p class="empty">Nothing on your calendar yet. Open a match and tap Add to my calendar.</p>
+                        <p class="empty">Nothing on your calendar yet. Open a match and tap Save to my Shooting Sports account.</p>
                         <p><a class="btn" href="{{ route('calendar') }}">Browse the calendar</a></p>
                     @endif
                 @else

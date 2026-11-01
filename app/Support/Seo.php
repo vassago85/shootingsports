@@ -131,11 +131,9 @@ final readonly class Seo
 
         $title = collect([$event->title, $place !== '' ? $place : null, $date])->filter()->implode(' · ');
 
-        $entry = match (true) {
-            $event->entry_fee_cents !== null => 'Entry is R'.number_format($event->entry_fee_cents / 100, 2, '.', '').'.',
-            filled($event->entry_url) => 'Entry details are linked from the event page.',
-            default => 'Entry details are on the event page.',
-        };
+        $facts = PublicEventFacts::for($event);
+        $entry = $facts->priceSentence()
+            ?? (filled($event->entry_url) ? 'Entry details are linked from the event page.' : 'Entry details are on the event page.');
 
         $sentence = collect([
             $event->hostOrganisation !== null ? 'Hosted by '.$event->hostOrganisation->name.'.' : null,

@@ -34,7 +34,10 @@ class PublicCounts
                 // the hero can read "34 clubs · 12 series" without
                 // conflating the two mental models a shooter has.
                 'clubs' => Organisation::query()->published()->where('type', OrganisationType::Club)->count(),
+                'associations' => Organisation::query()->published()->where('type', OrganisationType::Association)->count(),
                 'series' => Organisation::query()->published()->where('type', OrganisationType::Series)->count(),
+                // Same set as the public /clubs directory: clubs, associations and series.
+                'directory' => Organisation::query()->published()->clubs()->count(),
                 'ranges' => Venue::query()->published()->omitScheduleFragments()->count(),
                 // Count what visitors can actually reach on /calendar
                 // right now. `published()` would inflate this with

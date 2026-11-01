@@ -114,13 +114,7 @@ final class AnswerPages
         $query = Event::query()
             ->upcoming()
             ->with(['venue', 'hostOrganisation', 'disciplines'])
-            ->where('starts_at', '<=', $to)
-            ->where(function (Builder $window) use ($from): void {
-                $window->where('starts_at', '>=', $from)
-                    ->orWhere(function (Builder $spans) use ($from): void {
-                        $spans->whereNotNull('ends_at')->where('ends_at', '>=', $from);
-                    });
-            })
+            ->overlapping($from, $to)
             ->orderBy('starts_at');
 
         if ($province instanceof Province) {

@@ -44,7 +44,7 @@ it('answers this weekend with the date range, the count, and valid JSON-LD', fun
 
     $website = collect($graph['@graph'])->first(fn (array $node): bool => ($node['@type'] ?? null) === 'WebSite');
 
-    expect($website['potentialAction']['@type'] ?? null)->toBe('SearchAction');
+    expect($website)->not->toHaveKey('potentialAction');
 });
 
 it('says when a weekend is empty and links later events', function () {

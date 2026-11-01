@@ -65,14 +65,7 @@ it('renders both site graph and per-event JSON-LD on a match page', function () 
         ->assertSee('SEO Check Match', false);
 });
 
-/*
- * Google Search Console flagged three non-critical Event structured
- * data issues (endDate, offers, performer). The three tests below pin
- * the JsonLd::event payload so each field is always present, whether
- * or not the underlying Event has an explicit value.
- */
-
-it('event JSON-LD always includes endDate, offers and performer', function () {
+it('event JSON-LD includes endDate and labelled offers for each known price', function () {
     $club = Organisation::factory()->create([
         'slug' => 'schema-club',
         'name' => 'Schema Club',
@@ -94,16 +87,16 @@ it('event JSON-LD always includes endDate, offers and performer', function () {
 
     expect($payload['@type'])->toBe('SportsEvent')
         ->and($payload)->toHaveKey('endDate')
-        ->and($payload)->toHaveKey('performer')
-        ->and($payload)->toHaveKey('offers')
-        ->and($payload['performer']['@type'])->toBe('SportsOrganization')
-        ->and($payload['performer']['name'])->toBe('Schema Club')
-        ->and($payload['offers']['@type'])->toBe('Offer')
-        // Member fee wins when cheaper — 15000c = 150.00.
-        ->and($payload['offers']['price'])->toBe('150.00')
-        ->and($payload['offers']['priceCurrency'])->toBe('ZAR')
-        ->and($payload['offers']['url'])->toBe('https://entry.example/register')
-        ->and($payload['offers']['availability'])->toBe('https://schema.org/InStock');
+        ->and($payload)->not->toHaveKey('performer')
+        ->and($payload['organizer']['name'])->toBe('Schema Club')
+        ->and($payload['offers'])->toHaveCount(2)
+        ->and($payload['offers'][0]['name'])->toBe('Entry')
+        ->and($payload['offers'][0]['price'])->toBe('250.00')
+        ->and($payload['offers'][1]['name'])->toBe('Member entry')
+        ->and($payload['offers'][1]['price'])->toBe('150.00')
+        ->and($payload['offers'][0]['priceCurrency'])->toBe('ZAR')
+        ->and($payload['offers'][0]['url'])->toBe('https://entry.example/register')
+        ->and($payload['offers'][0]['availability'])->toBe('https://schema.org/InStock');
 });
 
 it('event JSON-LD falls back to a 4h endDate when ends_at is null', function () {
@@ -174,15 +167,13 @@ it('event JSON-LD marks cancelled events with Discontinued availability', functi
         ->and($payload['offers']['availability'])->toBe('https://schema.org/Discontinued');
 });
 
-it('event JSON-LD falls back to a PerformingGroup performer when there is no host', function () {
+it('event JSON-LD does not invent a performer when there is no host', function () {
     $event = Event::factory()->confirmed()->create([
         'host_organisation_id' => null,
     ]);
 
-    $performer = JsonLd::event($event)['performer'];
-
-    expect($performer['@type'])->toBe('PerformingGroup')
-        ->and($performer['name'])->toBe('Competitive shooters');
+    expect(JsonLd::event($event))->not->toHaveKey('performer')
+        ->and(JsonLd::event($event))->not->toHaveKey('organizer');
 });
 
 it('renders the google-site-verification meta only when configured', function () {
@@ -266,6 +257,7 @@ it('serves llms.txt as plain text with the calendar link', function () {
     $response
         ->assertSee('Shooting Sports')
         ->assertSee(route('calendar'), false)
+        ->assertSee('Friday to Sunday', false)
         ->assertSee(route('terms'), false)
         ->assertSee('/desk and /admin');
 });

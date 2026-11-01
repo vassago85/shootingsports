@@ -21,6 +21,7 @@ it('reports the delta after new published listings are added', function () {
     $baseline = PublicCounts::all();
 
     Organisation::factory()->count(2)->create(['type' => OrganisationType::Club, 'status' => ListingStatus::Published]);
+    Organisation::factory()->create(['type' => OrganisationType::Association, 'status' => ListingStatus::Published]);
     Organisation::factory()->create(['type' => OrganisationType::Series, 'status' => ListingStatus::Published]);
     Venue::factory()->count(3)->create(['status' => ListingStatus::Published]);
     Discipline::factory()->count(2)->create(['is_published' => true]);
@@ -35,7 +36,9 @@ it('reports the delta after new published listings are added', function () {
     // Provinces is a constant; every other count increments by the
     // number of published fixtures we added.
     expect($counts['clubs'] - $baseline['clubs'])->toBe(2)
+        ->and($counts['associations'] - $baseline['associations'])->toBe(1)
         ->and($counts['series'] - $baseline['series'])->toBe(1)
+        ->and($counts['directory'] - $baseline['directory'])->toBe(4)
         ->and($counts['ranges'] - $baseline['ranges'])->toBe(3)
         ->and($counts['disciplines'] - $baseline['disciplines'])->toBe(2)
         ->and($counts['suppliers'] - $baseline['suppliers'])->toBe(4)

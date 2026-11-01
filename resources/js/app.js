@@ -1,3 +1,17 @@
+const setMobileMenuOpen = (open) => {
+    const burger = document.getElementById('burger');
+    const menu = document.getElementById('mobile-menu');
+
+    if (! burger || ! menu) {
+        return;
+    }
+
+    menu.classList.toggle('open', open);
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    burger.textContent = open ? 'Close' : 'Menu';
+};
+
 document.addEventListener('click', (event) => {
     const burger = event.target.closest('#burger');
 
@@ -11,8 +25,23 @@ document.addEventListener('click', (event) => {
         return;
     }
 
-    const open = menu.classList.toggle('open');
-    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    setMobileMenuOpen(! menu.classList.contains('open'));
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') {
+        return;
+    }
+
+    const menu = document.getElementById('mobile-menu');
+    const burger = document.getElementById('burger');
+
+    if (! menu || ! burger || ! menu.classList.contains('open')) {
+        return;
+    }
+
+    setMobileMenuOpen(false);
+    burger.focus();
 });
 
 /*

@@ -73,7 +73,7 @@ class HomeController extends Controller
         return Event::query()
             ->upcoming()
             ->with(['hostOrganisation.parent', 'venue', 'disciplines'])
-            ->whereBetween('starts_at', [$from, $to])
+            ->overlapping($from, $to)
             ->orderBy('starts_at')
             ->get();
     }

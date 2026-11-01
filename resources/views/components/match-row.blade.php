@@ -48,7 +48,7 @@
     invisibly across the entire article so clicking anywhere navigates to
     the match detail page. No nested anchors, valid HTML.
 --}}
-<article class="mb-row {{ $planned ? 'is-planned' : '' }}" data-fam="{{ $family }}">
+<article class="mb-row {{ $planned ? 'is-planned' : '' }}" data-fam="{{ $family }}" {{ $attributes }}>
     <div class="mb-date {{ EventDate::isMultiDay($event->starts_at, $event->ends_at) ? 'is-range' : '' }}">
         <span class="dow">{{ EventDate::weekday($event->starts_at, $event->ends_at) }}</span>
         <b>{{ EventDate::dayOfMonth($event->starts_at, $event->ends_at) }}</b>

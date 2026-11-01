@@ -17,7 +17,8 @@ it('lets a signed-in shooter pin matches and embed only those', function () {
     $this->actingAs($user)
         ->get(route('events.show', $mine->slug))
         ->assertOk()
-        ->assertSee('Add to my calendar');
+        ->assertSee('Add to calendar')
+        ->assertSee('Save to my Shooting Sports account');
 
     Livewire::actingAs($user)
         ->test(SaveToCalendar::class, ['event' => $mine])

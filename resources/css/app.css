@@ -224,7 +224,8 @@ header.nav {
 .owner-panel-body > p { margin: 0; color: var(--slate); }
 .owner-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .nav .btn { padding: 8px 16px; font-size: 14px; }
-.hamburger { display: none; color: #e6e9e7; padding: 8px; }
+.hamburger { display: none; color: #e6e9e7; padding: 8px; min-height: 44px; min-width: 44px; }
+.hamburger:focus-visible, .mobile-menu a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .mobile-menu { display: none; }
 .mobile-menu.open { display: block; background: var(--gunmetal-2); border-bottom: 1px solid rgba(255,255,255,.08); }
 .mobile-menu a {
@@ -2095,7 +2096,7 @@ footer.site a:hover { color: #fff; }
 .dope-banner .pill-row { z-index: 3; }
 .dope-banner svg { position: absolute; right: 12px; bottom: 8px; width: 56px; height: 56px; opacity: .35; }
 
-.hamburger { display: none; color: #e6e9e7; padding: 8px; font-family: var(--f-display); letter-spacing: .08em; text-transform: uppercase; }
+.hamburger { display: none; color: #e6e9e7; padding: 8px; min-height: 44px; min-width: 44px; font-family: var(--f-display); letter-spacing: .08em; text-transform: uppercase; }
 @media (max-width: 900px) { .hamburger { display: block; } }
 
 /* Freemium UpgradePrompt.

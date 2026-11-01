@@ -17,6 +17,8 @@
         --}}
         <div class="mb-toolbar">
             <div class="mb-toolbar-in">
+                <p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ $resultCount }} {{ $resultCount === 1 ? 'match' : 'matches' }} shown</p>
+                <p class="sr-only" wire:loading role="status">Updating matches…</p>
                 <h2 class="mb-toolbar-title">
                     Matches
                     <small>
@@ -30,9 +32,9 @@
                     @endif
                 </h2>
                 <div class="view-toggle" role="group" aria-label="Matches view">
-                    <a href="{{ route('calendar', request()->query()) }}" aria-pressed="true">List</a>
-                    <a href="{{ route('calendar.month', request()->query()) }}" aria-pressed="false">Month</a>
-                    <a href="{{ route('map', request()->except(['month'])) }}" aria-pressed="false">Map</a>
+                    <a href="{{ $this->listUrl() }}" aria-pressed="true">List</a>
+                    <a href="{{ $this->monthUrl() }}" aria-pressed="false">Month</a>
+                    <a href="{{ $this->mapUrl() }}" aria-pressed="false">Map</a>
                 </div>
 
                 {{--
@@ -276,7 +278,7 @@
                 </div>
                 <div class="mb-list">
                     @foreach ($group['events'] as $event)
-                        <x-match-row :event="$event" />
+                        <x-match-row :event="$event" wire:key="calendar-event-{{ $event->id }}" />
                     @endforeach
                 </div>
             </section>

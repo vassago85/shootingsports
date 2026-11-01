@@ -206,11 +206,12 @@
                         {{-- Secondary actions. Save + I shot this + Share.
                              After the match, the personal log promotes. --}}
                         <div class="match-secondary">
+                            <a class="btn ghost" href="{{ route('ical.event', $event) }}">Add to calendar</a>
                             @auth
                                 <livewire:save-to-calendar :event="$event" variant="button" :key="'save-match-'.$event->id" />
                                 <livewire:log-attendance :event="$event" :key="'log-match-'.$event->id" />
                             @else
-                                <x-auth-gate action="save" :label="$isPast ? 'Add to my calendar' : 'Add to my calendar'" />
+                                <x-auth-gate action="save" label="Save to my Shooting Sports account" />
                                 <x-auth-gate action="log" label="I shot this" />
                             @endauth
                             <button
@@ -231,6 +232,12 @@
 
                         <p class="match-entry-note" style="margin-top:14px">
                             <a href="{{ route('enquiries.listing', ['type' => 'event', 'id' => $event->id]) }}">Ask the organiser</a>
+                            @if ($event->source)
+                                · Source: {{ $event->source->getLabel() }}
+                            @endif
+                            @if ($event->last_verified_at)
+                                · Checked {{ $event->last_verified_at->timezone(config('app.timezone'))->format('j M Y') }}
+                            @endif
                         </p>
 
                         <x-social-links :links="$event->socialLinks()" label="Follow this match" style="margin-top:14px" />

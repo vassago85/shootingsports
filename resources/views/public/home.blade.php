@@ -54,15 +54,11 @@
 
         <div class="strip home-stats">
             <div class="strip-in">
-                {{-- Bundle A #4: traction stats only. Drop Provinces
-                     (geography, not traction) and Industry (gated until
-                     seeded). Clubs & series combine membership clubs
-                     with branded series so the number matches the
-                     directory the visitor actually opens. --}}
+                {{-- Same published club, association and series scope as /clubs. --}}
                 <div><span>Matches</span><b>{{ $stats['matches'] }}</b></div>
                 <div><span>Ranges</span><b>{{ $stats['ranges'] }}</b></div>
                 <div><span>Disciplines</span><b>{{ $stats['disciplines'] }}</b></div>
-                <div><span>Clubs</span><b>{{ $stats['clubs'] + $stats['series'] }}</b></div>
+                <div><span>Clubs</span><b>{{ $stats['directory'] }}</b></div>
             </div>
         </div>
 

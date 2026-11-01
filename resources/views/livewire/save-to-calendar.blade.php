@@ -4,5 +4,5 @@
     wire:click="toggle"
     aria-pressed="{{ $saved ? 'true' : 'false' }}"
 >
-    {{ $saved ? 'On my calendar' : 'Add to my calendar' }}
+    {{ $saved ? 'Saved to my account' : 'Save to my Shooting Sports account' }}
 </button>

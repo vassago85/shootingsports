@@ -74,6 +74,7 @@ return [
         'llms',
         'ical.discipline',
         'ical.organisation',
+        'ical.event',
     ],
 
     /*
@@ -99,6 +100,8 @@ return [
         'coming-soon/confirm/*',
         'login',
         'register',
+        'forgot-password',
+        'reset-password/*',
         'logout',
         'claim/*/*',
         'supplier/*/claim',

@@ -13,6 +13,7 @@ use App\Models\Organisation;
 use App\Models\Venue;
 use App\Services\Geocoding\VenueGeocoder;
 use App\Services\Venues\VenueResolver;
+use App\Support\PublicEventFacts;
 use App\Support\VenueNames;
 use Illuminate\Support\Str;
 
@@ -66,6 +67,13 @@ class CalendarImporter
                 'import_notes' => $notes,
                 'needs_review' => $match->needsReview || $outcome['needsReview'],
             ];
+
+            $review = PublicEventFacts::reviewNotes(new Event($payload));
+
+            if ($review !== null) {
+                $payload['import_notes'] = trim(($payload['import_notes'] ?? '')."\n".$review);
+                $payload['needs_review'] = true;
+            }
 
             if ($existing) {
                 $existing->fill($payload)->save();

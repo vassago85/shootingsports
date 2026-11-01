@@ -4,7 +4,6 @@ namespace App\Support;
 
 use App\Models\Event;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 
 class IcalFeed
 {
@@ -27,6 +26,7 @@ class IcalFeed
 
         foreach ($events as $event) {
             $event->loadMissing(['hostOrganisation', 'venue']);
+            $facts = PublicEventFacts::for($event);
 
             $uid = 'event-'.$event->id.'@shootingsports.co.za';
             $stamp = now()->utc()->format('Ymd\THis\Z');
@@ -34,8 +34,10 @@ class IcalFeed
             $description = self::escape(trim(implode(' — ', array_filter([
                 $event->hostOrganisation?->name,
                 $event->status?->getLabel(),
+                $facts->priceSentence(),
+                $facts->venueLine(),
             ]))));
-            $location = self::escape($event->venue?->name ?: $event->locationLabel());
+            $location = self::escape(self::location($event, $facts));
 
             $lines[] = 'BEGIN:VEVENT';
             $lines[] = 'UID:'.$uid;
@@ -45,16 +47,16 @@ class IcalFeed
             $lines[] = 'SEQUENCE:'.$modified->timestamp;
 
             if ($event->all_day) {
-                $lines[] = 'DTSTART;VALUE=DATE:'.$event->starts_at->timezone('Africa/Johannesburg')->format('Ymd');
-
-                if ($event->ends_at) {
-                    $lines[] = 'DTEND;VALUE=DATE:'.$event->ends_at->timezone('Africa/Johannesburg')->addDay()->format('Ymd');
-                }
+                $timezone = 'Africa/Johannesburg';
+                $start = $event->starts_at->timezone($timezone);
+                $end = ($event->ends_at ?? $event->starts_at)->timezone($timezone);
+                $lines[] = 'DTSTART;VALUE=DATE:'.$start->format('Ymd');
+                $lines[] = 'DTEND;VALUE=DATE:'.$end->addDay()->format('Ymd');
             } else {
-                $lines[] = 'DTSTART:'.$event->starts_at->timezone('Africa/Johannesburg')->format('Ymd\THis');
+                $lines[] = 'DTSTART:'.$event->starts_at->utc()->format('Ymd\THis\Z');
 
                 if ($event->ends_at) {
-                    $lines[] = 'DTEND:'.$event->ends_at->timezone('Africa/Johannesburg')->format('Ymd\THis');
+                    $lines[] = 'DTEND:'.$event->ends_at->utc()->format('Ymd\THis\Z');
                 }
             }
 
@@ -67,13 +69,56 @@ class IcalFeed
 
         $lines[] = 'END:VCALENDAR';
 
-        return implode("\r\n", $lines)."\r\n";
+        return implode("\r\n", array_map(self::fold(...), $lines))."\r\n";
+    }
+
+    private static function location(Event $event, PublicEventFacts $facts): string
+    {
+        if ($event->venue) {
+            return collect([
+                $event->venue->name,
+                $event->venue->town,
+                $event->venue->province?->getLabel(),
+            ])->filter()->implode(', ');
+        }
+
+        return $facts->venueLine() ?? '';
     }
 
     private static function escape(string $value): string
     {
-        return Str::of($value)
-            ->replace(['\\', ';', ',', "\n"], ['\\\\', '\;', '\,', '\\n'])
-            ->toString();
+        return str_replace(
+            ['\\', ';', ',', "\r\n", "\n", "\r"],
+            ['\\\\', '\;', '\,', '\\n', '\\n', ''],
+            $value,
+        );
+    }
+
+    /**
+     * RFC 5545 line folding at 75 octets, continuing with a space.
+     */
+    private static function fold(string $line): string
+    {
+        if (strlen($line) <= 75) {
+            return $line;
+        }
+
+        $output = '';
+        $first = true;
+
+        while ($line !== '') {
+            $limit = $first ? 75 : 74;
+            $chunk = mb_strcut($line, 0, $limit, 'UTF-8');
+
+            if ($chunk === '') {
+                break;
+            }
+
+            $output .= ($first ? '' : "\r\n ").$chunk;
+            $line = substr($line, strlen($chunk));
+            $first = false;
+        }
+
+        return $output;
     }
 }

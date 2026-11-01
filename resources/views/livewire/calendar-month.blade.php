@@ -5,6 +5,8 @@
 <div x-data="{ moreOpen: {{ $moreFiltersOpen ? 'true' : 'false' }} }">
     <div class="mb-toolbar">
         <div class="mb-toolbar-in">
+            <p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{{ $resultCount }} {{ $resultCount === 1 ? 'match' : 'matches' }} shown</p>
+            <p class="sr-only" wire:loading role="status">Updating matches…</p>
             <h2 class="mb-toolbar-title">
                 Matches
                 <small>
@@ -18,9 +20,9 @@
                 @endif
             </h2>
             <div class="view-toggle" role="group" aria-label="Matches view">
-                <a href="{{ route('calendar', request()->except('month')) }}" aria-pressed="false">List</a>
-                <a href="{{ route('calendar.month', request()->query()) }}" aria-pressed="true">Month</a>
-                <a href="{{ route('map', request()->except(['month'])) }}" aria-pressed="false">Map</a>
+                <a href="{{ $this->listUrl() }}" aria-pressed="false">List</a>
+                <a href="{{ $this->monthUrl() }}" aria-pressed="true">Month</a>
+                <a href="{{ $this->mapUrl() }}" aria-pressed="false">Map</a>
             </div>
 
             {{-- Same When / Sport / Where / More filters priority as
@@ -195,6 +197,7 @@
                     class="month-cal-day {{ $day['inMonth'] ? '' : 'is-outside' }} {{ $day['isToday'] ? 'is-today' : '' }}"
                     role="gridcell"
                     aria-label="{{ $day['date']->format('j F Y') }}"
+                    wire:key="month-day-{{ $day['key'] }}"
                 >
                     <span class="month-cal-num">{{ $day['date']->format('j') }}</span>
                     @php
@@ -204,7 +207,7 @@
                     @endphp
                     <ul class="month-cal-chips">
                         @foreach ($shown as $event)
-                            <li>
+                            <li wire:key="month-{{ $day['key'] }}-{{ $event->id }}">
                                 <a href="{{ route('events.show', $event->slug) }}" title="{{ $event->title }}">
                                     <span class="chip-title">{{ \Illuminate\Support\Str::limit($event->title, 28) }}</span>
                                     @if ($event->venue?->town)

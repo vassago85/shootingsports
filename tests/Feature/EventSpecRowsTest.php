@@ -74,8 +74,10 @@ it('hides empty spec rows', function () {
     $event = Event::factory()->confirmed()->create([
         'round_count' => null,
         'entry_fee_cents' => null,
+        'member_fee_cents' => null,
         'venue_id' => null,
     ]);
+    $event->hostOrganisation->forceFill(['province' => null, 'town' => null])->save();
 
     $labels = collect(EventSpecRows::for($event->fresh(['disciplines'])))->pluck(0);
 

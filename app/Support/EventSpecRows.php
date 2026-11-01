@@ -18,9 +18,11 @@ class EventSpecRows
         $family = $discipline?->family;
         $slug = $discipline?->slug ?? '';
 
+        $facts = PublicEventFacts::for($event);
+
         $rows = [
             ['Discipline', $discipline?->name],
-            ['Venue', $event->listedLocation()],
+            ['Venue', $facts->venueLine()],
         ];
 
         if (self::isShotgun($family, $slug)) {
@@ -36,7 +38,9 @@ class EventSpecRows
             $rows[] = ['Rounds', self::number($event->round_count)];
         }
 
-        $rows[] = ['Entry', Money::rand($event->entry_fee_cents)];
+        foreach ($facts->priceRows() as $priceRow) {
+            $rows[] = $priceRow;
+        }
 
         if ($event->capacity) {
             $rows[] = ['Squads', ($event->entries_taken ?? 0).' / '.$event->capacity];

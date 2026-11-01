@@ -89,7 +89,7 @@
 <meta name="twitter:description" content="{{ $description }}">
 <meta name="twitter:image" content="{{ $image }}">
 
-<script type="application/ld+json">{!! json_encode($siteGraph, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+<script type="application/ld+json">{!! \App\Support\JsonLd::encode($siteGraph) !!}</script>
 
 @if ($umamiScriptUrl && $umamiWebsiteId)
     <script defer src="{{ $umamiScriptUrl }}" data-website-id="{{ $umamiWebsiteId }}"></script>

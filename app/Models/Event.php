@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
@@ -311,6 +312,23 @@ class Event extends Model
                         ->where('ends_at', '>=', now());
                 });
         });
+    }
+
+    /**
+     * Events whose start–end interval meets a window. A multi-day
+     * match that began before the window and is still running stays
+     * in the window. Date-only values stay date-only on the model.
+     */
+    public function scopeOverlapping(Builder $query, Carbon $from, Carbon $to): Builder
+    {
+        return $query
+            ->where('starts_at', '<=', $to)
+            ->where(function (Builder $window) use ($from): void {
+                $window->where('starts_at', '>=', $from)
+                    ->orWhere(function (Builder $spans) use ($from): void {
+                        $spans->whereNotNull('ends_at')->where('ends_at', '>=', $from);
+                    });
+            });
     }
 
     public function scopeUpcoming(Builder $query): Builder

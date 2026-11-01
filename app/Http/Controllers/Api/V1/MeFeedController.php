@@ -203,7 +203,7 @@ class MeFeedController extends Controller
         $query = Event::query()
             ->upcoming()
             ->with(self::EAGER)
-            ->whereBetween('starts_at', [$from, $to])
+            ->overlapping($from, $to)
             ->whereNotIn('id', $savedIds->all());
 
         $hasActiveBranch = false;
@@ -289,7 +289,7 @@ class MeFeedController extends Controller
         $candidates = Event::query()
             ->upcoming()
             ->with(self::EAGER)
-            ->whereBetween('starts_at', [Carbon::now(), $to])
+            ->overlapping(Carbon::now(), $to)
             ->whereNotIn('id', $alreadyShown->all())
             ->whereHas('venue', function (Builder $v): void {
                 $v->whereNotNull('lat')->whereNotNull('lng');
