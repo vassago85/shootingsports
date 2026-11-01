@@ -137,12 +137,11 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    @include('public.partials.map-basemap')
     <script>
         const rangePins = @json($pins);
         const map = L.map('range-map', { scrollWheelZoom: false });
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
+        window.ssAttachBasemap(map);
 
         const escapeHtml = (value) => String(value ?? '')
             .replaceAll('&', '&amp;')

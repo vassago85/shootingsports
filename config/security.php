@@ -53,12 +53,13 @@ return [
 
     'csp_report_only' => implode(' ', [
         "default-src 'self';",
-        "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://js.paystack.co https://analytics.charsley.co.za https://analytics.charsleydigital.co.za https://unpkg.com;",
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com;",
+        "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://js.paystack.co https://analytics.charsley.co.za https://analytics.charsleydigital.co.za https://unpkg.com https://maps.googleapis.com https://maps.gstatic.com;",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://fonts.gstatic.com;",
         "font-src 'self' https://fonts.gstatic.com data:;",
         "img-src 'self' data: blob: https:;",
-        "connect-src 'self' https://challenges.cloudflare.com https://api.paystack.co https://analytics.charsley.co.za https://analytics.charsleydigital.co.za https://nominatim.openstreetmap.org https://*.cartocdn.com;",
-        "frame-src 'self' https://challenges.cloudflare.com https://js.paystack.co;",
+        "connect-src 'self' https://challenges.cloudflare.com https://api.paystack.co https://analytics.charsley.co.za https://analytics.charsleydigital.co.za https://nominatim.openstreetmap.org https://*.cartocdn.com https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com;",
+        "worker-src 'self' blob:;",
+        "frame-src 'self' https://challenges.cloudflare.com https://js.paystack.co https://maps.googleapis.com;",
         "frame-ancestors 'self';",
         "base-uri 'self';",
         "form-action 'self';",

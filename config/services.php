@@ -54,6 +54,10 @@ return [
     // secondary handshake for the same property.
     'google' => [
         'site_verification' => env('GOOGLE_SITE_VERIFICATION'),
+        // Browser key for the public match map and ranges map. This is
+        // not the Android key baked into the mobile app — Maps
+        // JavaScript API keys are restricted by HTTP referrer.
+        'maps_web_key' => env('GOOGLE_MAPS_WEB_API_KEY'),
     ],
 
     // Shared Umami analytics (self-hosted, first-party). Both values must
@@ -75,8 +79,9 @@ return [
             : filter_var(env('INDEXNOW_ENABLED'), FILTER_VALIDATE_BOOLEAN),
     ],
 
-    // Optional CARTO basemap key for /map. When blank, the map falls
-    // back to free OSM tiles with a CSS mute — CARTO watermarks
+    // Optional CARTO basemap key for /map. Used only when
+    // GOOGLE_MAPS_WEB_API_KEY is blank. When both are blank, the map
+    // falls back to free OSM tiles with a CSS mute — CARTO watermarks
     // "API KEY REQUIRED" without a key.
     'carto' => [
         'api_key' => env('CARTO_API_KEY'),

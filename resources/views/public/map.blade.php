@@ -56,11 +56,13 @@
 
                 <div
                     id="ss-map"
-                    class="ss-map {{ $cartoApiKey ? '' : 'is-osm-fallback' }}"
+                    @class([
+                        'ss-map',
+                        'is-osm-fallback' => blank(config('services.google.maps_web_key')) && blank(config('services.carto.api_key')),
+                    ])
                     data-pins="{{ json_encode($pins, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}"
                     data-centroids="{{ json_encode($centroids, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}"
                     data-province="{{ $selectedProvince ?? '' }}"
-                    @if ($cartoApiKey) data-carto-key="{{ $cartoApiKey }}" @endif
                     role="region"
                     aria-label="Map of shooting ranges with upcoming matches"
                 ></div>
@@ -107,6 +109,7 @@
                         crossorigin=""></script>
                 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
                         crossorigin=""></script>
+                @include('public.partials.map-basemap')
                 <script>
                     (function () {
                         var mount = function () {
@@ -123,34 +126,7 @@
                                 attributionControl: true,
                             }).setView([-28.8, 25.0], 5);
 
-                            var osm = function () {
-                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                                    maxZoom: 14,
-                                    minZoom: 4,
-                                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                                }).addTo(map);
-                            };
-                            var cartoKey = el.dataset.cartoKey || '';
-                            var useCarto = cartoKey && location.hostname === 'shootingsports.co.za';
-                            if (useCarto) {
-                                var tiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=' + encodeURIComponent(cartoKey), {
-                                    maxZoom: 14,
-                                    minZoom: 4,
-                                    subdomains: 'abcd',
-                                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                                });
-                                var failed = 0;
-                                tiles.on('tileerror', function () {
-                                    failed += 1;
-                                    if (failed === 1) {
-                                        map.removeLayer(tiles);
-                                        osm();
-                                    }
-                                });
-                                tiles.addTo(map);
-                            } else {
-                                osm();
-                            }
+                            window.ssAttachBasemap(map);
 
                             if (! pins.length) return;
 

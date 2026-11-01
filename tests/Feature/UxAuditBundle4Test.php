@@ -13,7 +13,10 @@ use Illuminate\Support\Facades\Cache;
 beforeEach(function () {
     $this->withoutVite();
     Cache::flush();
-    config(['services.carto.api_key' => null]);
+    config([
+        'services.carto.api_key' => null,
+        'services.google.maps_web_key' => null,
+    ]);
 });
 
 // ---- Live reticle sweep -------------------------------------------
@@ -152,12 +155,14 @@ it('/map bubbles link to the calendar filtered by that province', function () {
 });
 
 it('/map shows empty-province claim copy instead of a bare zero', function () {
-    // Province bubbles replaced by venue pins — assert OSM/CARTO wiring.
+    // Province bubbles replaced by venue pins — assert the OSM fallback
+    // when neither a Google Maps nor a CARTO key is configured.
     $html = $this->get(route('map'))->assertOk()->getContent();
 
     expect($html)
         ->toContain('is-osm-fallback')
-        ->toContain('tile.openstreetmap.org');
+        ->toContain('tile.openstreetmap.org')
+        ->not->toContain('maps.googleapis.com/maps/api/js');
 });
 
 it('/map uses CARTO Positron when CARTO_API_KEY is configured', function () {
@@ -166,11 +171,37 @@ it('/map uses CARTO Positron when CARTO_API_KEY is configured', function () {
     $html = $this->get(route('map'))->assertOk()->getContent();
 
     expect($html)
-        ->toContain('data-carto-key="test-carto-key"')
+        ->toContain('test-carto-key')
         ->toContain('basemaps.cartocdn.com/light_all')
         ->toContain('?key=')
         ->toContain("location.hostname === 'shootingsports.co.za'")
+        ->not->toContain('class="ss-map is-osm-fallback"')
+        ->not->toContain('maps.googleapis.com/maps/api/js');
+});
+
+it('/map uses Google Maps when the web key is configured', function () {
+    config([
+        'services.google.maps_web_key' => 'test-google-web-key',
+        'services.carto.api_key' => 'test-carto-key',
+    ]);
+
+    $html = $this->get(route('map'))->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('https://maps.googleapis.com/maps/api/js?key=test-google-web-key')
+        ->toContain('leaflet.gridlayer.googlemutant@0.16.0')
+        ->toContain('googleMutant')
         ->not->toContain('class="ss-map is-osm-fallback"');
+});
+
+it('the ranges map uses Google Maps when the web key is configured', function () {
+    config(['services.google.maps_web_key' => 'test-google-web-key']);
+
+    $html = $this->get(route('ranges.index'))->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('https://maps.googleapis.com/maps/api/js?key=test-google-web-key')
+        ->toContain('ssAttachBasemap');
 });
 
 it('/map serves a Leaflet-backed interactive map element', function () {
