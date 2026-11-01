@@ -233,6 +233,8 @@
                             <a href="{{ route('enquiries.listing', ['type' => 'event', 'id' => $event->id]) }}">Ask the organiser</a>
                         </p>
 
+                        <x-social-links :links="$event->socialLinks()" label="Follow this match" style="margin-top:14px" />
+
                         @if ($articles->isNotEmpty())
                             <div class="match-partners">
                                 <h2>Activity</h2>

@@ -416,6 +416,8 @@ class JsonLd
             'sameAs' => array_values(array_filter([
                 $organisation->website_url,
                 $organisation->facebook_url,
+                $organisation->instagram_url,
+                $organisation->whatsapp_url,
             ])),
             'address' => self::postalAddress(null, $organisation->town, $organisation->province?->getLabel()),
         ]);

@@ -150,7 +150,13 @@ class OrganisationResource extends Resource
                         TextInput::make('email')->email(),
                         TextInput::make('phone')->tel(),
                         TextInput::make('website_url')->url()->columnSpanFull(),
-                        TextInput::make('facebook_url')->url()->columnSpanFull(),
+                        TextInput::make('facebook_url')->label('Facebook URL')->url()->columnSpanFull(),
+                        TextInput::make('instagram_url')->label('Instagram URL')->url()->columnSpanFull(),
+                        TextInput::make('whatsapp_url')
+                            ->label('WhatsApp link')
+                            ->url()
+                            ->helperText('Group invite or wa.me link.')
+                            ->columnSpanFull(),
                     ]),
 
                 Section::make('Logo')

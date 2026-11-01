@@ -2,6 +2,7 @@
 
 use App\Imports\CgpsaCalendarImporter;
 use App\Imports\MpsaCalendarImporter;
+use App\Imports\SapfCalendarImporter;
 use App\Imports\SaprfCalendarImporter;
 use App\Imports\VektorCalendarImporter;
 
@@ -39,11 +40,19 @@ return [
         'notes' => 'The Events Calendar REST API. Monthly Handgun / Rifle&PCC / Shotgun club shoots in Centurion. No fees in feed.',
     ],
     [
+        'key' => 'sapf',
+        'name' => 'South African Pistol Federation',
+        'url' => 'https://www.samarksman.co.za/',
+        'mode' => 'import',
+        'importer' => SapfCalendarImporter::class,
+        'notes' => 'Static HTML table on the home page. Columns: event / date / venue / entry / results. ISSF + NPA/PPC bullseye pistol. Venue strings mention the hosting city, so province is inferred from a short keyword map (Pretoria, Bellville, etc.). Rows without a parsable province are left needsReview.',
+    ],
+    [
         'key' => 'ctsasa',
         'name' => 'Clay Target Shooting Association of South Africa',
         'url' => 'https://ctsasa.co.za/competition-calendar/',
         'mode' => 'sell',
-        'notes' => 'WordPress + PDF year planner. Nationals are already seeded by hand. Club shoots need the embed.',
+        'notes' => 'WordPress + PDF year planner. Nationals are already seeded by hand. Club shoots need the embed. Re-checked 2026-10-31: still only an "A2 Year Planner" PDF download, no scrape-able table.',
     ],
     [
         'key' => 'sapsa',
@@ -72,6 +81,13 @@ return [
         'url' => 'https://sahunters.co.za/shooting/2026-streekskietprogram-regional-shooting-program/',
         'mode' => 'sell',
         'notes' => 'Year planner is a SharePoint PDF/XLSX, not a public table. Member GlobalCalendar mixes AGMs with branch shoots. Sell them the embed; nationals can be typed in by staff.',
+    ],
+    [
+        'key' => 'sashf',
+        'name' => 'SA Sport and Hunting Federation (SA Sport-Jag)',
+        'url' => 'https://sa-sportjag.co.za/calendar.php',
+        'mode' => 'sell',
+        'notes' => 'Checked 2026-10-31: /calendar.php renders an "All Events List" header with no rows under it. Nothing to scrape today. Revisit when they publish a season — the URL already parks a PHP page so a future importer could key off it.',
     ],
     [
         'key' => 'nrlhunter',

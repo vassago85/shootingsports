@@ -16,6 +16,7 @@ use App\Models\Concerns\HasSlug;
 use App\Observers\EventObserver;
 use App\Observers\IndexNowObserver;
 use App\Support\Indexability;
+use App\Support\SocialLinks;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -35,7 +36,8 @@ use Illuminate\Support\Facades\Storage;
     'all_day', 'level', 'kind', 'status', 'publication', 'confirmed_at', 'original_starts_at',
     'entry_fee_cents', 'member_fee_cents', 'entry_url', 'contact_email', 'accepts_platform_entries', 'entry_collection', 'accepts_team_entries', 'team_size', 'entry_payment_instructions', 'capacity',
     'entries_taken', 'round_count', 'target_count', 'stage_count',
-    'results_url', 'banner_media_id', 'banner_path', 'description', 'created_by',
+    'results_url', 'website_url', 'facebook_url', 'instagram_url', 'whatsapp_url',
+    'banner_media_id', 'banner_path', 'description', 'created_by',
     'source', 'last_verified_at', 'import_notes', 'needs_review',
     'last_material_change_at',
 ])]
@@ -494,6 +496,34 @@ class Event extends Model
     public function publicUrl(): string
     {
         return route('events.show', $this->slug);
+    }
+
+    /**
+     * Social links for the public match page. The event's own URLs
+     * win per platform; any slot the event left blank falls back to
+     * the host organisation, so a Royal Flush match without its own
+     * Facebook page still links through to the series page.
+     *
+     * @return list<array{key: 'website'|'facebook'|'instagram'|'whatsapp', label: string, url: string}>
+     */
+    public function socialLinks(): array
+    {
+        $host = $this->hostOrganisation;
+
+        return SocialLinks::merged(
+            [
+                'website_url' => $this->website_url,
+                'facebook_url' => $this->facebook_url,
+                'instagram_url' => $this->instagram_url,
+                'whatsapp_url' => $this->whatsapp_url,
+            ],
+            $host === null ? [] : [
+                'website_url' => $host->website_url,
+                'facebook_url' => $host->facebook_url,
+                'instagram_url' => $host->instagram_url,
+                'whatsapp_url' => $host->whatsapp_url,
+            ],
+        );
     }
 
     public function schemaId(): string

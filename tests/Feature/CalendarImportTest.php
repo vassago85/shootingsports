@@ -8,23 +8,51 @@ use App\Enums\OrganisationType;
 use App\Enums\Province;
 use App\Imports\CgpsaCalendarImporter;
 use App\Imports\MpsaCalendarImporter;
+use App\Imports\SapfCalendarImporter;
+use App\Imports\SaprfCalendarImporter;
+use App\Imports\VektorCalendarImporter;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
+use App\Support\CalendarImportSettings;
 use Illuminate\Support\Facades\Http;
 
 it('lists scrape and sell sources', function () {
-    $this->artisan('calendar:import --list')
-        ->assertSuccessful()
-        ->expectsOutputToContain('saprf')
-        ->expectsOutputToContain('cgpsa')
-        ->expectsOutputToContain('vektor')
-        ->expectsOutputToContain('import')
-        ->expectsOutputToContain('sapsa')
-        ->expectsOutputToContain('sahunters')
-        ->expectsOutputToContain('nrlhunter')
-        ->expectsOutputToContain('kaapjag')
-        ->expectsOutputToContain('sell');
+    // Sanity-check that the --list CLI runs cleanly against the
+    // current registry. Content assertions live in the next test so
+    // narrow test-terminal wrapping does not create false failures.
+    $this->artisan('calendar:import --list')->assertSuccessful();
+});
+
+it('registers every expected federation and club source', function () {
+    // The registry is the source of truth — assert on it directly
+    // rather than parsing a Symfony table whose wrapping depends on
+    // the current terminal width.
+    $sources = collect(config('calendar_sources'))->keyBy('key');
+
+    // Importers: every active scraper and the class that runs it.
+    expect($sources->get('saprf'))->toMatchArray(['mode' => 'import', 'importer' => SaprfCalendarImporter::class])
+        ->and($sources->get('mpsa'))->toMatchArray(['mode' => 'import', 'importer' => MpsaCalendarImporter::class])
+        ->and($sources->get('cgpsa'))->toMatchArray(['mode' => 'import', 'importer' => CgpsaCalendarImporter::class])
+        ->and($sources->get('vektor'))->toMatchArray(['mode' => 'import', 'importer' => VektorCalendarImporter::class])
+        ->and($sources->get('sapf'))->toMatchArray(['mode' => 'import', 'importer' => SapfCalendarImporter::class]);
+
+    // Sell-mode bodies: no feed worth scraping, we tell them to use
+    // the embed. Keep the whole set listed so the audit does not
+    // silently lose one on a merge conflict.
+    foreach (['ctsasa', 'sapsa', 'nrapa', 'idpa', 'sahunters', 'sashf', 'nrlhunter', 'kaapjag', 'send-it-elr'] as $key) {
+        expect($sources->get($key))->not->toBeNull()
+            ->and($sources->get($key)['mode'])->toBe('sell');
+    }
+});
+
+it('resolves every registered importer to an invokable class with an import() method', function () {
+    foreach (CalendarImportSettings::sources() as $source) {
+        $importer = app($source['importer']);
+
+        expect($importer)->toBeObject()
+            ->and(method_exists($importer, 'import'))->toBeTrue();
+    }
 });
 
 it('imports SAPRF table rows without touching staff matches', function () {

@@ -107,7 +107,20 @@ class OrganisationForm
                             ->url()
                             ->columnSpanFull(),
                         TextInput::make('facebook_url')
+                            ->label('Facebook URL')
                             ->url()
+                            ->placeholder('https://www.facebook.com/your-page')
+                            ->columnSpanFull(),
+                        TextInput::make('instagram_url')
+                            ->label('Instagram URL')
+                            ->url()
+                            ->placeholder('https://www.instagram.com/your-handle')
+                            ->columnSpanFull(),
+                        TextInput::make('whatsapp_url')
+                            ->label('WhatsApp link')
+                            ->url()
+                            ->placeholder('https://chat.whatsapp.com/... or https://wa.me/27...')
+                            ->helperText('Group invite or wa.me link. Shown as a chat button on the public page.')
                             ->columnSpanFull(),
                     ]),
 

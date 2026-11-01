@@ -13,6 +13,7 @@ use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\HasVerification;
 use App\Observers\IndexNowObserver;
 use App\Support\Indexability;
+use App\Support\SocialLinks;
 use Carbon\CarbonImmutable;
 use Database\Factories\OrganisationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -30,7 +31,7 @@ use Illuminate\Support\Facades\Storage;
 #[ObservedBy([IndexNowObserver::class])]
 #[Fillable([
     'slug', 'name', 'short_name', 'type', 'parent_id', 'province', 'town',
-    'email', 'phone', 'website_url', 'facebook_url', 'description',
+    'email', 'phone', 'website_url', 'facebook_url', 'instagram_url', 'whatsapp_url', 'description',
     'logo_path', 'accredited', 'visitors_welcome',
     'membership_enabled', 'accepts_applications',
     'membership_year_end_month', 'membership_year_end_day',
@@ -306,6 +307,23 @@ class Organisation extends Model
         }
 
         return Storage::disk('media')->url($this->logo_path);
+    }
+
+    /**
+     * Normalised social link rows for the public page and JSON-LD
+     * `sameAs`. Returns an empty list when no URLs are set so the
+     * caller can skip the whole row cleanly.
+     *
+     * @return list<array{key: 'website'|'facebook'|'instagram'|'whatsapp', label: string, url: string}>
+     */
+    public function socialLinks(): array
+    {
+        return SocialLinks::fromArray([
+            'website_url' => $this->website_url,
+            'facebook_url' => $this->facebook_url,
+            'instagram_url' => $this->instagram_url,
+            'whatsapp_url' => $this->whatsapp_url,
+        ]);
     }
 
     public function locationLabel(): string

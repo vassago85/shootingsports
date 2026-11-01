@@ -255,6 +255,23 @@ class EventResource extends Resource
                                         Heroicon::OutlinedInformationCircle,
                                         'Link to MatchApp, TicketForms, or another entry site. Keep it current, or leave blank.',
                                     ),
+                                TextInput::make('website_url')
+                                    ->label('Match website')
+                                    ->url()
+                                    ->helperText('Leave blank to fall back to the host club or series website.'),
+                                TextInput::make('facebook_url')
+                                    ->label('Facebook URL')
+                                    ->url()
+                                    ->placeholder('https://www.facebook.com/...')
+                                    ->helperText('Match-specific Facebook event or page. Falls back to the host.'),
+                                TextInput::make('instagram_url')
+                                    ->label('Instagram URL')
+                                    ->url()
+                                    ->placeholder('https://www.instagram.com/...'),
+                                TextInput::make('whatsapp_url')
+                                    ->label('WhatsApp link')
+                                    ->url()
+                                    ->placeholder('https://chat.whatsapp.com/... or https://wa.me/27...'),
                                 TextInput::make('contact_email')
                                     ->label('Organiser email')
                                     ->email()

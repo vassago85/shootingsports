@@ -38,6 +38,7 @@
                 @if ($organisation->website_url)
                     <p><a class="label" href="{{ $organisation->website_url }}" rel="noopener noreferrer" style="border-bottom:1px solid var(--brass);text-decoration:none">{{ parse_url($organisation->website_url, PHP_URL_HOST) }} →</a></p>
                 @endif
+                <x-social-links :links="$organisation->socialLinks()" label="Follow on" />
                 <p style="margin:14px 0 0; display:flex; gap:10px; flex-wrap:wrap">
                     <a class="btn" href="{{ route('enquiries.listing', ['type' => 'organisation', 'id' => $organisation->id]) }}">Enquire via platform</a>
                     <livewire:follow-button
