@@ -2,6 +2,7 @@
     :title="$seoTitle"
     :description="$seoDescription"
     :canonical="$canonical"
+    :robots="$robots"
     :json-ld="$jsonLd"
 >
     <main id="main">

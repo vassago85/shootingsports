@@ -37,7 +37,7 @@ class Indexability
      */
     public static function organisations(Builder $query): Builder
     {
-        return $query->published()
+        return self::requireSlug($query->published())
             ->where(function (Builder $located): void {
                 $located->whereNotNull('province')
                     ->orWhere(function (Builder $town): void {
@@ -61,7 +61,7 @@ class Indexability
      */
     public static function venues(Builder $query): Builder
     {
-        return $query->published()
+        return self::requireSlug($query->published())
             ->omitScheduleFragments()
             ->where(function (Builder $located): void {
                 $located->whereNotNull('province')
@@ -83,7 +83,7 @@ class Indexability
      */
     public static function events(Builder $query): Builder
     {
-        return $query->published()
+        return self::requireSlug($query->published())
             ->where(function (Builder $place): void {
                 $place->whereNotNull('venue_id')
                     ->orWhereNotNull('host_organisation_id');
@@ -96,7 +96,7 @@ class Indexability
      */
     public static function providers(Builder $query): Builder
     {
-        return $query->published()
+        return self::requireSlug($query->published())
             ->listed()
             ->whereNotNull('province')
             ->whereNotNull('town')
@@ -108,6 +108,23 @@ class Indexability
                     ->orWhere(fn (Builder $about) => self::filled($about, 'description'))
                     ->orWhereHas('disciplines');
             });
+    }
+
+    /**
+     * Every indexable record must resolve to a canonical URL.
+     * A null or empty slug makes route() throw, which is a data
+     * integrity failure — not an "unknown edge case" to swallow. We
+     * excise the bad row at the query boundary so the sitemap, meta
+     * tags, and IndexNow dispatch never try to build a URL for it.
+     *
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    private static function requireSlug(Builder $query): Builder
+    {
+        return $query->whereNotNull('slug')->where('slug', '!=', '');
     }
 
     /**

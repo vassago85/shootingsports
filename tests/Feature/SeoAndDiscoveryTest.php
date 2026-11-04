@@ -430,15 +430,20 @@ it('/calendar with a province filter promotes the province into the title and de
         ->assertSee('"name":"Gauteng"', false);
 });
 
-it('/calendar canonical strips non-canonical params like radius', function () {
+it('/calendar canonical collapses every filter — province, radius, weekend — onto the bare route', function () {
     $response = $this->get(route('calendar', [
         'province' => Province::WesternCape->urlSlug(),
         'radius' => 200,
     ]));
 
+    // `/calendar?province=…` is a filter view, not a canonical URL.
+    // The indexable surface for a province sits at
+    // /disciplines/{slug}/{province}; the calendar strips every query
+    // on its canonical and emits noindex,follow so Google doesn't
+    // pick two URLs for the same content.
     $response->assertOk()
-        // Canonical omits radius but keeps province.
-        ->assertSee('<link rel="canonical" href="'.route('calendar', ['province' => Province::WesternCape->urlSlug()]).'"', false);
+        ->assertSee('<link rel="canonical" href="'.route('calendar').'">', false)
+        ->assertSee('<meta name="robots" content="noindex,follow">', false);
 });
 
 // ================================================================

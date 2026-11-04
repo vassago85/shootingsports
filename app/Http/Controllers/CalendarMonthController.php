@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\Province;
 use App\Models\Discipline;
 use App\Support\JsonLd;
+use App\Support\PageIndex;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
@@ -37,6 +38,8 @@ class CalendarMonthController extends Controller
             ['name' => 'Month', 'url' => route('calendar.month')],
         ];
 
+        $page = PageIndex::forCalendarMonth($request);
+
         return view('public.calendar-month', [
             'discipline' => $disciplineSlug,
             'province' => $provinceSlug,
@@ -52,10 +55,8 @@ class CalendarMonthController extends Controller
             'month' => $month,
             'seoTitle' => 'Shooting competitions calendar, month view',
             'seoDescription' => 'Upcoming South African shooting matches on a month grid. Filter by discipline, province, and distance.',
-            'canonical' => route('calendar.month', array_filter([
-                'discipline' => $discipline?->slug,
-                'province' => $province?->urlSlug(),
-            ])),
+            'canonical' => $page->canonical,
+            'robots' => $page->robots,
             'jsonLd' => [JsonLd::breadcrumbs($crumbs)],
         ]);
     }

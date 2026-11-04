@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Support\AnswerPages;
-use App\Support\IndexNow;
 use App\Support\PublicCache;
 use Illuminate\Console\Command;
 
@@ -11,20 +10,14 @@ class RefreshAnswerPages extends Command
 {
     protected $signature = 'answers:refresh';
 
-    protected $description = 'Stamp answer-page freshness, drop feed caches, and ping IndexNow.';
+    protected $description = 'Stamp answer-page freshness and drop feed caches. Weekend URLs are not pinged to IndexNow (they canonicalise to /calendar).';
 
     public function handle(): int
     {
         AnswerPages::stamp();
         PublicCache::forgetSitemaps();
 
-        $urls = AnswerPages::publicUrls();
-
-        foreach ($urls as $url) {
-            IndexNow::ping($url);
-        }
-
-        $this->info('Refreshed '.count($urls).' answer pages.');
+        $this->info('Refreshed answer-page freshness and dropped sitemap caches.');
 
         return self::SUCCESS;
     }

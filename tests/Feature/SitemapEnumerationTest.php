@@ -199,12 +199,11 @@ it('includes a provider category once it has at least one listing', function () 
 });
 
 /**
- * The sitemap controller must survive a single row that throws while
- * building its URL — one dud match should not turn the entire sitemap
- * into a 500 for Search Console. We simulate that by faking a bad
- * scenario: two published events, one with a normal slug and one with
- * a slug we blank out post-insert (bypassing the NOT NULL by using an
- * update that would corrupt route() generation in the wild).
+ * The sitemap must survive a bad row — a published event whose slug
+ * got blanked by a broken import, for instance. The fix is at the
+ * query boundary (Indexability::requireSlug), not a per-row
+ * try/catch: a slugless record can't have a canonical URL and must
+ * not reach route() in the first place.
  */
 it('drops a bad row instead of 500ing the whole events sitemap', function () {
     $good = Event::factory()->create([
@@ -212,26 +211,22 @@ it('drops a bad row instead of 500ing the whole events sitemap', function () {
         'status' => EventStatus::Confirmed,
     ]);
 
-    // The controller's safeUrl guard catches Throwables from route().
-    // The cheapest way to force one is to give an event a slug that
-    // Laravel's URL generator rejects — a slug with a leading slash
-    // trips route() when combined with the {event:slug} binding
-    // pattern in strict mode.
+    // A published event with an empty slug — the shape production DBs
+    // sometimes end up with after a broken import. sqlite accepts the
+    // empty string even though the column is NOT NULL on real DBs.
     $bad = Event::factory()->create([
         'slug' => 'sitemap-doomed',
         'status' => EventStatus::Confirmed,
     ]);
-    // Blank the slug directly in the database — bypasses the NOT NULL
-    // constraint on some drivers (sqlite in tests happily accepts an
-    // empty string, which is what production DBs sometimes end up with
-    // after a broken import).
     DB::table('events')->where('id', $bad->id)->update(['slug' => '']);
 
     $response = $this->get('/sitemaps/events.xml');
 
-    // The whole sitemap must still be 200 XML, and the good event must
-    // be listed even though the bad row was quietly dropped.
+    // The sitemap stays 200 XML and the healthy event survives; the
+    // slugless row is excluded by Indexability, so nothing ever tries
+    // to generate a URL for it.
     $response->assertOk();
     expect($response->headers->get('content-type'))->toContain('application/xml');
     $response->assertSee('sitemap-survivor', false);
+    $response->assertDontSee('sitemap-doomed', false);
 });

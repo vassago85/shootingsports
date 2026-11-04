@@ -3,7 +3,6 @@
 use App\Enums\EventStatus;
 use App\Enums\ListingStatus;
 use App\Enums\Province;
-use App\Jobs\PingIndexNow;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
@@ -70,6 +69,23 @@ it('says when a weekend is empty and links later events', function () {
         ->assertDontSee('Citation Championship');
 });
 
+it('canonicalises every weekend page onto /calendar and marks them noindex,follow', function () {
+    citationFixture();
+
+    foreach ([
+        '/this-weekend',
+        '/gauteng/this-weekend',
+        '/gauteng/next-weekend',
+        '/western-cape/next-weekend',
+    ] as $path) {
+        $response = $this->get($path)->assertOk();
+
+        expect($response->getContent())
+            ->toContain('<link rel="canonical" href="'.route('calendar').'">')
+            ->toContain('<meta name="robots" content="noindex,follow">');
+    }
+});
+
 it('redirects a short discipline province URL to the canonical hub', function () {
     citationFixture();
 
@@ -87,15 +103,17 @@ it('redirects a short discipline province URL to the canonical hub', function ()
         ->assertSee('No upcoming Citation Discipline match is listed in Limpopo.');
 });
 
-it('lists answer pages in the sitemap and leaves empty discipline pairs out', function () {
+it('keeps weekend URLs out of the pages sitemap and lists only indexable discipline slices', function () {
     citationFixture();
     PublicCache::forgetSitemaps();
 
     $xml = $this->get('/sitemaps/pages.xml')->assertOk()->getContent();
 
-    expect($xml)->toContain(route('answers.this-weekend'))
-        ->toContain(route('answers.province-this-weekend', 'gauteng'))
-        ->not->toContain(route('answers.discipline', ['citation-discipline', 'gauteng']));
+    // Weekend URLs render for humans but canonicalise to /calendar
+    // and stay out of the sitemap — they're time windows, not the
+    // indexable surface for their province.
+    expect($xml)->not->toContain('/this-weekend')
+        ->not->toContain('/next-weekend');
 
     $disciplines = $this->get('/sitemaps/disciplines.xml')->assertOk()->getContent();
 
@@ -157,16 +175,19 @@ it('puts a followed ShootingSports credit on a club embed', function () {
         ->and($html)->toContain($event->title);
 });
 
-it('pings IndexNow for the answer pages when they are refreshed', function () {
+it('does not ping IndexNow for weekend URLs when the answer pages are refreshed', function () {
     Queue::fake();
     config([
         'services.indexnow.enabled' => true,
         'services.indexnow.key' => 'cc62820955164261944e17736b6d3752',
     ]);
 
+    // Weekend pages canonicalise to /calendar; refreshing them must
+    // not submit filter URLs to Bing. The command still stamps
+    // freshness and drops sitemap caches, but no ping fires.
     $this->artisan('answers:refresh')->assertSuccessful();
 
-    Queue::assertPushed(PingIndexNow::class, fn (PingIndexNow $job): bool => $job->url === route('answers.this-weekend'));
+    Queue::assertNothingPushed();
 });
 
 it('flags a Kraaifontein venue stored in Mpumalanga', function () {

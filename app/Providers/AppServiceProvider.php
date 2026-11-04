@@ -107,9 +107,21 @@ class AppServiceProvider extends ServiceProvider
             ->where('is_published', true)
             ->firstOrFail());
         Route::bind('event', function (string $value): Event {
-            $event = Event::query()->where('slug', $value)->first();
+            // Dead matches (soft-deleted or explicitly cancelled) return
+            // 410 Gone so crawlers drop them from the index instead of
+            // getting a soft-404 or a landing page for a match that
+            // will never run again. Draft matches stay 404 — a draft
+            // is "not yet public", not "gone".
+            $event = Event::withTrashed()->where('slug', $value)->first();
 
-            if ($event !== null) {
+            if ($event instanceof Event) {
+                if ($event->trashed() || $event->status === EventStatus::Cancelled) {
+                    throw new HttpResponseException(response('Gone', 410, [
+                        'Content-Type' => 'text/plain; charset=UTF-8',
+                        'X-Robots-Tag' => 'noindex',
+                    ]));
+                }
+
                 return $event;
             }
 

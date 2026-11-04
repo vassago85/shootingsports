@@ -16,8 +16,6 @@ use App\Support\PublicCache;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class SitemapController extends Controller
 {
@@ -133,11 +131,10 @@ class SitemapController extends Controller
             ->indexable()
             ->orderBy('starts_at')
             ->get()
-            ->map(fn (Event $event) => $this->safeUrl('events sitemap', $event, fn (): array => [
+            ->map(fn (Event $event): array => [
                 'loc' => route('events.show', $event->slug),
                 'lastmod' => $event->updated_at?->toAtomString(),
-            ]))
-            ->filter()
+            ])
             ->values();
     }
 
@@ -154,13 +151,12 @@ class SitemapController extends Controller
             ->indexable()
             ->orderBy('name')
             ->get()
-            ->map(fn (Organisation $org) => $this->safeUrl('organisations sitemap', $org, fn (): array => [
+            ->map(fn (Organisation $org): array => [
                 'loc' => $org->isFederationListing()
                     ? route('federations.show', $org->slug)
                     : route('clubs.show', $org->slug),
                 'lastmod' => $org->updated_at?->toAtomString(),
-            ]))
-            ->filter()
+            ])
             ->values();
     }
 
@@ -177,11 +173,10 @@ class SitemapController extends Controller
             ->indexable()
             ->orderBy('name')
             ->get()
-            ->map(fn (Venue $venue) => $this->safeUrl('venues sitemap', $venue, fn (): array => [
+            ->map(fn (Venue $venue): array => [
                 'loc' => route('ranges.show', $venue->slug),
                 'lastmod' => $venue->updated_at?->toAtomString(),
-            ]))
-            ->filter()
+            ])
             ->values();
     }
 
@@ -200,39 +195,33 @@ class SitemapController extends Controller
             ->get();
 
         $urls = new Collection;
+        $minimum = max(1, (int) config('seo.min_upcoming', 1));
 
         foreach ($disciplines as $discipline) {
-            $root = $this->safeUrl('disciplines sitemap', $discipline, fn (): array => [
+            $urls->push([
                 'loc' => route('disciplines.show', $discipline->slug),
                 'lastmod' => $discipline->updated_at?->toAtomString(),
             ]);
 
-            if ($root !== null) {
-                $urls->push($root);
-            }
-
-            $about = $this->safeUrl('disciplines about sitemap', $discipline, fn (): array => [
+            $urls->push([
                 'loc' => route('disciplines.about', $discipline->slug),
                 'lastmod' => $discipline->updated_at?->toAtomString(),
             ]);
 
-            if ($about !== null) {
-                $urls->push($about);
-            }
-
             foreach (Province::cases() as $province) {
-                if (! DisciplinePages::hasPublicRecord($discipline, $province)) {
+                // Match PageIndex::forDisciplineProvince(): a province
+                // slice only enters the sitemap when it clears the
+                // upcoming-event threshold. A page with clubs and
+                // zero matches renders for humans (noindex,follow)
+                // and stays out of the sitemap.
+                if (DisciplinePages::upcomingCount($discipline, $province) < $minimum) {
                     continue;
                 }
 
-                $slice = $this->safeUrl('disciplines province sitemap', $discipline, fn (): array => [
+                $urls->push([
                     'loc' => route('disciplines.province', [$discipline->slug, $province->urlSlug()]),
                     'lastmod' => DisciplinePages::lastmod($discipline, $province),
                 ]);
-
-                if ($slice !== null) {
-                    $urls->push($slice);
-                }
             }
         }
 
@@ -282,14 +271,10 @@ class SitemapController extends Controller
             ->orderBy('name')
             ->get()
             ->each(function (Provider $provider) use ($urls): void {
-                $url = $this->safeUrl('providers sitemap', $provider, fn (): array => [
+                $urls->push([
                     'loc' => route('suppliers.show', $provider->slug),
                     'lastmod' => $provider->updated_at?->toAtomString(),
                 ]);
-
-                if ($url !== null) {
-                    $urls->push($url);
-                }
             });
 
         return $urls;
@@ -309,11 +294,10 @@ class SitemapController extends Controller
             ->where('reader_access', 'public')
             ->orderByDesc('published_at')
             ->get()
-            ->map(fn (MagazineIssue $issue) => $this->safeUrl('magazines sitemap', $issue, fn (): array => [
+            ->map(fn (MagazineIssue $issue): array => [
                 'loc' => route('magazines.show', $issue->slug),
                 'lastmod' => $issue->updated_at?->toAtomString(),
-            ]))
-            ->filter()
+            ])
             ->values();
     }
 
@@ -401,26 +385,5 @@ class SitemapController extends Controller
         }
 
         return Carbon::parse($value)->timezone((string) config('app.timezone'))->toAtomString();
-    }
-
-    /**
-     * @param  callable(): array<string, mixed>  $build
-     * @return array<string, mixed>|null
-     */
-    private function safeUrl(string $context, object $subject, callable $build): ?array
-    {
-        try {
-            return $build();
-        } catch (Throwable $e) {
-            Log::warning('Sitemap row skipped', [
-                'context' => $context,
-                'model' => $subject::class,
-                'id' => property_exists($subject, 'id') ? $subject->id : null,
-                'slug' => property_exists($subject, 'slug') ? $subject->slug : null,
-                'error' => $e->getMessage(),
-            ]);
-
-            return null;
-        }
     }
 }

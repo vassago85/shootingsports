@@ -128,6 +128,20 @@ final class DisciplinePages
             || self::rangesInProvince($discipline, $province)->exists();
     }
 
+    /**
+     * Count of upcoming matches for a discipline × province.
+     *
+     * Shared with {@see PageIndex::forDisciplineProvince()} and the
+     * sitemap so the "is it indexable" decision and the "is it in
+     * the sitemap" decision read from the same number.
+     */
+    public static function upcomingCount(Discipline $discipline, Province $province): int
+    {
+        return (int) self::eventsInProvince($discipline, $province)
+            ->upcoming()
+            ->count();
+    }
+
     public static function lastmod(Discipline $discipline, Province $province): ?string
     {
         $candidates = array_filter([

@@ -71,7 +71,7 @@ it('renders the hub and province page with the count, date order, and valid JSON
         ->assertSee(route('disciplines.province', [$discipline->slug, 'gauteng']), false);
 });
 
-it('keeps a province with clubs indexable and drops a fully empty province from the sitemap', function () {
+it('noindexes any province slice with zero upcoming matches and drops it from the sitemap', function () {
     $discipline = Discipline::factory()->create([
         'slug' => 'precision-rifle',
         'name' => 'Precision Rifle',
@@ -79,6 +79,11 @@ it('keeps a province with clubs indexable and drops a fully empty province from 
         'intro' => null,
     ]);
 
+    // Limpopo has a club but zero upcoming matches. Previous rule
+    // ("any related record") kept it indexable and Google rated it a
+    // soft 404. New rule: a page without upcoming matches is thin
+    // regardless of the club list — render for humans, noindex, drop
+    // from the sitemap. The discipline hub itself carries the signal.
     Organisation::factory()->create([
         'name' => 'Hub Limpopo Club',
         'slug' => 'hub-limpopo-club',
@@ -91,7 +96,7 @@ it('keeps a province with clubs indexable and drops a fully empty province from 
     $limpopo->assertOk()
         ->assertSee('Hub Limpopo Club')
         ->assertSee('No upcoming Precision Rifle match is listed in Limpopo.')
-        ->assertDontSee('<meta name="robots" content="noindex,follow">', false);
+        ->assertSee('<meta name="robots" content="noindex,follow">', false);
 
     $empty = $this->get(route('disciplines.province', [$discipline->slug, 'northern-cape']));
 
@@ -103,8 +108,24 @@ it('keeps a province with clubs indexable and drops a fully empty province from 
 
     $xml = $this->get('/sitemaps/disciplines.xml')->assertOk()->getContent();
 
-    expect($xml)->toContain(route('disciplines.province', [$discipline->slug, 'limpopo']))
+    expect($xml)->not->toContain(route('disciplines.province', [$discipline->slug, 'limpopo']))
         ->not->toContain(route('disciplines.province', [$discipline->slug, 'northern-cape']));
+});
+
+it('keeps a province slice indexable once it has at least one upcoming match', function () {
+    [$discipline] = hubFixture();
+
+    // hubFixture() creates two upcoming matches in Gauteng, so the
+    // Gauteng slice must be indexable and live in the sitemap.
+    $this->get(route('disciplines.province', [$discipline->slug, 'gauteng']))
+        ->assertOk()
+        ->assertDontSee('<meta name="robots" content="noindex,follow">', false);
+
+    PublicCache::forgetSitemaps();
+
+    $xml = $this->get('/sitemaps/disciplines.xml')->assertOk()->getContent();
+
+    expect($xml)->toContain(route('disciplines.province', [$discipline->slug, 'gauteng']));
 });
 
 it('links the homepage and calendar to the PRS and PR22 hubs', function () {

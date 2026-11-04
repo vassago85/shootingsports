@@ -180,6 +180,7 @@ it('serves robots and a schema-valid sitemap in both indexability states', funct
 it('emits the clubs landing URL shape in the disciplines sitemap, not the legacy path', function () {
     config()->set('seo.indexable', true);
     config()->set('seo.landing_min', 1);
+    config()->set('seo.min_upcoming', 1);
 
     $discipline = Discipline::factory()->create([
         'slug' => 'shape-check',
@@ -187,11 +188,31 @@ it('emits the clubs landing URL shape in the disciplines sitemap, not the legacy
         'is_published' => true,
     ]);
 
-    Organisation::factory()->create([
+    $club = Organisation::factory()->create([
         'slug' => 'shape-club',
         'province' => Province::Gauteng,
         'status' => ListingStatus::Published,
-    ])->attachDiscipline($discipline);
+    ]);
+    $club->attachDiscipline($discipline);
+
+    // The province slice only enters the sitemap once it has at least
+    // one upcoming match — attach one so we're testing URL shape, not
+    // the thin-content threshold.
+    $venue = Venue::factory()->create([
+        'slug' => 'shape-range',
+        'name' => 'Shape Range',
+        'province' => Province::Gauteng,
+        'town' => 'Pretoria',
+        'status' => ListingStatus::Published,
+    ]);
+
+    $event = Event::factory()->confirmed()->create([
+        'slug' => 'shape-match',
+        'host_organisation_id' => $club->id,
+        'venue_id' => $venue->id,
+        'starts_at' => now()->addWeek(),
+    ]);
+    $event->syncDisciplines([$discipline->id], $discipline->id);
 
     $this->get('/sitemaps/disciplines.xml')
         ->assertOk()

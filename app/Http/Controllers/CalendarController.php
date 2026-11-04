@@ -7,6 +7,7 @@ use App\Models\Discipline;
 use App\Models\Event;
 use App\Queries\PublicEventQuery;
 use App\Support\JsonLd;
+use App\Support\PageIndex;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -80,6 +81,8 @@ class CalendarController extends Controller
             ));
         }
 
+        $page = PageIndex::forCalendar($request);
+
         return view('public.calendar', [
             'discipline' => $disciplineSlug,
             'province' => $provinceSlug,
@@ -96,7 +99,8 @@ class CalendarController extends Controller
             'featuredDisciplines' => Discipline::featuredHubs(),
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,
-            'canonical' => $this->canonical($discipline, $province),
+            'canonical' => $page->canonical,
+            'robots' => $page->robots,
             'jsonLd' => $jsonLd,
         ]);
     }
@@ -146,26 +150,5 @@ class CalendarController extends Controller
             'Shooting matches in '.$province->getLabel(),
             'Shooting matches in '.$province->getLabel().'. '.$facts,
         ];
-    }
-
-    /**
-     * Canonical URL that folds equivalent filter permutations into one.
-     * `?radius=100` and other non-indexable UI-state params are stripped
-     * so Search Console sees one canonical page per discipline/province
-     * combination, not a fresh URL for every widget position.
-     */
-    private function canonical(?Discipline $discipline, ?Province $province): string
-    {
-        $params = [];
-
-        if ($discipline instanceof Discipline) {
-            $params['discipline'] = $discipline->slug;
-        }
-
-        if ($province instanceof Province) {
-            $params['province'] = $province->urlSlug();
-        }
-
-        return route('calendar', $params);
     }
 }

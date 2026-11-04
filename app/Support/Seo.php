@@ -57,15 +57,13 @@ final readonly class Seo
             Event::query()->upcoming()->where('host_organisation_id', $organisation->id),
         ).' '.$sentence;
 
-        $canonical = $organisation->isFederationListing()
-            ? route('federations.show', $organisation->slug)
-            : route('clubs.show', $organisation->slug);
+        $page = PageIndex::forModel($organisation);
 
         return new self(
             title: $title,
             description: self::clip($sentence),
-            canonical: $canonical,
-            robots: Indexability::allows($organisation) ? null : 'noindex,follow',
+            canonical: $page->canonical,
+            robots: $page->robots,
         );
     }
 
@@ -113,11 +111,13 @@ final readonly class Seo
 
         $sentence = UpcomingCopy::facts(self::eventsAtVenue($venue)).' '.$sentence;
 
+        $page = PageIndex::forModel($venue);
+
         return new self(
             title: $title,
             description: self::clip($sentence),
-            canonical: route('ranges.show', $venue->slug),
-            robots: Indexability::allows($venue) ? null : 'noindex,follow',
+            canonical: $page->canonical,
+            robots: $page->robots,
         );
     }
 
@@ -143,11 +143,13 @@ final readonly class Seo
             filled($event->description) ? $event->description : null,
         ])->filter()->implode(' ');
 
+        $page = PageIndex::forModel($event);
+
         return new self(
             title: $title,
             description: self::clip($sentence),
-            canonical: $event->publicUrl(),
-            robots: Indexability::allows($event) ? null : 'noindex,follow',
+            canonical: $page->canonical,
+            robots: $page->robots,
         );
     }
 
@@ -164,30 +166,37 @@ final readonly class Seo
             $sentence .= ' '.$provider->description;
         }
 
+        $page = PageIndex::forModel($provider);
+
         return new self(
             title: $provider->name.' — '.$category.($place !== '' ? ' in '.$place : ''),
             description: self::clip($sentence),
-            canonical: route('suppliers.show', $provider->slug),
-            robots: Indexability::allows($provider) ? null : 'noindex,follow',
+            canonical: $page->canonical,
+            robots: $page->robots,
         );
     }
 
-    public static function landing(Discipline $discipline, Province $province, string $description, bool $thin, int $upcoming): self
+    public static function landing(Discipline $discipline, Province $province, string $description, int $upcoming): self
     {
+        $page = PageIndex::forDisciplineProvince($discipline, $province, $upcoming);
+
         return new self(
             title: DisciplinePages::title($discipline, $province, $upcoming),
             description: self::clip($description),
-            canonical: route('disciplines.province', [$discipline->slug, $province->urlSlug()]),
-            robots: $thin ? 'noindex,follow' : null,
+            canonical: $page->canonical,
+            robots: $page->robots,
         );
     }
 
     public static function discipline(Discipline $discipline, string $description, int $upcoming): self
     {
+        $page = PageIndex::forDiscipline($discipline);
+
         return new self(
             title: DisciplinePages::title($discipline, null, $upcoming),
             description: self::clip($description),
-            canonical: route('disciplines.show', $discipline->slug),
+            canonical: $page->canonical,
+            robots: $page->robots,
         );
     }
 

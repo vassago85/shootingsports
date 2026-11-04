@@ -8,6 +8,7 @@ use App\Enums\ProviderCategory;
 use App\Enums\Province;
 use App\Models\Provider;
 use App\Support\JsonLd;
+use App\Support\PageIndex;
 use App\Support\Seo;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -96,6 +97,8 @@ class ProviderController extends Controller
             ['name' => 'Industry', 'url' => route('suppliers.index')],
         ]);
 
+        $page = PageIndex::forDirectoryIndex('suppliers.index', $request);
+
         return view('public.suppliers.index', [
             'grouped' => $providers,
             'matches' => $matches,
@@ -104,6 +107,8 @@ class ProviderController extends Controller
             'categories' => ProviderCategory::publicCases(),
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,
+            'canonical' => $page->canonical,
+            'robots' => $page->robots,
             'jsonLd' => [$itemList, $breadcrumbs],
         ]);
     }

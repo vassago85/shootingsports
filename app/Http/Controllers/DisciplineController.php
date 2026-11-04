@@ -144,7 +144,13 @@ class DisciplineController extends Controller
         // as clubs.
         $ranges = $this->stats->rangesForDiscipline($discipline, $province);
 
-        $noindex = $province !== null && ! DisciplinePages::hasPublicRecord($discipline, $province);
+        // noindex gating now lives on upcoming-match count, not on
+        // "any related record". A province page with clubs and zero
+        // matches is thin to Google even though the club block is
+        // useful to humans — keep it rendering, drop it from the
+        // sitemap, let the discipline hub carry the hub signal.
+        $noindex = $province !== null
+            && $events->count() < (int) config('seo.min_upcoming', 1);
 
         $directoryClubs = $province === null ? $clubs : $this->stats->clubsForDiscipline($discipline);
         $directoryRanges = $province === null ? $ranges : $this->stats->rangesForDiscipline($discipline);
@@ -208,7 +214,7 @@ class DisciplineController extends Controller
         ])->values()->all();
 
         $seo = $province !== null
-            ? Seo::landing($discipline, $province, $seoDescription, $noindex, $events->count())
+            ? Seo::landing($discipline, $province, $seoDescription, $events->count())
             : Seo::discipline($discipline, $seoDescription, $events->count());
 
         return [

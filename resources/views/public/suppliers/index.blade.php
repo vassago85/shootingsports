@@ -1,4 +1,4 @@
-<x-layouts.public :title="$seoTitle" :description="$seoDescription" :json-ld="$jsonLd">
+<x-layouts.public :title="$seoTitle" :description="$seoDescription" :canonical="$canonical" :robots="$robots" :json-ld="$jsonLd">
     <main id="main">
         <div class="wrap dir-page">
             <x-dir-hero page="industry" kicker="Directory" title="Industry">

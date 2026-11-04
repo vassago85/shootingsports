@@ -14,6 +14,7 @@ use App\Services\Discovery\DiscoveryStats;
 use App\Services\Venues\VenueResolver;
 use App\Support\Geo;
 use App\Support\JsonLd;
+use App\Support\PageIndex;
 use App\Support\Seo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -93,6 +94,8 @@ class VenueController extends Controller
             ])
             ->values();
 
+        $page = PageIndex::forDirectoryIndex('ranges.index', $request);
+
         return view('public.ranges.index', [
             'venues' => $venues,
             'pins' => $pins,
@@ -106,6 +109,8 @@ class VenueController extends Controller
             'sports' => Discipline::query()->where('is_published', true)->orderBy('name')->get(['id', 'name', 'slug']),
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,
+            'canonical' => $page->canonical,
+            'robots' => $page->robots,
             'jsonLd' => [$itemList, $breadcrumbs],
         ]);
     }

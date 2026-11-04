@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Queries\PublicEventQuery;
 use App\Services\Discovery\DiscoveryStats;
 use App\Support\JsonLd;
+use App\Support\PageIndex;
 use App\Support\Seo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -97,6 +98,8 @@ class OrganisationController extends Controller
             ->orderBy('name')
             ->get();
 
+        $page = PageIndex::forDirectoryIndex('clubs.index', $request);
+
         return view('public.clubs.index', [
             'clubs' => $clubs,
             'province' => $province,
@@ -109,6 +112,8 @@ class OrganisationController extends Controller
             'provinces' => Province::cases(),
             'seoTitle' => $seoTitle,
             'seoDescription' => $seoDescription,
+            'canonical' => $page->canonical,
+            'robots' => $page->robots,
             'jsonLd' => [$itemList, $breadcrumbs],
         ]);
     }

@@ -82,10 +82,30 @@ class EventController extends Controller
                 ->values();
         }
 
+        // Past match surfacing: when the match being viewed is already
+        // over (Completed or Postponed, or its start time is in the
+        // past), load the host club's next 4 upcoming matches so the
+        // page has a path forward instead of ending at a dead date.
+        $isPast = $event->status === EventStatus::Completed
+            || $event->status === EventStatus::Postponed
+            || ($event->starts_at !== null && $event->starts_at->isPast());
+
+        $upcomingByHost = collect();
+
+        if ($isPast && $event->host_organisation_id !== null) {
+            $upcomingByHost = (new PublicEventQuery(
+                organisationId: $event->host_organisation_id,
+                limit: 4,
+            ))->get()
+                ->reject(fn (Event $candidate): bool => $candidate->id === $event->id)
+                ->values();
+        }
+
         return view('public.matches.show', [
             'event' => $event,
             'articles' => $articles,
             'relatedEvents' => $relatedEvents,
+            'upcomingByHost' => $upcomingByHost,
             'specs' => EventSpecRows::for($event),
             'seo' => Seo::forEvent($event),
             'jsonLd' => [

@@ -42,6 +42,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // responses fire before the router can emit a plain 404.
         $middleware->append(RedirectLegacyWordPressUrls::class);
 
+        // The canonical-host middleware collapses www, trailing
+        // slashes, plain-http, and uppercase content paths onto one
+        // URL per piece of content. Must be global, not just on the
+        // web group, so `/Events/some-slug` (which Laravel treats as
+        // "no route") still 301s to `/events/some-slug` before the
+        // router hands back a bare 404.
+        $middleware->append(CanonicalHost::class);
+
         // Lets the /api/v1 routes read the signed-in web session cookie
         // (via Sanctum's EnsureFrontendRequestsAreStateful) so a user
         // logged into the website can call /api/v1/me from the browser
@@ -52,7 +60,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
 
         $middleware->web(append: [
-            CanonicalHost::class,
             EnsureComingSoonAccess::class,
             RedirectRetiredAdminUrls::class,
             ApplySecurityHeaders::class,

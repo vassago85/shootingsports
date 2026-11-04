@@ -69,8 +69,8 @@ final class AnswerPages
         return self::payload(
             title: $title,
             description: $paragraphs[0],
-            canonical: self::weekendUrl($province, $next),
-            robots: null,
+            canonical: PageIndex::forWeekend()->canonical,
+            robots: PageIndex::forWeekend()->robots,
             events: $events,
             later: $later,
             paragraphs: $paragraphs,
@@ -79,23 +79,15 @@ final class AnswerPages
     }
 
     /**
+     * Weekend pages are humans-only time windows. They render 200 but
+     * stay out of the sitemap (canonical points at `/calendar`) and
+     * are not pinged to IndexNow.
+     *
      * @return Collection<int, array{loc: string, lastmod: string}>
      */
     public static function sitemapUrls(): Collection
     {
-        $lastmod = self::lastmod();
-        $urls = collect([
-            ['loc' => route('answers.this-weekend'), 'lastmod' => $lastmod],
-        ]);
-
-        foreach (Province::cases() as $province) {
-            $urls->push(
-                ['loc' => route('answers.province-this-weekend', $province->urlSlug()), 'lastmod' => $lastmod],
-                ['loc' => route('answers.province-next-weekend', $province->urlSlug()), 'lastmod' => $lastmod],
-            );
-        }
-
-        return $urls;
+        return collect();
     }
 
     /**
@@ -103,7 +95,7 @@ final class AnswerPages
      */
     public static function publicUrls(): array
     {
-        return self::sitemapUrls()->pluck('loc')->all();
+        return [];
     }
 
     /**
@@ -237,16 +229,5 @@ final class AnswerPages
                 $when,
             ])->filter()->implode(', '),
         ];
-    }
-
-    private static function weekendUrl(?Province $province, bool $next): string
-    {
-        if ($province === null) {
-            return route('answers.this-weekend');
-        }
-
-        return $next
-            ? route('answers.province-next-weekend', $province->urlSlug())
-            : route('answers.province-this-weekend', $province->urlSlug());
     }
 }

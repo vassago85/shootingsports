@@ -284,6 +284,24 @@
                     </section>
                 @endif
 
+                @if (($upcomingByHost ?? collect())->isNotEmpty())
+                    {{-- Past-match surfacing: a shooter landing on an
+                         old match shouldn't hit a dead end. Show the
+                         same host club's next few matches so the
+                         page has a clear next step. --}}
+                    <section class="match-related">
+                        <div class="sec-head">
+                            <p class="label">Next from this club</p>
+                            <h2>Upcoming at {{ $host?->name ?? 'this club' }}</h2>
+                        </div>
+                        <div class="dope-grid">
+                            @foreach ($upcomingByHost as $next)
+                                <x-event-card :event="$next" />
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
+
                 {{-- Owner / admin panel — sits at the bottom so shooter
                      actions above stay uncluttered. Only rendered when
                      something is genuinely unclaimed. --}}
