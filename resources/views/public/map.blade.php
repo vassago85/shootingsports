@@ -124,6 +124,12 @@
                                 zoomControl: true,
                                 scrollWheelZoom: false,
                                 attributionControl: true,
+                                // Markercluster needs an upper bound on the map itself:
+                                // the Google basemap attaches asynchronously via GoogleMutant,
+                                // so without this the cluster runs before any tile layer and
+                                // throws "Map has no maxZoom specified".
+                                maxZoom: 18,
+                                minZoom: 4,
                             }).setView([-28.8, 25.0], 5);
 
                             window.ssAttachBasemap(map);

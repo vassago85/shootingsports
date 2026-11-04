@@ -213,7 +213,11 @@ it('/map serves a Leaflet-backed interactive map element', function () {
         ->toContain('unpkg.com/leaflet@1.9.4')
         ->toContain('leaflet.markercluster')
         ->toContain('markerClusterGroup')
-        ->toContain('disableClusteringAtZoom');
+        ->toContain('disableClusteringAtZoom')
+        // Guard the Google basemap race: markercluster throws
+        // "Map has no maxZoom specified" if L.map() is created
+        // without maxZoom and the tile layer attaches async.
+        ->toContain('Markercluster needs an upper bound on the map itself');
 });
 
 it('/map shows province zoom chips above the map', function () {
