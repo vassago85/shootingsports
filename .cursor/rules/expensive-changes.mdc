@@ -1,0 +1,16 @@
+---
+description: Say where a change gets expensive before leaving a hot path unbounded
+globs: app/**/*.php,database/migrations/**/*.php
+alwaysApply: false
+---
+
+# Expensive changes
+
+When a change can get slow, say where it gets expensive before finishing: query count, a missing index, cache lifetime, or a queue that should exist. Skip this for copy, layout, and other work that does not add a query, loop, or job.
+
+- Lists that touch a relationship need `with()`, not a query per row.
+- A column used to filter or sort a growing table needs an index in the migration.
+- Name the cache key and what invalidates it. Do not cache without a lifetime.
+- Mail, webhooks, imports, and other work the request does not need to wait on belong on the queue.
+
+Leave frontend profiling until the task is performance.

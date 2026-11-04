@@ -1,0 +1,23 @@
+---
+description: Name the stranger-triggered failure and the check that stops it on auth, uploads, payments, and public endpoints
+globs: routes/**/*.php,app/Http/**/*.php,app/Policies/**/*.php,app/Services/**/*.php,app/Livewire/Auth/**/*.php,app/Livewire/Suppliers/**/*.php,app/Livewire/Listings/**/*.php,app/Livewire/Upgrade.php,app/Livewire/SubmitTeamEntry.php,app/Livewire/ApplyForMembership.php
+alwaysApply: false
+---
+
+# Sensitive boundaries
+
+When a change touches auth, uploads, payments, or a public endpoint, name the failure a stranger could trigger and the check that stops it. Use one of: policy, validation, query binding, file visibility, or webhook signature.
+
+```php
+// Paystack webhook: ignore a body whose signature does not match the secret.
+if ($secretKey === '' || $signature === '' || ! PaystackClient::verifyWebhookSignature($rawBody, $signature, $secretKey)) {
+    return response()->json(['status' => 'invalid'], 200);
+}
+```
+
+```php
+// Upload: validate contents, then store on the media disk outside a public executable path.
+'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+```
+
+Write a full vulnerability report only when the user asks for an audit.

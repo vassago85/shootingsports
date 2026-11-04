@@ -1,0 +1,17 @@
+---
+description: Keep the Docker deploy shape and the CI test run when changing deploy or workflow files
+globs: docker/**/*,docker-compose.yml,docker-compose.prod.yml,.github/workflows/**/*.yml
+alwaysApply: false
+---
+
+# Deploy checklist
+
+Production is Docker Compose on the Ubuntu host, not Kubernetes and not Laravel Cloud.
+
+- `app`, `queue`, and `scheduler` share `shootingsports-app:latest`. Only `app` has a `build:` block.
+- Migrations run in `docker/entrypoint.sh` for the app role. Queue and scheduler set `APP_RUN_MIGRATIONS_ON_BOOT=false`.
+- The app healthcheck hits `/up`.
+- Media stays on the mounted volume (`MEDIA_HOST_PATH`, default `/mnt/storage/shootingsports/media`).
+- `.github/workflows/tests.yml` runs `php artisan test --compact` on push and pull request. Keep that job when editing the workflow.
+
+Add a monitoring product only after something fails that `/up` and `storage/logs/laravel.log` cannot explain.

@@ -1,0 +1,17 @@
+---
+description: Cover loading, empty, error, narrow layout, and accessibility when changing a screen
+globs: resources/views/**/*.blade.php,app/Livewire/**/*.php,app/Filament/**/*.php,resources/css/**/*.css
+alwaysApply: false
+---
+
+# Screen states
+
+When a change affects what a person sees, cover loading, empty, error, and the narrow layout. Match an existing Filament, Livewire, or Blade pattern before adding a new one.
+
+- Loading: disable the control and swap the label, as in `wire:loading.attr="disabled"` with `wire:loading` / `wire:loading.remove`.
+- Empty: use `@empty` and a `.empty` block that offers a next step, as on the clubs index ("No clubs match these filters" plus clear/explore links).
+- Error: show the validation or failure message next to the action that failed.
+- Narrow layout: the same screen must stay usable when the directory columns stack.
+- Accessibility: label every control, keep focus visible, and keep text contrast readable. Mark decorative marks with `aria-hidden="true"`, as the directory chevron does.
+
+Skip this for a copy change that does not add or remove a state.
