@@ -42,7 +42,7 @@ it('lists the 7 November Loch Lynne match and skips 22 August', function () {
         ->assertOk()
         ->assertSee('Saturday 7 November 2026')
         ->assertSee('Loch Lynne')
-        ->assertSee('https://www.xsssa.co.za/calender/calender.html', false)
+        ->assertSee('https://www.xsssa.co.za/calender.html', false)
         ->assertDontSee('22 August');
 });
 

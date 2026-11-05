@@ -15,6 +15,20 @@ use App\Models\Organisation;
 use App\Models\Venue;
 use Illuminate\Database\Seeder;
 
+/**
+ * XSSSA — Xtreme Steel Shooting South Africa.
+ *
+ * Taken from the revamped https://www.xsssa.co.za/ (Dr Arnold Rix).
+ * Matches are Western Cape only, at Loch Lynne near Prince Alfred
+ * Hamlet, 30 teams in 10 groups per match (around 60 shooters), 18
+ * targets. Entries run through XSSSA's WhatsApp and Telegram groups
+ * and the matches sell out early.
+ *
+ * The site has 52 matches since 2013 and 532 different shooters but
+ * no 2027 dates yet; Arnold normally publishes those closer to the
+ * season. The 7 November 2026 match is the one on the calendar now,
+ * with entries closed.
+ */
 class XsssaEventsSeeder extends Seeder
 {
     public function run(): void
@@ -27,15 +41,16 @@ class XsssaEventsSeeder extends Seeder
                 'name' => 'Xtreme Steel Shooting South Africa',
                 'short_name' => 'XSSSA',
                 'type' => OrganisationType::Federation,
-                'province' => null,
-                'town' => null,
+                'province' => Province::WesternCape,
+                'town' => 'Prince Alfred Hamlet',
                 'website_url' => 'https://www.xsssa.co.za/',
-                'description' => 'Practical rifle on natural terrain: target recognition, range estimation, wind, and the gear a shooter can carry.',
+                'description' => "Xtreme Steel Shooting is a non-standard contest that examines practical rifle skills: target recognition, range estimation, wind doping and marksmanship, in practical challenges over natural terrain using the equipment a competitor can carry.\n\nMatches are Western Cape only, shot at Loch Lynne near Prince Alfred Hamlet. 30 teams in 10 groups per match, around 60 shooters, 18 targets. Entries run through the XSSSA WhatsApp and Telegram groups and sell out early.",
                 'accredited' => true,
                 'visitors_welcome' => true,
                 'status' => ListingStatus::Published,
                 'verification_state' => VerificationState::Unconfirmed,
                 'source' => ListingSource::Import,
+                'last_verified_at' => now(),
             ],
         );
 
@@ -48,6 +63,8 @@ class XsssaEventsSeeder extends Seeder
                 'name' => 'Loch Lynne',
                 'province' => Province::WesternCape,
                 'town' => 'Prince Alfred Hamlet',
+                'description' => 'XSSSA home range in the Koue Bokkeveld near Prince Alfred Hamlet. Natural terrain, 18 steel targets per match, laid out across ten lanes with three teams on each lane.',
+                'website_url' => 'https://www.xsssa.co.za/',
                 'status' => ListingStatus::Published,
                 'verification_state' => VerificationState::Unconfirmed,
                 'source' => ListingSource::Import,
@@ -66,10 +83,10 @@ class XsssaEventsSeeder extends Seeder
                 'ends_at' => null,
                 'all_day' => true,
                 'level' => EventLevel::Series,
-                'status' => EventStatus::EntriesOpen,
+                'status' => EventStatus::Full,
                 'confirmed_at' => now(),
-                'entry_url' => 'https://www.xsssa.co.za/calender/calender.html',
-                'description' => 'XSSSA match at Loch Lynne, Prince Alfred Hamlet. The XSSSA calendar lists this date with entries open.',
+                'entry_url' => 'https://www.xsssa.co.za/calender.html',
+                'description' => 'XSSSA match at Loch Lynne, Prince Alfred Hamlet. 30 teams in 10 groups — entries closed and the match is full. Join the XSSSA WhatsApp or Telegram group to hear about the next match.',
                 'source' => ListingSource::Import,
                 'last_verified_at' => now(),
             ],
