@@ -221,6 +221,22 @@ it('parses MPSA season dates that wrap a month', function () {
         ->and($matches[1]->startsAt->toDateString())->toBe('2026-06-06');
 });
 
+it('places an MPSA match in the venue province when the town is known', function (string $venue, Province $province) {
+    $matches = app(MpsaCalendarImporter::class)->parse(<<<HTML
+        <table>
+            <tr><td>2026-10-31</td><td>{$venue}</td><td>SA Champs</td><td>III</td></tr>
+        </table>
+        HTML);
+
+    expect($matches)->toHaveCount(1)
+        ->and($matches[0]->province)->toBe($province);
+})->with([
+    'Kraaifontein' => ['Kraaifontein', Province::WesternCape],
+    'Polokwane' => ['Polokwane', Province::Limpopo],
+    'PE Club' => ['PE Club', Province::EasternCape],
+    'White River' => ['White River', Province::Mpumalanga],
+]);
+
 it('imports CGPSA Events Calendar JSON without inventing fees', function () {
     // Pin "now" so hardcoded 2026-10-03 fixture dates remain in the
     // future — otherwise the importer stamps them Completed when the

@@ -12,6 +12,7 @@ use App\Models\Organisation;
 use App\Models\Venue;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     $this->withoutVite();
@@ -86,6 +87,68 @@ it('refuses to link to a verified namesake in a different province and does not 
         ->and($event->needs_review)->toBeTrue()
         ->and($event->import_notes)->toContain('left unlinked')
         ->and($westernCape->aliases()->count())->toBe(0);
+});
+
+it('corrects an unconfirmed range when its town is in the feed province', function () {
+    Http::fake([
+        'nominatim.openstreetmap.org/*' => Http::response([
+            ['lat' => '-33.847', 'lon' => '18.721', 'display_name' => 'Kraaifontein'],
+        ], 200),
+    ]);
+
+    $venue = Venue::factory()->create([
+        'name' => 'Kraaifontein',
+        'province' => Province::Mpumalanga,
+        'town' => 'Kraaifontein',
+        'lat' => -25.5,
+        'lng' => 30.5,
+        'verification_state' => VerificationState::Unconfirmed,
+        'status' => ListingStatus::Published,
+    ]);
+
+    $host = Organisation::factory()->create();
+
+    app(CalendarImporter::class)->persist($host, [publicDataIntegrityMatch(
+        'audit-kraai-correct',
+        'Kraaifontein',
+        Province::WesternCape,
+    )]);
+
+    $event = Event::query()->where('slug', 'audit-kraai-correct')->firstOrFail();
+    $venue->refresh();
+
+    expect($venue->province)->toBe(Province::WesternCape)
+        ->and($event->venue_id)->toBe($venue->id)
+        ->and($event->needs_review)->toBeFalse()
+        ->and((float) $venue->lat)->toBe(-33.847)
+        ->and((float) $venue->lng)->toBe(18.721);
+});
+
+it('does not move a verified range when the feed names another province', function () {
+    $venue = Venue::factory()->create([
+        'name' => 'Kraaifontein',
+        'province' => Province::Mpumalanga,
+        'town' => 'Kraaifontein',
+        'lat' => -25.5,
+        'lng' => 30.5,
+        'verification_state' => VerificationState::Verified,
+        'status' => ListingStatus::Published,
+    ]);
+
+    $host = Organisation::factory()->create();
+
+    app(CalendarImporter::class)->persist($host, [publicDataIntegrityMatch(
+        'audit-kraai-verified',
+        'Kraaifontein',
+        Province::WesternCape,
+    )]);
+
+    $event = Event::query()->where('slug', 'audit-kraai-verified')->firstOrFail();
+
+    expect($venue->fresh()->province)->toBe(Province::Mpumalanga)
+        ->and($event->venue_id)->toBeNull()
+        ->and($event->needs_review)->toBeTrue()
+        ->and($event->import_notes)->toContain('left unlinked');
 });
 
 it('links a feed to the one existing namesake when the provinces agree', function () {

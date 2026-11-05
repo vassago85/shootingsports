@@ -60,6 +60,15 @@ final class TownProvince
         'mthatha' => Province::EasternCape,
     ];
 
+    /**
+     * Feed labels that are not town names but only ever mean one province.
+     *
+     * @var array<string, Province>
+     */
+    private const VENUE_LABELS = [
+        'pe club' => Province::EasternCape,
+    ];
+
     public static function forTown(?string $town): ?Province
     {
         $key = mb_strtolower(trim((string) $town));
@@ -69,6 +78,27 @@ final class TownProvince
         }
 
         return self::TOWNS[$key] ?? null;
+    }
+
+    /**
+     * Province for a venue label: a known town, or a feed label that
+     * only belongs in one province. Ambiguous names stay unresolved.
+     */
+    public static function forVenue(?string $label): ?Province
+    {
+        $fromTown = self::forTown($label);
+
+        if ($fromTown instanceof Province) {
+            return $fromTown;
+        }
+
+        $key = mb_strtolower(trim((string) $label));
+
+        if ($key === '') {
+            return null;
+        }
+
+        return self::VENUE_LABELS[$key] ?? null;
     }
 
     public static function fromLabel(?string $label): ?Province

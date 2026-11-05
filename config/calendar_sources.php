@@ -21,7 +21,7 @@ return [
         'url' => 'https://mpsa.net.za/calendar26.html',
         'mode' => 'import',
         'importer' => MpsaCalendarImporter::class,
-        'notes' => 'Static HTML table for the season. Dates are a bit messy (31/01) but parseable.',
+        'notes' => 'Static HTML table for the season. Dates are a bit messy (31/01) but parseable. Province stays Mpumalanga unless the venue is a known town in another province.',
     ],
     [
         'key' => 'cgpsa',

@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\Province;
+use App\Support\TownProvince;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
@@ -73,6 +74,7 @@ class MpsaCalendarImporter
             }
 
             $title = $cells[2];
+            $venue = $cells[1] !== '' ? $cells[1] : null;
             $slug = 'mpsa-'.Str::slug($title.' '.$startsAt->toDateString());
 
             $matches[] = new ImportedMatch(
@@ -83,8 +85,8 @@ class MpsaCalendarImporter
                 endsAt: $endsAt,
                 level: str_contains($cells[3] ?? '', 'III') ? EventLevel::National : EventLevel::Series,
                 status: $startsAt->isPast() ? EventStatus::Completed : EventStatus::Confirmed,
-                province: Province::Mpumalanga,
-                venueName: $cells[1] !== '' ? $cells[1] : null,
+                province: $this->provinceForVenue($venue),
+                venueName: $venue,
                 disciplineSlug: 'ipsc-practical',
             );
         }
@@ -125,5 +127,15 @@ class MpsaCalendarImporter
         }
 
         return [null, null];
+    }
+
+    /**
+     * The feed is the Mpumalanga calendar, but it also lists nationals
+     * hosted in other provinces. A known town wins. Anything else stays
+     * Mpumalanga.
+     */
+    private function provinceForVenue(?string $venue): Province
+    {
+        return TownProvince::forVenue($venue) ?? Province::Mpumalanga;
     }
 }

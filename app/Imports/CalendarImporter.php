@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Enums\GeocodeSource;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
@@ -14,6 +15,7 @@ use App\Models\Venue;
 use App\Services\Geocoding\VenueGeocoder;
 use App\Services\Venues\VenueResolver;
 use App\Support\PublicEventFacts;
+use App\Support\TownProvince;
 use App\Support\VenueNames;
 use Illuminate\Support\Str;
 
@@ -182,6 +184,14 @@ class CalendarImporter
                 && $existing->province !== $match->province;
 
             if ($provinceDisagrees) {
+                if ($this->correctProvinceFromTown($existing, $match)) {
+                    return [
+                        'venue' => $this->ensureGeocoded($existing),
+                        'note' => null,
+                        'needsReview' => false,
+                    ];
+                }
+
                 // A verified range already carries this name in another
                 // province. Do not auto-link, do not write an alias that
                 // would lock the mistake in. Leave venue_id null so staff
@@ -221,6 +231,36 @@ class CalendarImporter
         );
 
         return ['venue' => $this->ensureGeocoded($created), 'note' => null, 'needsReview' => false];
+    }
+
+    /**
+     * An unconfirmed range whose town is unambiguous takes that town's
+     * province when the feed agrees. A verified pin is left alone.
+     */
+    private function correctProvinceFromTown(Venue $existing, ImportedMatch $match): bool
+    {
+        if ($match->province === null || $existing->verification_state !== VerificationState::Unconfirmed) {
+            return false;
+        }
+
+        $known = TownProvince::forVenue($existing->town) ?? TownProvince::forVenue($existing->name);
+
+        if ($known !== $match->province) {
+            return false;
+        }
+
+        $existing->province = $known;
+
+        if ($existing->geocode_source !== GeocodeSource::Staff) {
+            $existing->lat = null;
+            $existing->lng = null;
+            $existing->geocode_source = null;
+            $existing->geocoded_at = null;
+        }
+
+        $existing->save();
+
+        return true;
     }
 
     private function rememberAlias(Venue $venue, string $incomingName): void
