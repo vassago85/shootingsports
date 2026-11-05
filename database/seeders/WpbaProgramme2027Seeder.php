@@ -20,12 +20,18 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Western Province Bisley Association 2027 programme.
+ * Western Province Bisley Association 2027 programme — Western Cape dates only.
  *
  * Typed from the one-page programme Louise Taylor sent in November 2026
  * ("2027 PROGRAM - Updated November 2026"). Chairman on that note:
  * Rick Jaffe. The association's own site is http://www.wpbisley.co.za/
  * and it names Good Hope Shooting Range, Atlantis.
+ *
+ * The programme also lists three Bloemfontein meetings — the Free
+ * State Championships, the SA Championships and the SA Long Range
+ * Championships — hosted by the South African Bisley Union. Those are
+ * SABU's to publish, not WPBA's, so they are not seeded here. When
+ * SABU sends its own 2027 programme they can land in a SABU seeder.
  *
  * Range-closed days and the 18 September target-maintenance day are
  * not matches, so they are not events. The programme prints 27-Feb-26
@@ -35,12 +41,17 @@ use Illuminate\Support\Facades\Storage;
  *
  * Idempotent. Organisations and venues are firstOrCreate so a later
  * desk edit is kept. Events are updateOrCreate on the slug so a
- * corrected programme can be re-seeded.
+ * corrected programme can be re-seeded. The three Bloemfontein slugs
+ * from the earlier version of this seeder are pruned on run so a
+ * database that was seeded with the old list drops back to the WC-only
+ * programme on the next pass.
  */
 class WpbaProgramme2027Seeder extends Seeder
 {
     public function run(): void
     {
+        $this->pruneLegacyNationalRows();
+
         $fullbore = Discipline::query()->where('slug', 'bisley-fullbore')->firstOrFail();
         $targetRifle = Discipline::query()->where('slug', 'target-rifle')->firstOrFail();
 
@@ -89,18 +100,6 @@ class WpbaProgramme2027Seeder extends Seeder
      */
     private function hosts(Discipline $fullbore, Discipline $targetRifle): array
     {
-        $sabu = $this->organisation(
-            slug: 'sabu',
-            name: 'South African Bisley Union',
-            shortName: 'SABU',
-            type: OrganisationType::Federation,
-            province: null,
-            town: null,
-            website: 'https://sabisley.com/',
-            description: 'National governing body for Bisley target rifle in South Africa. The 2027 SA Open page names Genl De Wet Shooting Range, Bloemfontein.',
-            accredited: true,
-        );
-
         $wpba = $this->organisation(
             slug: 'wpba',
             name: 'Western Province Bisley Association',
@@ -111,7 +110,6 @@ class WpbaProgramme2027Seeder extends Seeder
             website: 'http://www.wpbisley.co.za/',
             description: 'Provincial Bisley association for the Western Cape, affiliated to the South African Bisley Union. The 2027 programme is shot at Good Hope Shooting Range, Atlantis, and is subject to change. Chairman: Rick Jaffe.',
             accredited: true,
-            parent: $sabu,
             logo: true,
         );
 
@@ -167,7 +165,6 @@ class WpbaProgramme2027Seeder extends Seeder
             parent: $wpba,
         );
 
-        $this->syncDisciplinesIfEmpty($sabu, [$fullbore->id], $fullbore->id);
         $this->syncDisciplinesIfEmpty($wpba, [$fullbore->id, $targetRifle->id], $fullbore->id);
         $this->syncDisciplinesIfEmpty($prc, [$targetRifle->id, $fullbore->id], $targetRifle->id);
         $this->syncDisciplinesIfEmpty($club303, [$fullbore->id], $fullbore->id);
@@ -175,7 +172,6 @@ class WpbaProgramme2027Seeder extends Seeder
         $this->syncDisciplinesIfEmpty($winelands, [$fullbore->id], $fullbore->id);
 
         return [
-            'sabu' => $sabu,
             'wpba' => $wpba,
             'prc' => $prc,
             'club303' => $club303,
@@ -206,25 +202,8 @@ class WpbaProgramme2027Seeder extends Seeder
             ],
         );
 
-        $genlDeWet = Venue::query()->firstOrCreate(
-            ['slug' => 'genl-de-wet-shooting-range'],
-            [
-                'name' => 'Genl De Wet Shooting Range',
-                'province' => Province::FreeState,
-                'town' => 'Bloemfontein',
-                'access' => VenueAccess::GuestByArrangement,
-                'description' => 'Bloemfontein range named by the South African Bisley Union for the 2027 SA Open. The WPBA 2027 programme lists the SA Championships, the SA Long Range Championships and the Free State Championships at Bloem.',
-                'notes' => 'SABU 2027 SA Open page names Genl De Wet Shooting Range, Bloemfontein. The WPBA programme says only Bloem.',
-                'website_url' => 'https://sabisley.com/sa-open-2027/',
-                'status' => ListingStatus::Published,
-                'verification_state' => VerificationState::Unconfirmed,
-                'source' => ListingSource::Staff,
-            ],
-        );
-
         return [
             'good-hope' => $goodHope,
-            'genl-de-wet' => $genlDeWet,
         ];
     }
 
@@ -417,18 +396,6 @@ class WpbaProgramme2027Seeder extends Seeder
                 'rounds' => '15, 15',
             ],
             [
-                'slug' => 'wpba-2027-free-state-championships',
-                'title' => 'Free State Championships',
-                'host' => 'sabu',
-                'venue' => 'genl-de-wet',
-                'starts_at' => '2027-04-09',
-                'level' => EventLevel::Provincial,
-                'distances' => 'As per the program',
-                'extra' => 'The programme lists the place as Bloem and does not name the host association. This row uses the South African Bisley Union and Genl De Wet Shooting Range because SABU names that Bloemfontein range for the 2027 SA Open.',
-                'notes' => 'Host association is not on the WPBA programme. Venue is inferred from the SABU 2027 SA Open page, which names Genl De Wet and still says its own programme is coming soon.',
-                'review' => true,
-            ],
-            [
                 'slug' => 'wpba-2027-prc-22-open-championships',
                 'title' => 'PRC .22 Open Championships',
                 'host' => 'prc',
@@ -437,20 +404,6 @@ class WpbaProgramme2027Seeder extends Seeder
                 'discipline' => 'target-rifle',
                 'distances' => '100 m, 200 m, 300 m',
                 'rounds' => '10, 10, 15',
-            ],
-            [
-                'slug' => 'wpba-2027-sa-championships',
-                'title' => 'SA Championships',
-                'host' => 'sabu',
-                'venue' => 'genl-de-wet',
-                'starts_at' => '2027-04-10',
-                'ends_at' => '2027-04-17',
-                'level' => EventLevel::National,
-                'distances' => 'As per the program',
-                'entry_url' => 'https://sabisley.com/sa-open-2027/',
-                'extra' => 'Printed as 10–17 April at Bloem. SABU calls the 2027 meeting the SA Open, names Genl De Wet Shooting Range, Bloemfontein, and still says the programme and entry forms are coming soon.',
-                'notes' => 'Dates come from the WPBA programme. SABU has not published the 2027 programme yet.',
-                'review' => true,
             ],
             [
                 'slug' => 'wpba-2027-303-short-range-2',
@@ -566,19 +519,6 @@ class WpbaProgramme2027Seeder extends Seeder
                 'level' => EventLevel::Series,
                 'distances' => '700 m, 800 m',
                 'rounds' => '15, 15',
-            ],
-            [
-                'slug' => 'wpba-2027-sa-long-range',
-                'title' => 'SA Long Range Championships',
-                'host' => 'sabu',
-                'venue' => 'genl-de-wet',
-                'starts_at' => '2027-08-12',
-                'ends_at' => '2027-08-14',
-                'level' => EventLevel::National,
-                'distances' => 'As per the program',
-                'extra' => 'Printed as 12–14 August at Bloem. The range is Genl De Wet because that is the Bloemfontein range SABU names for 2027.',
-                'notes' => 'The WPBA programme says Bloem and does not name the range. SABU had not published a 2027 long-range page when this was entered.',
-                'review' => true,
             ],
             [
                 'slug' => 'wpba-2027-prc-22-2027-08-14',
@@ -725,6 +665,33 @@ class WpbaProgramme2027Seeder extends Seeder
                 'rounds' => '10, 11',
             ],
         ];
+    }
+
+    /**
+     * Drop the three Bloemfontein rows that an earlier version of this
+     * seeder planted (SA Championships, SA Long Range Championships,
+     * Free State Championships) along with the Genl De Wet venue, so
+     * a database that ran the old seeder once lands back on the
+     * Western-Cape-only programme. The SABU host row stays — if any
+     * other seeder has started leaning on it, pruning it here would
+     * break them. Deleting the three events first keeps the venue
+     * delete safe from foreign-key failure.
+     */
+    private function pruneLegacyNationalRows(): void
+    {
+        Event::query()
+            ->whereIn('slug', [
+                'wpba-2027-free-state-championships',
+                'wpba-2027-sa-championships',
+                'wpba-2027-sa-long-range',
+            ])
+            ->forceDelete();
+
+        $genlDeWet = Venue::query()->where('slug', 'genl-de-wet-shooting-range')->first();
+
+        if ($genlDeWet !== null && ! Event::query()->where('venue_id', $genlDeWet->id)->exists()) {
+            $genlDeWet->forceDelete();
+        }
     }
 
     private function storeLogo(): ?string
