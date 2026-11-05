@@ -6,6 +6,7 @@ use App\Enums\DisciplineFamily;
 use App\Models\Discipline;
 use App\Support\DivisionCatalog;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 
 class DisciplineSeeder extends Seeder
 {
@@ -149,6 +150,8 @@ class DisciplineSeeder extends Seeder
         }
 
         DivisionCatalog::apply();
+
+        $this->storeHeroImages();
     }
 
     /**
@@ -160,5 +163,46 @@ class DisciplineSeeder extends Seeder
             ['slug' => $attributes['slug']],
             $attributes,
         );
+    }
+
+    /**
+     * Copy curated hero photos onto the media disk and point the
+     * discipline at them. A discipline already carrying an image_path
+     * from a staff upload in Filament is left alone — the seeder
+     * never clobbers a human-curated image.
+     *
+     * Sources live in database/seeders/data/ keyed by the hero
+     * filename; the published path on the media disk is keyed by the
+     * discipline slug so a re-seed with a new image replaces the file
+     * in place without orphaning the old one.
+     */
+    private function storeHeroImages(): void
+    {
+        $heroes = [
+            'bisley-fullbore' => 'bisley-fullbore-hero.jpg',
+        ];
+
+        foreach ($heroes as $slug => $filename) {
+            $source = database_path('seeders/data/'.$filename);
+
+            if (! is_file($source)) {
+                continue;
+            }
+
+            $discipline = Discipline::query()->where('slug', $slug)->first();
+
+            if ($discipline === null) {
+                continue;
+            }
+
+            $extension = pathinfo($filename, PATHINFO_EXTENSION) ?: 'jpg';
+            $path = 'discipline-images/'.$slug.'.'.$extension;
+
+            Storage::disk('media')->put($path, file_get_contents($source));
+
+            if (! filled($discipline->image_path)) {
+                $discipline->forceFill(['image_path' => $path])->save();
+            }
+        }
     }
 }
