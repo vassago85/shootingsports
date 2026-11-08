@@ -2,6 +2,7 @@
 
 use App\Enums\EventLevel;
 use App\Enums\EventStatus;
+use App\Enums\GeocodeSource;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
@@ -14,7 +15,9 @@ use App\Imports\VektorCalendarImporter;
 use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
+use App\Models\Venue;
 use App\Support\CalendarImportSettings;
+use App\Support\VenueProvinceCorrection;
 use Illuminate\Support\Facades\Http;
 
 it('lists scrape and sell sources', function () {
@@ -232,6 +235,7 @@ it('places an MPSA match in the venue province when the town is known', function
         ->and($matches[0]->province)->toBe($province);
 })->with([
     'Kraaifontein' => ['Kraaifontein', Province::WesternCape],
+    'KSSC address' => ['KSSC, Amadeus Drive, Kraaifontein', Province::WesternCape],
     'Polokwane' => ['Polokwane', Province::Limpopo],
     'PE Club' => ['PE Club', Province::EasternCape],
     'White River' => ['White River', Province::Mpumalanga],
@@ -404,6 +408,35 @@ it('imports Vektor Events Calendar JSON onto the Centurion club range', function
         ->type->toBe(OrganisationType::Club)
         ->name->toBe('Vektor Shooting Club')
         ->town->toBe('Centurion');
+});
+
+it('moves a Kraaifontein range out of Mpumalanga when the town or address says so', function () {
+    $byTown = Venue::factory()->create([
+        'name' => 'Kraaifontein',
+        'town' => 'Kraaifontein',
+        'province' => Province::Mpumalanga,
+        'lat' => -25.5653,
+        'lng' => 30.5279,
+        'geocode_source' => GeocodeSource::Nominatim,
+    ]);
+    $byAddress = Venue::factory()->create([
+        'name' => 'KSSC',
+        'town' => '',
+        'address' => 'Amadeus Drive, Kraaifontein',
+        'province' => Province::Mpumalanga,
+    ]);
+    $leftAlone = Venue::factory()->create([
+        'name' => 'Teks',
+        'town' => 'Teks',
+        'province' => Province::Mpumalanga,
+    ]);
+
+    expect(VenueProvinceCorrection::apply())->toBe(2);
+
+    expect($byTown->fresh()->province)->toBe(Province::WesternCape)
+        ->and($byTown->fresh()->lat)->toBeNull()
+        ->and($byAddress->fresh()->province)->toBe(Province::WesternCape)
+        ->and($leftAlone->fresh()->province)->toBe(Province::Mpumalanga);
 });
 
 it('tells staff to sell the embed when a source has no feed', function () {

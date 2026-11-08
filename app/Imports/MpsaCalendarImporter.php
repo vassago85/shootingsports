@@ -136,6 +136,6 @@ class MpsaCalendarImporter
      */
     private function provinceForVenue(?string $venue): Province
     {
-        return TownProvince::forVenue($venue) ?? Province::Mpumalanga;
+        return TownProvince::fromText($venue) ?? Province::Mpumalanga;
     }
 }

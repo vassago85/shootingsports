@@ -101,6 +101,36 @@ final class TownProvince
         return self::VENUE_LABELS[$key] ?? null;
     }
 
+    /**
+     * Exact town or feed label first, then a known town mentioned
+     * inside a longer venue string such as "KSSC, Amadeus Drive, Kraaifontein".
+     */
+    public static function fromText(?string $text): ?Province
+    {
+        $exact = self::forVenue($text);
+
+        if ($exact instanceof Province) {
+            return $exact;
+        }
+
+        $haystack = mb_strtolower(trim((string) $text));
+
+        if ($haystack === '') {
+            return null;
+        }
+
+        $keys = array_keys(self::TOWNS);
+        usort($keys, fn (string $left, string $right): int => mb_strlen($right) <=> mb_strlen($left));
+
+        foreach ($keys as $key) {
+            if (preg_match('/\b'.preg_quote($key, '/').'\b/u', $haystack) === 1) {
+                return self::TOWNS[$key];
+            }
+        }
+
+        return null;
+    }
+
     public static function fromLabel(?string $label): ?Province
     {
         $needle = mb_strtolower(trim((string) $label));
