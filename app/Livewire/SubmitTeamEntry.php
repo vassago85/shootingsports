@@ -7,6 +7,7 @@ use App\Mail\TeamEntryOrganiserMail;
 use App\Models\Event;
 use App\Models\TeamEntry;
 use App\Models\User;
+use App\Support\Turnstile;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
@@ -38,6 +39,8 @@ class SubmitTeamEntry extends Component
 
     public string $companyWebsite = '';
 
+    public string $turnstileResponse = '';
+
     public bool $submitted = false;
 
     public function mount(Event $event): void
@@ -65,6 +68,12 @@ class SubmitTeamEntry extends Component
 
         if ($this->companyWebsite !== '') {
             $this->addError('teamName', 'Unable to submit this entry.');
+
+            return;
+        }
+
+        if (! Turnstile::verify($this->turnstileResponse, request()->ip())) {
+            $this->addError('turnstileResponse', 'Please complete the security check and try again.');
 
             return;
         }

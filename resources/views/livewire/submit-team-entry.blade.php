@@ -81,6 +81,22 @@
             </label>
             @error('consent') <p class="err">{{ $message }}</p> @enderror
 
+            @if ($turnstileSiteKey = \App\Support\Turnstile::siteKey())
+                <div
+                    class="cf-turnstile"
+                    data-sitekey="{{ $turnstileSiteKey }}"
+                    data-callback="teamEntryTurnstile"
+                    wire:ignore
+                ></div>
+                <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+                <script>
+                    function teamEntryTurnstile(token) {
+                        @this.set('turnstileResponse', token)
+                    }
+                </script>
+            @endif
+            @error('turnstileResponse') <p class="err">{{ $message }}</p> @enderror
+
             <button type="submit" class="btn" wire:loading.attr="disabled" wire:target="submit,proofOfPayment">Send team entry</button>
         </form>
     @endif

@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -152,6 +153,32 @@ it('drops submissions that fill the honeypot', function () {
         ->assertHasErrors('teamName');
 
     expect(TeamEntry::query()->count())->toBe(0);
+});
+
+it('rejects a team entry when Turnstile fails', function () {
+    config()->set('services.turnstile.site_key', 'site-test');
+    config()->set('services.turnstile.secret_key', 'secret-test');
+
+    Http::fake([
+        'https://challenges.cloudflare.com/turnstile/v0/siteverify' => Http::response(['success' => false]),
+    ]);
+
+    $event = Event::factory()->teamEntriesOpen()->create();
+
+    Livewire::test(SubmitTeamEntry::class, ['event' => $event])
+        ->set('teamName', 'Bosveld Boere')
+        ->set('captainName', 'Jan Captain')
+        ->set('captainEmail', 'jan@example.com')
+        ->set('captainPhone', '082 111 2222')
+        ->set('members', teamEntryShooters())
+        ->set('consent', true)
+        ->set('turnstileResponse', 'bad-token')
+        ->call('submit')
+        ->assertHasErrors('turnstileResponse')
+        ->assertSet('submitted', false);
+
+    expect(TeamEntry::query()->count())->toBe(0);
+    Mail::assertNothingQueued();
 });
 
 it('shows the team entry form on an open match page', function () {
