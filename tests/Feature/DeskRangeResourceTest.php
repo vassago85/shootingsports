@@ -2,7 +2,11 @@
 
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
+use App\Enums\OrganisationUserRole;
+use App\Filament\Desk\Resources\Organisations\OrganisationResource;
 use App\Filament\Desk\Resources\Venues\VenueResource;
+use App\Models\Organisation;
+use App\Models\OrganisationUser;
 use App\Models\User;
 use App\Models\Venue;
 use App\Models\VenueMembership;
@@ -72,17 +76,39 @@ it('scopes the Venues list to the owner\'s approved memberships', function () {
         ->not->toContain($otherRange->id);
 });
 
-it('lets staff see every range in the desk Venues list', function () {
-    $rangeA = Venue::factory()->create();
-    $rangeB = Venue::factory()->create();
+it('counts only the clubs and ranges a staff user actually seats on the desk', function () {
+    $myRange = Venue::factory()->create();
+    $otherRange = Venue::factory()->create();
+    $myClub = Organisation::factory()->create();
+    $otherClub = Organisation::factory()->create();
     $staff = User::factory()->staff()->create();
+
+    VenueMembership::query()->create([
+        'venue_id' => $myRange->id,
+        'user_id' => $staff->id,
+        'role' => MembershipRole::Owner->value,
+        'status' => MembershipStatus::Approved->value,
+        'approved_at' => now(),
+    ]);
+    OrganisationUser::query()->create([
+        'user_id' => $staff->id,
+        'organisation_id' => $myClub->id,
+        'role' => OrganisationUserRole::Admin->value,
+        'status' => MembershipStatus::Approved->value,
+        'granted_at' => now(),
+    ]);
 
     Filament::setCurrentPanel('desk');
     Filament::auth()->login($staff);
 
-    $ids = VenueResource::getEloquentQuery()->pluck('venues.id')->all();
-
-    expect($ids)->toContain($rangeA->id)->toContain($rangeB->id);
+    expect(VenueResource::getEloquentQuery()->pluck('venues.id')->all())
+        ->toContain($myRange->id)
+        ->not->toContain($otherRange->id)
+        ->and(VenueResource::getNavigationBadge())->toBe('1')
+        ->and(OrganisationResource::getEloquentQuery()->pluck('organisations.id')->all())
+        ->toContain($myClub->id)
+        ->not->toContain($otherClub->id)
+        ->and(OrganisationResource::getNavigationBadge())->toBe('1');
 });
 
 it('points the Range capability card at the new desk/venues URL', function () {

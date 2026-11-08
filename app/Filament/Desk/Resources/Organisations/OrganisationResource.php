@@ -76,14 +76,10 @@ class OrganisationResource extends Resource
         $query = parent::getEloquentQuery();
         $user = Auth::user();
 
-        // Staff / platform owner see every club. Everyone else is
-        // scoped to the clubs they're linked to. claimed_by stays so
-        // an owner whose pivot row is missing can still open the
-        // listing they own.
-        if ($user?->is_staff) {
-            return $query;
-        }
-
+        // Own seats only. A staff account with no club seat sees
+        // nothing here; the full list lives on /admin. claimed_by
+        // stays so an owner whose pivot row is missing can still
+        // open the listing they own.
         if ($user === null) {
             return $query->whereRaw('1 = 0');
         }

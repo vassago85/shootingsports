@@ -87,15 +87,10 @@ class VenueResource extends Resource
         $query = parent::getEloquentQuery();
         $user = Auth::user();
 
-        // Staff see every range for support and moderation; everyone
-        // else is scoped to approved venue_user memberships only.
-        // The legacy `claimed_by` fallback is included so range
-        // owners whose rows pre-date the pivot still see their
-        // listing until the shim is dropped.
-        if ($user?->is_staff) {
-            return $query;
-        }
-
+        // Own seats only. A staff account with no range seat sees
+        // nothing here; the full list lives on /admin. The legacy
+        // `claimed_by` fallback stays so range owners whose rows
+        // pre-date the pivot still see their listing.
         if ($user === null) {
             return $query->whereRaw('1 = 0');
         }
