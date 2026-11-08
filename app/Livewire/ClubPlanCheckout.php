@@ -4,6 +4,8 @@ namespace App\Livewire;
 
 use App\Models\Organisation;
 use App\Models\User;
+use App\Services\Paystack\ClubSubscriptionApplier;
+use App\Services\Paystack\PaystackClient;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -18,6 +20,8 @@ class ClubPlanCheckout extends Component
 {
     public Organisation $organisation;
 
+    public string $selected = 'annual';
+
     public function mount(Organisation $organisation): void
     {
         $user = auth()->user();
@@ -27,6 +31,64 @@ class ClubPlanCheckout extends Component
         abort_unless($this->canSubscribe($user, $organisation), 403);
 
         $this->organisation = $organisation;
+    }
+
+    public function pick(string $cycle): void
+    {
+        $this->selected = in_array($cycle, ['annual', 'monthly'], true) ? $cycle : 'annual';
+    }
+
+    public function checkout(PaystackClient $paystack): void
+    {
+        $user = auth()->user();
+
+        if (! $user instanceof User || ! config('club-plans.enabled') || ! $this->pricesReady()) {
+            return;
+        }
+
+        if ($this->organisation->isPaid() || ! $this->canSubscribe($user, $this->organisation)) {
+            return;
+        }
+
+        $init = $paystack->initializeTransaction(
+            email: (string) $user->email,
+            amountCents: (int) config('club-plans.pricing.'.$this->selected.'.amount_cents'),
+            planCode: (string) config('services.paystack.club_plan_codes.'.$this->selected),
+            callbackUrl: route('paystack.callback'),
+            metadata: [
+                'purpose' => 'club_plan',
+                'organisation_id' => $this->organisation->id,
+                'cycle' => $this->selected,
+                'user_id' => $user->id,
+            ],
+        );
+
+        $this->redirect($init['authorization_url'], navigate: false);
+    }
+
+    public function cancel(PaystackClient $paystack): void
+    {
+        $user = auth()->user();
+        $organisation = $this->organisation->fresh();
+
+        if (! $user instanceof User || ! $organisation instanceof Organisation) {
+            return;
+        }
+
+        if (! $this->canSubscribe($user, $organisation) || blank($organisation->paystack_subscription_code)) {
+            return;
+        }
+
+        $subscription = $paystack->fetchSubscription((string) $organisation->paystack_subscription_code);
+        $token = (string) ($subscription['email_token'] ?? '');
+
+        if ($token === '') {
+            return;
+        }
+
+        $paystack->disableSubscription((string) $organisation->paystack_subscription_code, $token);
+        app(ClubSubscriptionApplier::class)->applyCancellation($organisation);
+        $this->organisation = $organisation->fresh();
     }
 
     public function render(): View

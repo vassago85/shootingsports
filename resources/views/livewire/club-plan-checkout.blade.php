@@ -15,6 +15,10 @@
                     <p>Pricing is not set yet.</p>
                 @else
                     <p>{{ $pricing['annual']['display'] }} or {{ $pricing['monthly']['display'] }}.</p>
+                    <button type="button" wire:click="checkout">Continue to Paystack</button>
+                @endif
+                @if ($organisation->isPaid() && filled($organisation->paystack_subscription_code))
+                    <button type="button" wire:click="cancel">Cancel the club subscription</button>
                 @endif
             </div>
         </section>

@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\MembershipInvoicePaymentMethod;
 use App\Models\MembershipInvoice;
+use App\Models\Organisation;
 use App\Models\PaystackEvent;
 use App\Models\User;
 use App\Services\Entries\RecordEventEntryPayment;
 use App\Services\Memberships\RecordMembershipPayment;
+use App\Services\Paystack\ClubSubscriptionApplier;
 use App\Services\Paystack\PaystackClient;
 use App\Services\Paystack\SubscriptionApplier;
 use Illuminate\Http\JsonResponse;
@@ -79,6 +81,15 @@ class PaystackController extends Controller
                 : '/';
 
             return redirect($target)->with('status', 'Membership payment received. Your renewal is active.');
+        }
+
+        if ($this->isClubPlanPayment($verified)) {
+            $organisation = app(ClubSubscriptionApplier::class)->applyFromCharge($verified);
+            $target = $organisation instanceof Organisation
+                ? route('club-plan.show', $organisation)
+                : '/';
+
+            return redirect($target)->with('status', 'The club subscription is active.');
         }
 
         $user = $this->resolveUserFromVerified($verified);
@@ -243,6 +254,14 @@ class PaystackController extends Controller
     /**
      * @param  array<string, mixed>  $data
      */
+    private function isClubPlanPayment(array $data): bool
+    {
+        return $this->metadataPurposeIs($data, 'club_plan');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
     private function metadataPurposeIs(array $data, string $expected): bool
     {
         $purpose = data_get($data, 'metadata.purpose');
@@ -316,6 +335,12 @@ class PaystackController extends Controller
             return;
         }
 
+        if ($this->isClubPlanPayment($data)) {
+            app(ClubSubscriptionApplier::class)->applyFromCharge($data);
+
+            return;
+        }
+
         $email = (string) data_get($data, 'customer.email', '');
         $subscriptionCode = (string) data_get($data, 'plan_object.subscription_code', '');
 
@@ -349,6 +374,12 @@ class PaystackController extends Controller
      */
     private function onSubscriptionCreate(array $data): void
     {
+        if ($this->isClubPlanPayment($data)) {
+            app(ClubSubscriptionApplier::class)->rememberCodes($data);
+
+            return;
+        }
+
         $email = (string) data_get($data, 'customer.email', '');
         $subscriptionCode = (string) data_get($data, 'subscription_code', '');
         $customerCode = (string) data_get($data, 'customer.customer_code', '');
@@ -373,8 +404,18 @@ class PaystackController extends Controller
      */
     private function onSubscriptionCancelled(array $data): void
     {
-        $email = (string) data_get($data, 'customer.email', '');
         $subscriptionCode = (string) data_get($data, 'subscription_code', '');
+        $organisation = $subscriptionCode !== ''
+            ? Organisation::query()->where('paystack_subscription_code', $subscriptionCode)->first()
+            : null;
+
+        if ($organisation instanceof Organisation) {
+            app(ClubSubscriptionApplier::class)->applyCancellation($organisation);
+
+            return;
+        }
+
+        $email = (string) data_get($data, 'customer.email', '');
 
         $user = $this->resolveUser($email, $subscriptionCode);
 
