@@ -10,6 +10,7 @@ use App\Filament\Desk\Resources\ClubMembers\RelationManagers\StatusChangesRelati
 use App\Filament\Desk\Resources\ClubMembers\Schemas\ClubMemberForm;
 use App\Filament\Desk\Resources\ClubMembers\Tables\ClubMembersTable;
 use App\Models\ClubMember;
+use App\Models\Organisation;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -58,10 +59,13 @@ class ClubMemberResource extends Resource
         $user = Auth::user();
 
         if ($user?->is_staff) {
-            return $query;
+            return $query->whereIn('organisation_id', Organisation::query()->paid()->pluck('id'));
         }
 
-        return $query->whereIn('organisation_id', self::managedClubIds());
+        return $query->whereIn(
+            'organisation_id',
+            Organisation::query()->paid()->whereIn('id', self::managedClubIds())->pluck('id'),
+        );
     }
 
     public static function canViewAny(): bool

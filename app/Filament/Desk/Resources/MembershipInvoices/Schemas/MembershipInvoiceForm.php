@@ -35,10 +35,10 @@ class MembershipInvoiceForm
                                     $user = Auth::user();
 
                                     if ($user?->is_staff) {
-                                        return $query->clubs()->orderBy('name');
+                                        return $query->clubs()->paid()->orderBy('name');
                                     }
 
-                                    return $query->whereIn('id', ClubMemberResource::managedClubIds())
+                                    return $query->paid()->whereIn('id', ClubMemberResource::managedClubIds())
                                         ->orderBy('name');
                                 },
                             )

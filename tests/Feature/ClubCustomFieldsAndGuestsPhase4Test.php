@@ -10,7 +10,7 @@ use App\Support\MembershipCustomFields;
 use Illuminate\Support\Facades\Validator;
 
 it('normalises the custom fields schema and drops entries without a key', function () {
-    $organisation = Organisation::factory()->create([
+    $organisation = Organisation::factory()->clubPlan()->create([
         'membership_custom_fields' => [
             ['key' => 'sa_id', 'label' => 'SA ID', 'type' => 'text', 'required' => true],
             ['key' => 'diet', 'label' => 'Diet', 'type' => 'select', 'required' => false, 'options' => ['none', 'veg', 'halal']],
@@ -29,7 +29,7 @@ it('normalises the custom fields schema and drops entries without a key', functi
 });
 
 it('builds Laravel rules for each field type with required / nullable prefix', function () {
-    $organisation = Organisation::factory()->create([
+    $organisation = Organisation::factory()->clubPlan()->create([
         'membership_custom_fields' => [
             ['key' => 'sa_id', 'label' => 'SA ID', 'type' => 'text', 'required' => true],
             ['key' => 'diet', 'label' => 'Diet', 'type' => 'select', 'required' => false, 'options' => ['none', 'veg']],
@@ -49,7 +49,7 @@ it('builds Laravel rules for each field type with required / nullable prefix', f
 });
 
 it('rejects a submission that leaves a required custom field blank', function () {
-    $organisation = Organisation::factory()->create([
+    $organisation = Organisation::factory()->clubPlan()->create([
         'membership_custom_fields' => [
             ['key' => 'sa_id', 'label' => 'SA ID', 'type' => 'text', 'required' => true],
         ],
@@ -65,7 +65,7 @@ it('rejects a submission that leaves a required custom field blank', function ()
 });
 
 it('accepts a submission that provides all required custom fields', function () {
-    $organisation = Organisation::factory()->create([
+    $organisation = Organisation::factory()->clubPlan()->create([
         'membership_custom_fields' => [
             ['key' => 'sa_id', 'label' => 'SA ID', 'type' => 'text', 'required' => true],
             ['key' => 'birth_year', 'label' => 'Birth year', 'type' => 'number', 'required' => false],
@@ -81,7 +81,7 @@ it('accepts a submission that provides all required custom fields', function () 
 });
 
 it('persists custom_attributes on a ClubMember as a JSON column', function () {
-    $organisation = Organisation::factory()->create();
+    $organisation = Organisation::factory()->clubPlan()->create();
 
     $member = ClubMember::factory()->active()->create([
         'organisation_id' => $organisation->id,
@@ -102,7 +102,7 @@ it('creates a ClubGuestVisit via factory and reports it as not-yet-converted', f
 it('converts a guest visit to an Applied ClubMember and stamps the conversion', function () {
     $user = User::factory()->create();
 
-    $organisation = Organisation::factory()->create();
+    $organisation = Organisation::factory()->clubPlan()->create();
     $visit = ClubGuestVisit::factory()->create([
         'organisation_id' => $organisation->id,
         'name' => 'Walkup Guest',

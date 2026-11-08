@@ -20,7 +20,8 @@ class ClubGuestVisitPolicy
 
     public function view(User $user, ClubGuestVisit $visit): bool
     {
-        return $user->canManageClubMembers($visit->organisation);
+        return $user->canManageClubMembers($visit->organisation)
+            && $visit->organisation->allowsClubFeature('guest_days');
     }
 
     public function create(User $user): bool
@@ -30,11 +31,13 @@ class ClubGuestVisitPolicy
 
     public function update(User $user, ClubGuestVisit $visit): bool
     {
-        return $user->canManageClubMembers($visit->organisation);
+        return $user->canManageClubMembers($visit->organisation)
+            && $visit->organisation->allowsClubFeature('guest_days');
     }
 
     public function delete(User $user, ClubGuestVisit $visit): bool
     {
-        return $user->canManageClubMembers($visit->organisation);
+        return $user->canManageClubMembers($visit->organisation)
+            && $visit->organisation->allowsClubFeature('guest_days');
     }
 }

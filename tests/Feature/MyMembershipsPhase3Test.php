@@ -18,7 +18,7 @@ it('shows only the signed-in users memberships', function () {
     $user = User::factory()->create();
     $other = User::factory()->create();
 
-    $organisation = Organisation::factory()->create();
+    $organisation = Organisation::factory()->clubPlan()->create();
 
     $mine = ClubMember::factory()->active()->create([
         'organisation_id' => $organisation->id,
@@ -43,7 +43,7 @@ it('shows only the signed-in users memberships', function () {
 
 it('also matches memberships by email when user_id is not linked yet', function () {
     $user = User::factory()->create(['email' => 'carol@example.test']);
-    $organisation = Organisation::factory()->create();
+    $organisation = Organisation::factory()->clubPlan()->create();
 
     ClubMember::factory()->active()->create([
         'organisation_id' => $organisation->id,
@@ -95,7 +95,7 @@ it('lets the member save contact details on the detail page', function () {
 
 it('lets the member notify EFT paid which stamps the pending-confirmation column but does not mark Paid', function () {
     $user = User::factory()->create();
-    $organisation = Organisation::factory()->create();
+    $organisation = Organisation::factory()->clubPlan()->create();
     $member = ClubMember::factory()->active()->create([
         'organisation_id' => $organisation->id,
         'user_id' => $user->id,
@@ -147,7 +147,7 @@ it('ignores notifyPaidByEft for an invoice belonging to someone else', function 
 
 it('refuses the paystack init when the club does not accept online payments', function () {
     $user = User::factory()->create();
-    $organisation = Organisation::factory()->create(['membership_online_payments' => false]);
+    $organisation = Organisation::factory()->clubPlan()->create(['membership_online_payments' => false]);
     $member = ClubMember::factory()->active()->create([
         'organisation_id' => $organisation->id,
         'user_id' => $user->id,

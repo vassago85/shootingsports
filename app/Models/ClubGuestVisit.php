@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\GuardsClubSubscription;
 use Database\Factories\ClubGuestVisitFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,7 +25,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ClubGuestVisit extends Model
 {
     /** @use HasFactory<ClubGuestVisitFactory> */
-    use HasFactory;
+    use GuardsClubSubscription, HasFactory;
+
+    public function clubSubscriptionFeature(): string
+    {
+        return 'guest_days';
+    }
 
     protected function casts(): array
     {

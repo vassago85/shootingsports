@@ -99,7 +99,16 @@ class Event extends Model
 
     public function openForPlatformEntries(): bool
     {
-        return $this->accepts_platform_entries && $this->status === EventStatus::EntriesOpen;
+        return $this->accepts_platform_entries
+            && $this->status === EventStatus::EntriesOpen
+            && (bool) $this->hostOrganisation?->allowsClubFeature('on_site_entries');
+    }
+
+    public function usesOnSiteEntries(): bool
+    {
+        return $this->entry_collection === EntryCollection::Paystack
+            || (bool) $this->accepts_platform_entries
+            || (bool) $this->accepts_team_entries;
     }
 
     public function openForTeamEntries(): bool
@@ -108,7 +117,8 @@ class Event extends Model
             && $this->team_size !== null
             && $this->team_size > 0
             && $this->status === EventStatus::EntriesOpen
-            && ! $this->hasPassed();
+            && ! $this->hasPassed()
+            && (bool) $this->hostOrganisation?->allowsClubFeature('on_site_entries');
     }
 
     /**

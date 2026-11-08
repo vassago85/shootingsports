@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\MembershipInvoicePaymentMethod;
 use App\Enums\MembershipInvoiceStatus;
+use App\Models\Concerns\GuardsClubSubscription;
 use Database\Factories\MembershipInvoiceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,7 +30,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class MembershipInvoice extends Model
 {
     /** @use HasFactory<MembershipInvoiceFactory> */
-    use HasFactory;
+    use GuardsClubSubscription, HasFactory;
+
+    public function clubSubscriptionFeature(): string
+    {
+        return 'invoices';
+    }
 
     protected function casts(): array
     {

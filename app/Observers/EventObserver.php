@@ -7,10 +7,12 @@ use App\Enums\EventStatus;
 use App\Jobs\SendPushNotification;
 use App\Mail\MatchEntriesOpen;
 use App\Models\Event;
+use App\Models\Organisation;
 use App\Models\User;
 use App\Support\EmailPreferences;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Fans event-level changes out to every shooter who saved the event.
@@ -38,6 +40,31 @@ class EventObserver
      * does not flip this clock — only date, venue, and status move it.
      */
     private const MATERIAL_KEYS = ['starts_at', 'ends_at', 'venue_id', 'status'];
+
+    public function saving(Event $event): void
+    {
+        if (! $event->isDirty(['entry_collection', 'accepts_platform_entries', 'accepts_team_entries'])) {
+            return;
+        }
+
+        if (! $event->usesOnSiteEntries()) {
+            return;
+        }
+
+        $organisation = $event->hostOrganisation;
+
+        if (! $organisation instanceof Organisation && filled($event->host_organisation_id)) {
+            $organisation = Organisation::query()->find($event->host_organisation_id);
+        }
+
+        if ($organisation instanceof Organisation && $organisation->allowsClubFeature('on_site_entries')) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'entry_collection' => 'On-site entries are part of the club subscription.',
+        ]);
+    }
 
     public function updating(Event $event): void
     {

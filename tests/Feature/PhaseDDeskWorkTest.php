@@ -32,7 +32,7 @@ beforeEach(function (): void {
 
 it('publishes a desk event immediately when the host club is trusted', function () {
     $director = User::factory()->matchDirector()->create(['is_staff' => false]);
-    $host = Organisation::factory()->create([
+    $host = Organisation::factory()->clubPlan()->create([
         'status' => ListingStatus::Published,
         'type' => OrganisationType::Club,
         'trusted' => true,
@@ -184,7 +184,7 @@ it('scopes desk enquiries to the supplier own listing', function () {
 
 it('shows Entries in the desk nav only when a managed event takes on-site entries', function () {
     $director = User::factory()->matchDirector()->create(['is_staff' => false]);
-    $host = Organisation::factory()->create(['status' => ListingStatus::Published]);
+    $host = Organisation::factory()->clubPlan()->create(['status' => ListingStatus::Published]);
     $host->users()->attach($director->id, [
         'role' => OrganisationUserRole::MatchDirector,
         'granted_at' => now(),

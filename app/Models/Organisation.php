@@ -178,7 +178,9 @@ class Organisation extends Model
      */
     public function acceptsMembershipApplications(): bool
     {
-        return $this->membership_enabled && $this->accepts_applications;
+        return $this->membership_enabled
+            && $this->accepts_applications
+            && $this->allowsClubFeature('members');
     }
 
     /**

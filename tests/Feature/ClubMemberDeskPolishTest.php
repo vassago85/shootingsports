@@ -14,7 +14,7 @@ use Livewire\Livewire;
 
 function clubWithAdmin(): array
 {
-    $club = Organisation::factory()->create();
+    $club = Organisation::factory()->clubPlan()->create();
     $admin = User::factory()->create();
     OrganisationUser::create([
         'organisation_id' => $club->id,

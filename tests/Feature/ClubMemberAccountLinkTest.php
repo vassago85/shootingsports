@@ -6,12 +6,12 @@ use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 
 it('links unlinked members with the verified email', function () {
-    $club = Organisation::factory()->create();
+    $club = Organisation::factory()->clubPlan()->create();
     $imported = ClubMember::factory()
         ->for($club, 'organisation')
         ->create(['user_id' => null, 'email' => 'Jana@Example.COM']);
 
-    $otherClub = Organisation::factory()->create();
+    $otherClub = Organisation::factory()->clubPlan()->create();
     ClubMember::factory()
         ->for($otherClub, 'organisation')
         ->create(['user_id' => null, 'email' => 'someone-else@example.com']);
@@ -25,7 +25,7 @@ it('links unlinked members with the verified email', function () {
 });
 
 it('leaves already-linked members alone', function () {
-    $club = Organisation::factory()->create();
+    $club = Organisation::factory()->clubPlan()->create();
     $other = User::factory()->create();
 
     $member = ClubMember::factory()

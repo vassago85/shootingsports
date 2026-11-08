@@ -15,7 +15,7 @@ use App\Services\Memberships\RecordMembershipPayment;
 use Carbon\CarbonImmutable;
 
 it('issues a single invoice snapshotting the organisation fee for the member category', function () {
-    $organisation = Organisation::factory()->create(['membership_enabled' => true]);
+    $organisation = Organisation::factory()->clubPlan()->create(['membership_enabled' => true]);
     OrganisationMembershipFee::factory()->senior(60000)->create(['organisation_id' => $organisation->id]);
 
     $member = ClubMember::factory()->active()->create([
@@ -35,7 +35,7 @@ it('issues a single invoice snapshotting the organisation fee for the member cat
 });
 
 it('is idempotent per member and period', function () {
-    $organisation = Organisation::factory()->create();
+    $organisation = Organisation::factory()->clubPlan()->create();
     OrganisationMembershipFee::factory()->senior(50000)->create(['organisation_id' => $organisation->id]);
 
     $member = ClubMember::factory()->active()->create([
@@ -54,7 +54,7 @@ it('is idempotent per member and period', function () {
 });
 
 it('throws when no fee exists for the member category', function () {
-    $organisation = Organisation::factory()->create();
+    $organisation = Organisation::factory()->clubPlan()->create();
     $member = ClubMember::factory()->active()->create([
         'organisation_id' => $organisation->id,
         'category' => ClubMemberCategory::Senior,
@@ -68,7 +68,7 @@ it('throws when no fee exists for the member category', function () {
 });
 
 it('bulk-issues one invoice per billable member and skips existing invoices on a second run', function () {
-    $organisation = Organisation::factory()->create();
+    $organisation = Organisation::factory()->clubPlan()->create();
     OrganisationMembershipFee::factory()->senior(45000)->create(['organisation_id' => $organisation->id]);
     OrganisationMembershipFee::factory()->junior(20000)->create(['organisation_id' => $organisation->id]);
 
@@ -104,7 +104,7 @@ it('bulk-issues one invoice per billable member and skips existing invoices on a
 });
 
 it('marks an invoice paid and renews the underlying member to period_end', function () {
-    $organisation = Organisation::factory()->create();
+    $organisation = Organisation::factory()->clubPlan()->create();
     OrganisationMembershipFee::factory()->senior(60000)->create(['organisation_id' => $organisation->id]);
 
     $member = ClubMember::factory()->active()->create([
@@ -135,7 +135,7 @@ it('marks an invoice paid and renews the underlying member to period_end', funct
 });
 
 it('leaves a paid invoice alone on a second mark-paid call', function () {
-    $organisation = Organisation::factory()->create();
+    $organisation = Organisation::factory()->clubPlan()->create();
     $member = ClubMember::factory()->active()->create(['organisation_id' => $organisation->id]);
 
     $invoice = MembershipInvoice::factory()->paid()->create([
@@ -164,7 +164,7 @@ it('routes a Paystack club_membership webhook to the invoice recorder', function
     config()->set('services.paystack.secret_key', 'sk_test_dummy');
     config()->set('services.paystack.webhook_secret', null);
 
-    $organisation = Organisation::factory()->create();
+    $organisation = Organisation::factory()->clubPlan()->create();
     OrganisationMembershipFee::factory()->senior(60000)->create(['organisation_id' => $organisation->id]);
 
     $member = ClubMember::factory()->active()->create([

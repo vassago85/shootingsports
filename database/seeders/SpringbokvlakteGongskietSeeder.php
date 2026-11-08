@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ClubPlan;
 use App\Enums\EventLevel;
 use App\Enums\EventStatus;
 use App\Enums\ListingSource;
@@ -38,6 +39,8 @@ class SpringbokvlakteGongskietSeeder extends Seeder
                 'status' => ListingStatus::Published,
                 'verification_state' => VerificationState::Unconfirmed,
                 'source' => ListingSource::Staff,
+                'plan' => ClubPlan::Club,
+                'plan_expires_at' => null,
             ],
         );
 

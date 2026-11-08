@@ -18,7 +18,7 @@ beforeEach(function () {
 
 function makeOpenClub(): Organisation
 {
-    return Organisation::factory()->create([
+    return Organisation::factory()->clubPlan()->create([
         'membership_enabled' => true,
         'accepts_applications' => true,
     ]);
@@ -69,7 +69,7 @@ it('creates an Applied record and emails club admins', function () {
 });
 
 it('refuses to apply when the club is closed', function () {
-    $club = Organisation::factory()->create([
+    $club = Organisation::factory()->clubPlan()->create([
         'membership_enabled' => true,
         'accepts_applications' => false,
     ]);

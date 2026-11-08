@@ -18,7 +18,8 @@ class ClubMemberPolicy
 
     public function view(User $user, ClubMember $member): bool
     {
-        return $user->canManageClubMembers($member->organisation);
+        return $user->canManageClubMembers($member->organisation)
+            && $member->organisation->allowsClubFeature('members');
     }
 
     public function create(User $user): bool
@@ -28,7 +29,8 @@ class ClubMemberPolicy
 
     public function update(User $user, ClubMember $member): bool
     {
-        return $user->canManageClubMembers($member->organisation);
+        return $user->canManageClubMembers($member->organisation)
+            && $member->organisation->allowsClubFeature('members');
     }
 
     /**

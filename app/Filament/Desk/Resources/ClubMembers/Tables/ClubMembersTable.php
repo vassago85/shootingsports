@@ -394,10 +394,10 @@ class ClubMembersTable
         $user = Auth::user();
 
         if ($user?->is_staff) {
-            return Organisation::query()->clubs()->pluck('id')->all();
+            return Organisation::query()->paid()->clubs()->pluck('id')->all();
         }
 
-        return ClubMemberResource::managedClubIds();
+        return Organisation::query()->paid()->whereIn('id', ClubMemberResource::managedClubIds())->pluck('id')->all();
     }
 
     private static function notifyApplicant(ClubMember $member, bool $approved, ?string $reason = null): void

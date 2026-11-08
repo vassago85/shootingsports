@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ClubMemberCategory;
 use App\Enums\ClubMemberStatus;
+use App\Models\Concerns\GuardsClubSubscription;
 use Carbon\CarbonImmutable;
 use Database\Factories\ClubMemberFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -33,7 +34,12 @@ use Illuminate\Support\Carbon;
 class ClubMember extends Model
 {
     /** @use HasFactory<ClubMemberFactory> */
-    use HasFactory, SoftDeletes;
+    use GuardsClubSubscription, HasFactory, SoftDeletes;
+
+    public function clubSubscriptionFeature(): string
+    {
+        return 'members';
+    }
 
     protected function casts(): array
     {

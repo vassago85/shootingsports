@@ -109,9 +109,11 @@
                         <div class="owner-actions">
                             <a class="btn ghost" href="{{ $manageUrl }}">Manage this club</a>
                         </div>
-                        <div class="owner-embed">
-                            <x-embed-snippet :club="$organisation->slug" />
-                        </div>
+                        @if ($organisation->allowsClubFeature('embed'))
+                            <div class="owner-embed">
+                                <x-embed-snippet :club="$organisation->slug" />
+                            </div>
+                        @endif
                     </x-owner-panel>
                 @elseif ($organisation->claimed_by === null)
                     <x-owner-panel title="For club administrators">

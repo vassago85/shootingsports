@@ -53,7 +53,7 @@ it('is a no-op the second time the sweep runs the same day', function () {
 it('sends a renewal reminder once per threshold', function () {
     Mail::fake();
 
-    $organisation = Organisation::factory()->create([
+    $organisation = Organisation::factory()->clubPlan()->create([
         'membership_enabled' => true,
     ]);
 
@@ -79,7 +79,7 @@ it('sends a renewal reminder once per threshold', function () {
 it('escalates to the next threshold without re-sending the previous', function () {
     Mail::fake();
 
-    $organisation = Organisation::factory()->create([
+    $organisation = Organisation::factory()->clubPlan()->create([
         'membership_enabled' => true,
     ]);
 
@@ -108,7 +108,7 @@ it('escalates to the next threshold without re-sending the previous', function (
 it('skips reminders for Lapsed, Resigned, Suspended, Rejected and Applied members', function () {
     Mail::fake();
 
-    $organisation = Organisation::factory()->create([
+    $organisation = Organisation::factory()->clubPlan()->create([
         'membership_enabled' => true,
     ]);
 
@@ -127,7 +127,7 @@ it('skips reminders for Lapsed, Resigned, Suspended, Rejected and Applied member
 });
 
 it('renew() sets Active, bumps expires_at and clears reminder stamps', function () {
-    $organisation = Organisation::factory()->create([
+    $organisation = Organisation::factory()->clubPlan()->create([
         'membership_year_end_month' => 12,
         'membership_year_end_day' => 31,
     ]);
@@ -154,7 +154,7 @@ it('renew() sets Active, bumps expires_at and clears reminder stamps', function 
 });
 
 it('the Desk bulk renew action renews every selected member to the configured year-end', function () {
-    $organisation = Organisation::factory()->create([
+    $organisation = Organisation::factory()->clubPlan()->create([
         'membership_year_end_month' => 12,
         'membership_year_end_day' => 31,
     ]);
@@ -181,7 +181,7 @@ it('the Desk bulk renew action renews every selected member to the configured ye
 });
 
 it('Organisation::membershipYearEndFor returns next year once the configured date is past', function () {
-    $organisation = Organisation::factory()->create([
+    $organisation = Organisation::factory()->clubPlan()->create([
         'membership_year_end_month' => 1,
         'membership_year_end_day' => 15,
     ]);

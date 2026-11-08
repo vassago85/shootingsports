@@ -59,6 +59,7 @@ class PlaywrightSeeder extends Seeder
             'kind' => EventKind::Competition,
             'status' => EventStatus::EntriesOpen,
             'confirmed_at' => now(),
+            'host_organisation_id' => Organisation::factory()->clubPlan(),
             'accepts_platform_entries' => true,
             'entry_collection' => EntryCollection::External,
             'starts_at' => now()->addDays(10),
@@ -96,7 +97,7 @@ class PlaywrightSeeder extends Seeder
             'password' => 'password',
         ]);
 
-        $club = Organisation::factory()->create([
+        $club = Organisation::factory()->clubPlan()->create([
             'slug' => 'playwright-rifle-club',
             'name' => 'Playwright Rifle Club',
             'membership_enabled' => true,

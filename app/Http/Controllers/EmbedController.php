@@ -17,6 +17,8 @@ class EmbedController extends Controller
 {
     public function calendar(Request $request): View
     {
+        $this->abortUnlessClubEmbedIsPaid($request);
+
         $events = PublicEventQuery::fromRequest($request)->get();
         $theme = EmbedTheme::fromRequest($request);
 
@@ -37,6 +39,8 @@ class EmbedController extends Controller
         $embed = EmbedUrl::fromString($request->string('url')->toString());
 
         abort_unless($embed instanceof EmbedUrl, 404);
+
+        $this->abortUnlessClubEmbedIsPaid(Request::create($embed->calendarUrl));
 
         $width = max(320, min(1200, $request->integer('maxwidth') ?: 800));
         $height = $request->integer('maxheight') ?: $embed->height;
@@ -150,5 +154,23 @@ JS;
         }
 
         return route('calendar');
+    }
+
+    private function abortUnlessClubEmbedIsPaid(Request $request): void
+    {
+        $slug = $request->string('organisation')->toString()
+            ?: $request->string('club')->toString();
+
+        if ($slug === '') {
+            return;
+        }
+
+        $organisation = Organisation::query()->published()->where('slug', $slug)->first();
+
+        if (! $organisation instanceof Organisation) {
+            return;
+        }
+
+        abort_unless($organisation->allowsClubFeature('embed'), 404);
     }
 }

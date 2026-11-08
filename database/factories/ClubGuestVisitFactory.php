@@ -14,7 +14,7 @@ class ClubGuestVisitFactory extends Factory
     public function definition(): array
     {
         return [
-            'organisation_id' => Organisation::factory(),
+            'organisation_id' => Organisation::factory()->clubPlan(),
             'name' => fake()->name(),
             'email' => fake()->safeEmail(),
             'phone' => fake()->phoneNumber(),

@@ -19,7 +19,7 @@ class ClubMemberFactory extends Factory
         $lastName = fake()->lastName();
 
         return [
-            'organisation_id' => Organisation::factory(),
+            'organisation_id' => Organisation::factory()->clubPlan(),
             'user_id' => null,
             'member_number' => fake()->unique()->numerify('M####'),
             'first_name' => $firstName,

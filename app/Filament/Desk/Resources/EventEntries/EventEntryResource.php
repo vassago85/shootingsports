@@ -78,7 +78,8 @@ class EventEntryResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->whereHas('event.hostOrganisation', fn (Builder $organisation): Builder => $organisation->paid());
         $user = Auth::user();
 
         if ($user?->is_staff) {

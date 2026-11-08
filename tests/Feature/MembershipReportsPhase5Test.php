@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
-    $this->club = Organisation::factory()->create();
+    $this->club = Organisation::factory()->clubPlan()->create();
     OrganisationUser::create([
         'organisation_id' => $this->club->id,
         'user_id' => $this->user->id,
@@ -32,7 +32,7 @@ beforeEach(function () {
 });
 
 it('counts members by status for clubs the current admin manages only', function () {
-    $otherClub = Organisation::factory()->create();
+    $otherClub = Organisation::factory()->clubPlan()->create();
 
     ClubMember::factory()->count(3)->create([
         'organisation_id' => $this->club->id,

@@ -9,6 +9,7 @@ use App\Filament\Desk\Resources\ClubGuestVisits\Schemas\ClubGuestVisitForm;
 use App\Filament\Desk\Resources\ClubGuestVisits\Tables\ClubGuestVisitsTable;
 use App\Filament\Desk\Resources\ClubMembers\ClubMemberResource;
 use App\Models\ClubGuestVisit;
+use App\Models\Organisation;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -52,10 +53,13 @@ class ClubGuestVisitResource extends Resource
         $user = Auth::user();
 
         if ($user?->is_staff) {
-            return $query;
+            return $query->whereIn('organisation_id', Organisation::query()->paid()->pluck('id'));
         }
 
-        return $query->whereIn('organisation_id', ClubMemberResource::managedClubIds());
+        return $query->whereIn(
+            'organisation_id',
+            Organisation::query()->paid()->whereIn('id', ClubMemberResource::managedClubIds())->pluck('id'),
+        );
     }
 
     public static function canViewAny(): bool

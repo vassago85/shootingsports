@@ -20,7 +20,7 @@ class MembershipInvoiceFactory extends Factory
         $periodEnd = CarbonImmutable::create((int) CarbonImmutable::today()->year, 12, 31);
 
         return [
-            'organisation_id' => Organisation::factory(),
+            'organisation_id' => Organisation::factory()->clubPlan(),
             'club_member_id' => ClubMember::factory(),
             'period_start' => $periodStart->toDateString(),
             'period_end' => $periodEnd->toDateString(),

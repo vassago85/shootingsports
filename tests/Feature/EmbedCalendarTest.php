@@ -33,13 +33,13 @@ beforeEach(function () {
 });
 
 it('embeds only a published club\'s upcoming matches', function () {
-    $club = Organisation::factory()->create([
+    $club = Organisation::factory()->clubPlan()->create([
         'slug' => 'embed-club',
         'name' => 'Embed Rifle Club',
         'status' => ListingStatus::Published,
         'type' => OrganisationType::Club,
     ]);
-    $other = Organisation::factory()->create([
+    $other = Organisation::factory()->clubPlan()->create([
         'slug' => 'other-embed-club',
         'status' => ListingStatus::Published,
     ]);
@@ -90,7 +90,7 @@ it('embeds matches at a published range', function () {
 });
 
 it('ignores unpublished listings and invalid theme values', function () {
-    Organisation::factory()->create([
+    Organisation::factory()->clubPlan()->create([
         'slug' => 'draft-embed-club',
         'name' => 'Hidden Draft Club',
         'status' => ListingStatus::Pending,
@@ -119,7 +119,7 @@ it('serves embed script attributes for club styling', function () {
 
 it('hides club admin tools from guests and from people who do not run that club', function () {
     $owner = User::factory()->create();
-    $club = Organisation::factory()->create([
+    $club = Organisation::factory()->clubPlan()->create([
         'slug' => 'snippet-club',
         'name' => 'Snippet Club',
         'status' => ListingStatus::Published,
@@ -155,14 +155,14 @@ it('shows club admin tools only to a match director or club admin of that club',
     $editor = User::factory()->create();
     $secretary = User::factory()->create();
     $pendingDirector = User::factory()->create();
-    $club = Organisation::factory()->create([
+    $club = Organisation::factory()->clubPlan()->create([
         'slug' => 'snippet-club',
         'name' => 'Snippet Club',
         'status' => ListingStatus::Published,
         'type' => OrganisationType::Club,
         'claimed_by' => $clubAdmin->id,
     ]);
-    $other = Organisation::factory()->create([
+    $other = Organisation::factory()->clubPlan()->create([
         'slug' => 'other-snippet-club',
         'status' => ListingStatus::Published,
         'type' => OrganisationType::Club,
@@ -222,7 +222,7 @@ it('shows club admin tools only to a match director or club admin of that club',
 });
 
 it('keeps the claim link on an unclaimed club and still hides the embed', function () {
-    $club = Organisation::factory()->create([
+    $club = Organisation::factory()->clubPlan()->create([
         'slug' => 'unclaimed-snippet-club',
         'status' => ListingStatus::Published,
         'type' => OrganisationType::Club,
@@ -254,7 +254,7 @@ it('shows range and federation embed tools only to the owner of that listing', f
         'status' => MembershipStatus::Approved->value,
         'approved_at' => now(),
     ]);
-    $federation = Organisation::factory()->create([
+    $federation = Organisation::factory()->clubPlan()->create([
         'slug' => 'snippet-fed',
         'name' => 'Snippet Federation',
         'status' => ListingStatus::Published,
@@ -298,7 +298,7 @@ it('advertises oEmbed discovery and allows the calendar to be framed', function 
 });
 
 it('returns oEmbed JSON for a same-host calendar URL', function () {
-    Organisation::factory()->create([
+    Organisation::factory()->clubPlan()->create([
         'slug' => 'oembed-club',
         'name' => 'OEmbed Rifle Club',
         'status' => ListingStatus::Published,

@@ -19,7 +19,8 @@ class MembershipInvoicePolicy
 
     public function view(User $user, MembershipInvoice $invoice): bool
     {
-        return $user->canManageClubMembers($invoice->organisation);
+        return $user->canManageClubMembers($invoice->organisation)
+            && $invoice->organisation->allowsClubFeature('invoices');
     }
 
     public function create(User $user): bool
@@ -29,7 +30,8 @@ class MembershipInvoicePolicy
 
     public function update(User $user, MembershipInvoice $invoice): bool
     {
-        return $user->canManageClubMembers($invoice->organisation);
+        return $user->canManageClubMembers($invoice->organisation)
+            && $invoice->organisation->allowsClubFeature('invoices');
     }
 
     public function delete(User $user, MembershipInvoice $invoice): bool

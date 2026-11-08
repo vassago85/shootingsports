@@ -28,8 +28,8 @@ beforeEach(function () {
 });
 
 it('scopes the list to clubs the user manages', function () {
-    $mine = Organisation::factory()->create();
-    $theirs = Organisation::factory()->create();
+    $mine = Organisation::factory()->clubPlan()->create();
+    $theirs = Organisation::factory()->clubPlan()->create();
 
     $secretary = User::factory()->create();
     attachRole($secretary, $mine, OrganisationUserRole::Secretary);
@@ -45,7 +45,7 @@ it('scopes the list to clubs the user manages', function () {
 });
 
 it('blocks a match director without the member-admin role', function () {
-    $club = Organisation::factory()->create();
+    $club = Organisation::factory()->clubPlan()->create();
     $md = User::factory()->matchDirector()->create();
     attachRole($md, $club, OrganisationUserRole::MatchDirector);
 
@@ -57,7 +57,7 @@ it('blocks a match director without the member-admin role', function () {
 it('approves an application, writes history and emails the applicant', function () {
     Mail::fake();
 
-    $club = Organisation::factory()->create();
+    $club = Organisation::factory()->clubPlan()->create();
     $admin = User::factory()->create();
     attachRole($admin, $club, OrganisationUserRole::Admin);
 
@@ -83,7 +83,7 @@ it('approves an application, writes history and emails the applicant', function 
 it('rejects an application with a reason and emails the applicant', function () {
     Mail::fake();
 
-    $club = Organisation::factory()->create();
+    $club = Organisation::factory()->clubPlan()->create();
     $admin = User::factory()->create();
     attachRole($admin, $club, OrganisationUserRole::Admin);
 

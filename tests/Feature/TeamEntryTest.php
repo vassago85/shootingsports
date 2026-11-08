@@ -98,7 +98,7 @@ it('requires every shooter and consent before sending', function () {
 
 it('sends the entry to staff when the match has no organiser email', function () {
     $staff = User::factory()->staff()->create();
-    $host = Organisation::factory()->create(['email' => null]);
+    $host = Organisation::factory()->clubPlan()->create(['email' => null]);
     $event = Event::factory()->teamEntriesOpen(2)->create([
         'contact_email' => null,
         'host_organisation_id' => $host->id,

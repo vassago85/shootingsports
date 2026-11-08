@@ -24,7 +24,7 @@ class EventFactory extends Factory
         return [
             'slug' => Str::slug($title).'-'.fake()->unique()->numerify('###'),
             'title' => $title,
-            'host_organisation_id' => Organisation::factory(),
+            'host_organisation_id' => Organisation::factory()->clubPlan(),
             'venue_id' => Venue::factory(),
             'starts_at' => $starts,
             'ends_at' => null,
