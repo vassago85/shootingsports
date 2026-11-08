@@ -12,37 +12,6 @@
         </section>
         <section class="block">
             <div class="wrap">
-                <livewire:manage-equipment />
-            </div>
-        </section>
-        @if ($clubMemberships->isNotEmpty())
-            <section class="block">
-                <div class="wrap">
-                    <h2 class="section-title">My clubs</h2>
-                    <ul class="my-clubs" style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-                        @foreach ($clubMemberships as $membership)
-                            @php($effective = $membership->effectiveStatus())
-                            <li style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px;border:1px solid var(--line);border-radius:8px">
-                                <div>
-                                    <a class="label" href="{{ route('clubs.show', $membership->organisation->slug) }}" style="text-decoration:none;border-bottom:1px solid var(--brass)">{{ $membership->organisation->name }}</a>
-                                    @if ($membership->member_number)
-                                        <p style="margin:4px 0 0;font-family:var(--f-mono);font-size:13px;color:var(--slate)">Member no. {{ $membership->member_number }}</p>
-                                    @endif
-                                </div>
-                                <div style="text-align:right">
-                                    <span class="tag" style="background:transparent;border:1px solid var(--line)">{{ $effective->getLabel() }}</span>
-                                    @if ($membership->expires_at)
-                                        <p style="margin:4px 0 0;font-family:var(--f-mono);font-size:13px;color:var(--slate)">Expires {{ $membership->expires_at->format('j M Y') }}</p>
-                                    @endif
-                                </div>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            </section>
-        @endif
-        <section class="block">
-            <div class="wrap">
                 {{-- Post-signup / persistent flash for match director
                      requests. Session flash covers the first render right
                      after the redirect from /directors/register; the
@@ -80,6 +49,14 @@
                         </p>
                     </div>
                 @endif
+
+                <p class="label">
+                    @if ($savedLimit === null)
+                        {{ $savedCount }} saved
+                    @else
+                        {{ $savedCount }} of {{ $savedLimit }} saved
+                    @endif
+                </p>
 
                 @if ($events->isEmpty() && $past->isEmpty())
                     <p class="empty">Nothing on your calendar yet. Open a match and tap Save to my Shooting Sports account.</p>
@@ -132,6 +109,37 @@
                         </select>
                         <button type="submit" class="btn" style="margin-top:10px">Save</button>
                     </form>
+            </div>
+        </section>
+        @if ($clubMemberships->isNotEmpty())
+            <section class="block">
+                <div class="wrap">
+                    <h2 class="section-title">My clubs</h2>
+                    <ul class="my-clubs" style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
+                        @foreach ($clubMemberships as $membership)
+                            @php($effective = $membership->effectiveStatus())
+                            <li style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px;border:1px solid var(--line);border-radius:8px">
+                                <div>
+                                    <a class="label" href="{{ route('clubs.show', $membership->organisation->slug) }}" style="text-decoration:none;border-bottom:1px solid var(--brass)">{{ $membership->organisation->name }}</a>
+                                    @if ($membership->member_number)
+                                        <p style="margin:4px 0 0;font-family:var(--f-mono);font-size:13px;color:var(--slate)">Member no. {{ $membership->member_number }}</p>
+                                    @endif
+                                </div>
+                                <div style="text-align:right">
+                                    <span class="tag" style="background:transparent;border:1px solid var(--line)">{{ $effective->getLabel() }}</span>
+                                    @if ($membership->expires_at)
+                                        <p style="margin:4px 0 0;font-family:var(--f-mono);font-size:13px;color:var(--slate)">Expires {{ $membership->expires_at->format('j M Y') }}</p>
+                                    @endif
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </section>
+        @endif
+        <section class="block">
+            <div class="wrap">
+                <livewire:manage-equipment />
             </div>
         </section>
     </main>

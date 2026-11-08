@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\EquipmentCategory;
+use App\Enums\Plan;
 use App\Enums\ProfileVisibility;
 use App\Livewire\SaveToCalendar;
 use App\Models\Event;
@@ -175,4 +176,39 @@ it('rotates the calendar link and retires the previous token', function () {
     $this->get(route('ical.shooter', $user->calendar_token))
         ->assertOk()
         ->assertSee('Token Match');
+});
+
+it('lists saved matches and the calendar link before equipment', function () {
+    $user = User::factory()->create();
+    $first = Event::factory()->confirmed()->create([
+        'title' => 'Saved Cup One',
+        'starts_at' => now()->addDays(2),
+    ]);
+    $second = Event::factory()->confirmed()->create([
+        'title' => 'Saved Cup Two',
+        'starts_at' => now()->addDays(9),
+    ]);
+    $user->savedEvents()->attach([$first->id, $second->id]);
+
+    $this->actingAs($user)
+        ->get(route('my-calendar'))
+        ->assertOk()
+        ->assertSee('2 of 3 saved')
+        ->assertSeeInOrder([
+            '2 of 3 saved',
+            'Saved Cup One',
+            'Reset my calendar link',
+            'Equipment',
+        ]);
+});
+
+it('shows an open saved-match count for a pro shooter', function () {
+    $user = User::factory()->create(['plan' => Plan::Pro]);
+    $user->savedEvents()->attach(Event::factory()->confirmed()->create()->id);
+
+    $this->actingAs($user)
+        ->get(route('my-calendar'))
+        ->assertOk()
+        ->assertSee('1 saved')
+        ->assertDontSee('of 3 saved');
 });

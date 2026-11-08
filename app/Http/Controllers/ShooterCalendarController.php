@@ -41,6 +41,8 @@ class ShooterCalendarController extends Controller
             'events' => $upcoming,
             'past' => $past,
             'historyClipped' => $historyClipped,
+            'savedCount' => count($savedIds),
+            'savedLimit' => $user->limit('saved_events'),
             // Any status is listed so a shooter can see pending
             // applications and ex-memberships, not only Active rows.
             'clubMemberships' => $user->clubMemberships()
