@@ -136,11 +136,25 @@ it('match page links the venue and exposes Directions', function () {
 
     $response = $this->get(route('events.show', $event->slug))->assertOk();
 
-    $response->assertSee('match-layout', false)
+    $response->assertSee('match-layout is-facts-only', false)
+        ->assertDontSee('match-layout-media', false)
         ->assertSee('Enter here', false)
         ->assertSee('Directions', false)
         ->assertSee(route('ranges.show', $venue->slug), false)
         ->assertSee('Test Rifle Club', false)
         ->assertSee('Test Range', false)
         ->assertDontSee('Host club');
+});
+
+it('keeps the match description column when the event has a write-up', function () {
+    $event = Event::factory()->create([
+        'status' => 'confirmed',
+        'description' => 'Bring ear protection and a zeroed rifle.',
+    ]);
+
+    $this->get(route('events.show', $event->slug))
+        ->assertOk()
+        ->assertSee('match-layout-media', false)
+        ->assertDontSee('is-facts-only', false)
+        ->assertSee('Bring ear protection and a zeroed rifle.');
 });

@@ -81,20 +81,26 @@
                 {{-- Bundle A #6: facts-first two-column layout.
                      Poster capped left; sticky fact card right with
                      the primary Enter here CTA. --}}
-                <div class="match-layout">
-                    <div class="match-layout-media">
-                        @if ($bannerUrl = $event->bannerUrl())
-                            <figure class="match-poster">
-                                <img src="{{ $bannerUrl }}" alt="{{ $event->title }} match poster">
-                            </figure>
-                        @endif
-                        @if ($event->description)
-                            <div class="prose">{!! nl2br(e($event->description)) !!}</div>
-                        @endif
-                        @if ($event->openForTeamEntries())
-                            <livewire:submit-team-entry :event="$event" :key="'team-entry-'.$event->id" />
-                        @endif
-                    </div>
+                @php
+                    $bannerUrl = $event->bannerUrl();
+                    $hasMatchMedia = filled($bannerUrl) || filled($event->description) || $event->openForTeamEntries();
+                @endphp
+                <div @class(['match-layout', 'is-facts-only' => ! $hasMatchMedia])>
+                    @if ($hasMatchMedia)
+                        <div class="match-layout-media">
+                            @if (filled($bannerUrl))
+                                <figure class="match-poster">
+                                    <img src="{{ $bannerUrl }}" alt="{{ $event->title }} match poster">
+                                </figure>
+                            @endif
+                            @if ($event->description)
+                                <div class="prose">{!! nl2br(e($event->description)) !!}</div>
+                            @endif
+                            @if ($event->openForTeamEntries())
+                                <livewire:submit-team-entry :event="$event" :key="'team-entry-'.$event->id" />
+                            @endif
+                        </div>
+                    @endif
 
                     <aside class="match-facts">
                         <dl class="dope-rows">

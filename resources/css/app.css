@@ -1790,6 +1790,9 @@ button.wiz-step-btn:hover { border-color: var(--brass); color: var(--ink); }
     align-items: start;
     padding-bottom: 48px;
 }
+.match-layout.is-facts-only {
+    grid-template-columns: minmax(280px, 720px);
+}
 @media (max-width: 860px) {
     .match-layout { grid-template-columns: 1fr; gap: 28px; }
 }
