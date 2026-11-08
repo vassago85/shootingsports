@@ -155,7 +155,10 @@ it('rolls the current cycle forward once the end date passes', function () {
 });
 
 it('saves dedicated-status fields via the Livewire settings component', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'plan' => Plan::Pro,
+        'plan_expires_at' => now()->addYear(),
+    ]);
 
     Livewire::actingAs($user)
         ->test(DedicatedStatus::class)
@@ -177,7 +180,10 @@ it('saves dedicated-status fields via the Livewire settings component', function
 });
 
 it('rejects a body that is not one of the configured codes', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'plan' => Plan::Pro,
+        'plan_expires_at' => now()->addYear(),
+    ]);
 
     Livewire::actingAs($user)
         ->test(DedicatedStatus::class)
@@ -187,7 +193,10 @@ it('rejects a body that is not one of the configured codes', function () {
 });
 
 it('enforces the regulation floor of 2 activities per cycle', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'plan' => Plan::Pro,
+        'plan_expires_at' => now()->addYear(),
+    ]);
 
     Livewire::actingAs($user)
         ->test(DedicatedStatus::class)
@@ -205,7 +214,10 @@ it('enforces the regulation floor of 2 activities per cycle', function () {
 });
 
 it('labels the required-count validation message with the field name shoppers see', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'plan' => Plan::Pro,
+        'plan_expires_at' => now()->addYear(),
+    ]);
 
     $component = Livewire::actingAs($user)
         ->test(DedicatedStatus::class)
@@ -226,6 +238,22 @@ it('301-redirects the old /me/settings/notifications URL to the real settings pa
         ->assertRedirect('/me/settings');
 });
 
+it('leaves a free shooter read-only and does not save the form', function () {
+    config()->set('plans.pro_enabled', true);
+
+    $user = User::factory()->create(['dedicated_body' => 'nrapa']);
+
+    Livewire::actingAs($user)
+        ->test(DedicatedStatus::class)
+        ->assertSee('The dedicated-status tracker is a Pro feature.')
+        ->assertSee('Upgrade to Pro')
+        ->assertDontSee('>Save<', false)
+        ->set('statusNumber', 'DS-should-not-stick')
+        ->call('save');
+
+    expect($user->refresh()->dedicated_status_number)->toBeNull();
+});
+
 it('defaults a new user to NRAPA with the regulation floor of 2', function () {
     $user = User::factory()->create(); // No dedicated_* fields set.
 
@@ -237,6 +265,8 @@ it('defaults a new user to NRAPA with the regulation floor of 2', function () {
 
 it('clears every tracker field via the clear action', function () {
     $user = User::factory()->create([
+        'plan' => Plan::Pro,
+        'plan_expires_at' => now()->addYear(),
         'dedicated_body' => 'nrapa',
         'dedicated_membership_number' => 'NR-1',
         'dedicated_status_number' => 'DS-2',

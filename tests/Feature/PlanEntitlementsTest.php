@@ -110,20 +110,16 @@ it('pro gate resolves through the trait', function () {
         ->and(Gate::forUser($pro)->allows('pro'))->toBeTrue();
 });
 
-it('unlimited-follows gate is true only for pro', function () {
+it('keeps follows and history on the plan limits, not a second gate', function () {
     $free = User::factory()->create();
     $pro = User::factory()->create(['plan' => Plan::Pro]);
 
-    expect(Gate::forUser($free)->allows('unlimited-follows'))->toBeFalse()
-        ->and(Gate::forUser($pro)->allows('unlimited-follows'))->toBeTrue();
-});
-
-it('full-history gate is true only for pro', function () {
-    $free = User::factory()->create();
-    $pro = User::factory()->create(['plan' => Plan::Pro]);
-
-    expect(Gate::forUser($free)->allows('full-history'))->toBeFalse()
-        ->and(Gate::forUser($pro)->allows('full-history'))->toBeTrue();
+    expect($free->limit('follows'))->toBe(3)
+        ->and($free->limit('history_months'))->toBe(12)
+        ->and($pro->limit('follows'))->toBeNull()
+        ->and($pro->limit('history_months'))->toBeNull()
+        ->and(Gate::forUser($pro)->allows('unlimited-follows'))->toBeFalse()
+        ->and(Gate::forUser($pro)->allows('full-history'))->toBeFalse();
 });
 
 it('export-season gate matches the config feature flag', function () {
@@ -136,7 +132,5 @@ it('export-season gate matches the config feature flag', function () {
 
 it('gates return false for guests', function () {
     expect(Gate::forUser(null)->allows('pro'))->toBeFalse()
-        ->and(Gate::forUser(null)->allows('export-season'))->toBeFalse()
-        ->and(Gate::forUser(null)->allows('unlimited-follows'))->toBeFalse()
-        ->and(Gate::forUser(null)->allows('full-history'))->toBeFalse();
+        ->and(Gate::forUser(null)->allows('export-season'))->toBeFalse();
 });

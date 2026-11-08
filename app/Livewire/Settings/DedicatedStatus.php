@@ -19,10 +19,8 @@ use Livewire\Component;
  * default 1 November → 31 October) so bodies can shift without a
  * migration or a per-user renewal date.
  *
- * The setup form is visible to non-Pro shooters too, with a Pro
- * notice. The tracker widget and the printable report are both
- * Pro-gated — this lets a trial-ready shooter prepare their fields
- * now so the moment Pro opens the widget just appears.
+ * Saving is Pro-only (staff included). Free accounts can open the
+ * page read-only and are sent to the upgrade flow.
  */
 class DedicatedStatus extends Component
 {
@@ -64,6 +62,10 @@ class DedicatedStatus extends Component
         $user = auth()->user();
         abort_unless($user instanceof User, 403);
 
+        if (! $this->viewerCanEdit($user)) {
+            return;
+        }
+
         $data = $this->validate(
             rules: [
                 'body' => ['required', Rule::in(array_keys($this->bodies()))],
@@ -102,6 +104,10 @@ class DedicatedStatus extends Component
         $user = auth()->user();
         abort_unless($user instanceof User, 403);
 
+        if (! $this->viewerCanEdit($user)) {
+            return;
+        }
+
         $user->forceFill([
             'dedicated_body' => null,
             'dedicated_membership_number' => null,
@@ -119,6 +125,11 @@ class DedicatedStatus extends Component
         session()->flash('status', 'Dedicated-status settings cleared.');
     }
 
+    public function viewerCanEdit(User $user): bool
+    {
+        return $user->is_staff || $user->isPro();
+    }
+
     /** @return array<string, string> */
     public function bodies(): array
     {
@@ -134,8 +145,11 @@ class DedicatedStatus extends Component
     #[Layout('components.layouts.public', ['title' => 'Dedicated status'])]
     public function render()
     {
+        $viewer = auth()->user();
+
         return view('livewire.settings.dedicated-status', [
-            'user' => auth()->user(),
+            'user' => $viewer,
+            'canEdit' => $viewer instanceof User && $this->viewerCanEdit($viewer),
             'bodies' => $this->bodies(),
             'categories' => $this->categories(),
             'cycle' => auth()->user()?->dedicatedCycle(),

@@ -212,8 +212,6 @@ class AppServiceProvider extends ServiceProvider
         // the paid-feature check, not row-level ownership.
         Gate::define('pro', fn (?User $user): bool => (bool) ($user?->is_staff || $user?->isPro()));
         Gate::define('export-season', fn (?User $user): bool => (bool) ($user?->is_staff || $user?->allows('export')));
-        Gate::define('unlimited-follows', fn (?User $user): bool => $user !== null && ($user->is_staff || $user->limit('follows') === null));
-        Gate::define('full-history', fn (?User $user): bool => $user !== null && ($user->is_staff || $user->limit('history_months') === null));
         // Attendance log — logging up to the free cap is open to any
         // signed-in user; the annual export PDF/CSV is Pro-only. Kept
         // as two gates so views can hide UI cleanly without repeating

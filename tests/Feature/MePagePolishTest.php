@@ -69,8 +69,9 @@ it('shows the inline Upgrade link and the Pro strip for Free shooters while Pro 
     $response->assertOk();
     $response->assertSee('class="me-upgrade-inline"', escape: false);
     $response->assertSee('Upgrade to Pro');
-    $response->assertSee('Pro removes the limits');
-    $response->assertSee('See Pro');
+    $response->assertSee('R299 / year');
+    $response->assertDontSee('Join the waitlist');
+    $response->assertDontSee('Pro is coming');
 });
 
 it('swaps the Pro affordance to waitlist copy while Pro sales are closed', function () {

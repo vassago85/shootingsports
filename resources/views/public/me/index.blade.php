@@ -134,10 +134,15 @@
                 <div class="wrap">
                     <div class="me-upgrade-strip">
                         <div>
-                            <h2>{{ $proSalesOpen ? 'Pro removes the limits' : 'Pro is coming' }}</h2>
-                            <p>Unlimited follows, unlimited log history, dedicated-status export, household up to four.{{ $proSalesOpen ? '' : ' Join the waitlist to hear first when it opens.' }}</p>
+                            @if ($proSalesOpen)
+                                <h2>Upgrade to Pro</h2>
+                                <p>{{ config('plans.pricing.annual.display') }} or {{ config('plans.pricing.monthly.display') }}. Cancel any time from your account.</p>
+                            @else
+                                <h2>Pro is coming</h2>
+                                <p>Unlimited follows, unlimited log history, dedicated-status export, household up to four. Join the waitlist to hear first when it opens.</p>
+                            @endif
                         </div>
-                        <a class="btn" href="{{ route('upgrade') }}">{{ $proSalesOpen ? 'See Pro' : 'Join the waitlist' }}</a>
+                        <a class="btn" href="{{ route('upgrade') }}">{{ $proSalesOpen ? 'Upgrade to Pro' : 'Join the waitlist' }}</a>
                     </div>
                 </div>
             </section>
