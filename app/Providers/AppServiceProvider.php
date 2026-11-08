@@ -220,7 +220,6 @@ class AppServiceProvider extends ServiceProvider
         // the plan lookup.
         Gate::define('log-attendance', fn (?User $user): bool => $user !== null);
         Gate::define('export-attendance-log', fn (?User $user): bool => (bool) ($user?->is_staff || $user?->allows('export')));
-        Gate::define('custom-calendar', fn (?User $user): bool => (bool) ($user?->is_staff || $user?->allows('custom_calendar')));
 
         $bumpPublic = static fn () => PublicCache::bump();
 

@@ -7,14 +7,7 @@
             <div class="wrap">
                 <p class="label">Shooter calendar</p>
                 <h1>My calendar</h1>
-                @if ($user->can('custom-calendar'))
-                    <p>Add matches from the public calendar. Subscribe once and they land on your phone calendar when you add or remove them.</p>
-                @else
-                    <p>A personal calendar is a Pro feature. Browsing every public match stays free.</p>
-                    @if (config('plans.pro_enabled'))
-                        <p style="margin-top:14px"><a class="btn" href="{{ route('upgrade') }}">See Pro</a></p>
-                    @endif
-                @endif
+                <p>Add matches from the public calendar. Subscribe once and they land on your phone calendar when you add or remove them.</p>
             </div>
         </section>
         <section class="block">
@@ -89,10 +82,8 @@
                 @endif
 
                 @if ($events->isEmpty() && $past->isEmpty())
-                    @if ($user->can('custom-calendar'))
-                        <p class="empty">Nothing on your calendar yet. Open a match and tap Save to my Shooting Sports account.</p>
-                        <p><a class="btn" href="{{ route('calendar') }}">Browse the calendar</a></p>
-                    @endif
+                    <p class="empty">Nothing on your calendar yet. Open a match and tap Save to my Shooting Sports account.</p>
+                    <p><a class="btn" href="{{ route('calendar') }}">Browse the calendar</a></p>
                 @else
                     @if ($events->isNotEmpty())
                         <h2 class="section-title">Upcoming</h2>
@@ -124,8 +115,7 @@
                         @endif
                     @endif
                 @endif
-                @if ($user->can('custom-calendar'))
-                    <x-calendar-subscribe :ics="route('ical.shooter', $user->calendar_token)" />
+                <x-calendar-subscribe :ics="route('ical.shooter', $user->calendar_token)" />
                     <form method="post" action="{{ route('my-calendar.reset-link') }}" style="margin-top:14px">
                         @csrf
                         <button type="submit" class="btn ghost">Reset my calendar link</button>
@@ -142,7 +132,6 @@
                         </select>
                         <button type="submit" class="btn" style="margin-top:10px">Save</button>
                     </form>
-                @endif
             </div>
         </section>
     </main>

@@ -44,6 +44,7 @@ return [
         // an old one to log a new one). Pro = unlimited history for
         // dedicated-status renewal PDFs.
         'attended_events_slots' => 3,
+        'saved_events' => 3,
     ],
 
     Plan::Pro->value => [
@@ -53,6 +54,7 @@ return [
         'export' => true,
         'household_profiles' => 4,
         'attended_events_slots' => null,
+        'saved_events' => null,
     ],
 
     /*

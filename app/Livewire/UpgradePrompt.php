@@ -131,6 +131,10 @@ class UpgradePrompt extends Component
                 'headline' => 'You are following as many clubs and disciplines as Free allows.',
                 'detail' => 'Pro removes the 3-follow cap. Follow every club, every discipline, every venue you shoot at and keep them all in one feed.',
             ],
+            'saved_events_limit' => [
+                'headline' => 'You have saved as many matches as Free allows.',
+                'detail' => 'Pro removes the saved-match cap so every match you plan to shoot stays on your calendar.',
+            ],
             'saved_search_limit' => [
                 'headline' => 'You already have your one saved search.',
                 'detail' => 'Pro lets you save as many filter sets as you want. One for each discipline, province and driving distance you actually chase.',

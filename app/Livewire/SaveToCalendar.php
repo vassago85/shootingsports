@@ -2,7 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Exceptions\PlanLimitExceeded;
 use App\Models\Event;
+use App\Models\SavedEvent;
 use Livewire\Component;
 
 class SaveToCalendar extends Component
@@ -38,7 +40,17 @@ class SaveToCalendar extends Component
             return;
         }
 
-        $user->savedEvents()->syncWithoutDetaching([$this->eventId]);
+        try {
+            SavedEvent::create([
+                'user_id' => $user->id,
+                'event_id' => $this->eventId,
+            ]);
+        } catch (PlanLimitExceeded $e) {
+            $this->dispatch('open-upgrade-prompt', trigger: $e->trigger);
+
+            return;
+        }
+
         $this->saved = true;
     }
 

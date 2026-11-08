@@ -28,6 +28,7 @@ class EnforcesPlanLimits
         'export' => 'export',
         'household_profiles' => 'household',
         'attended_events_slots' => 'attendance_log_limit',
+        'saved_events' => 'saved_events_limit',
     ];
 
     /**
