@@ -3,6 +3,7 @@
 use App\Filament\Desk\Resources\MagazineIssues\MagazineIssueResource;
 use App\Models\MagazineIssue;
 use App\Models\MagazineRead;
+use App\Models\Organisation;
 use App\Models\User;
 use Illuminate\Support\Facades\URL;
 
@@ -104,12 +105,13 @@ it('shows the text version when a page has extracted copy', function () {
         ->assertDontSee('Page 1', false);
 });
 
-it('lists published issues on the magazines index with their owner', function () {
+it('lists published issues on the magazines index with their publisher', function () {
     $owner = User::factory()->create(['name' => 'Range Desk', 'is_media_partner' => true]);
 
     MagazineIssue::factory()->published()->create([
         'user_id' => $owner->id,
         'title' => 'Published issue A',
+        'publisher_name' => 'On Target Africa',
     ]);
     MagazineIssue::factory()->draft()->create(['title' => 'Draft issue B']);
 
@@ -117,10 +119,30 @@ it('lists published issues on the magazines index with their owner', function ()
         ->assertOk()
         ->assertSee('Magazines', false)
         ->assertSee('Published issue A', false)
-        ->assertSee('Owner · Range Desk', false)
+        ->assertSee('Published by On Target Africa', false)
+        ->assertDontSee('Owner · Range Desk', false)
+        ->assertDontSee('Range Desk', false)
         ->assertDontSee('Draft issue B', false)
         ->assertDontSee('Targets magazine', false)
         ->assertSee('"@type":"ItemList"', false);
+});
+
+it('uses the organisation name as the public publisher and hides the uploader', function () {
+    $org = Organisation::factory()->create(['name' => 'On Target Africa']);
+    $uploader = User::factory()->create(['name' => 'Range Desk', 'is_media_partner' => true]);
+
+    $issue = MagazineIssue::factory()->published()->create([
+        'user_id' => $uploader->id,
+        'publisher_organisation_id' => $org->id,
+        'publisher_name' => 'Typed Name',
+        'title' => 'Issue With Org',
+    ]);
+
+    $this->get(route('magazines.show', $issue->slug))
+        ->assertOk()
+        ->assertSee('Published by On Target Africa', false)
+        ->assertDontSee('Typed Name', false)
+        ->assertDontSee('Range Desk', false);
 });
 
 // ============================================================

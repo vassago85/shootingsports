@@ -15,7 +15,7 @@ class MagazineIssueController extends Controller
     {
         $issues = MagazineIssue::query()
             ->published()
-            ->with('author')
+            ->with(['author', 'publisher'])
             ->orderByDesc('published_at')
             ->get();
 
@@ -29,6 +29,7 @@ class MagazineIssueController extends Controller
     public function show(Request $request, string $issue): View|RedirectResponse
     {
         $record = MagazineIssue::query()
+            ->with('publisher')
             ->where('slug', $issue)
             ->firstOrFail();
 

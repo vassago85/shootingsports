@@ -17,8 +17,8 @@
                     @endif
                 </p>
                 <h1>{{ $issue->title }}</h1>
-                @if ($issue->author?->name)
-                    <p>Owner · {{ $issue->author->name }}</p>
+                @if ($publisher = $issue->publisherLabel())
+                    <p>Published by {{ $publisher }}</p>
                 @endif
                 @if ($issue->description)
                     <p>{{ $issue->description }}</p>

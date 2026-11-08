@@ -10,7 +10,7 @@
             <div class="wrap">
                 <p class="label">Magazine</p>
                 <h1>Magazines</h1>
-                <p>Published magazines only. Each issue names its owner, so more than one publisher can host here.</p>
+                <p>Published magazines only. Each issue names who published it.</p>
             </div>
         </section>
 
@@ -28,8 +28,8 @@
                         <div>
                             <p class="label">{{ $issue->publication }} · {{ $issue->issue_label ?? $issue->published_at?->format('F Y') }}</p>
                             <h2><a href="{{ route('magazines.show', $issue->slug) }}">{{ $issue->title }}</a></h2>
-                            @if ($issue->author?->name)
-                                <p>Owner · {{ $issue->author->name }}</p>
+                            @if ($publisher = $issue->publisherLabel())
+                                <p>Published by {{ $publisher }}</p>
                             @endif
                             @if ($issue->description)
                                 <p>{{ $issue->description }}</p>

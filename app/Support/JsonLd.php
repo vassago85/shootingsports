@@ -297,8 +297,8 @@ class JsonLd
             'description' => $issue->description,
             'image' => $issue->coverUrl(),
             'thumbnailUrl' => $issue->coverUrl(),
-            'author' => $issue->author?->name !== null
-                ? ['@type' => 'Person', 'name' => $issue->author->name]
+            'publisher' => ($label = $issue->publisherLabel()) !== null
+                ? ['@type' => 'Organization', 'name' => $label]
                 : null,
         ];
 

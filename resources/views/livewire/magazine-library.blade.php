@@ -29,8 +29,8 @@
                                 <div>
                                     <p class="label">{{ $issue->publication }} · {{ $issue->issue_label ?? $issue->published_at?->format('F Y') }}</p>
                                     <h2><a href="{{ route('magazines.show', $issue->slug) }}">{{ $issue->title }}</a></h2>
-                                    @if ($issue->author?->name)
-                                        <p>Owner · {{ $issue->author->name }}</p>
+                                    @if ($publisher = $issue->publisherLabel())
+                                        <p>Published by {{ $publisher }}</p>
                                     @endif
                                     <div class="library-actions">
                                         <a class="btn" href="{{ route('magazines.show', $issue->slug) }}">Read this issue</a>

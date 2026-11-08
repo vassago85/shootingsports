@@ -52,7 +52,7 @@ class MagazineLibrary extends Component
     {
         return $user->savedMagazineIssues()
             ->published()
-            ->with('author')
+            ->with(['author', 'publisher'])
             ->orderBy('saved_magazine_issues.created_at', 'desc')
             ->get();
     }

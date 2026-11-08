@@ -31,8 +31,19 @@ class MagazineIssueForm
                             ->required()
                             ->default('Targets')
                             ->helperText('The magazine name, such as On Target.'),
+                        Select::make('publisher_organisation_id')
+                            ->label('Publisher')
+                            ->relationship('publisher', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->nullable()
+                            ->helperText('A club or organisation on the site. Leave empty to type a name instead.'),
+                        TextInput::make('publisher_name')
+                            ->label('Publisher name')
+                            ->maxLength(160)
+                            ->helperText('Free text, used when the publisher is not a listing. Shown as Published by …'),
                         Placeholder::make('owner_name')
-                            ->label('Owner')
+                            ->label('Uploaded by')
                             ->content(function (?MagazineIssue $record): string {
                                 $name = $record?->author?->name ?? auth()->user()?->name;
 
@@ -40,7 +51,7 @@ class MagazineIssueForm
                                     ? $name
                                     : 'The account that saves this issue';
                             })
-                            ->helperText('Shown on the public list. Another publisher hosts theirs under their own account.'),
+                            ->helperText('The account that uploaded the file. Not shown on the public page.'),
                         Select::make('language')
                             ->required()
                             ->default('en')

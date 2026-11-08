@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Storage;
  * open as a page-flip viewer and also browse as searchable text.
  */
 #[Fillable([
-    'user_id', 'publication', 'title', 'slug', 'issue_label', 'description',
+    'user_id', 'publisher_organisation_id', 'publisher_name', 'publication', 'title', 'slug', 'issue_label', 'description',
     'language', 'pdf_path', 'pdf_download_enabled', 'cover_path', 'page_count',
     'pages_text', 'published_at', 'reader_access',
 ])]
@@ -43,6 +43,22 @@ class MagazineIssue extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function publisher(): BelongsTo
+    {
+        return $this->belongsTo(Organisation::class, 'publisher_organisation_id');
+    }
+
+    /**
+     * Public byline. An organisation on the site wins over free text.
+     * The uploading account is not the publisher.
+     */
+    public function publisherLabel(): ?string
+    {
+        $name = $this->publisher?->name ?: $this->publisher_name;
+
+        return filled($name) ? $name : null;
     }
 
     /**
