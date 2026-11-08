@@ -59,7 +59,7 @@ Status:
 | iCal: event, discipline, club | feed | Public | Live | `routes/web.php:99-100`, `115`. Unpublished / draft 404: `IcalController.php:20`, `29`, `38` |
 | Personal iCal (`/calendars/{token}.ics`) | feed | Public | Live | `routes/web.php:215-217` `IcalController::shooter` looks up `users.calendar_token`. The old `/shooters/{slug}/calendar.ics` returns 404 (`web.php:218-220`). The owner resets the token from `/me/calendar`. No Pro check. |
 | Public shooter page (`/shooters/{slug}`) | public | Public | Live | `ShooterCalendarController::show`. Private unless the user opts in (`ProfileVisibility`, default private). Anyone else, including guests, gets 404; the owner and staff can open it. The page does not render equipment, upcoming entries, or the calendar token. |
-| Embeddable calendar, script, docs, oEmbed | embed | Public | Live | `routes/web.php:208-211` `EmbedController` |
+| Embeddable calendar, script, docs, oEmbed | embed | Public | Live | `EmbedController`. A national embed stays public. A `club` or `organisation` embed is 404 unless that organisation's club subscription is current. The snippet on the club and federation pages is hidden until then. Range embeds are unchanged. |
 | Ad click redirect (`/go/{placement}`) | public | Advertiser | Live | Active placement only: `PlacementClickController.php:12` |
 | Advertise rate card and enquiry | public | Public | Live | `routes/web.php:217` `EnquiryController::advertise`. Prices in `config/advertising.php`. Enquiry only; no checkout. |
 | Contact, listing enquiry, public reply thread | public | Public | Live | `routes/web.php:218-232`. Thread is token-addressed, not login. |
@@ -89,7 +89,7 @@ Status:
 | Dedicated-status settings form | /me | Paid / Pro | Live | `DedicatedStatus::viewerCanEdit` is staff or `isPro()`. A Free user sees the form read-only, with an upgrade prompt when `plans.pro_enabled` is on. Save and clear do nothing otherwise. |
 | Notification preferences | /me | Free account | Live | `routes/web.php:378-380` `auth` `NotificationPreferences` |
 | One-click email unsubscribe / resubscribe | public | Public | Live | `routes/web.php:376-377`. Token on the user, not a login. |
-| Apply to join a club | public | Free account | Live | `ApplyForMembership.php:46-57`. Club must accept applications. Creates an Applied member and emails admins/secretaries. |
+| Apply to join a club | public | Free account | Live | `ApplyForMembership`. The club must accept applications and `allowsClubFeature('members')`. |
 | Enter a match on the platform | public | Free account | Live | `EnterEvent.php:27-40`. Event must be open for platform entries. Paystack path is per event (`EntryCollection::Paystack`), not a shooter plan. |
 | Submit a team entry | public | Public | Live | `SubmitTeamEntry`. No login required. Turnstile runs before the 5-per-IP limit. Event must be open for team entries. Blank Turnstile keys pass only in local and testing. |
 | My memberships and invoices | /me | Free account | Live | `routes/web.php:360-366` `auth`. Record must be linked to the user or the same email: `MyMembershipDetails.php:115`, `MembershipPaymentController.php:106`. |
@@ -133,11 +133,11 @@ Any signed-in user can open `/desk` (`User.php:387-391` returns true; Filament `
 | My clubs | /desk | Desk role | Live | `OrganisationResource::canViewAny` director or staff. The query is the user’s linked clubs or `claimed_by`, including for staff. Edit: `OrganisationPolicy::update` staff or match director / admin / editor. |
 | Claim another club | /desk | Desk role | Live | Nav: director or staff (`ClaimListing.php:33-39`). Creates a claim; staff approve it. |
 | Events for my clubs | /desk | Desk role | Live | `EventResource::canViewAny` director or staff. Non-staff rows are limited to host clubs. Staff still see every event, so creating one does not 404 on edit. Create/update/delete: `EventPolicy` staff or a `canManageEvents` seat. |
-| Entries list (read only) | /desk | Desk role | Live | Shown only when one of their events accepts platform or team entries (`EventEntryResource.php:91-126`). Create/edit/delete false (`:134-146`). |
-| Members | /desk | Desk role | Live | Admin or secretary seat, or staff: `ClubMemberResource.php:67-72`, `ClubMemberPolicy.php:14-31`. Delete is staff only (`ClubMemberPolicy.php:38-40`). |
-| Invoices | /desk | Desk role | Live | Same member-managing seat: `MembershipInvoiceResource.php:59-64`. |
-| Guest days | /desk | Desk role | Live | Same seat: `ClubGuestVisitResource.php:61-66`. |
-| Membership reports | /desk | Desk role | Live | `MembershipReports::canAccess` staff or `holdsAnyMemberManagingRole()` (`MembershipReports.php:48-52`). |
+| Entries list (read only) | /desk | Desk role | Live | Shown when a managed event accepts platform or team entries, and also when a director's club is unpaid, so the lock page is reachable. Rows are limited to paid host clubs. |
+| Members | /desk | Desk role | Live | Admin or secretary seat, and the club's subscription is current. An unpaid club still shows the nav item, which opens a lock page. Creating or editing a member is rejected in `GuardsClubSubscription`. |
+| Invoices | /desk | Desk role | Live | Same member-managing seat and the same club subscription. Online payment of an invoice also requires `allowsClubFeature('invoices')`. |
+| Guest days | /desk | Desk role | Live | Same seat and `allowsClubFeature('guest_days')`. |
+| Membership reports | /desk | Desk role | Live | `MembershipReports::canAccess` is still the seat check. The figures and CSV only include clubs on the subscription. Unpaid-only secretaries get the lock page. |
 | My ranges | /desk | Desk role | Live | `VenueResource::canViewAny` staff or `isRangeManager()`. The query is approved `venue_user` seats or `claimed_by`, including for staff. Update: `VenuePolicy::update`. No create page; claim flow is public. |
 | Enquiries about my business | /desk | Desk role | Live | Industry desk user or staff (`EnquiryResource.php:111-116`). Read only (`:137-149`). Scoped to managed providers (`:104-108`). |
 | Adverts (impressions and clicks) | /desk | Advertiser | Live | Read only. Nav appears only when this user has at least one placement (`PlacementResource.php:89-107`). Staff place the booking in `/admin`. |
@@ -263,6 +263,16 @@ Staff (`is_staff`) pass the gates in `AppServiceProvider.php:213-223` without a 
 
 `plans.pro_enabled` (default false, `plans.php:35`) hides the buy button and the trial. It does not lift the caps. A Free user still cannot create a fourth follow.
 
+### 4.1a Club subscription
+
+Separate from shooter Pro. Columns live on `organisations` (`plan` free|club, `plan_expires_at`, `plan_cancelled_at`, billing cycle, Paystack customer and subscription codes). `Organisation::isPaid()` is the expiry check. There is no nightly downgrade. Feature flags and the pricing placeholders are `config/club-plans.php`. `CLUB_PLANS_ENABLED` defaults false. Prices and `PAYSTACK_CLUB_PLAN_ANNUAL` / `PAYSTACK_CLUB_PLAN_MONTHLY` are unset on purpose.
+
+Free for every club: claim or create the club, edit the profile and logo, create and edit events (status, banner, beginner flags), link out to the organiser's own entry system, and the public club page.
+
+The subscription unlocks members (including public applications and CSV import), invoices, guest days, membership reports, on-site platform and team entries, Paystack entry-fee collection, the desk entries list, and a club-scoped embed. Enforcement is `GuardsClubSubscription`, `EventObserver::saving`, `openForPlatformEntries` / `openForTeamEntries`, and `EmbedController`. Desk nav stays visible and opens `club-plan-locked` per unpaid club. Subscribe is `/clubs/{slug}/subscribe` when the sales flag is on; otherwise the lock links to `/contact`.
+
+Checkout calls `PaystackClient::initializeTransaction` with metadata `purpose=club_plan`. The callback and `charge.success` webhook run `ClubSubscriptionApplier` and do not change the director's shooter plan. `subscription.disable` for a code stored on the organisation sets `plan_cancelled_at` and leaves access until `plan_expires_at`. A live charge cannot be run until the placeholder prices and plan codes are filled in. Entry fees still use `initializeOneOffTransaction` and are not settled to a subaccount.
+
 ### 4.2 Match entry and club invoices
 
 These set payment status on an entry or an invoice. They do not set `users.plan`.
@@ -319,6 +329,7 @@ Upgrade prompt headlines still describe a purchase (“Go Pro”, “Pro removes
 | Item | Where | What exists |
 | --- | --- | --- |
 | Pro checkout and trial hidden until `PRO_FEATURES` is true | `config/plans.php` | Caps, `/upgrade`, webhook, cancel, and the waitlist are built. `/me` shows the buy card only while the flag is on. `pro:notify-waitlist` mails the waitlist. A live Paystack test-mode charge still needs the secret and plan codes. |
+| Club subscription prices and Paystack plan codes | `config/club-plans.php`, `config/services.php` | Placeholders. `CLUB_PLANS_ENABLED` defaults false. Checkout refuses until both prices and plan codes are set. |
 | Personalised app home | `apps/mobile/src/flags.ts:32-34` | API feed exists. App flag defaults off. |
 | Weekly digest | `EmailCategory.php:26`, `routes/console.php` | Opt-in flag only. |
 | Product-update mail | `EmailCategory.php:27` | Opt-in flag. The only sender is `pro:notify-waitlist`, which honours it. |
