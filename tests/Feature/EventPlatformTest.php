@@ -13,6 +13,7 @@ use App\Models\Event;
 use App\Models\EventResult;
 use App\Models\User;
 use App\Support\DisciplineRecommender;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 
@@ -157,11 +158,19 @@ it('ranks linked results by wins then podiums then starts', function () {
         'placing' => 1,
     ]);
 
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+
     $this->get(route('disciplines.rankings', $discipline))
         ->assertOk()
         ->assertSee('not a SAPRF')
         ->assertSeeInOrder(['Ada Winner', 'Bea Podium'])
         ->assertDontSee('Unlinked');
+
+    $sql = collect(DB::getQueryLog())->pluck('query')->implode("\n");
+
+    expect($sql)->toContain('"placing"')
+        ->and($sql)->not->toMatch('/WHEN placing\b/');
 });
 
 it('shows published articles on the feed and hides drafts', function () {

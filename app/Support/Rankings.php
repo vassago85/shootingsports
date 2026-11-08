@@ -20,11 +20,17 @@ final class Rankings
     {
         $year ??= (int) now()->year;
 
-        $rows = EventResult::query()
+        $query = EventResult::query();
+        // PLACING is reserved in Postgres. An unquoted column makes every
+        // rankings page fail with a syntax error. SQLite accepts the bare
+        // word, so the quote has to come from the grammar, not a literal.
+        $placing = $query->getQuery()->getGrammar()->wrap('placing');
+
+        $rows = $query
             ->select('user_id')
             ->selectRaw('COUNT(*) as starts')
-            ->selectRaw('SUM(CASE WHEN placing = 1 THEN 1 ELSE 0 END) as wins')
-            ->selectRaw('SUM(CASE WHEN placing BETWEEN 1 AND 3 THEN 1 ELSE 0 END) as podiums')
+            ->selectRaw("SUM(CASE WHEN {$placing} = 1 THEN 1 ELSE 0 END) as wins")
+            ->selectRaw("SUM(CASE WHEN {$placing} BETWEEN 1 AND 3 THEN 1 ELSE 0 END) as podiums")
             ->where('discipline_id', $discipline->id)
             ->whereNotNull('user_id')
             ->whereHas('event', fn ($query) => $query->whereYear('starts_at', $year))
