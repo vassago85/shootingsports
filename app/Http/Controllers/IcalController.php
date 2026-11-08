@@ -40,9 +40,9 @@ class IcalController extends Controller
         return $this->feed($event->title, [$event]);
     }
 
-    public function shooter(string $shooter): Response
+    public function shooter(string $token): Response
     {
-        $user = User::query()->where('calendar_slug', $shooter)->firstOrFail();
+        $user = User::query()->where('calendar_token', $token)->firstOrFail();
         $events = (new PublicEventQuery(eventIds: $user->savedEvents()->pluck('events.id')->all()))->get();
 
         return $this->feed($user->name.' calendar', $events);

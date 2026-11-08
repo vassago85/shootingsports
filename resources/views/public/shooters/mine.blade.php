@@ -125,8 +125,23 @@
                     @endif
                 @endif
                 @if ($user->can('custom-calendar'))
-                    <x-calendar-subscribe :ics="route('ical.shooter', $user->calendar_slug)" />
-                    <x-embed-snippet :shooter="$user->calendar_slug" />
+                    <x-calendar-subscribe :ics="route('ical.shooter', $user->calendar_token)" />
+                    <form method="post" action="{{ route('my-calendar.reset-link') }}" style="margin-top:14px">
+                        @csrf
+                        <button type="submit" class="btn ghost">Reset my calendar link</button>
+                    </form>
+                    <x-embed-snippet :shooter="$user->calendar_token" />
+                    <form method="post" action="{{ route('my-calendar.visibility') }}" style="margin-top:22px">
+                        @csrf
+                        <p class="label">Shooter page</p>
+                        <p>Private by default. A public page shows your name, results and saved matches. It never shows your equipment or entries.</p>
+                        <label for="profile-visibility">Who can open your shooter page</label>
+                        <select id="profile-visibility" name="profile_visibility">
+                            <option value="private" @selected(! $user->isProfilePublic())>Private</option>
+                            <option value="public" @selected($user->isProfilePublic())>Public</option>
+                        </select>
+                        <button type="submit" class="btn" style="margin-top:10px">Save</button>
+                    </form>
                 @endif
             </div>
         </section>

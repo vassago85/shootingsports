@@ -197,12 +197,23 @@ Route::get('/me', [MeController::class, 'show'])
 Route::get('/me/calendar', [ShooterCalendarController::class, 'mine'])
     ->middleware('auth')
     ->name('my-calendar');
+Route::post('/me/calendar/visibility', [ShooterCalendarController::class, 'updateVisibility'])
+    ->middleware('auth')
+    ->name('my-calendar.visibility');
+Route::post('/me/calendar/reset-link', [ShooterCalendarController::class, 'resetCalendarLink'])
+    ->middleware('auth')
+    ->name('my-calendar.reset-link');
 
 Route::get('/me/library', MagazineLibrary::class)
     ->middleware('auth')
     ->name('my-library');
 Route::redirect('/my-calendar', '/me/calendar', 301);
-Route::get('/shooters/{shooter}/calendar.ics', [IcalController::class, 'shooter'])->name('ical.shooter');
+Route::get('/calendars/{token}.ics', [IcalController::class, 'shooter'])
+    ->where('token', '[A-Za-z0-9]{32,64}')
+    ->name('ical.shooter');
+Route::get('/shooters/{shooter}/calendar.ics', function () {
+    abort(404);
+})->where('shooter', '[A-Za-z0-9\-]+');
 Route::get('/shooters/{shooter}', [ShooterCalendarController::class, 'show'])->name('shooters.show');
 
 Route::get('/embed/calendar', [EmbedController::class, 'calendar'])->name('embed.calendar');

@@ -114,7 +114,7 @@ JS;
         $shooterSlug = $request->string('shooter')->toString();
 
         if ($shooterSlug !== '') {
-            return User::query()->where('calendar_slug', $shooterSlug)->value('name');
+            return User::query()->where('calendar_token', $shooterSlug)->value('name');
         }
 
         return null;

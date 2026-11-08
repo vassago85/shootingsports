@@ -17,30 +17,6 @@
                 @endif
             </div>
         </section>
-        @if ($equipment->isNotEmpty())
-            <section class="block">
-                <div class="wrap">
-                    <h2>Equipment</h2>
-                    <ul>
-                        @foreach ($equipment as $item)
-                            <li>{{ $item->category->getLabel() }} — {{ $item->label }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </section>
-        @endif
-        @if ($upcomingEntries->isNotEmpty())
-            <section class="block">
-                <div class="wrap">
-                    <h2>Entered</h2>
-                    <ul>
-                        @foreach ($upcomingEntries as $entry)
-                            <li><a href="{{ route('events.show', $entry->event->slug) }}">{{ $entry->event->title }}</a></li>
-                        @endforeach
-                    </ul>
-                </div>
-            </section>
-        @endif
         <section class="block">
             <div class="wrap">
                 @if ($events->isEmpty())
@@ -51,10 +27,6 @@
                             <x-event-card :event="$event" />
                         @endforeach
                     </div>
-                @endif
-                <x-calendar-subscribe :ics="route('ical.shooter', $user->calendar_slug)" />
-                @if (auth()->id() === $user->id && $user->can('custom-calendar'))
-                    <x-embed-snippet :shooter="$user->calendar_slug" />
                 @endif
             </div>
         </section>

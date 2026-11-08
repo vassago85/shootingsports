@@ -7,6 +7,7 @@ use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Enums\OrganisationUserRole;
 use App\Enums\Plan;
+use App\Enums\ProfileVisibility;
 use App\Enums\Province;
 use App\Enums\UserRole;
 use App\Models\Concerns\HasPlan;
@@ -43,7 +44,7 @@ use Laravel\Sanctum\HasApiTokens;
     'dedicated_category', 'dedicated_required_count',
     'pro_trial_started_at',
 ])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'calendar_token'])]
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
@@ -88,6 +89,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'pro_trial_ended_notified_at' => 'datetime',
             'dedicated_required_count' => 'integer',
             'dedicated_last_reminded_cycle_end' => 'date',
+            'profile_visibility' => ProfileVisibility::class,
         ];
     }
 
@@ -102,6 +104,14 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         static::creating(function (self $user): void {
             if (blank($user->unsubscribe_token)) {
                 $user->unsubscribe_token = Str::random(48);
+            }
+
+            if (blank($user->calendar_token)) {
+                $user->calendar_token = Str::random(48);
+            }
+
+            if ($user->profile_visibility === null) {
+                $user->profile_visibility = ProfileVisibility::Private;
             }
         });
     }
@@ -603,6 +613,37 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         $this->forceFill(['calendar_slug' => $slug])->save();
 
         return $slug;
+    }
+
+    public function isProfilePublic(): bool
+    {
+        return $this->profile_visibility === ProfileVisibility::Public;
+    }
+
+    /**
+     * Private profiles 404 for everyone except the owner and staff.
+     * A public opt-in is readable by guests.
+     */
+    public function profileVisibleTo(?self $viewer): bool
+    {
+        if ($this->isProfilePublic()) {
+            return true;
+        }
+
+        if (! $viewer instanceof self) {
+            return false;
+        }
+
+        return $viewer->is_staff || $viewer->id === $this->id;
+    }
+
+    public function rotateCalendarToken(): string
+    {
+        $token = Str::random(48);
+
+        $this->forceFill(['calendar_token' => $token])->save();
+
+        return $token;
     }
 
     public function follows(): HasMany

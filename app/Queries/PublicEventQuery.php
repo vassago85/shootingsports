@@ -435,7 +435,7 @@ class PublicEventQuery
             return null;
         }
 
-        $user = User::query()->where('calendar_slug', $slug)->first();
+        $user = User::query()->where('calendar_token', $slug)->first();
 
         if (! $user) {
             return [];

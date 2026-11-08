@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\EntryStatus;
+use App\Enums\ProfileVisibility;
 use App\Models\Event;
 use App\Models\User;
 use App\Queries\PublicEventQuery;
 use App\Support\Rankings;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ShooterCalendarController extends Controller
@@ -17,6 +19,10 @@ class ShooterCalendarController extends Controller
         $user = auth()->user();
         abort_unless($user instanceof User, 401);
         $user->ensureCalendarSlug();
+
+        if (blank($user->calendar_token)) {
+            $user->rotateCalendarToken();
+        }
 
         $savedIds = $user->savedEvents()->pluck('events.id')->all();
 
@@ -47,25 +53,50 @@ class ShooterCalendarController extends Controller
     public function show(string $shooter, Rankings $rankings): View
     {
         $user = User::query()->where('calendar_slug', $shooter)->firstOrFail();
-        $user->ensureCalendarSlug();
+
+        $viewer = auth()->user();
+
+        abort_unless($user->profileVisibleTo($viewer instanceof User ? $viewer : null), 404);
 
         $events = (new PublicEventQuery(
             eventIds: $user->savedEvents()->pluck('events.id')->all(),
         ))->get();
 
-        $profile = $rankings->profile($user);
-
         return view('public.shooters.show', [
             'user' => $user,
             'events' => $events,
-            'profile' => $profile,
-            'equipment' => $user->equipment()->orderBy('category')->get(),
-            'upcomingEntries' => $user->eventEntries()
-                ->where('status', EntryStatus::Entered)
-                ->whereHas('event', fn ($query) => $query->where('starts_at', '>=', now()))
-                ->with('event')
-                ->get(),
+            'profile' => $rankings->profile($user),
         ]);
+    }
+
+    public function updateVisibility(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+
+        $visibility = ProfileVisibility::tryFrom((string) $request->input('profile_visibility'));
+
+        abort_unless($visibility instanceof ProfileVisibility, 422);
+
+        $user->forceFill(['profile_visibility' => $visibility])->save();
+
+        return redirect()
+            ->route('my-calendar')
+            ->with('status', $visibility === ProfileVisibility::Public
+                ? 'Your shooter page is now public.'
+                : 'Your shooter page is now private.');
+    }
+
+    public function resetCalendarLink(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
+
+        $user->rotateCalendarToken();
+
+        return redirect()
+            ->route('my-calendar')
+            ->with('status', 'Your calendar link has been reset. The previous link no longer works.');
     }
 
     /**
