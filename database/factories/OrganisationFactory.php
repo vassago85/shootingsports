@@ -2,12 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Enums\ClubPlan;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
 use App\Enums\Province;
 use App\Enums\VerificationState;
-use App\Models\Organisation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -49,6 +49,15 @@ class OrganisationFactory extends Factory
         return $this->state(fn (): array => [
             'verification_state' => VerificationState::Verified,
             'last_verified_at' => now(),
+        ]);
+    }
+
+    public function clubPlan(): static
+    {
+        return $this->state(fn (): array => [
+            'plan' => ClubPlan::Club,
+            'plan_expires_at' => now()->addYear(),
+            'plan_cancelled_at' => null,
         ]);
     }
 }

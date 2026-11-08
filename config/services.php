@@ -106,6 +106,13 @@ return [
             'annual' => env('PAYSTACK_PLAN_ANNUAL'),
             'monthly' => env('PAYSTACK_PLAN_MONTHLY'),
         ],
+        // Club subscription plans. Separate from the shooter Pro codes
+        // above. Leave blank until the prices in config/club-plans.php
+        // are filled in and `paystack:setup-plans` has a club mode.
+        'club_plan_codes' => [
+            'annual' => env('PAYSTACK_CLUB_PLAN_ANNUAL'), // TODO
+            'monthly' => env('PAYSTACK_CLUB_PLAN_MONTHLY'), // TODO
+        ],
     ],
 
 ];

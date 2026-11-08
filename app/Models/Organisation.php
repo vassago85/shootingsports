@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\ClubPlan;
 use App\Enums\ListingSource;
 use App\Enums\ListingStatus;
 use App\Enums\MembershipStatus;
 use App\Enums\OrganisationType;
 use App\Enums\Province;
 use App\Enums\VerificationState;
+use App\Models\Concerns\HasClubPlan;
 use App\Models\Concerns\HasDisciplines;
 use App\Models\Concerns\HasSlug;
 use App\Models\Concerns\HasVerification;
@@ -44,7 +46,11 @@ use Illuminate\Support\Facades\Storage;
 class Organisation extends Model
 {
     /** @use HasFactory<OrganisationFactory> */
-    use HasDisciplines, HasFactory, HasSlug, HasVerification, SoftDeletes;
+    use HasClubPlan, HasDisciplines, HasFactory, HasSlug, HasVerification, SoftDeletes;
+
+    protected $attributes = [
+        'plan' => 'free',
+    ];
 
     protected function casts(): array
     {
@@ -61,6 +67,9 @@ class Organisation extends Model
             'membership_online_payments' => 'boolean',
             'membership_custom_fields' => 'array',
             'status' => ListingStatus::class,
+            'plan' => ClubPlan::class,
+            'plan_expires_at' => 'datetime',
+            'plan_cancelled_at' => 'datetime',
             'verification_state' => VerificationState::class,
             'last_verified_at' => 'immutable_datetime',
             'source' => ListingSource::class,
