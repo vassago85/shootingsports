@@ -136,10 +136,10 @@
                         <div>
                             @if ($proSalesOpen)
                                 <h2>Upgrade to Pro</h2>
-                                <p>{{ config('plans.pricing.annual.display') }} or {{ config('plans.pricing.monthly.display') }}. Cancel any time from your account.</p>
+                                <p>{{ config('plans.pricing.annual.display') }} or {{ config('plans.pricing.monthly.display') }}. Unlimited saved matches, unlimited follows and saved searches, full calendar and log history, log export, and the dedicated-status tracker.</p>
                             @else
                                 <h2>Pro is coming</h2>
-                                <p>Unlimited follows, unlimited log history, dedicated-status export, household up to four. Join the waitlist to hear first when it opens.</p>
+                                <p>Unlimited saved matches, unlimited follows and saved searches, full calendar and log history, log export, and the dedicated-status tracker. Join the waitlist to hear first when it opens.</p>
                             @endif
                         </div>
                         <a class="btn" href="{{ route('upgrade') }}">{{ $proSalesOpen ? 'Upgrade to Pro' : 'Join the waitlist' }}</a>

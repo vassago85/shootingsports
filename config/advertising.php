@@ -20,7 +20,6 @@
 |   - discipline_exclusive   → single-discipline hero + sponsor
 |   - home_leaderboard       → home page banner
 |   - calendar_leaderboard   → calendar page banner
-|   - newsletter             → editorial newsletter mention
 |
 */
 
@@ -84,22 +83,11 @@ return [
             'slot' => PlacementSlot::Leaderboard->value,
             'audience' => 'Shooters actively looking for the next match, filtered by discipline, province and driving distance.',
         ],
-
-        'newsletter' => [
-            'key' => 'newsletter',
-            'name' => 'Newsletter mention',
-            'summary' => 'A single-paragraph mention with a link in the weekly / monthly shooter digest.',
-            'price_per_month_cents' => 75000,
-            'price_display' => 'R750 per issue',
-            'page' => null,
-            'slot' => null,
-            'audience' => 'Registered shooters who have opted in to the digest.',
-        ],
     ],
 
     'commitments' => [
         'One national register — no discipline is favoured, no federation buys editorial.',
         'Ads are labelled and never dressed up as match listings.',
-        'We do not sell firearms, take a cut of a transfer or broker ammunition — advertising is our only revenue.',
+        'We do not sell firearms, take a cut of a transfer or broker ammunition. Advertising and optional Pro fund the free calendar and directory.',
     ],
 ];

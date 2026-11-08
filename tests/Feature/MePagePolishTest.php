@@ -70,6 +70,7 @@ it('shows the inline Upgrade link and the Pro strip for Free shooters while Pro 
     $response->assertSee('class="me-upgrade-inline"', escape: false);
     $response->assertSee('Upgrade to Pro');
     $response->assertSee('R299 / year');
+    $response->assertSee('unlimited saved matches, unlimited follows and saved searches');
     $response->assertDontSee('Join the waitlist');
     $response->assertDontSee('Pro is coming');
 });

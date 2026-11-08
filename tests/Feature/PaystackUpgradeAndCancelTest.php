@@ -29,6 +29,8 @@ it('a free signed-in user sees both pricing cards and can pick annual or monthly
         ->assertSet('selected', 'annual')
         ->assertSee('R299 / year')
         ->assertSee('R29 / month')
+        ->assertSee('Unlimited saved matches')
+        ->assertSee('Dedicated-status tracker')
         ->call('pick', 'monthly')
         ->assertSet('selected', 'monthly')
         ->call('pick', 'annual')

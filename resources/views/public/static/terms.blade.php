@@ -4,7 +4,7 @@
             <div class="wrap">
                 <p class="label">Legal</p>
                 <h1>Terms of Use</h1>
-                <p>Last updated: 17 September 2026. Draft for public use. Intended for attorney review. Questions: <a href="mailto:hello@shootingsports.co.za">hello@shootingsports.co.za</a>.</p>
+                <p>Last updated: 8 November 2026. Draft for public use. Intended for attorney review. Questions: <a href="mailto:hello@shootingsports.co.za">hello@shootingsports.co.za</a>.</p>
             </div>
         </section>
 
@@ -59,7 +59,7 @@
 
                 <h2>7. Pro subscriptions and payments</h2>
                 <ul>
-                    <li>Browsing the public calendar and directory remains free. Pro adds personalisation and convenience features (for example higher follow and saved-search limits, attendance-log depth, exports) as described on the upgrade page; feature limits may change.</li>
+                    <li>Browsing the public calendar and directory remains free. Pro adds unlimited saved matches, unlimited follows and saved searches, full calendar and log history, log export, and the dedicated-status tracker.</li>
                     <li>Paid Pro is billed via our payment provider (Paystack). Card data is handled by Paystack; we do not store full card numbers.</li>
                     <li>Trials (where offered) do not require a card unless you choose to subscribe. Cancelling stops future charges; access continues until the end of the period already paid, as stated in the product UI.</li>
                     <li>Prices are in South African Rand as displayed at checkout. Entry fees taken on an event page are separate from Pro and are charged once via Paystack.</li>

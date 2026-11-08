@@ -48,6 +48,10 @@ it('renders the public commitments block', function () {
     foreach (config('advertising.commitments') as $line) {
         $response->assertSee(e($line));
     }
+
+    $response->assertSee('Advertising and optional Pro fund the free calendar and directory.')
+        ->assertDontSee('advertising is our only revenue')
+        ->assertDontSee('Newsletter mention');
 });
 
 it('does not publish advertising prices', function () {

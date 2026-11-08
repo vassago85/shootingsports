@@ -5,7 +5,7 @@
                 @if ($proEnabled)
                     <p class="label">Pro · Upgrade</p>
                     <h1>Go Pro</h1>
-                    <p>Unlimited follows, unlimited saved searches, full history, season exports. Cancel any time from your account. No lock-in.</p>
+                    <p>Unlimited saved matches, unlimited follows and saved searches, full calendar and log history, log export, and the dedicated-status tracker. Cancel any time from your account. No lock-in.</p>
                 @else
                     <p class="label">Account</p>
                     <h1>Pro is on hold</h1>
@@ -139,11 +139,11 @@
                         </div>
 
                         <ul class="pro-features">
-                            <li><b>Attendance log.</b> Track every match you shoot, no cap on entries</li>
-                            <li><b>Annual attendance record.</b> Printable PDF + CSV for your SAPSA / PISA / KKSA dedicated-status renewals</li>
-                            <li>Unlimited club, discipline and venue follows</li>
-                            <li>Unlimited saved calendar searches</li>
-                            <li>Full match history back to when we started tracking</li>
+                            <li>Unlimited saved matches</li>
+                            <li>Unlimited follows and saved searches</li>
+                            <li>Full calendar and log history</li>
+                            <li>Log export</li>
+                            <li>Dedicated-status tracker</li>
                         </ul>
 
                         <div class="pro-actions">

@@ -267,7 +267,9 @@ it('serves the terms of use page and links it from the public footer', function 
         ->assertOk()
         ->assertSee('Terms of Use')
         ->assertSee('independent discovery register', false)
-        ->assertSee('Not a firearms dealer', false);
+        ->assertSee('Not a firearms dealer', false)
+        ->assertSee('unlimited saved matches, unlimited follows and saved searches, full calendar and log history, log export, and the dedicated-status tracker', false)
+        ->assertSee('we do not automatically pay the club out', false);
 
     $this->get('/')
         ->assertOk()
