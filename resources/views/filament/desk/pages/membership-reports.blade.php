@@ -1,4 +1,7 @@
 <x-filament-panels::page>
+    @if ($note = $this->clubPlanSubheading())
+        <p class="mb-4 text-sm text-gray-600 dark:text-gray-300">{{ $note }}</p>
+    @endif
     <div class="space-y-6">
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-test="membership-report-tiles">
             <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">

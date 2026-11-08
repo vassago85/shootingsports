@@ -3,6 +3,7 @@
 namespace App\Filament\Desk\Resources\ClubMembers\Pages;
 
 use App\Enums\ClubMemberStatus;
+use App\Filament\Desk\Concerns\LocksUnpaidClubs;
 use App\Filament\Desk\Resources\ClubMembers\ClubMemberResource;
 use App\Filament\Resources\Organisations\Pages\ListOrganisations;
 use Filament\Actions\CreateAction;
@@ -12,7 +13,23 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ListClubMembers extends ListRecords
 {
+    use LocksUnpaidClubs;
+
     protected static string $resource = ClubMemberResource::class;
+
+    public function mount(): void
+    {
+        parent::mount();
+
+        if ($this->shouldLockClubTools()) {
+            $this->view = 'filament.desk.pages.club-plan-locked';
+        }
+    }
+
+    public function getSubheading(): ?string
+    {
+        return $this->clubPlanSubheading();
+    }
 
     protected function getHeaderActions(): array
     {

@@ -4,6 +4,7 @@ namespace App\Filament\Desk\Pages;
 
 use App\Enums\ClubMemberStatus;
 use App\Enums\MembershipInvoiceStatus;
+use App\Filament\Desk\Concerns\LocksUnpaidClubs;
 use App\Filament\Desk\Resources\ClubMembers\ClubMemberResource;
 use App\Models\ClubMember;
 use App\Models\MembershipInvoice;
@@ -24,6 +25,8 @@ use UnitEnum;
  */
 class MembershipReports extends Page
 {
+    use LocksUnpaidClubs;
+
     protected string $view = 'filament.desk.pages.membership-reports';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;
@@ -43,6 +46,10 @@ class MembershipReports extends Page
     public function mount(): void
     {
         $this->year ??= (string) CarbonImmutable::today()->year;
+
+        if ($this->shouldLockClubTools()) {
+            $this->view = 'filament.desk.pages.club-plan-locked';
+        }
     }
 
     public static function canAccess(): bool

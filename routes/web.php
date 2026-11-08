@@ -39,6 +39,7 @@ use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
+use App\Livewire\ClubPlanCheckout;
 use App\Livewire\FindYourDiscipline;
 use App\Livewire\Listings\SubmitClaim;
 use App\Livewire\MagazineLibrary;
@@ -342,6 +343,9 @@ Route::post('/logout', function () {
 // completing checkout on their phone. Webhook is CSRF-exempted in
 // bootstrap/app.php since Paystack cannot present a CSRF token.
 Route::get('/upgrade', Upgrade::class)->middleware('auth')->name('upgrade');
+Route::get('/clubs/{organisation:slug}/subscribe', ClubPlanCheckout::class)
+    ->middleware('auth')
+    ->name('club-plan.show');
 Route::post('/upgrade/cancel', [PaystackController::class, 'cancel'])
     ->middleware('auth')
     ->name('upgrade.cancel');

@@ -6,6 +6,7 @@ use App\Enums\EntryStatus;
 use App\Filament\Desk\Resources\EventEntries\Pages\ManageEventEntries;
 use App\Models\Event;
 use App\Models\EventEntry;
+use App\Models\Organisation;
 use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -116,6 +117,15 @@ class EventEntryResource extends Resource
 
         if ($orgIds->isEmpty()) {
             return false;
+        }
+
+        $hasUnpaidClub = Organisation::query()
+            ->whereIn('id', $orgIds)
+            ->get()
+            ->contains(fn (Organisation $organisation): bool => ! $organisation->isPaid());
+
+        if ($hasUnpaidClub) {
+            return true;
         }
 
         return Event::query()
