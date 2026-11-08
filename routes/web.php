@@ -27,6 +27,7 @@ use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\PaystackController;
 use App\Http\Controllers\PlacementClickController;
 use App\Http\Controllers\ProviderController;
+use App\Http\Controllers\ReportCorrectionController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\ShooterCalendarController;
 use App\Http\Controllers\ShooterLogController;
@@ -134,6 +135,9 @@ Route::get('/ranges', [VenueController::class, 'index'])->name('ranges.index');
 // canonical URL. Route generation stays the same:
 // `route('ranges.show', $venue->slug)` still works.
 Route::get('/ranges/{slug}', [VenueController::class, 'show'])->name('ranges.show');
+Route::post('/corrections', ReportCorrectionController::class)
+    ->middleware('throttle:5,1')
+    ->name('corrections.store');
 
 Route::get('/suppliers', [ProviderController::class, 'index'])->name('suppliers.index');
 Route::get('/suppliers/{category}/{province}', [ProviderController::class, 'category'])

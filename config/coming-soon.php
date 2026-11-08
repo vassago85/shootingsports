@@ -49,6 +49,7 @@ return [
         'ranges.index',
         'ranges.show',
         'events.show',
+        'corrections.store',
         'find',
         'feed',
         'disciplines.rankings',

@@ -121,6 +121,8 @@
                         </div>
                     </x-owner-panel>
                 @endif
+
+                <x-report-correction type="organisation" :subject-id="$organisation->id" />
             </div>
         </section>
     </main>

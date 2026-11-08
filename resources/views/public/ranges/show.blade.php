@@ -177,6 +177,8 @@
                         </div>
                     </x-owner-panel>
                 @endif
+
+                <x-report-correction type="venue" :subject-id="$venue->id" />
             </div>
         </section>
     </main>

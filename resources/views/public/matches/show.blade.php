@@ -324,6 +324,8 @@
                         </div>
                     </x-owner-panel>
                 @endif
+
+                <x-report-correction type="event" :subject-id="$event->id" />
             </div>
         </section>
     </main>
