@@ -1,10 +1,13 @@
 <?php
 
 use App\Filament\Desk\Resources\MagazineIssues\MagazineIssueResource;
+use App\Mail\MagazineDownloadLink;
 use App\Models\MagazineIssue;
 use App\Models\MagazineRead;
 use App\Models\Organisation;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
 beforeEach(function (): void {
@@ -56,7 +59,7 @@ it('serves a published issue to the public with the flipbook mount', function ()
         ->assertDontSee('noindex,nofollow', false);
 });
 
-it('offers a PDF download when the issue allows it', function () {
+it('offers an emailed PDF download when the issue allows it', function () {
     $issue = MagazineIssue::factory()->published()->create([
         'pdf_path' => 'magazines/pdf/issue.pdf',
         'pdf_download_enabled' => true,
@@ -64,8 +67,97 @@ it('offers a PDF download when the issue allows it', function () {
 
     $this->get(route('magazines.show', $issue->slug))
         ->assertOk()
-        ->assertSee('Download PDF', false)
-        ->assertSee('download the PDF', false);
+        ->assertSee('id="magazine-flipbook"', false)
+        ->assertSee('Send download link', false)
+        ->assertSee('Reading on this page is free', false)
+        ->assertDontSee('>Download PDF<', false);
+});
+
+it('emails a signed download link and keeps the reader open without it', function () {
+    Storage::fake('media');
+    Storage::disk('media')->put('magazines/pdf/issue.pdf', '%PDF-1.4');
+    Mail::fake();
+
+    $issue = MagazineIssue::factory()->published()->create([
+        'title' => 'October 2026 Issue',
+        'pdf_path' => 'magazines/pdf/issue.pdf',
+        'pdf_download_enabled' => true,
+    ]);
+
+    $this->post(route('magazines.download-link', $issue->slug), [
+        'email' => 'Reader@Example.com',
+    ])->assertRedirect()
+        ->assertSessionHas('download_link_sent', true);
+
+    Mail::assertQueued(MagazineDownloadLink::class, function (MagazineDownloadLink $mail) use ($issue): bool {
+        return $mail->hasTo('reader@example.com')
+            && $mail->issue->is($issue)
+            && str_contains($mail->downloadUrl, 'signature=');
+    });
+
+    $this->get(route('magazines.show', $issue->slug))
+        ->assertOk()
+        ->assertSee('id="magazine-flipbook"', false);
+});
+
+it('downloads the PDF from the emailed link and refuses an unsigned link', function () {
+    Storage::fake('media');
+    Storage::disk('media')->put('magazines/pdf/issue.pdf', '%PDF-1.4');
+
+    $issue = MagazineIssue::factory()->published()->create([
+        'title' => 'October 2026 Issue',
+        'pdf_path' => 'magazines/pdf/issue.pdf',
+        'pdf_download_enabled' => true,
+    ]);
+
+    $this->get(route('magazines.download', $issue->slug))->assertForbidden();
+
+    $url = URL::temporarySignedRoute(
+        'magazines.download',
+        now()->addDays(MagazineDownloadLink::LINK_DAYS),
+        ['issue' => $issue->slug],
+    );
+
+    $this->get($url)->assertOk()->assertDownload('october-2026-issue.pdf');
+});
+
+it('does not email a download link when the issue turns downloads off', function () {
+    Storage::fake('media');
+    Storage::disk('media')->put('magazines/pdf/issue.pdf', '%PDF-1.4');
+    Mail::fake();
+
+    $issue = MagazineIssue::factory()->published()->create([
+        'pdf_path' => 'magazines/pdf/issue.pdf',
+        'pdf_download_enabled' => false,
+    ]);
+
+    $this->get(route('magazines.show', $issue->slug))
+        ->assertOk()
+        ->assertDontSee('Send download link', false)
+        ->assertSee('id="magazine-flipbook"', false);
+
+    $this->post(route('magazines.download-link', $issue->slug), [
+        'email' => 'reader@example.com',
+    ])->assertNotFound();
+
+    Mail::assertNothingQueued();
+});
+
+it('asks for a valid email before sending a download link', function () {
+    Storage::fake('media');
+    Storage::disk('media')->put('magazines/pdf/issue.pdf', '%PDF-1.4');
+
+    $issue = MagazineIssue::factory()->published()->create([
+        'pdf_path' => 'magazines/pdf/issue.pdf',
+        'pdf_download_enabled' => true,
+    ]);
+
+    $this->from(route('magazines.show', $issue->slug))
+        ->post(route('magazines.download-link', $issue->slug), [
+            'email' => 'not-an-email',
+        ])
+        ->assertRedirect()
+        ->assertSessionHasErrors('email');
 });
 
 it('hides the PDF download when the issue turns it off', function () {

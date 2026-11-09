@@ -22,6 +22,7 @@
         :json-ld="$jsonLd"
         :branded="$branded"
     />
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16.png') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" sizes="16x16 32x32 48x48">
@@ -118,6 +119,7 @@
                     <ul>
                         <li><a href="{{ route('calendar') }}">Events</a></li>
                         <li><a href="{{ route('disciplines.index') }}">Sports</a></li>
+                        <li><a href="{{ route('glossary') }}">Glossary</a></li>
                         <li><a href="{{ route('clubs.index') }}">Clubs</a></li>
                         <li><a href="{{ route('ranges.index') }}">Ranges</a></li>
                         <li><a href="{{ route('map') }}">Events near me</a></li>

@@ -322,7 +322,7 @@ class PublicEventQuery
             return [];
         }
 
-        $discipline = Discipline::query()->where('slug', $this->disciplineSlug)->first();
+        $discipline = Discipline::query()->matchingTerm($this->disciplineSlug)->orderBy('name')->first();
 
         return $discipline?->treeIds() ?? [];
     }

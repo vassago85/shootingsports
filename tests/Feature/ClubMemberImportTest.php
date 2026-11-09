@@ -25,7 +25,7 @@ function csvFixture(array $rows): string
 }
 
 it('creates members on the first import', function () {
-    $club = Organisation::factory()->create();
+    $club = Organisation::factory()->clubPlan()->create();
     $actor = User::factory()->staff()->create();
 
     $path = csvFixture([
@@ -45,7 +45,7 @@ it('creates members on the first import', function () {
 });
 
 it('updates matching rows on a second import instead of duplicating', function () {
-    $club = Organisation::factory()->create();
+    $club = Organisation::factory()->clubPlan()->create();
     $actor = User::factory()->staff()->create();
     $importer = new ImportClubMembers;
 
@@ -75,7 +75,7 @@ it('updates matching rows on a second import instead of duplicating', function (
 });
 
 it('reports invalid rows but imports the rest', function () {
-    $club = Organisation::factory()->create();
+    $club = Organisation::factory()->clubPlan()->create();
 
     $path = csvFixture([
         ['M001', 'Jana', 'van der Merwe', 'jana@example.com', '', '', 'senior', 'active', '', '', '', ''],
@@ -94,7 +94,7 @@ it('reports invalid rows but imports the rest', function () {
 });
 
 it('writes a status-change row for each imported member', function () {
-    $club = Organisation::factory()->create();
+    $club = Organisation::factory()->clubPlan()->create();
 
     $path = csvFixture([
         ['M001', 'Jana', 'van der Merwe', 'jana@example.com', '', '', 'senior', 'active', '', '', '', ''],

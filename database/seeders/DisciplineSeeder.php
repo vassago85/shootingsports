@@ -66,7 +66,7 @@ class DisciplineSeeder extends Seeder
             ['combat-rifle', 'Combat Rifle', 'Practical rifle on timed stages.', '25–300 m'],
             ['hunting-rifle', 'Hunting Rifle', 'Field-position hunting rifle matches.', '100–400 m'],
             ['nrl-hunter', 'NRL Hunter', 'Hunting-position precision rifle on unknown-distance steel.', '200–800 m'],
-            ['gong-shooting', 'Gong Shooting', 'Team or individual steel-gong rifle matches, often hunting-calibre.', '100–450 m'],
+            ['gong-shooting', 'Gong shoot / gong skiet', 'Steel gong shoots, known in Afrikaans as gong skiet, are relaxed, social rifle events usually hosted on farms and at local clubs.', 'up to about 800 m'],
             ['metallic-silhouette', 'Metallic Silhouette', 'Knock-down animal silhouettes at known distance.', '200–500 m'],
         ] as [$slug, $name, $blurb, $distance]) {
             $this->upsert([
@@ -150,6 +150,14 @@ class DisciplineSeeder extends Seeder
         }
 
         DivisionCatalog::apply();
+
+        $gong = 'Steel gong shoots, known in Afrikaans as gong skiet, are relaxed, social rifle events usually hosted on farms and at local clubs. Distances typically run out to around 800 m, which keeps them achievable for most licensed firearm owners and less intimidating than long range or precision series events. They are a good first step into organised shooting and a strong part of local and rural shooting communities.';
+
+        Discipline::query()->where('slug', 'gong-shooting')->update([
+            'body' => $gong,
+            'intro' => $gong,
+            'keywords' => 'gong shoot, gong skiet, gongskiet',
+        ]);
 
         $this->storeHeroImages();
     }

@@ -31,6 +31,7 @@ class LlmsTxtController extends Controller
             '- '.route('calendar').' — Match calendar',
             '- '.route('answers.this-weekend').' — Matches this weekend, Friday to Sunday. On Saturday the window starts today; on Sunday it is today only. Grouped by province',
             '- '.route('disciplines.index').' — Disciplines',
+            '- '.route('glossary').' — Event type glossary',
             '- '.route('clubs.index').' — Clubs',
             '- '.route('ranges.index').' — Ranges',
             '- '.route('suppliers.index').' — Suppliers',

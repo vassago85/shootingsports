@@ -33,7 +33,7 @@ use Illuminate\Support\Facades\Storage;
 #[ObservedBy([IndexNowObserver::class])]
 #[Fillable([
     'slug', 'name', 'short_name', 'type', 'parent_id', 'province', 'town',
-    'email', 'phone', 'website_url', 'facebook_url', 'instagram_url', 'whatsapp_url', 'description',
+    'email', 'phone', 'private_contact', 'website_url', 'facebook_url', 'instagram_url', 'whatsapp_url', 'description',
     'logo_path', 'accredited', 'visitors_welcome',
     'membership_enabled', 'accepts_applications',
     'membership_year_end_month', 'membership_year_end_day',

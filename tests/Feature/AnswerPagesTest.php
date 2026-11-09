@@ -220,7 +220,7 @@ function citationFixture(): array
         'name' => 'Citation Discipline',
         'is_published' => true,
     ]);
-    $club = Organisation::factory()->create([
+    $club = Organisation::factory()->clubPlan()->create([
         'name' => 'Citation Club',
         'slug' => 'citation-club',
         'status' => ListingStatus::Published,

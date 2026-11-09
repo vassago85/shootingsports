@@ -148,6 +148,11 @@ class EventResource extends Resource
                                 Textarea::make('description')
                                     ->rows(8)
                                     ->columnSpanFull(),
+                                Textarea::make('private_contact')
+                                    ->label('Private organiser contact')
+                                    ->rows(2)
+                                    ->columnSpanFull()
+                                    ->helperText('Staff only. Never shown on the public page.'),
                             ]),
 
                         Tab::make('Schedule')

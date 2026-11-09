@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Storage;
  * open as a page-flip viewer and also browse as searchable text.
  */
 #[Fillable([
-    'user_id', 'publisher_organisation_id', 'publisher_name', 'publication', 'title', 'slug', 'issue_label', 'description',
+    'user_id', 'publisher_organisation_id', 'publisher_name', 'publication', 'title', 'slug', 'issue_label', 'issue_number', 'issue_month', 'external_url', 'description',
     'language', 'pdf_path', 'pdf_download_enabled', 'cover_path', 'page_count',
     'pages_text', 'published_at', 'reader_access',
 ])]
@@ -35,6 +35,8 @@ class MagazineIssue extends Model
         return [
             'pages_text' => 'array',
             'page_count' => 'integer',
+            'issue_number' => 'integer',
+            'issue_month' => 'date',
             'pdf_download_enabled' => 'boolean',
             'published_at' => 'datetime',
         ];

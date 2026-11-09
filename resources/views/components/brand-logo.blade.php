@@ -1,7 +1,7 @@
 <img
-    src="{{ asset('images/brand/logo-lockup.png') }}"
+    src="{{ asset('images/brand/logo-lockup.svg') }}"
     alt="ShootingSports — The SA Register"
-    width="1600"
-    height="289"
+    width="1166"
+    height="300"
     {{ $attributes->class('brand-logo') }}
 >

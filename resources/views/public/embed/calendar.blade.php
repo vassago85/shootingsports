@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex">
     <link rel="alternate" type="application/json+oembed" href="{{ $oembedUrl }}" title="Shooting Sports oEmbed">
     <title>{{ $listingName ? $listingName.' calendar' : 'Match calendar' }} · Shooting Sports</title>
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16.png') }}">
     @if ($theme->googleFontsHref())

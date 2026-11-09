@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300"><rect width="300" height="300" fill="#0E3328"/><g transform="translate(50.00 50.00) scale(0.89286) translate(12 12)">
+<defs><clipPath id="kom"><path clip-rule="evenodd" d="M-20 -20H220V220H-20Z M100 84 A16 16 0 1 0 100 116 A16 16 0 1 0 100 84Z"/></clipPath></defs>
+<g fill="none" stroke-width="13">
+<path d="M112.25 12.85 A88 88 0 0 1 187.15 87.75" stroke="#C5E07A"/>
+<path d="M187.15 112.25 A88 88 0 0 1 112.25 187.15" stroke="#FFFFFF"/>
+<path d="M87.75 187.15 A88 88 0 0 1 12.85 112.25" stroke="#C5E07A"/>
+<path d="M12.85 87.75 A88 88 0 0 1 87.75 12.85" stroke="#FFFFFF"/>
+<path d="M119.05 67 A22 22 0 1 0 100 100 A22 22 0 1 1 80.95 133" stroke="#FFFFFF" stroke-width="18" clip-path="url(#kom)"/>
+</g>
+<g fill="#FFFFFF"><rect x="98" y="-4" width="4" height="38"/><rect x="98" y="166" width="4" height="38"/><rect x="-4" y="98" width="38" height="4"/><rect x="166" y="98" width="38" height="4"/></g>
+<circle cx="100" cy="100" r="11" fill="#C5E07A"/>
+</g></svg>

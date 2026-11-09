@@ -87,8 +87,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Livewire's temporary upload default is max:12288 (12 MB), which
         // blocks magazine PDFs before Filament's own ->maxSize() rule even
-        // runs. Lift it to 50 MB to match the Magazine Issue form cap.
-        config(['livewire.temporary_file_upload.rules' => ['required', 'file', 'max:51200']]);
+        // runs. 60 MB matches this workstation's upload_max_filesize and
+        // leaves room for the On Target Africa issues.
+        config(['livewire.temporary_file_upload.rules' => ['required', 'file', 'max:61440']]);
 
         // User implements MustVerifyEmail, so every Registered event
         // (shooter, match director, supplier) fires this listener and

@@ -14,6 +14,7 @@ use App\Http\Controllers\EnquiryController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventsJsonController;
 use App\Http\Controllers\FeedController;
+use App\Http\Controllers\GlossaryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IcalController;
 use App\Http\Controllers\LlmsFullTxtController;
@@ -95,6 +96,7 @@ Route::get('/map', MapController::class)->name('map');
 Route::get('/calendar/map', fn () => redirect()->route('map'));
 
 Route::get('/disciplines', [DisciplineController::class, 'index'])->name('disciplines.index');
+Route::get('/glossary', GlossaryController::class)->name('glossary');
 Route::get('/divisions/{division}', [DivisionController::class, 'show'])
     ->where('division', 'handgun|bolt-action-rifle|self-loading-rifle|shotgun|air-rifle')
     ->name('divisions.show');
@@ -158,6 +160,11 @@ Route::get('/feed', FeedController::class)->name('feed');
 // Drafts 404 to the public, unless the request carries a signed
 // preview link generated from the Desk resource.
 Route::get('/magazines', [MagazineIssueController::class, 'index'])->name('magazines.index');
+Route::post('/magazines/{issue}/download-link', [MagazineIssueController::class, 'emailDownloadLink'])
+    ->name('magazines.download-link');
+Route::get('/magazines/{issue}/download', [MagazineIssueController::class, 'download'])
+    ->middleware('signed')
+    ->name('magazines.download');
 Route::get('/magazines/{issue}', [MagazineIssueController::class, 'show'])->name('magazines.show');
 Route::post('/magazines/{issue}/read', [MagazineReadController::class, 'store'])
     ->middleware('throttle:60,1')

@@ -62,7 +62,7 @@ it('publishes the Western Cape 2027 WPBA programme', function () {
         ->and($league->starts_at->toDateTimeString())->toBe('2027-01-16 00:00:00')
         ->and($league->ends_at)->toBeNull()
         ->and($league->all_day)->toBeTrue()
-        ->and($league->status)->toBe(EventStatus::Confirmed)
+        ->and($league->status)->toBe(EventStatus::Planned)
         ->and($league->publication)->toBe(EventPublication::Published)
         ->and($league->level)->toBe(EventLevel::Series)
         ->and($league->hostOrganisation?->slug)->toBe('wpba')

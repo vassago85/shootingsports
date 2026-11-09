@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\Storage;
 #[Fillable([
     'slug', 'title', 'host_organisation_id', 'venue_id', 'starts_at', 'ends_at',
     'all_day', 'level', 'kind', 'status', 'publication', 'confirmed_at', 'original_starts_at',
-    'entry_fee_cents', 'member_fee_cents', 'entry_url', 'contact_email', 'accepts_platform_entries', 'entry_collection', 'accepts_team_entries', 'team_size', 'entry_payment_instructions', 'capacity',
+    'entry_fee_cents', 'member_fee_cents', 'entry_url', 'contact_email', 'private_contact', 'accepts_platform_entries', 'entry_collection', 'accepts_team_entries', 'team_size', 'entry_payment_instructions', 'capacity',
     'entries_taken', 'round_count', 'target_count', 'stage_count',
     'results_url', 'website_url', 'facebook_url', 'instagram_url', 'whatsapp_url',
     'banner_media_id', 'banner_path', 'description', 'created_by',

@@ -147,6 +147,11 @@ class DisciplineResource extends Resource
                     ->maxLength(320)
                     ->columnSpanFull()
                     ->helperText('Shown on the sport page, with the events and videos.'),
+                TextInput::make('keywords')
+                    ->label('Search aliases')
+                    ->maxLength(255)
+                    ->columnSpanFull()
+                    ->helperText('Comma-separated. Searches match these as well as the name, ignoring spaces.'),
                 Textarea::make('intro')
                     ->label('Intro')
                     ->rows(6)

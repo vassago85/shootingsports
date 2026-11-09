@@ -3,6 +3,7 @@
 namespace App\Filament\Desk\Resources\MagazineIssues\Schemas;
 
 use App\Models\MagazineIssue;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -81,6 +82,20 @@ class MagazineIssueForm
                         TextInput::make('issue_label')
                             ->maxLength(80)
                             ->helperText('Human label such as "October 2026" or "Vol. 12, Issue 4".'),
+                        TextInput::make('issue_number')
+                            ->label('Issue number')
+                            ->numeric()
+                            ->minValue(1),
+                        DatePicker::make('issue_month')
+                            ->label('Month')
+                            ->native(false)
+                            ->displayFormat('F Y'),
+                        TextInput::make('external_url')
+                            ->label('Reader URL')
+                            ->url()
+                            ->maxLength(500)
+                            ->helperText('Yumpu or another reader. Opens in a new tab when there is no PDF.')
+                            ->columnSpanFull(),
                         DateTimePicker::make('published_at')
                             ->label('Publish at')
                             ->seconds(false)
@@ -104,7 +119,7 @@ class MagazineIssueForm
                     ]),
 
                 Section::make('Files')
-                    ->description('Stored on the media volume. Keep PDFs under 50 MB — the server upload limits match this cap.')
+                    ->description('Stored on the media volume. Keep PDFs under 60 MB.')
                     ->columns(2)
                     ->schema([
                         FileUpload::make('pdf_path')
@@ -114,14 +129,14 @@ class MagazineIssueForm
                             ->directory('magazines/pdf')
                             ->visibility('public')
                             ->acceptedFileTypes(['application/pdf'])
-                            ->maxSize(50 * 1024)
+                            ->maxSize(60 * 1024)
                             ->columnSpanFull(),
                         Toggle::make('pdf_download_enabled')
                             ->label('Allow PDF download')
                             ->inline(false)
                             ->default(true)
                             ->columnSpanFull()
-                            ->helperText('Shows a Download PDF button on the reader. Turn off to keep the issue in the flipbook only.'),
+                            ->helperText('Emails a download link. Reading in the flipbook stays free. Turn off to hide the download form.'),
                         FileUpload::make('cover_path')
                             ->label('Cover image')
                             ->disk('media')

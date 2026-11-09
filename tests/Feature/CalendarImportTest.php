@@ -43,7 +43,7 @@ it('registers every expected federation and club source', function () {
     // Sell-mode bodies: no feed worth scraping, we tell them to use
     // the embed. Keep the whole set listed so the audit does not
     // silently lose one on a merge conflict.
-    foreach (['ctsasa', 'sapsa', 'nrapa', 'idpa', 'sahunters', 'sashf', 'nrlhunter', 'kaapjag', 'send-it-elr'] as $key) {
+    foreach (['ctsasa', 'sapsa', 'nrapa', 'idpa', 'sahunters', 'sashf', 'nrlhunter', 'kaapjag', 'send-it-elr', 'alrha'] as $key) {
         expect($sources->get($key))->not->toBeNull()
             ->and($sources->get($key)['mode'])->toBe('sell');
     }

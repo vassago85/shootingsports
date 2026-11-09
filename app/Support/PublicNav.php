@@ -43,7 +43,7 @@ final class PublicNav
                 // parent so they stop competing with Events / Sports /
                 // Industry as peer nav items.
                 'route' => null,
-                'active' => ['clubs.*', 'federations.*', 'ranges.*', 'find'],
+                'active' => ['clubs.*', 'federations.*', 'ranges.*', 'find', 'glossary'],
                 'children' => [
                     [
                         'label' => 'Clubs',
@@ -64,6 +64,11 @@ final class PublicNav
                         'label' => 'Which sport fits me',
                         'route' => 'find',
                         'active' => ['find'],
+                    ],
+                    [
+                        'label' => 'Glossary',
+                        'route' => 'glossary',
+                        'active' => ['glossary'],
                     ],
                 ],
             ],

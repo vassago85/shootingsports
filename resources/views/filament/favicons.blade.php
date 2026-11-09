@@ -1,3 +1,4 @@
+<link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
 <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
 <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16.png') }}">
 <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" sizes="16x16 32x32 48x48">

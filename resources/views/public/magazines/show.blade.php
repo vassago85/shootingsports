@@ -32,7 +32,10 @@
         </section>
 
         <section class="block">
-            <div class="wrap" style="max-width:1440px">
+            <div class="wrap" style="max-width:800px">
+                @if ($issue->external_url && $issue->pdfUrl() === null)
+                    <p><a class="btn" href="{{ $issue->external_url }}" target="_blank" rel="noopener noreferrer">Read this issue</a></p>
+                @else
                 <div class="magazine-stage" id="magazine-stage">
                     <div
                         id="magazine-flipbook"
@@ -52,29 +55,44 @@
                         @if (! $preview && $issue->isPublished())
                             <livewire:save-magazine-issue :issue="$issue" :key="'save-issue-'.$issue->id" />
                         @endif
-                        @if ($issue->allowsPdfDownload())
-                            <a class="btn ghost magazine-control magazine-control--download" href="{{ $issue->pdfUrl() }}" download>Download PDF</a>
-                        @endif
                         @if ($issue->hasReadableText())
                             <a class="btn ghost magazine-control magazine-control--text" href="#magazine-text">Read as text</a>
                         @endif
                     </div>
+
+                    @if ($issue->allowsPdfDownload() && ! $preview)
+                        <form method="post" action="{{ route('magazines.download-link', $issue->slug) }}" class="enquiry-form" style="margin-top:18px;max-width:420px">
+                            @csrf
+                            <div class="hp" aria-hidden="true">
+                                <label for="company_website-{{ $issue->id }}">Company website</label>
+                                <input type="text" name="company_website" id="company_website-{{ $issue->id }}" value="" tabindex="-1" autocomplete="off">
+                            </div>
+                            @if (session('download_link_sent'))
+                                <p>Check your email for the download link. It expires in 7 days. Reading on this page stays free.</p>
+                            @else
+                                <label class="field">
+                                    <span>Email the PDF</span>
+                                    <input type="email" name="email" value="{{ old('email') }}" required maxlength="255" autocomplete="email">
+                                </label>
+                                @error('email')
+                                    <p class="empty">{{ $message }}</p>
+                                @enderror
+                                <button type="submit" class="btn">Send download link</button>
+                                <p>Reading on this page is free. We email you a download link.</p>
+                            @endif
+                        </form>
+                    @endif
                 </div>
 
                 <noscript>
                     <p class="empty" style="margin-top:16px">
                         The flipbook needs JavaScript.
-                        @if ($issue->allowsPdfDownload())
-                            You can
-                            <a href="{{ $issue->pdfUrl() }}">download the PDF</a>
-                            @if ($issue->hasReadableText())
-                                or scroll down to read the magazine as text.
-                            @endif
-                        @elseif ($issue->hasReadableText())
+                        @if ($issue->hasReadableText())
                             Scroll down to read the magazine as text.
                         @endif
                     </p>
                 </noscript>
+                @endif
             </div>
         </section>
 
@@ -104,5 +122,7 @@
         @endif
     </main>
 
-    @vite('resources/js/flipbook.js')
+    @unless ($issue->external_url && $issue->pdfUrl() === null)
+        @vite('resources/js/flipbook.js')
+    @endunless
 </x-layouts.public>

@@ -18,7 +18,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
-    'slug', 'name', 'family', 'parent_id', 'federation_organisation_id',
+    'slug', 'name', 'keywords', 'family', 'parent_id', 'federation_organisation_id',
     'short_blurb', 'intro', 'image_path', 'body', 'typical_distances', 'equipment_rules',
     'sort_order', 'is_published',
 ])]
@@ -61,6 +61,52 @@ class Discipline extends Model
     public function scopeExcludingVerificationFixtures(Builder $query): Builder
     {
         return $query->where('slug', 'not like', 'verify-%');
+    }
+
+    /**
+     * Match a slug, name or keyword after spaces and punctuation are removed,
+     * so "gong skiet", "gong-skiet" and "gongskiet" find the same sport.
+     */
+    public function scopeMatchingTerm(Builder $query, string $term): Builder
+    {
+        $needle = self::foldTerm($term);
+
+        if ($needle === '') {
+            return $query->whereRaw('0 = 1');
+        }
+
+        return $query->where(function (Builder $inner) use ($term, $needle): void {
+            $inner->where('slug', $term);
+
+            foreach (['name', 'slug', 'keywords'] as $column) {
+                $inner->orWhereRaw(
+                    "replace(replace(replace(replace(lower(coalesce({$column}, '')), ' ', ''), '-', ''), '/', ''), ',', '') like ?",
+                    ['%'.$needle.'%'],
+                );
+            }
+        });
+    }
+
+    public static function foldTerm(string $term): string
+    {
+        return (string) preg_replace('/[^a-z0-9]+/u', '', mb_strtolower(trim($term)));
+    }
+
+    public function glossaryDescription(): ?string
+    {
+        $body = trim((string) $this->body);
+        if ($body !== '') {
+            return $body;
+        }
+
+        $blurb = trim((string) $this->short_blurb);
+
+        return $blurb !== '' ? $blurb : null;
+    }
+
+    public function needsDescription(): bool
+    {
+        return trim((string) $this->body) === '' && trim((string) $this->short_blurb) === '';
     }
 
     public function parent(): BelongsTo

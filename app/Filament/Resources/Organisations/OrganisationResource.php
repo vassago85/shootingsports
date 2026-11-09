@@ -149,6 +149,11 @@ class OrganisationResource extends Resource
                     ->schema([
                         TextInput::make('email')->email(),
                         TextInput::make('phone')->tel(),
+                        Textarea::make('private_contact')
+                            ->label('Private contact')
+                            ->rows(2)
+                            ->columnSpanFull()
+                            ->helperText('Staff only. Never shown on the public site.'),
                         TextInput::make('website_url')->url()->columnSpanFull(),
                         TextInput::make('facebook_url')->label('Facebook URL')->url()->columnSpanFull(),
                         TextInput::make('instagram_url')->label('Instagram URL')->url()->columnSpanFull(),

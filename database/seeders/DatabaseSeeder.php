@@ -26,6 +26,8 @@ class DatabaseSeeder extends Seeder
             CtsasaEventsSeeder::class,
             NrlHunterEventsSeeder::class,
             WpbaProgramme2027Seeder::class,
+            CommunityListingsSeeder::class,
+            OnTargetAfricaSeeder::class,
             SpringbokvlakteGongskietSeeder::class,
             SahrsaEventsSeeder::class,
             MuletechRidgeRangeSeeder::class,

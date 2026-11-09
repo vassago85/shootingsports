@@ -110,4 +110,11 @@ return [
         'mode' => 'sell',
         'notes' => 'Already on the register. They should use the club embed on their own site.',
     ],
+    [
+        'key' => 'alrha',
+        'name' => 'African Long Range Hunters Association (ALRHA)',
+        'url' => 'https://alrha.co.za/shoots',
+        'mode' => 'sell',
+        'notes' => 'No public match table. Sell them the embed. Do not scrape.',
+    ],
 ];

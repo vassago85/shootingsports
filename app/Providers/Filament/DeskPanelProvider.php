@@ -41,7 +41,7 @@ class DeskPanelProvider extends PanelProvider
             ->passwordReset()
             ->profile(EditProfile::class)
             ->brandName('Shooting Sports Desk')
-            ->brandLogo(asset('images/brand/logo-lockup.png'))
+            ->brandLogo(asset('images/brand/logo-lockup.svg'))
             ->brandLogoHeight('2.5rem')
             ->renderHook(
                 PanelsRenderHook::HEAD_START,

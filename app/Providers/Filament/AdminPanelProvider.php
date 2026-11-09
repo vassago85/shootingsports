@@ -36,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->profile(EditProfile::class)
             ->passwordReset()
             ->brandName('Shooting Sports')
-            ->brandLogo(asset('images/brand/logo-lockup.png'))
+            ->brandLogo(asset('images/brand/logo-lockup.svg'))
             ->brandLogoHeight('2.5rem')
             ->renderHook(
                 PanelsRenderHook::HEAD_START,

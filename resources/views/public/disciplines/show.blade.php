@@ -20,8 +20,7 @@
                 <p class="lede">{{ $answer }}</p>
                 @if ($introHtml)
                     <div class="discipline-intro">{!! $introHtml !!}</div>
-                @endif
-                @if (filled($discipline->short_blurb))
+                @elseif (filled($discipline->short_blurb))
                     <p>{{ $discipline->short_blurb }}</p>
                 @endif
                 <p style="margin-top:18px">

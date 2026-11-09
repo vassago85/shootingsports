@@ -100,6 +100,7 @@ class SitemapController extends Controller
             'calendar.month',
             'map',
             'disciplines.index',
+            'glossary',
             'clubs.index',
             'ranges.index',
             'suppliers.index',
