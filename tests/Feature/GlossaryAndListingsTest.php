@@ -55,11 +55,14 @@ it('keeps On Target Africa issues on this site', function () {
 
     expect(MagazineIssue::query()->where('slug', 'on-target-africa-89')->value('external_url'))->toBeNull()
         ->and(MagazineIssue::query()->where('slug', 'on-target-africa-89')->value('pdf_path'))->toBe('magazines/pdf/on-target-africa-89.pdf')
-        ->and(Storage::disk('media')->exists('magazines/pdf/on-target-africa-89.pdf'))->toBeTrue();
+        ->and(MagazineIssue::query()->where('slug', 'on-target-africa-89')->value('cover_path'))->toBe('magazines/covers/on-target-africa-89.jpg')
+        ->and(Storage::disk('media')->exists('magazines/pdf/on-target-africa-89.pdf'))->toBeTrue()
+        ->and(Storage::disk('media')->exists('magazines/covers/on-target-africa-89.jpg'))->toBeTrue();
 
     $this->get(route('magazines.index'))
         ->assertOk()
         ->assertSee(route('magazines.show', 'on-target-africa-89'), false)
+        ->assertSee('magazines/covers/on-target-africa-89.jpg', false)
         ->assertDontSee('yumpu.com', false);
 
     $this->get(route('magazines.show', 'on-target-africa-89'))
@@ -90,6 +93,19 @@ it('opens a stored On Target PDF in the on-site reader', function () {
         ->assertOk()
         ->assertSee(route('magazines.show', 'on-target-africa-89'), false)
         ->assertDontSee('yumpu.com', false);
+});
+
+it('keeps an uploaded On Target cover', function () {
+    Storage::fake('media');
+    User::factory()->staff()->create();
+    $this->seed(OnTargetAfricaSeeder::class);
+
+    $issue = MagazineIssue::query()->where('slug', 'on-target-africa-88')->first();
+    $issue->forceFill(['cover_path' => 'magazines/covers/custom.jpg'])->save();
+
+    $this->seed(OnTargetAfricaSeeder::class);
+
+    expect($issue->fresh()->cover_path)->toBe('magazines/covers/custom.jpg');
 });
 
 it('seeds the community listings once and does not duplicate them', function () {

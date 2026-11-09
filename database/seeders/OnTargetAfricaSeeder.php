@@ -33,6 +33,8 @@ class OnTargetAfricaSeeder extends Seeder
                 $issue['pdf_path'] = $pdfPath;
             }
 
+            $coverPath = $this->publishShippedCover($slug);
+
             $existing = MagazineIssue::query()->where('slug', $slug)->first();
 
             if ($existing === null && $issue['issue_number'] === 87) {
@@ -44,6 +46,9 @@ class OnTargetAfricaSeeder extends Seeder
                 if (filled($existing->pdf_path)) {
                     $existing->pdf_download_enabled = true;
                 }
+                if ($existing->cover_path === null && $coverPath !== null) {
+                    $existing->cover_path = $coverPath;
+                }
                 $existing->save();
 
                 continue;
@@ -53,6 +58,7 @@ class OnTargetAfricaSeeder extends Seeder
                 'slug' => $slug,
                 'user_id' => $userId,
                 'pdf_download_enabled' => filled($issue['pdf_path'] ?? null),
+                'cover_path' => $coverPath,
             ]);
         }
     }
@@ -121,5 +127,39 @@ class OnTargetAfricaSeeder extends Seeder
         if (is_resource($stream)) {
             fclose($stream);
         }
+    }
+
+    /**
+     * Copy the front-page cover that ships with the app.
+     * An editor-uploaded cover is left in place.
+     */
+    private function publishShippedCover(string $slug): ?string
+    {
+        $shipped = database_path('seeders/assets/magazines/'.$slug.'.jpg');
+
+        if (! is_file($shipped)) {
+            return null;
+        }
+
+        $coverPath = 'magazines/covers/'.$slug.'.jpg';
+        $shippedSize = filesize($shipped);
+        $disk = Storage::disk('media');
+        $currentSize = $disk->exists($coverPath) ? $disk->size($coverPath) : null;
+
+        if ($currentSize !== $shippedSize) {
+            $stream = fopen($shipped, 'rb');
+
+            if ($stream === false) {
+                return null;
+            }
+
+            $disk->put($coverPath, $stream);
+
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
+
+        return $coverPath;
     }
 }
