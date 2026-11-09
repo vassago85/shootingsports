@@ -14,6 +14,7 @@ use App\Models\Discipline;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Venue;
+use App\Support\Venues\CorrectSendItElrRange;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 
@@ -33,7 +34,7 @@ class SendItElr2026Seeder extends Seeder
                 'province' => Province::WesternCape,
                 'town' => 'Wellington',
                 'website_url' => null,
-                'description' => 'ELR series: 1-mile and 2-mile challenges, .22 ELR, and Send It Ultra. Hosted with APWY, 3% Tactical, PEKS, Matroosbergstasie, Lambert Brand and Taai Boskraal.',
+                'description' => app(CorrectSendItElrRange::class)->seriesDescription(),
                 'logo_path' => $logoPath,
                 'accredited' => false,
                 'visitors_welcome' => true,
@@ -90,12 +91,7 @@ class SendItElr2026Seeder extends Seeder
                 'town' => 'Wellington',
                 'notes' => '.22 LR ELR.',
             ],
-            'matroosbergstasie-skietklub' => [
-                'name' => 'Matroosbergstasie Skietklub',
-                'province' => Province::WesternCape,
-                'town' => 'Matroosberg',
-                'notes' => '2-mile challenges.',
-            ],
+            CorrectSendItElrRange::SLUG => app(CorrectSendItElrRange::class)->newVenue(),
             'hanover-northern-cape' => [
                 'name' => 'Hanover ELR Range',
                 'province' => Province::NorthernCape,
@@ -110,12 +106,14 @@ class SendItElr2026Seeder extends Seeder
             ],
         ];
 
+        app(CorrectSendItElrRange::class)();
+
         $venues = [];
 
         foreach ($rows as $slug => $attributes) {
-            $venues[$slug] = Venue::query()->updateOrCreate(
-                ['slug' => $slug],
-                [
+            $payload = $slug === CorrectSendItElrRange::SLUG
+                ? $attributes
+                : [
                     'name' => $attributes['name'],
                     'province' => $attributes['province'],
                     'town' => $attributes['town'],
@@ -124,7 +122,11 @@ class SendItElr2026Seeder extends Seeder
                     'status' => ListingStatus::Published,
                     'verification_state' => VerificationState::Unconfirmed,
                     'source' => ListingSource::Staff,
-                ],
+                ];
+
+            $venues[$slug] = Venue::query()->updateOrCreate(
+                ['slug' => $slug],
+                $payload,
             );
         }
 
@@ -156,10 +158,10 @@ class SendItElr2026Seeder extends Seeder
             [
                 'slug' => 'send-it-2-mile-challenge-q1-2026',
                 'title' => '2-Mile Challenge Q1',
-                'venue' => 'matroosbergstasie-skietklub',
+                'venue' => CorrectSendItElrRange::SLUG,
                 'starts_at' => '2026-03-14 08:00:00',
                 'ends_at' => null,
-                'description' => '2-mile challenge at Matroosbergstasie Skietklub.',
+                'description' => app(CorrectSendItElrRange::class)->eventDescription('send-it-2-mile-challenge-q1-2026'),
             ],
             [
                 'slug' => 'send-it-1-mile-challenge-q2-2026',
@@ -172,10 +174,10 @@ class SendItElr2026Seeder extends Seeder
             [
                 'slug' => 'send-it-2-mile-challenge-q2-2026',
                 'title' => '2-Mile Challenge Q2',
-                'venue' => 'matroosbergstasie-skietklub',
+                'venue' => CorrectSendItElrRange::SLUG,
                 'starts_at' => '2026-04-11 08:00:00',
                 'ends_at' => null,
-                'description' => '2-mile challenge at Matroosbergstasie Skietklub.',
+                'description' => app(CorrectSendItElrRange::class)->eventDescription('send-it-2-mile-challenge-q2-2026'),
             ],
             [
                 'slug' => 'send-it-ultra-2026',
@@ -188,10 +190,10 @@ class SendItElr2026Seeder extends Seeder
             [
                 'slug' => 'send-it-2-mile-challenge-q3-2026',
                 'title' => '2-Mile Challenge Q3',
-                'venue' => 'matroosbergstasie-skietklub',
+                'venue' => CorrectSendItElrRange::SLUG,
                 'starts_at' => '2026-05-23 08:00:00',
                 'ends_at' => null,
-                'description' => '2-mile challenge at Matroosbergstasie Skietklub.',
+                'description' => app(CorrectSendItElrRange::class)->eventDescription('send-it-2-mile-challenge-q3-2026'),
             ],
             [
                 'slug' => 'send-it-elr-match-july-2026',
@@ -228,10 +230,10 @@ class SendItElr2026Seeder extends Seeder
             [
                 'slug' => 'send-it-2-mile-challenge-final-2026',
                 'title' => '2-Mile Challenge Final',
-                'venue' => 'matroosbergstasie-skietklub',
+                'venue' => CorrectSendItElrRange::SLUG,
                 'starts_at' => '2026-11-14 08:00:00',
                 'ends_at' => null,
-                'description' => '2-mile challenge final at Matroosbergstasie Skietklub.',
+                'description' => app(CorrectSendItElrRange::class)->eventDescription('send-it-2-mile-challenge-final-2026'),
             ],
         ];
     }

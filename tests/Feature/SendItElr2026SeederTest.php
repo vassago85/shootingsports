@@ -2,9 +2,12 @@
 
 use App\Enums\EventLevel;
 use App\Enums\EventStatus;
+use App\Enums\ListingStatus;
 use App\Enums\OrganisationType;
 use App\Models\Event;
 use App\Models\Organisation;
+use App\Models\Venue;
+use App\Support\Venues\CorrectSendItElrRange;
 use Database\Seeders\DisciplineSeeder;
 use Database\Seeders\SendItElr2026Seeder;
 
@@ -34,4 +37,38 @@ it('seeds the Send It ELR series and 2026 calendar', function () {
     expect($ultra)->not->toBeNull()
         ->and($ultra->ends_at?->toDateString())->toBe('2026-05-02')
         ->and($ultra->venue?->town)->toBe('Hanover');
+
+    $final = $events->firstWhere('slug', 'send-it-2-mile-challenge-final-2026');
+
+    expect($final?->venue?->slug)->toBe(CorrectSendItElrRange::SLUG)
+        ->and($final?->venue?->name)->toBe('Send It ELR 2-Mile Range')
+        ->and($final?->venue?->town)->toBe('Matroosbergstasie')
+        ->and((float) $final?->venue?->lat)->toEqualWithDelta(-33.42915, 0.00001)
+        ->and((float) $final?->venue?->lng)->toEqualWithDelta(19.83748, 0.00001)
+        ->and($final?->venue?->address)->toContain('Close to Matroosbergstasie')
+        ->and($final?->description)->toContain('Karoo Huisies');
+});
+
+it('sends the old Matroosbergstasie range address to the 2-mile range', function () {
+    $venue = Venue::factory()->create([
+        'slug' => CorrectSendItElrRange::PREVIOUS_SLUG,
+        'name' => 'Matroosbergstasie Skietklub',
+        'town' => 'Matroosberg',
+        'status' => ListingStatus::Published,
+    ]);
+
+    Event::factory()->create([
+        'slug' => 'send-it-2-mile-challenge-q1-2026',
+        'venue_id' => $venue->id,
+        'description' => '2-mile challenge at Matroosbergstasie Skietklub.',
+    ]);
+
+    app(CorrectSendItElrRange::class)();
+
+    $this->get('/ranges/'.CorrectSendItElrRange::PREVIOUS_SLUG)
+        ->assertRedirect(route('ranges.show', CorrectSendItElrRange::SLUG));
+
+    expect($venue->fresh()?->name)->toBe('Send It ELR 2-Mile Range')
+        ->and(Event::query()->where('slug', 'send-it-2-mile-challenge-q1-2026')->value('description'))
+        ->toContain('Matroosbergstasie');
 });
