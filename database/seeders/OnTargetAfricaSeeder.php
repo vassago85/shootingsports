@@ -42,6 +42,10 @@ class OnTargetAfricaSeeder extends Seeder
             }
 
             if ($existing instanceof MagazineIssue) {
+                if ($existing->slug !== $slug) {
+                    $existing->slug = $slug;
+                }
+
                 $existing->fill($issue);
                 if (filled($existing->pdf_path)) {
                     $existing->pdf_download_enabled = true;

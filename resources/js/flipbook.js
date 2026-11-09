@@ -1,18 +1,13 @@
 /*
- * Targets magazine reader.
+ * Magazine reader.
  *
- * PDF.js draws each page to a canvas at the size it is shown, so type
- * stays as sharp as the file. A portrait page is one magazine page and
- * stays whole. A landscape sheet (wider than it is tall) is a spread
- * and is split at the gutter so page-flip curls one half to the middle.
- * The curl copies the page element, and a copied canvas is blank, so
- * each animation frame copies the live pixels across.
+ * pdf.js draws each page at the size it is shown. Portrait pages stay
+ * whole. A landscape sheet is a spread and is split at the gutter.
+ * Page-flip copies the page element while it curls, and a copied canvas
+ * is blank, so each animation frame copies the live pixels across.
  *
- * On a narrow screen the same canvases slide in 2D, one page at a time.
- * Zoom throws the old bitmap away and draws the page again.
- *
- * Link annotations are placed on the same viewport. Read tracking posts
- * to /magazines/{slug}/read via navigator.sendBeacon.
+ * Links are stored on the server and painted onto the live leaves after
+ * StPageFlip builds the book. The hidden source sheets never receive them.
  */
 import { PageFlip } from 'page-flip';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
@@ -20,8 +15,8 @@ import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.mjs?url';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
-const NARROW_QUERY = '(max-width: 700px)';
 const ZOOM_LEVELS = [1, 1.25, 1.5, 2];
+const PORTRAIT_QUERY = '(max-width: 800px), (orientation: portrait) and (max-width: 1024px)';
 const beaconedPages = new Set();
 
 const container = document.getElementById('magazine-flipbook');
@@ -36,11 +31,23 @@ if (container && container.dataset.pdfUrl) {
 async function bootReader(root) {
     const pdfUrl = root.dataset.pdfUrl;
     const readUrl = root.dataset.readUrl;
+    const progressUrl = root.dataset.progressUrl || '';
+    const slug = root.dataset.slug || '';
     const trackingEnabled = root.dataset.track === '1';
+    const hotspots = readJson('magazine-hotspots');
+    const pageImages = readJson('magazine-page-images');
+    const storageKey = slug ? `magazine-page:${slug}` : '';
 
-    const pdf = await pdfjsLib.getDocument({ url: pdfUrl }).promise;
+    const pdf = await pdfjsLib.getDocument({
+        url: pdfUrl,
+        disableAutoFetch: true,
+        disableStream: false,
+        rangeChunkSize: 65536,
+        isEvalSupported: false,
+    }).promise;
+
     const first = await pdf.getPage(1);
-
+    const base = first.getViewport({ scale: 1 });
     const sheets = [];
 
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
@@ -48,46 +55,38 @@ async function bootReader(root) {
         sheet.className = 'magazine-sheet';
         sheet.dataset.page = String(pageNumber);
 
-        if (pageNumber === 1 || pageNumber === pdf.numPages) {
-            sheet.dataset.density = 'hard';
-        }
-
         const canvas = document.createElement('canvas');
         canvas._live = true;
-
-        const links = document.createElement('div');
-        links.className = 'magazine-links';
-        sheet.append(canvas, links);
-
-        const page = pageNumber === 1 ? first : await pdf.getPage(pageNumber);
-        const view = page.getViewport({ scale: 1 });
+        sheet.append(canvas);
 
         sheets.push({
             pageNumber,
             sheet,
             canvas,
-            links,
             task: null,
             key: '',
-            linked: false,
-            pdfWidth: view.width,
-            pdfHeight: view.height,
-            spread: view.width > view.height * 1.15,
+            logical: pageNumber,
+            imageUrl: pageImages[pageNumber - 1] || '',
+            pdfWidth: base.width,
+            pdfHeight: base.height,
+            spread: base.width > base.height * 1.15,
+            sized: pageNumber === 1,
         });
     }
 
-    const makeLeaf = (entry, half) => {
+    const makeLeaf = (entry, half, logical) => {
         const element = document.createElement('div');
         element.className = 'magazine-leaf';
         element.dataset.page = String(entry.pageNumber);
         element.dataset.half = half;
+        element.dataset.logical = String(logical);
 
         const canvas = document.createElement('canvas');
         const links = document.createElement('div');
         links.className = 'magazine-links';
         element.append(canvas, links);
 
-        return { sheet: entry, half, element, canvas, links };
+        return { sheet: entry, half, logical, element, canvas, links };
     };
 
     const sources = document.createElement('div');
@@ -95,16 +94,21 @@ async function bootReader(root) {
     sources.hidden = true;
 
     const leaves = [];
+    let logicalCursor = 1;
 
     for (const entry of sheets) {
         sources.append(entry.sheet);
 
         if (entry.spread) {
-            leaves.push(makeLeaf(entry, 'left'), makeLeaf(entry, 'right'));
+            entry.logical = logicalCursor;
+            leaves.push(makeLeaf(entry, 'left', logicalCursor), makeLeaf(entry, 'right', logicalCursor + 1));
+            logicalCursor += 2;
             continue;
         }
 
-        const leaf = makeLeaf(entry, 'full');
+        entry.logical = logicalCursor;
+        const leaf = makeLeaf(entry, 'full', logicalCursor);
+        logicalCursor += 1;
 
         if (entry.pageNumber === 1 || entry.pageNumber === pdf.numPages) {
             leaf.element.dataset.density = 'hard';
@@ -113,77 +117,59 @@ async function bootReader(root) {
         leaves.push(leaf);
     }
 
-    const leafIndexForSheet = (sheetIndex) => {
-        const sheet = sheets[sheetIndex];
-        const index = leaves.findIndex((leaf) => leaf.sheet === sheet);
+    const totalPages = leaves.length === 0 ? 1 : leaves[leaves.length - 1].logical;
+
+    const leafIndexForLogical = (page) => {
+        const index = leaves.findIndex((leaf) => leaf.logical === page);
 
         return index < 0 ? 0 : index;
     };
 
-    const sheetIndexForLeaf = (leafIndex) => {
-        const sheetIndex = sheets.indexOf(leaves[leafIndex]?.sheet);
+    const requested = Number(root.dataset.startPage)
+        || Number(root.dataset.resumePage)
+        || Number(storageKey ? localStorage.getItem(storageKey) : 0)
+        || 1;
 
-        return sheetIndex < 0 ? 0 : sheetIndex;
-    };
-
-    const spreadPage = sheets.find((entry) => entry.spread) ?? sheets[0];
-    const sheetAspect = spreadPage.pdfWidth / spreadPage.pdfHeight;
-    const singlePages = sheets.every((entry) => !entry.spread);
-
-    let pageIndex = 0;
+    let pageIndex = leafIndexForLogical(Math.min(Math.max(requested, 1), totalPages));
     let zoomIndex = 0;
     let flip = null;
-    let mode = '';
     let currentSpec = null;
     let lastLayoutKey = '';
     let paintToken = 0;
     let painting = false;
     const paintQueue = [];
+    let idleTimer = 0;
 
     root.setAttribute('tabindex', '0');
 
-    const previous = document.createElement('button');
-    previous.type = 'button';
-    previous.className = 'btn ghost magazine-control magazine-control--prev';
-    previous.textContent = 'Previous';
+    const previous = button('Previous page', 'Previous');
+    const next = button('Next page', 'Next');
+    const zoomOut = button('Zoom out', '−');
+    const zoomIn = button('Zoom in', '+');
+    const thumbs = button('Page thumbnails', 'Pages');
+    thumbs.setAttribute('aria-expanded', 'false');
+    thumbs.setAttribute('aria-controls', 'magazine-thumbs');
 
-    const next = document.createElement('button');
-    next.type = 'button';
-    next.className = 'btn ghost magazine-control magazine-control--next';
-    next.textContent = 'Next';
-
-    const zoomOut = document.createElement('button');
-    zoomOut.type = 'button';
-    zoomOut.className = 'btn ghost magazine-control magazine-control--zoom';
-    zoomOut.textContent = 'Zoom out';
-
-    const zoomIn = document.createElement('button');
-    zoomIn.type = 'button';
-    zoomIn.className = 'btn ghost magazine-control magazine-control--zoom';
-    zoomIn.textContent = 'Zoom in';
+    const jump = document.createElement('input');
+    jump.type = 'number';
+    jump.min = '1';
+    jump.max = String(totalPages);
+    jump.className = 'magazine-jump';
+    jump.setAttribute('aria-label', 'Go to page');
+    jump.inputMode = 'numeric';
 
     const status = document.createElement('span');
     status.className = 'magazine-status';
     status.setAttribute('aria-live', 'polite');
 
-    const bar = root.closest('.magazine-stage')?.querySelector('.magazine-stage__bar');
-    const fullscreen = document.getElementById('magazine-fullscreen');
+    const nav = root.closest('.magazine-stage')?.querySelector('[data-magazine-nav]');
 
-    if (bar && fullscreen) {
-        const nav = document.createElement('div');
-        nav.className = 'magazine-stage__nav';
-        nav.append(previous, status, next);
-
-        const tools = document.createElement('div');
-        tools.className = 'magazine-stage__tools';
-        tools.append(zoomOut, zoomIn);
-
-        while (bar.firstChild) {
-            tools.append(bar.firstChild);
-        }
-
-        bar.append(nav, tools);
+    if (nav) {
+        nav.append(previous, status, jump, next, thumbs, zoomOut, zoomIn);
     }
+
+    const stage = root.closest('.magazine-stage');
+    const fullscreenButton = document.getElementById('magazine-fullscreen');
 
     const beacon = (pageNumber) => {
         if (!trackingEnabled || !readUrl || beaconedPages.has(pageNumber)) {
@@ -198,6 +184,7 @@ async function bootReader(root) {
 
         if (typeof navigator.sendBeacon === 'function') {
             navigator.sendBeacon(readUrl, payload);
+
             return;
         }
 
@@ -209,19 +196,62 @@ async function bootReader(root) {
         }).catch(() => {});
     };
 
+    const remember = (logical) => {
+        const url = new URL(window.location.href);
+
+        if (url.searchParams.get('page') !== String(logical)) {
+            url.searchParams.set('page', String(logical));
+            history.replaceState({}, '', url);
+        }
+
+        if (storageKey) {
+            localStorage.setItem(storageKey, String(logical));
+        }
+
+        if (!progressUrl) {
+            return;
+        }
+
+        const payload = new FormData();
+        payload.append('page', String(logical));
+        payload.append('_token', csrfToken());
+
+        if (typeof navigator.sendBeacon === 'function') {
+            navigator.sendBeacon(progressUrl, payload);
+
+            return;
+        }
+
+        fetch(progressUrl, {
+            method: 'POST',
+            body: payload,
+            keepalive: true,
+            credentials: 'same-origin',
+        }).catch(() => {});
+    };
+
+    const portraitNow = () => window.matchMedia(PORTRAIT_QUERY).matches;
+
     const measure = () => {
-        const stage = root.closest('.magazine-stage') ?? root;
-        const toolbar = stage.querySelector('.magazine-stage__bar');
-        const reading = stage.classList.contains('is-reading') || document.fullscreenElement === stage;
-        const narrow = window.matchMedia(NARROW_QUERY).matches;
+        const host = stage ?? root;
+        const toolbar = document.getElementById('magazine-toolbar');
+        const reading = host.classList.contains('is-reading') || document.fullscreenElement === host;
+        const idle = host.classList.contains('is-idle');
+        const toolbarHeight = reading && idle ? 0 : (toolbar?.offsetHeight ?? 0);
+
+        if (stage) {
+            stage.style.paddingBottom = `${toolbarHeight}px`;
+        }
+
         const zoom = ZOOM_LEVELS[zoomIndex];
-        const hostWidth = reading ? stage.clientWidth : root.clientWidth;
-        const widthBudget = Math.max(hostWidth - (reading ? (narrow ? 16 : 40) : 0), narrow ? 160 : 320);
-        const heightBudget = reading
-            ? Math.max(stage.clientHeight - (toolbar?.offsetHeight ?? 64) - 28, 280)
-            : Math.min(window.innerHeight * 0.78, 1100);
-        const facing = singlePages && !narrow;
-        const bookAspect = facing ? sheetAspect * 2 : sheetAspect;
+        const portrait = portraitNow();
+        const sample = sheets.find((entry) => entry.spread) ?? sheets[0];
+        const onePageAspect = sample
+            ? (sample.spread ? (sample.pdfWidth / 2) / sample.pdfHeight : sample.pdfWidth / sample.pdfHeight)
+            : 0.7;
+        const bookAspect = portrait ? onePageAspect : onePageAspect * (sample?.spread ? 2 : 2);
+        const widthBudget = Math.max((host.clientWidth || root.clientWidth) - 16, 280);
+        const heightBudget = Math.max((host.clientHeight || window.innerHeight * 0.7) - toolbarHeight - 12, 240);
         let pageWidth = widthBudget;
         let pageHeight = pageWidth / bookAspect;
 
@@ -232,42 +262,19 @@ async function bootReader(root) {
 
         pageWidth = Math.max(160, pageWidth * zoom);
         pageHeight = Math.max(160, pageHeight * zoom);
-        const pixelRatio = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
 
-        return { narrow, zoom, pageWidth, pageHeight, pixelRatio };
+        return {
+            portrait,
+            zoom,
+            pageWidth,
+            pageHeight,
+            pixelRatio: Math.min(Math.max(window.devicePixelRatio || 1, 1), 2),
+        };
     };
 
-    const visibleIndexes = () => {
-        const index = flip ? sheetIndexForLeaf(flip.getCurrentPageIndex()) : pageIndex;
+    const currentLeaf = () => (flip ? flip.getCurrentPageIndex() : pageIndex);
 
-        return [Math.max(0, Math.min(index, sheets.length - 1))];
-    };
-
-    const placeName = (index) => {
-        const entry = sheets[index];
-
-        if (!entry) {
-            return '';
-        }
-
-        if (index === 0 && !entry.spread) {
-            return 'Cover';
-        }
-
-        let slot = 1;
-
-        for (let cursor = 0; cursor < index; cursor += 1) {
-            slot += sheets[cursor].spread ? 2 : 1;
-        }
-
-        if (entry.spread) {
-            return `Pages ${slot}–${slot + 1}`;
-        }
-
-        return `Page ${slot}`;
-    };
-
-    const frameFor = (entry, spec, boxWidth = spec.pageWidth, boxHeight = spec.pageHeight) => {
+    const frameFor = (entry, spec, boxWidth, boxHeight) => {
         const pageAspect = entry.pdfWidth / entry.pdfHeight;
         let cssWidth = boxWidth;
         let cssHeight = boxWidth / pageAspect;
@@ -285,60 +292,113 @@ async function bootReader(root) {
         };
     };
 
-    const placeNodes = (nodes, frame, shift = 0) => {
-        for (const node of nodes) {
-            node.style.position = 'absolute';
-            node.style.right = 'auto';
-            node.style.bottom = 'auto';
-            node.style.left = `${frame.left - shift}px`;
-            node.style.top = `${frame.top}px`;
-            node.style.width = `${frame.cssWidth}px`;
-            node.style.height = `${frame.cssHeight}px`;
-        }
-    };
-
-    const place = (entry, spec) => {
-        placeNodes([entry.canvas, entry.links], frameFor(entry, spec));
+    const placeCanvas = (node, frame, shift = 0) => {
+        node.style.position = 'absolute';
+        node.style.left = `${frame.left - shift}px`;
+        node.style.top = `${frame.top}px`;
+        node.style.width = `${frame.cssWidth}px`;
+        node.style.height = `${frame.cssHeight}px`;
     };
 
     const placeLeaf = (leaf, spec) => {
+        const leafWidth = spec.portrait ? spec.pageWidth : spec.pageWidth / 2;
         const frame = leaf.half === 'full'
-            ? frameFor(leaf.sheet, spec, spec.pageWidth / 2, spec.pageHeight)
-            : frameFor(leaf.sheet, spec);
+            ? frameFor(leaf.sheet, spec, leafWidth, spec.pageHeight)
+            : frameFor(leaf.sheet, spec, spec.pageWidth, spec.pageHeight);
         const shift = leaf.half === 'right' ? frame.cssWidth / 2 : 0;
-
-        placeNodes([leaf.canvas, leaf.links], frame, shift);
+        placeCanvas(leaf.canvas, frame, shift);
     };
 
-    const syncLeafLinks = (entry) => {
+    const visibleLeafIndexes = () => {
+        const index = currentLeaf();
+        const portrait = currentSpec?.portrait ?? portraitNow();
+
+        if (portrait || index <= 0 || index >= leaves.length - 1) {
+            return [index];
+        }
+
+        return [index, index + 1];
+    };
+
+    const paintLinks = () => {
+        const visible = new Set(visibleLeafIndexes());
+
         for (const leaf of leaves) {
-            if (leaf.sheet !== entry) {
-                continue;
-            }
+            const host = leaf.element.querySelector('.magazine-links') ?? leaf.links;
+            host.replaceChildren();
 
-            leaf.links.replaceChildren();
+            for (const hotspot of hotspotsForLeaf(leaf, hotspots)) {
+                const anchor = document.createElement('a');
+                anchor.href = hotspot.href;
+                anchor.target = '_blank';
+                anchor.rel = 'noopener sponsored';
+                anchor.title = hotspot.label || 'Advertiser link';
+                anchor.setAttribute('aria-label', hotspot.label || 'Advertiser link');
+                anchor.style.left = `${hotspot.x}%`;
+                anchor.style.top = `${hotspot.y}%`;
+                anchor.style.width = `${hotspot.w}%`;
+                anchor.style.height = `${hotspot.h}%`;
+                anchor.tabIndex = visible.has(leaves.indexOf(leaf)) ? 0 : -1;
 
-            for (const anchor of entry.links.querySelectorAll('a')) {
-                const copy = anchor.cloneNode(true);
-                copy.addEventListener('click', (event) => event.stopPropagation());
-                leaf.links.append(copy);
+                const stop = (event) => event.stopPropagation();
+
+                for (const type of ['pointerdown', 'mousedown', 'touchstart', 'click']) {
+                    anchor.addEventListener(type, stop, true);
+                }
+
+                anchor.addEventListener('click', () => {
+                    if (typeof window.umami?.track === 'function') {
+                        window.umami.track('magazine_link', {
+                            page: String(hotspot.page),
+                            label: hotspot.label || '',
+                        });
+                    }
+                });
+
+                host.append(anchor);
             }
         }
     };
 
     const updateChrome = () => {
-        const indexes = visibleIndexes();
+        const index = currentLeaf();
+        const leaf = leaves[index];
         const zoom = ZOOM_LEVELS[zoomIndex];
-
-        status.textContent = `${placeName(indexes[0])} · ${Math.round(zoom * 100)}%`;
-        previous.disabled = indexes[0] <= 0;
-        next.disabled = indexes[0] >= sheets.length - 1;
+        const portrait = currentSpec?.portrait ?? portraitNow();
+        const alone = portrait || index <= 0 || index >= leaves.length - 1;
+        const start = leaf?.logical ?? 1;
+        const end = alone ? start : (leaves[index + 1]?.logical ?? start);
+        status.textContent = alone
+            ? `Page ${start} of ${totalPages}`
+            : `Pages ${start}–${end} of ${totalPages}`;
+        jump.value = String(start);
+        previous.disabled = index <= 0;
+        next.disabled = index >= leaves.length - 1;
         zoomOut.disabled = zoomIndex <= 0;
         zoomIn.disabled = zoomIndex >= ZOOM_LEVELS.length - 1;
+        previous.setAttribute('aria-disabled', previous.disabled ? 'true' : 'false');
+        next.setAttribute('aria-disabled', next.disabled ? 'true' : 'false');
 
-        for (const index of indexes) {
-            beacon(index + 1);
+        const book = root.querySelector('.magazine-book');
+
+        if (book) {
+            book.classList.toggle('is-cover', !portrait && index === 0);
+            book.classList.toggle('is-back', !portrait && index >= leaves.length - 1 && index !== 0);
         }
+
+        for (const visible of visibleLeafIndexes()) {
+            const logical = leaves[visible]?.logical;
+
+            if (logical) {
+                beacon(logical);
+            }
+        }
+
+        if (leaf) {
+            remember(alone ? start : start);
+        }
+
+        paintLinks();
     };
 
     const copyCanvasClones = () => {
@@ -348,7 +408,9 @@ async function bootReader(root) {
             }
 
             const pageNumber = Number(canvas.closest('[data-page]')?.dataset.page);
-            const source = sheets[pageNumber - 1]?.canvas;
+            const half = canvas.closest('[data-half]')?.dataset.half || 'full';
+            const source = leaves.find((leaf) => leaf.sheet.pageNumber === pageNumber && leaf.half === half)?.canvas
+                ?? sheets[pageNumber - 1]?.canvas;
 
             if (!source?.width) {
                 continue;
@@ -384,6 +446,7 @@ async function bootReader(root) {
 
             if (performance.now() < watchUntil) {
                 requestAnimationFrame(tick);
+
                 return;
             }
 
@@ -393,8 +456,27 @@ async function bootReader(root) {
         requestAnimationFrame(tick);
     };
 
+    const ensureSize = async (entry) => {
+        if (entry.sized) {
+            return;
+        }
+
+        const page = await pdf.getPage(entry.pageNumber);
+        const view = page.getViewport({ scale: 1 });
+        entry.pdfWidth = view.width;
+        entry.pdfHeight = view.height;
+        entry.spread = view.width > view.height * 1.15;
+        entry.sized = true;
+    };
+
     const paint = async (entry, spec, token) => {
-        const key = `${Math.round(spec.pageWidth)}x${Math.round(spec.pageHeight)}@${spec.pixelRatio.toFixed(2)}`;
+        await ensureSize(entry);
+
+        if (token !== paintToken) {
+            return;
+        }
+
+        const key = `${Math.round(spec.pageWidth)}x${Math.round(spec.pageHeight)}@${spec.pixelRatio.toFixed(2)}@${spec.zoom}`;
 
         if (entry.key === key) {
             return;
@@ -406,31 +488,45 @@ async function bootReader(root) {
             // The previous draw had already finished.
         }
 
-        const page = entry.pageNumber === 1 ? first : await pdf.getPage(entry.pageNumber);
-
-        if (token !== paintToken) {
-            return;
-        }
-
-        const frame = frameFor(entry, spec);
-        const viewport = page.getViewport({
-            scale: (frame.cssWidth / entry.pdfWidth) * spec.pixelRatio,
-        });
+        const leafWidth = spec.portrait ? spec.pageWidth : spec.pageWidth / 2;
+        const frame = frameFor(entry, spec, entry.spread ? spec.pageWidth : leafWidth, spec.pageHeight);
+        const ratio = spec.pixelRatio;
         const context = entry.canvas.getContext('2d', { alpha: false });
-        entry.canvas.width = Math.floor(viewport.width);
-        entry.canvas.height = Math.floor(viewport.height);
 
-        const task = page.render({ canvas: entry.canvas, canvasContext: context, viewport });
-        entry.task = task;
+        if (entry.imageUrl && spec.zoom <= 1) {
+            const image = await loadImage(entry.imageUrl);
 
-        try {
-            await task.promise;
-        } catch (error) {
-            if (error?.name === 'RenderingCancelledException') {
+            if (token !== paintToken) {
                 return;
             }
 
-            throw error;
+            entry.canvas.width = Math.max(1, Math.floor(frame.cssWidth * ratio));
+            entry.canvas.height = Math.max(1, Math.floor(frame.cssHeight * ratio));
+            context?.drawImage(image, 0, 0, entry.canvas.width, entry.canvas.height);
+        } else {
+            const page = await pdf.getPage(entry.pageNumber);
+
+            if (token !== paintToken) {
+                return;
+            }
+
+            const viewport = page.getViewport({
+                scale: (frame.cssWidth / entry.pdfWidth) * ratio,
+            });
+            entry.canvas.width = Math.max(1, Math.floor(viewport.width));
+            entry.canvas.height = Math.max(1, Math.floor(viewport.height));
+            const task = page.render({ canvas: entry.canvas, canvasContext: context, viewport });
+            entry.task = task;
+
+            try {
+                await task.promise;
+            } catch (error) {
+                if (error?.name === 'RenderingCancelledException') {
+                    return;
+                }
+
+                throw error;
+            }
         }
 
         if (token !== paintToken) {
@@ -439,32 +535,39 @@ async function bootReader(root) {
 
         entry.key = key;
         entry.canvas._live = true;
-        place(entry, spec);
-        syncLeafLinks(entry);
+        placeCanvas(entry.canvas, frame);
 
         for (const leaf of leaves) {
-            if (leaf.sheet === entry) {
-                placeLeaf(leaf, spec);
+            if (leaf.sheet === entry && currentSpec) {
+                placeLeaf(leaf, currentSpec);
+                await copyLeaf(leaf, entry, spec);
             }
-        }
-
-        if (!entry.linked) {
-            const annotations = await page.getAnnotations();
-            entry.links.replaceChildren();
-
-            for (const annotation of annotations) {
-                const anchor = linkForAnnotation(annotation, viewport);
-
-                if (anchor !== null) {
-                    anchor.addEventListener('click', (event) => event.stopPropagation());
-                    entry.links.appendChild(anchor);
-                }
-            }
-
-            entry.linked = true;
         }
 
         copyCanvasClones();
+        paintLinks();
+    };
+
+    const copyLeaf = async (leaf, entry, spec) => {
+        if (!entry.canvas.width) {
+            return;
+        }
+
+        if (leaf.half === 'full') {
+            leaf.canvas.width = entry.canvas.width;
+            leaf.canvas.height = entry.canvas.height;
+            leaf.canvas.getContext('2d')?.drawImage(entry.canvas, 0, 0);
+
+            return;
+        }
+
+        const width = Math.max(1, Math.floor(entry.canvas.width / 2));
+        const height = entry.canvas.height;
+        leaf.canvas.width = width;
+        leaf.canvas.height = height;
+        const context = leaf.canvas.getContext('2d');
+        const sx = leaf.half === 'right' ? width : 0;
+        context?.drawImage(entry.canvas, sx, 0, width, height, 0, 0, width, height);
     };
 
     const drain = async () => {
@@ -480,7 +583,7 @@ async function bootReader(root) {
                 const token = paintToken;
                 const spec = currentSpec;
 
-                if (!spec) {
+                if (!entry || !spec) {
                     continue;
                 }
 
@@ -509,6 +612,45 @@ async function bootReader(root) {
         drain();
     };
 
+    const nearbySheets = () => {
+        const index = sheets.indexOf(leaves[currentLeaf()]?.sheet);
+        const keep = [];
+
+        for (let cursor = index - 4; cursor <= index + 5; cursor += 1) {
+            if (sheets[cursor]) {
+                keep.push(sheets[cursor]);
+            }
+        }
+
+        return keep;
+    };
+
+    const releaseFarSheets = (keep) => {
+        const held = new Set(keep);
+
+        for (const entry of sheets) {
+            if (held.has(entry) || !entry.key) {
+                continue;
+            }
+
+            try {
+                entry.task?.cancel();
+            } catch {
+                // Already finished.
+            }
+
+            entry.canvas.width = 0;
+            entry.canvas.height = 0;
+            entry.key = '';
+        }
+    };
+
+    const refreshVisible = () => {
+        const keep = nearbySheets();
+        releaseFarSheets(keep);
+        requestPaint(keep);
+    };
+
     const releaseSheet = (sheet) => {
         sheet.classList.remove('stf__item', '--hard', '--soft', '--simple', '--left', '--right');
         sheet.style.cssText = '';
@@ -516,7 +658,7 @@ async function bootReader(root) {
 
     const mountFlip = (spec) => {
         if (flip) {
-            pageIndex = sheetIndexForLeaf(flip.getCurrentPageIndex());
+            pageIndex = flip.getCurrentPageIndex();
             flip.destroy();
             flip = null;
         }
@@ -537,37 +679,35 @@ async function bootReader(root) {
             book.append(leaf.element);
         }
 
-        const leafWidth = Math.max(1, Math.round(spec.pageWidth / 2));
+        const leafWidth = Math.max(1, Math.round(spec.portrait ? spec.pageWidth : spec.pageWidth / 2));
         const height = Math.round(spec.pageHeight);
 
         flip = new PageFlip(book, {
             width: leafWidth,
             height,
             size: 'fixed',
-            showCover: sheets[0] ? !sheets[0].spread : true,
-            usePortrait: false,
-            autoSize: true,
+            showCover: true,
+            usePortrait: spec.portrait,
+            autoSize: false,
             drawShadow: true,
             maxShadowOpacity: 0.35,
             flippingTime: 650,
-            mobileScrollSupport: true,
-            clickEventForward: true,
+            mobileScrollSupport: false,
+            clickEventForward: false,
             useMouseEvents: true,
-            disableFlipByClick: false,
+            disableFlipByClick: true,
             showPageCorners: true,
-            startPage: leafIndexForSheet(pageIndex),
+            startPage: Math.max(0, Math.min(pageIndex, leaves.length - 1)),
             swipeDistance: 30,
         });
 
         flip.loadFromHTML(leaves.map((leaf) => leaf.element));
 
         flip.on('flip', (event) => {
-            pageIndex = sheetIndexForLeaf(event.data);
+            pageIndex = event.data;
             updateChrome();
-            const around = [pageIndex - 1, pageIndex, pageIndex + 1]
-                .map((index) => sheets[index])
-                .filter(Boolean);
-            requestPaint(around);
+            refreshVisible();
+            watchClones();
         });
 
         flip.on('changeState', (event) => {
@@ -576,204 +716,65 @@ async function bootReader(root) {
             }
         });
 
-        mode = 'flip';
-        pageIndex = sheetIndexForLeaf(flip.getCurrentPageIndex());
-
-        for (const entry of sheets) {
-            place(entry, spec);
-        }
-
         for (const leaf of leaves) {
             placeLeaf(leaf, spec);
         }
 
         copyCanvasClones();
         updateChrome();
+        root.classList.add('is-ready');
     };
 
     const resizeFlip = (spec) => {
-        const settings = flip.getSettings();
-        const leafWidth = Math.max(1, Math.round(spec.pageWidth / 2));
-        const height = Math.round(spec.pageHeight);
-        const spreadWidth = leafWidth * 2;
-        settings.width = leafWidth;
-        settings.height = height;
-        settings.minWidth = leafWidth;
-        settings.maxWidth = leafWidth;
-        settings.minHeight = height;
-        settings.maxHeight = height;
+        if (!flip) {
+            mountFlip(spec);
 
-        const book = root.querySelector('.magazine-book');
-
-        if (book) {
-            book.style.minWidth = `${spreadWidth}px`;
-            book.style.minHeight = `${height}px`;
-            book.style.width = spec.zoom > 1 ? `${spreadWidth}px` : '100%';
-            book.style.maxWidth = spec.zoom > 1 ? 'none' : `${spreadWidth}px`;
+            return;
         }
 
-        for (const entry of sheets) {
-            place(entry, spec);
+        const settings = flip.getSettings();
+        const leafWidth = Math.max(1, Math.round(spec.portrait ? spec.pageWidth : spec.pageWidth / 2));
+        const height = Math.round(spec.pageHeight);
+        settings.width = leafWidth;
+        settings.height = height;
+        settings.usePortrait = spec.portrait;
+
+        const book = root.querySelector('.magazine-book');
+        const spreadWidth = spec.portrait ? leafWidth : leafWidth * 2;
+
+        if (book) {
+            book.style.width = `${spreadWidth}px`;
+            book.style.height = `${height}px`;
         }
 
         for (const leaf of leaves) {
             placeLeaf(leaf, spec);
         }
 
-        copyCanvasClones();
-
         flip.update();
+        copyCanvasClones();
         updateChrome();
-    };
-
-    const bindSwipe = (frame) => {
-        let startX = 0;
-        let startY = 0;
-        let tracking = false;
-
-        frame.addEventListener('pointerdown', (event) => {
-            if (event.target.closest('a')) {
-                return;
-            }
-
-            tracking = true;
-            startX = event.clientX;
-            startY = event.clientY;
-        });
-
-        frame.addEventListener('pointerup', (event) => {
-            if (!tracking) {
-                return;
-            }
-
-            tracking = false;
-            const dx = event.clientX - startX;
-            const dy = event.clientY - startY;
-
-            if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) {
-                return;
-            }
-
-            go(dx < 0 ? 1 : -1);
-        });
-    };
-
-    const showSlide = (index, direction) => {
-        const frame = root.querySelector('.magazine-slide');
-        const incoming = sheets[index]?.sheet;
-
-        if (!frame || !incoming) {
-            return;
-        }
-
-        releaseSheet(incoming);
-        incoming.style.position = 'absolute';
-        incoming.style.inset = '0';
-        incoming.style.transition = 'none';
-        incoming.style.transform = direction === 0 ? 'translateX(0)' : `translateX(${direction > 0 ? '100%' : '-100%'})`;
-        frame.appendChild(incoming);
-
-        if (currentSpec) {
-            place(sheets[index], currentSpec);
-        }
-
-        const outgoing = [...frame.children].find((node) => node !== incoming);
-
-        if (direction !== 0) {
-            requestAnimationFrame(() => {
-                incoming.style.transition = 'transform 420ms ease';
-                incoming.style.transform = 'translateX(0)';
-
-                if (outgoing) {
-                    outgoing.style.transition = 'transform 420ms ease';
-                    outgoing.style.transform = `translateX(${direction > 0 ? '-100%' : '100%'})`;
-                    outgoing.addEventListener('transitionend', () => outgoing.remove(), { once: true });
-                }
-            });
-        } else if (outgoing) {
-            outgoing.remove();
-        }
-
-        pageIndex = index;
-        updateChrome();
-    };
-
-    const mountSlide = (spec) => {
-        if (flip) {
-            pageIndex = sheetIndexForLeaf(flip.getCurrentPageIndex());
-            flip.destroy();
-            flip = null;
-        }
-
-        for (const entry of sheets) {
-            releaseSheet(entry.sheet);
-        }
-
-        const frame = document.createElement('div');
-        frame.className = 'magazine-slide';
-        frame.style.width = `${Math.round(spec.pageWidth)}px`;
-        frame.style.height = `${Math.round(spec.pageHeight)}px`;
-        root.replaceChildren(frame);
-        bindSwipe(frame);
-        mode = 'slide';
-        showSlide(Math.max(0, Math.min(pageIndex, sheets.length - 1)), 0);
-    };
-
-    const resizeSlide = (spec) => {
-        const frame = root.querySelector('.magazine-slide');
-
-        if (!frame) {
-            mountSlide(spec);
-            return;
-        }
-
-        frame.style.width = `${Math.round(spec.pageWidth)}px`;
-        frame.style.height = `${Math.round(spec.pageHeight)}px`;
-        updateChrome();
-    };
-
-    const applyMode = (spec) => {
-        root.classList.toggle('is-2d', spec.narrow);
-        root.classList.toggle('is-3d', !spec.narrow);
-        root.classList.toggle('is-zoomed', spec.zoom > 1);
-
-        if (spec.narrow) {
-            if (mode !== 'slide') {
-                mountSlide(spec);
-            } else {
-                resizeSlide(spec);
-            }
-
-            return;
-        }
-
-        if (mode !== 'flip') {
-            mountFlip(spec);
-            return;
-        }
-
-        resizeFlip(spec);
     };
 
     const layout = async () => {
         const spec = measure();
-        const key = `${spec.narrow}|${Math.round(spec.pageWidth)}|${Math.round(spec.pageHeight)}|${spec.pixelRatio.toFixed(2)}`;
+        const key = `${spec.portrait}|${Math.round(spec.pageWidth)}|${Math.round(spec.pageHeight)}|${spec.pixelRatio.toFixed(2)}|${spec.zoom}`;
 
-        if (key === lastLayoutKey) {
+        if (key === lastLayoutKey && flip) {
             return;
         }
 
+        const modeChanged = currentSpec ? currentSpec.portrait !== spec.portrait : true;
         lastLayoutKey = key;
         currentSpec = spec;
         paintQueue.length = 0;
         paintToken += 1;
         const token = paintToken;
-        const index = flip ? sheetIndexForLeaf(flip.getCurrentPageIndex()) : pageIndex;
-        const indexes = [index, index + 1];
+        root.classList.toggle('is-zoomed', spec.zoom > 1);
 
-        const visible = indexes.map((page) => sheets[page]).filter(Boolean);
+        const keep = nearbySheets();
 
-        for (const entry of visible) {
+        for (const entry of keep.slice(0, 4)) {
             await paint(entry, spec, token);
 
             if (token !== paintToken) {
@@ -781,18 +782,20 @@ async function bootReader(root) {
             }
         }
 
-        if (token !== paintToken) {
-            return;
+        if (!flip || modeChanged) {
+            mountFlip(spec);
+        } else {
+            resizeFlip(spec);
         }
 
-        applyMode(spec);
-
-        if (spec.zoom <= 1) {
-            requestPaint(sheets.filter((entry) => !visible.includes(entry)));
-        }
+        refreshVisible();
     };
 
     const go = (direction) => {
+        if (!flip) {
+            return;
+        }
+
         if (direction < 0 && previous.disabled) {
             return;
         }
@@ -801,36 +804,23 @@ async function bootReader(root) {
             return;
         }
 
-        if (flip) {
-            const index = sheetIndexForLeaf(flip.getCurrentPageIndex());
-            const ahead = [index + direction];
-            const pending = ahead
-                .map((page) => sheets[page])
-                .filter(Boolean)
-                .map((entry) => paint(entry, currentSpec, paintToken));
+        if (direction > 0) {
+            flip.flipNext();
+        } else {
+            flip.flipPrev();
+        }
+    };
 
-            Promise.all(pending).then(() => {
-                if (direction > 0) {
-                    flip.flipNext('bottom');
-                } else {
-                    flip.flipPrev('bottom');
-                }
-            }).catch((error) => {
-                console.error('Magazine page failed to draw', error);
-            });
-
+    const turnTo = (logical) => {
+        if (!flip) {
             return;
         }
 
-        const index = Math.max(0, Math.min(sheets.length - 1, pageIndex + direction));
-        const entry = sheets[index];
-
-        if (currentSpec && entry) {
-            paint(entry, currentSpec, paintToken).then(() => showSlide(index, direction));
-            return;
-        }
-
-        showSlide(index, direction);
+        const index = leafIndexForLogical(Math.min(Math.max(logical, 1), totalPages));
+        flip.turnToPage(index);
+        pageIndex = index;
+        updateChrome();
+        refreshVisible();
     };
 
     const setZoom = (index) => {
@@ -841,6 +831,11 @@ async function bootReader(root) {
         }
 
         zoomIndex = nextIndex;
+
+        for (const entry of sheets) {
+            entry.key = '';
+        }
+
         layout();
     };
 
@@ -848,13 +843,56 @@ async function bootReader(root) {
     next.addEventListener('click', () => go(1));
     zoomOut.addEventListener('click', () => setZoom(zoomIndex - 1));
     zoomIn.addEventListener('click', () => setZoom(zoomIndex + 1));
+    jump.addEventListener('change', () => turnTo(Number(jump.value)));
+    thumbs.addEventListener('click', () => toggleThumbs(thumbs, sheets, pageImages, pdf, turnTo));
 
-    document.addEventListener('keydown', (event) => {
-        if (event.target instanceof Element && event.target.closest('input, textarea, select')) {
+    document.getElementById('magazine-download-open')?.addEventListener('click', () => {
+        document.getElementById('magazine-download')?.showModal();
+    });
+    document.getElementById('magazine-download-close')?.addEventListener('click', () => {
+        document.getElementById('magazine-download')?.close();
+    });
+
+    stage?.addEventListener('click', (event) => {
+        if (!(event.target instanceof Element)) {
             return;
         }
 
+        if (event.target.closest('a, button, input, .magazine-toolbar, .magazine-thumbs, .magazine-links')) {
+            return;
+        }
+
+        const bounds = (stage).getBoundingClientRect();
+        go(event.clientX - bounds.left < bounds.width / 2 ? -1 : 1);
+    });
+
+    document.addEventListener('click', (event) => {
+        const trigger = event.target instanceof Element
+            ? event.target.closest('[data-magazine-jump]')
+            : null;
+
+        if (!trigger) {
+            return;
+        }
+
+        event.preventDefault();
+        turnTo(Number(trigger.getAttribute('data-magazine-jump')));
+        stage?.scrollIntoView({ block: 'nearest' });
+    });
+
+    document.addEventListener('keydown', (event) => {
         if (!root.isConnected) {
+            return;
+        }
+
+        if (event.key === 'Escape' && stage?.classList.contains('is-reading') && !document.fullscreenElement) {
+            stage.classList.remove('is-reading');
+            layout();
+
+            return;
+        }
+
+        if (event.target instanceof Element && event.target.closest('input, textarea, select')) {
             return;
         }
 
@@ -864,117 +902,294 @@ async function bootReader(root) {
         } else if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
             event.preventDefault();
             go(-1);
+        } else if (event.key === 'Home') {
+            event.preventDefault();
+            turnTo(1);
+        } else if (event.key === 'End') {
+            event.preventDefault();
+            turnTo(totalPages);
         } else if (event.key === '+' || event.key === '=') {
             setZoom(zoomIndex + 1);
         } else if (event.key === '-' || event.key === '_') {
             setZoom(zoomIndex - 1);
+        } else if (event.key === 'f' || event.key === 'F') {
+            event.preventDefault();
+            fullscreenButton?.click();
         }
     });
+
+    const poke = () => {
+        const wasIdle = stage?.classList.contains('is-idle') ?? false;
+        stage?.classList.remove('is-idle');
+
+        if (wasIdle) {
+            layout();
+        }
+
+        window.clearTimeout(idleTimer);
+        idleTimer = window.setTimeout(() => {
+            if (stage?.classList.contains('is-reading') || document.fullscreenElement === stage) {
+                stage?.classList.add('is-idle');
+                layout();
+            }
+        }, 3000);
+    };
+
+    stage?.addEventListener('pointermove', poke);
+    stage?.addEventListener('pointerdown', poke);
+    stage?.addEventListener('focusin', poke);
+
+    bindPinch(stage ?? root, () => setZoom(zoomIndex + 1), () => setZoom(zoomIndex - 1));
 
     let resizeTimer = 0;
-    window.addEventListener('resize', () => {
+    const refitSoon = () => {
         window.clearTimeout(resizeTimer);
         resizeTimer = window.setTimeout(() => layout(), 150);
-    });
+    };
 
-    mountFullscreen(root.closest('.magazine-stage'), () => layout());
+    window.addEventListener('resize', refitSoon);
+    window.matchMedia(PORTRAIT_QUERY).addEventListener('change', refitSoon);
 
+    mountFullscreen(stage, () => layout());
     await layout();
+    poke();
 }
 
-function linkForAnnotation(annotation, viewport) {
-    if (annotation?.subtype !== 'Link' || !Array.isArray(annotation.rect)) {
-        return null;
-    }
+function hotspotsForLeaf(leaf, hotspots) {
+    const page = leaf.sheet.pageNumber;
 
-    const href = safeHttpUrl(annotation.url || annotation.unsafeUrl);
-
-    if (href === null) {
-        return null;
-    }
-
-    const [x1, y1, x2, y2] = pdfRectToViewport(annotation.rect, viewport);
-    const boxWidth = Math.abs(x2 - x1);
-    const boxHeight = Math.abs(y2 - y1);
-
-    if (boxWidth < 1 || boxHeight < 1 || viewport.width < 1 || viewport.height < 1) {
-        return null;
-    }
-
-    const anchor = document.createElement('a');
-    anchor.href = href;
-    anchor.target = '_blank';
-    anchor.rel = 'noopener noreferrer';
-    anchor.title = href;
-    anchor.style.left = `${(Math.min(x1, x2) / viewport.width) * 100}%`;
-    anchor.style.top = `${(Math.min(y1, y2) / viewport.height) * 100}%`;
-    anchor.style.width = `${(boxWidth / viewport.width) * 100}%`;
-    anchor.style.height = `${(boxHeight / viewport.height) * 100}%`;
-
-    return anchor;
-}
-
-function pdfRectToViewport(rect, viewport) {
-    const transform = viewport?.transform;
-
-    if (!Array.isArray(transform) || transform.length < 6) {
-        return [0, 0, 0, 0];
-    }
-
-    const [a, b, c, d, e, f] = transform;
-    const project = (x, y) => [a * x + c * y + e, b * x + d * y + f];
-    const [left, top] = project(rect[0], rect[1]);
-    const [right, bottom] = project(rect[2], rect[3]);
-
-    return [left, top, right, bottom];
-}
-
-function safeHttpUrl(value) {
-    if (typeof value !== 'string' || value.trim() === '') {
-        return null;
-    }
-
-    try {
-        const url = new URL(value, window.location.href);
-
-        if (url.protocol === 'https:' || url.protocol === 'http:' || url.protocol === 'mailto:') {
-            return url.href;
+    return hotspots.flatMap((hotspot) => {
+        if (Number(hotspot.pdfPage) !== page) {
+            return [];
         }
-    } catch {
-        return null;
-    }
 
-    return null;
+        const x = Number(hotspot.x);
+        const y = Number(hotspot.y);
+        const w = Number(hotspot.w);
+        const h = Number(hotspot.h);
+        const right = x + w;
+
+        if (leaf.half === 'full') {
+            return [{ ...hotspot, x, y, w, h }];
+        }
+
+        if (leaf.half === 'left') {
+            if (x >= 50) {
+                return [];
+            }
+
+            const edge = Math.min(right, 50);
+
+            return [{ ...hotspot, x: x * 2, y, w: (edge - x) * 2, h }];
+        }
+
+        if (right <= 50) {
+            return [];
+        }
+
+        const edge = Math.max(x, 50);
+
+        return [{ ...hotspot, x: (edge - 50) * 2, y, w: (Math.min(right, 100) - edge) * 2, h }];
+    });
 }
 
-function mountFullscreen(stage, onRefit) {
-    const button = document.getElementById('magazine-fullscreen');
+function toggleThumbs(trigger, sheets, pageImages, pdf, turnTo) {
+    const drawer = document.getElementById('magazine-thumbs');
 
-    if (!stage || !button) {
+    if (!drawer) {
         return;
     }
 
-    const isReading = () => stage.classList.contains('is-reading') || document.fullscreenElement === stage;
+    const open = drawer.hidden;
+    drawer.hidden = !open;
+    trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+    if (!open || drawer.childElementCount > 0) {
+        return;
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'magazine-thumbs__grid';
+    drawer.append(grid);
+
+    sheets.forEach((entry, index) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'magazine-thumbs__item';
+        item.setAttribute('aria-label', `Go to page ${index + 1}`);
+        item.addEventListener('click', () => {
+            turnTo(entry.logical || index + 1);
+            drawer.hidden = true;
+            trigger.setAttribute('aria-expanded', 'false');
+        });
+
+        if (pageImages[index]) {
+            const image = document.createElement('img');
+            image.alt = '';
+            image.loading = 'lazy';
+            image.src = pageImages[index];
+            item.append(image);
+        } else {
+            const canvas = document.createElement('canvas');
+            item.append(canvas);
+            observeThumb(item, canvas, () => pdf.getPage(entry.pageNumber));
+        }
+
+        const caption = document.createElement('span');
+        caption.textContent = String(index + 1);
+        item.append(caption);
+        grid.append(item);
+    });
+}
+
+function observeThumb(item, canvas, loadPage) {
+    const paint = async () => {
+        if (canvas.dataset.ready === '1') {
+            return;
+        }
+
+        canvas.dataset.ready = '1';
+        const page = await loadPage();
+        const viewport = page.getViewport({ scale: 0.2 });
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+        await page.render({ canvas, canvasContext: canvas.getContext('2d'), viewport }).promise;
+    };
+
+    if (!('IntersectionObserver' in window)) {
+        paint();
+
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+            observer.disconnect();
+            paint();
+        }
+    });
+    observer.observe(item);
+}
+
+function bindPinch(target, zoomIn, zoomOut) {
+    const points = new Map();
+    let start = 0;
+
+    target.addEventListener('pointerdown', (event) => {
+        if (event.target instanceof Element && event.target.closest('a, button, input')) {
+            return;
+        }
+
+        points.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+        if (points.size === 2) {
+            start = distance(points);
+        }
+    });
+
+    target.addEventListener('pointermove', (event) => {
+        if (!points.has(event.pointerId)) {
+            return;
+        }
+
+        points.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    });
+
+    const finish = (event) => {
+        if (points.size === 2 && start > 0) {
+            const next = distance(points);
+
+            if (next > start * 1.12) {
+                zoomIn();
+            } else if (next < start * 0.88) {
+                zoomOut();
+            }
+        }
+
+        points.delete(event.pointerId);
+        start = points.size === 2 ? distance(points) : 0;
+    };
+
+    target.addEventListener('pointerup', finish);
+    target.addEventListener('pointercancel', finish);
+}
+
+function distance(points) {
+    const [a, b] = [...points.values()];
+
+    if (!a || !b) {
+        return 0;
+    }
+
+    return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function button(label, text) {
+    const element = document.createElement('button');
+    element.type = 'button';
+    element.className = 'btn ghost';
+    element.textContent = text;
+    element.setAttribute('aria-label', label);
+
+    return element;
+}
+
+function readJson(id) {
+    const node = document.getElementById(id);
+
+    if (!node?.textContent) {
+        return [];
+    }
+
+    try {
+        const parsed = JSON.parse(node.textContent);
+
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+function loadImage(url) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.decoding = 'async';
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Page image failed'));
+        image.src = url;
+    });
+}
+
+function mountFullscreen(stage, onRefit) {
+    const control = document.getElementById('magazine-fullscreen');
+
+    if (!stage || !control) {
+        return;
+    }
+
+    const reading = () => stage.classList.contains('is-reading') || document.fullscreenElement === stage;
 
     const refit = () => {
-        const on = isReading();
-        button.textContent = on ? 'Exit full screen' : 'Full screen';
-        button.setAttribute('aria-pressed', on ? 'true' : 'false');
+        const on = reading();
+        control.textContent = on ? 'Exit full screen' : 'Full screen';
+        control.setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen');
+        control.setAttribute('aria-pressed', on ? 'true' : 'false');
         document.documentElement.classList.toggle('magazine-reading', on);
         requestAnimationFrame(() => {
             requestAnimationFrame(() => onRefit());
         });
     };
 
-    button.addEventListener('click', async () => {
-        if (isReading()) {
-            stage.classList.remove('is-reading');
+    control.addEventListener('click', async () => {
+        if (reading()) {
+            stage.classList.remove('is-reading', 'is-idle');
 
             if (document.fullscreenElement) {
                 await document.exitFullscreen().catch(() => {});
             }
 
             refit();
+
             return;
         }
 
@@ -985,8 +1200,8 @@ function mountFullscreen(stage, onRefit) {
             try {
                 await request();
             } catch {
-                // The fixed overlay still covers the page when the
-                // browser refuses the Fullscreen API.
+                // iOS Safari has no Fullscreen API here. The fixed
+                // immersive layer still covers the viewport.
             }
         }
 
@@ -1001,17 +1216,10 @@ function mountFullscreen(stage, onRefit) {
             stage.classList.add('is-reading');
         } else if (usingFullscreenApi) {
             usingFullscreenApi = false;
-            stage.classList.remove('is-reading');
+            stage.classList.remove('is-reading', 'is-idle');
         }
 
         refit();
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && stage.classList.contains('is-reading') && !document.fullscreenElement) {
-            stage.classList.remove('is-reading');
-            refit();
-        }
     });
 }
 

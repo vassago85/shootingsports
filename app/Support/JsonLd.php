@@ -291,7 +291,7 @@ class JsonLd
             'url' => route('magazines.show', $issue->slug),
             'inLanguage' => $issue->language,
             'isPartOf' => $periodical,
-            'issueNumber' => $issue->issue_label,
+            'issueNumber' => $issue->issue_number ?: $issue->issue_label,
             'numberOfPages' => $issue->page_count,
             'datePublished' => self::iso($issue->published_at),
             'description' => $issue->description,

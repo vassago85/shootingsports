@@ -4,7 +4,9 @@ namespace App\Filament\Desk\Resources\MagazineIssues\Pages;
 
 use App\Filament\Desk\Resources\MagazineIssues\MagazineIssueResource;
 use App\Jobs\ExtractMagazineCover;
+use App\Jobs\ExtractMagazineLinks;
 use App\Jobs\ExtractMagazineText;
+use App\Jobs\RenderMagazinePages;
 use App\Models\MagazineIssue;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -32,6 +34,8 @@ class CreateMagazineIssue extends CreateRecord
         }
 
         ExtractMagazineText::dispatch($record->id);
+        ExtractMagazineLinks::dispatch($record->id);
+        RenderMagazinePages::dispatch($record->id);
 
         if ($record->cover_path === null) {
             ExtractMagazineCover::dispatch($record->id);

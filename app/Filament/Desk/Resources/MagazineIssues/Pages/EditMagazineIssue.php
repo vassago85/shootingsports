@@ -4,8 +4,11 @@ namespace App\Filament\Desk\Resources\MagazineIssues\Pages;
 
 use App\Filament\Desk\Resources\MagazineIssues\MagazineIssueResource;
 use App\Jobs\ExtractMagazineCover;
+use App\Jobs\ExtractMagazineLinks;
 use App\Jobs\ExtractMagazineText;
+use App\Jobs\RenderMagazinePages;
 use App\Models\MagazineIssue;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -41,6 +44,11 @@ class EditMagazineIssue extends EditRecord
             ExtractMagazineText::dispatch($record->id);
         }
 
+        if ($pdfChanged || $record->hotspots()->whereIn('source', ['annotation', 'text'])->doesntExist()) {
+            ExtractMagazineLinks::dispatch($record->id);
+            RenderMagazinePages::dispatch($record->id);
+        }
+
         // Auto-extract a cover when (a) the PDF was swapped and the
         // editor left the cover blank, or (b) the editor cleared an
         // existing cover and wants a fresh one from page 1.
@@ -55,6 +63,9 @@ class EditMagazineIssue extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('hotspots')
+                ->label('Advertiser links')
+                ->url(fn (): string => MagazineIssueResource::getUrl('hotspots', ['record' => $this->getRecord()])),
             DeleteAction::make(),
         ];
     }

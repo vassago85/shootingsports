@@ -20,6 +20,7 @@ use App\Http\Controllers\IcalController;
 use App\Http\Controllers\LlmsFullTxtController;
 use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\MagazineIssueController;
+use App\Http\Controllers\MagazineLinkController;
 use App\Http\Controllers\MagazineReadController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\MeController;
@@ -159,6 +160,7 @@ Route::get('/feed', FeedController::class)->name('feed');
 // renders the page-flip reader plus a translate-friendly text view.
 // Drafts 404 to the public, unless the request carries a signed
 // preview link generated from the Desk resource.
+Route::get('/go/{hotspot}', MagazineLinkController::class)->name('magazines.go');
 Route::get('/magazines', [MagazineIssueController::class, 'index'])->name('magazines.index');
 Route::post('/magazines/{issue}/download-link', [MagazineIssueController::class, 'emailDownloadLink'])
     ->name('magazines.download-link');
@@ -169,6 +171,9 @@ Route::get('/magazines/{issue}', [MagazineIssueController::class, 'show'])->name
 Route::post('/magazines/{issue}/read', [MagazineReadController::class, 'store'])
     ->middleware('throttle:60,1')
     ->name('magazines.read');
+Route::post('/magazines/{issue}/progress', [MagazineIssueController::class, 'progress'])
+    ->middleware('throttle:60,1')
+    ->name('magazines.progress');
 
 // Bare /matches and /events are not listing surfaces — /calendar is.
 Route::redirect('/matches', '/calendar', 301);

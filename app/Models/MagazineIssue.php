@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasSlug;
+use App\Support\Magazines\MagazineLinkMerger;
 use Database\Factories\MagazineIssueFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -34,6 +35,7 @@ class MagazineIssue extends Model
     {
         return [
             'pages_text' => 'array',
+            'page_images' => 'array',
             'page_count' => 'integer',
             'issue_number' => 'integer',
             'issue_month' => 'date',
@@ -72,11 +74,40 @@ class MagazineIssue extends Model
     }
 
     /**
+     * @return HasMany<MagazineHotspot, $this>
+     */
+    public function hotspots(): HasMany
+    {
+        return $this->hasMany(MagazineHotspot::class);
+    }
+
+    /**
+     * @return HasMany<MagazineLinkClick, $this>
+     */
+    public function linkClicks(): HasMany
+    {
+        return $this->hasMany(MagazineLinkClick::class);
+    }
+
+    /**
      * @return BelongsToMany<User, $this>
      */
     public function savedByUsers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'saved_magazine_issues')->withTimestamps();
+        return $this->belongsToMany(User::class, 'saved_magazine_issues')
+            ->withPivot('last_page')
+            ->withTimestamps();
+    }
+
+    protected function slugSource(): string
+    {
+        $publication = trim((string) $this->publication);
+
+        if ($publication !== '' && filled($this->issue_number)) {
+            return $publication.'-'.$this->issue_number;
+        }
+
+        return (string) ($this->title ?? '');
     }
 
     /**
@@ -172,5 +203,111 @@ class MagazineIssue extends Model
         }
 
         return false;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function pageImageUrls(): array
+    {
+        $paths = $this->page_images ?? [];
+
+        if (! is_array($paths)) {
+            return [];
+        }
+
+        $urls = [];
+
+        foreach ($paths as $path) {
+            if (is_string($path) && $path !== '') {
+                $urls[] = Storage::disk('media')->url($path);
+            }
+        }
+
+        return $urls;
+    }
+
+    /**
+     * Annotations, printed URLs, and manual hotspots. A manual box
+     * replaces anything it overlaps.
+     *
+     * @return list<array{id: string, page: int, pdfPage: int, x: float, y: float, w: float, h: float, href: string, label: string}>
+     */
+    public function readerHotspots(): array
+    {
+        $rows = $this->relationLoaded('hotspots')
+            ? $this->hotspots
+            : $this->hotspots()->with('organisation')->get();
+
+        $payload = $rows->map(fn (MagazineHotspot $hotspot): array => [
+            'token' => $hotspot->token,
+            'page' => $hotspot->page,
+            'pdf_page' => $hotspot->pdf_page,
+            'x' => $hotspot->x,
+            'y' => $hotspot->y,
+            'w' => $hotspot->w,
+            'h' => $hotspot->h,
+            'url' => $hotspot->url,
+            'source' => $hotspot->source,
+            'label' => $hotspot->label ?: $hotspot->displayName(),
+        ])->all();
+
+        return array_map(fn (array $link): array => [
+            'id' => (string) $link['token'],
+            'page' => (int) $link['page'],
+            'pdfPage' => (int) $link['pdf_page'],
+            'x' => (float) $link['x'],
+            'y' => (float) $link['y'],
+            'w' => (float) $link['w'],
+            'h' => (float) $link['h'],
+            'href' => route('magazines.go', $link['token']),
+            'label' => (string) ($link['label'] ?: 'Advertiser link'),
+        ], app(MagazineLinkMerger::class)->merge($payload));
+    }
+
+    /**
+     * One row per advertiser, at the earliest page they appear.
+     *
+     * @return list<array{name: string, logo: ?string, page: int, listing_url: ?string}>
+     */
+    public function advertisers(): array
+    {
+        $rows = ($this->relationLoaded('hotspots')
+            ? $this->hotspots
+            : $this->hotspots()->with('organisation')->get())
+            ->sortBy([
+                ['page', 'asc'],
+                ['id', 'asc'],
+            ]);
+
+        $groups = [];
+
+        foreach ($rows as $hotspot) {
+            $name = $hotspot->displayName();
+            $key = $hotspot->organisation_id
+                ? 'org:'.$hotspot->organisation_id
+                : 'name:'.strtolower($name);
+
+            if (isset($groups[$key])) {
+                continue;
+            }
+
+            $listing = null;
+
+            if ($hotspot->organisation !== null) {
+                $listing = $hotspot->organisation->isFederationListing()
+                    ? route('federations.show', $hotspot->organisation->slug)
+                    : route('clubs.show', $hotspot->organisation->slug);
+            }
+
+            $groups[$key] = [
+                'name' => $name,
+                'logo' => $hotspot->organisation?->logoUrl(),
+                'page' => $hotspot->page,
+                'listing_url' => $listing,
+            ];
+        }
+
+        return array_values($groups);
     }
 }

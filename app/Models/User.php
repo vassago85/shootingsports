@@ -587,7 +587,9 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
      */
     public function savedMagazineIssues(): BelongsToMany
     {
-        return $this->belongsToMany(MagazineIssue::class, 'saved_magazine_issues')->withTimestamps();
+        return $this->belongsToMany(MagazineIssue::class, 'saved_magazine_issues')
+            ->withPivot('last_page')
+            ->withTimestamps();
     }
 
     public function deviceTokens(): HasMany

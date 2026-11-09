@@ -358,9 +358,11 @@ it('opens an account issue for a signed-in reader and keeps it out of search', f
 it('labels an account issue as sign-in on the public list', function () {
     MagazineIssue::factory()->published()->loginRequired()->create([
         'title' => 'Account Issue',
+        'published_at' => now()->subDays(2),
     ]);
     MagazineIssue::factory()->published()->create([
         'title' => 'Open Issue',
+        'published_at' => now()->subDay(),
     ]);
 
     $this->get(route('magazines.index'))
@@ -368,7 +370,7 @@ it('labels an account issue as sign-in on the public list', function () {
         ->assertSee('Account Issue', false)
         ->assertSee('Sign in to read', false)
         ->assertSee('Open Issue', false)
-        ->assertSee('Read this issue', false);
+        ->assertSee('Read now', false);
 });
 
 it('leaves account issues out of the magazines sitemap', function () {

@@ -4,7 +4,9 @@ namespace App\Filament\Resources\MagazineIssues\Pages;
 
 use App\Filament\Resources\MagazineIssues\MagazineIssueResource;
 use App\Jobs\ExtractMagazineCover;
+use App\Jobs\ExtractMagazineLinks;
 use App\Jobs\ExtractMagazineText;
+use App\Jobs\RenderMagazinePages;
 use App\Models\MagazineIssue;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
@@ -30,15 +32,13 @@ class CreateMagazineIssue extends CreateRecord
 
     protected function afterCreate(): void
     {
-        if ($this->record instanceof MagazineIssue && blank($this->record->slug)) {
-            $this->record->update(['slug' => 'issue-'.$this->record->id]);
-        }
-
         if (! $this->record instanceof MagazineIssue || $this->record->pdf_path === null) {
             return;
         }
 
         ExtractMagazineText::dispatch($this->record->id);
+        ExtractMagazineLinks::dispatch($this->record->id);
+        RenderMagazinePages::dispatch($this->record->id);
 
         if ($this->record->cover_path === null) {
             ExtractMagazineCover::dispatch($this->record->id);

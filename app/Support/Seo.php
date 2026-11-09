@@ -204,7 +204,7 @@ final readonly class Seo
     {
         return new self(
             title: 'Magazines',
-            description: self::clip('Published magazines. Each issue names its owner, so more than one publisher can host here.'),
+            description: self::clip('Read South African shooting sports magazines free online.'),
             canonical: route('magazines.index'),
         );
     }

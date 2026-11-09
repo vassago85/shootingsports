@@ -13,6 +13,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
@@ -31,6 +32,8 @@ class MagazineIssueForm
                             ->label('Magazine')
                             ->required()
                             ->default('Targets')
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn (?string $state, Set $set, Get $get, mixed $livewire) => self::suggestSlug($set, $get, $livewire))
                             ->helperText('The magazine name, such as On Target.'),
                         Select::make('publisher_organisation_id')
                             ->label('Publisher')
@@ -69,14 +72,10 @@ class MagazineIssueForm
                             ->maxLength(160)
                             ->columnSpanFull()
                             ->live(onBlur: true)
-                            ->afterStateUpdated(function (?string $state, Set $set, mixed $livewire): void {
-                                if ($livewire instanceof CreateRecord && filled($state)) {
-                                    $set('slug', Str::slug($state));
-                                }
-                            }),
+                            ->afterStateUpdated(fn (?string $state, Set $set, Get $get, mixed $livewire) => self::suggestSlug($set, $get, $livewire, fromTitle: true)),
                         TextInput::make('slug')
                             ->columnSpanFull()
-                            ->helperText('Auto-generated from the title. Edit only if you need a custom URL.')
+                            ->helperText('Built from the magazine name and issue number. Edit only if you need a custom URL.')
                             ->unique(ignoreRecord: true)
                             ->rules(['alpha_dash']),
                         TextInput::make('issue_label')
@@ -85,7 +84,9 @@ class MagazineIssueForm
                         TextInput::make('issue_number')
                             ->label('Issue number')
                             ->numeric()
-                            ->minValue(1),
+                            ->minValue(1)
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn (mixed $state, Set $set, Get $get, mixed $livewire) => self::suggestSlug($set, $get, $livewire)),
                         DatePicker::make('issue_month')
                             ->label('Month')
                             ->native(false)
@@ -146,5 +147,25 @@ class MagazineIssueForm
                             ->helperText('Portrait or square cover for listings and social previews. Leave empty to auto-extract the PDF\'s first page.'),
                     ]),
             ]);
+    }
+
+    private static function suggestSlug(Set $set, Get $get, mixed $livewire, bool $fromTitle = false): void
+    {
+        if (! $livewire instanceof CreateRecord) {
+            return;
+        }
+
+        $publication = trim((string) $get('publication'));
+        $number = $get('issue_number');
+
+        if ($publication !== '' && filled($number)) {
+            $set('slug', Str::slug($publication.'-'.$number));
+
+            return;
+        }
+
+        if ($fromTitle && filled($get('title'))) {
+            $set('slug', Str::slug((string) $get('title')));
+        }
     }
 }

@@ -5,6 +5,7 @@ namespace App\Filament\Desk\Resources\MagazineIssues;
 use App\Filament\Desk\Resources\MagazineIssues\Pages\CreateMagazineIssue;
 use App\Filament\Desk\Resources\MagazineIssues\Pages\EditMagazineIssue;
 use App\Filament\Desk\Resources\MagazineIssues\Pages\ListMagazineIssues;
+use App\Filament\Desk\Resources\MagazineIssues\Pages\ManageMagazineHotspots;
 use App\Filament\Desk\Resources\MagazineIssues\Schemas\MagazineIssueForm;
 use App\Filament\Desk\Resources\MagazineIssues\Tables\MagazineIssuesTable;
 use App\Models\MagazineIssue;
@@ -66,6 +67,7 @@ class MagazineIssueResource extends Resource
             'index' => ListMagazineIssues::route('/'),
             'create' => CreateMagazineIssue::route('/create'),
             'edit' => EditMagazineIssue::route('/{record}/edit'),
+            'hotspots' => ManageMagazineHotspots::route('/{record}/hotspots'),
         ];
     }
 }

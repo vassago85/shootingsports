@@ -5,6 +5,7 @@ namespace App\Filament\Resources\MagazineIssues;
 use App\Filament\Resources\MagazineIssues\Pages\CreateMagazineIssue;
 use App\Filament\Resources\MagazineIssues\Pages\EditMagazineIssue;
 use App\Filament\Resources\MagazineIssues\Pages\ListMagazineIssues;
+use App\Filament\Resources\MagazineIssues\Pages\ManageMagazineHotspots;
 use App\Models\MagazineIssue;
 use BackedEnum;
 use Filament\Forms\Components\DatePicker;
@@ -75,6 +76,7 @@ class MagazineIssueResource extends Resource
             TextColumn::make('title')->searchable(),
             TextColumn::make('issue_number')->label('Issue'),
             TextColumn::make('issue_month')->date('F Y'),
+            TextColumn::make('link_clicks_count')->counts('linkClicks')->label('Ad clicks'),
         ]);
     }
 
@@ -84,6 +86,7 @@ class MagazineIssueResource extends Resource
             'index' => ListMagazineIssues::route('/'),
             'create' => CreateMagazineIssue::route('/create'),
             'edit' => EditMagazineIssue::route('/{record}/edit'),
+            'hotspots' => ManageMagazineHotspots::route('/{record}/hotspots'),
         ];
     }
 }

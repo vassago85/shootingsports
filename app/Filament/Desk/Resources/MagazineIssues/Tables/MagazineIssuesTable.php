@@ -33,6 +33,9 @@ class MagazineIssuesTable
                     ->label('Pages')
                     ->numeric()
                     ->toggleable(),
+                TextColumn::make('link_clicks_count')
+                    ->counts('linkClicks')
+                    ->label('Ad clicks'),
                 TextColumn::make('readers')
                     ->label('Readers')
                     ->getStateUsing(fn (MagazineIssue $record): int => $record->readersCount()),

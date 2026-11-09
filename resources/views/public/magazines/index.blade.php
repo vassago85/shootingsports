@@ -10,38 +10,61 @@
             <div class="wrap">
                 <p class="label">Magazine</p>
                 <h1>Magazines</h1>
-                <p>Published magazines only. Each issue names who published it.</p>
+                <p>Read South African shooting sports magazines free online.</p>
             </div>
         </section>
 
         <section class="block">
-            <div class="wrap" style="max-width:960px">
-                @forelse ($issues as $issue)
-                    <article class="club-card" style="margin-top:16px;display:grid;grid-template-columns:120px 1fr;gap:20px;align-items:start">
-                        @if ($issue->coverUrl())
-                            <a href="{{ route('magazines.show', $issue->slug) }}" aria-hidden="true" tabindex="-1">
-                                <img src="{{ $issue->coverUrl() }}" alt="" style="width:120px;height:auto;border-radius:6px">
-                            </a>
+            <div class="wrap">
+                <form class="magazine-filters" method="get" action="{{ route('magazines.index') }}">
+                    <label>
+                        <span>Publication</span>
+                        <select name="publication">
+                            <option value="">All publications</option>
+                            @foreach ($publications as $name)
+                                <option value="{{ $name }}" @selected($publication === $name)>{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <label>
+                        <span>Year</span>
+                        <select name="year">
+                            <option value="">All years</option>
+                            @foreach ($years as $option)
+                                <option value="{{ $option }}" @selected($year === $option)>{{ $option }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <button type="submit" class="btn">Filter</button>
+                    @if ($publication || $year)
+                        <a href="{{ route('magazines.index') }}">Clear filters</a>
+                    @endif
+                </form>
+
+                @if ($issues->isEmpty())
+                    <p class="empty">
+                        @if ($publication || $year)
+                            No issues match these filters.
+                            <a href="{{ route('magazines.index') }}">Show every issue</a>
                         @else
-                            <div aria-hidden="true" style="width:120px;height:160px;background:var(--panel,#1b1b1b);border-radius:6px"></div>
+                            The first issue is on its way.
                         @endif
-                        <div>
-                            <p class="label">{{ $issue->publication }} · {{ $issue->issue_label ?? $issue->published_at?->format('F Y') }}</p>
-                            <h2><a href="{{ route('magazines.show', $issue->slug) }}">{{ $issue->title }}</a></h2>
-                            @if ($publisher = $issue->publisherLabel())
-                                <p>Published by {{ $publisher }}</p>
-                            @endif
-                            @if ($issue->description)
-                                <p>{{ $issue->description }}</p>
-                            @endif
-                            <p style="margin-top:12px">
-                                <a class="btn" href="{{ route('magazines.show', $issue->slug) }}">Read this issue</a>
-                            </p>
-                        </div>
-                    </article>
-                @empty
-                    <p class="empty">The first issue is on its way.</p>
-                @endforelse
+                    </p>
+                @else
+                    @php
+                        $hero = $issues->first();
+                    @endphp
+
+                    <div class="magazine-grid">
+                        @foreach ($issues as $issue)
+                            @include('public.magazines._card', [
+                                'issue' => $issue,
+                                'hero' => $issue->is($hero),
+                                'continuePage' => $continue[$issue->id] ?? null,
+                            ])
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </section>
     </main>
