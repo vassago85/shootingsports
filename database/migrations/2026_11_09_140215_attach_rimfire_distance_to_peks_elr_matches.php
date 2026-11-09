@@ -22,7 +22,7 @@ return new class extends Migration
                 'family' => DisciplineFamily::Rifle,
                 'parent_id' => $elr->id,
                 'short_blurb' => '.22 LR extreme long range.',
-                'typical_distances' => '50–750 m',
+                'typical_distances' => '50–500 m',
                 'is_published' => false,
                 'sort_order' => $elr->sort_order + 1,
             ],

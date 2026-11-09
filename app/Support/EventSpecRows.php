@@ -56,7 +56,7 @@ class EventSpecRows
 
     /**
      * A more specific child discipline wins over the parent's range.
-     * .22 LR ELR is 50–750 m, not the centerfire ELR mile-plus range.
+     * .22 LR ELR is 50–500 m, not the centerfire ELR mile-plus range.
      */
     public static function distance(Event $event, ?Discipline $discipline = null): ?string
     {

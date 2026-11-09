@@ -37,7 +37,7 @@ it('seeds the Send It ELR 2027 dates from the programme sheet', function () {
     $peksDistance = collect(EventSpecRows::for($peks->load('disciplines')))
         ->firstWhere(fn (array $row): bool => $row[0] === 'Distance');
 
-    expect($peksDistance[1] ?? null)->toBe('50–750 m');
+    expect($peksDistance[1] ?? null)->toBe('50–500 m');
 
     $twoMile = $events->firstWhere('slug', 'send-it-2-mile-challenge-2027-03-13');
     $twoMileDistance = collect(EventSpecRows::for($twoMile->load('disciplines')))

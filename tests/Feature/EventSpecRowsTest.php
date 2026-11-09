@@ -78,7 +78,7 @@ it('uses the .22 LR range for a rimfire ELR match', function () {
         'name' => '.22 LR ELR',
         'family' => DisciplineFamily::Rifle,
         'parent_id' => $elr->id,
-        'typical_distances' => '50–750 m',
+        'typical_distances' => '50–500 m',
         'is_published' => false,
     ]);
     $event = Event::factory()->confirmed()->create();
@@ -87,7 +87,7 @@ it('uses the .22 LR range for a rimfire ELR match', function () {
 
     $rows = collect(EventSpecRows::for($event->fresh(['disciplines'])));
 
-    expect($rows->firstWhere(fn ($row) => $row[0] === 'Distance')[1])->toBe('50–750 m')
+    expect($rows->firstWhere(fn ($row) => $row[0] === 'Distance')[1])->toBe('50–500 m')
         ->and($rows->firstWhere(fn ($row) => $row[0] === 'Discipline')[1])->toBe('ELR');
 });
 
