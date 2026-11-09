@@ -2,11 +2,11 @@
  * Targets magazine reader.
  *
  * PDF.js draws each page to a canvas at the size it is shown, so type
- * stays as sharp as the file. Each PDF page is shown on its own, at
- * its own shape. The cover is portrait. Later pages are full spreads,
- * split at the gutter on a wide screen so page-flip curls one half
- * to the middle. The curl copies the page element, and a copied canvas
- * is blank, so each animation frame copies the live pixels across.
+ * stays as sharp as the file. A portrait page is one magazine page and
+ * stays whole. A landscape sheet (wider than it is tall) is a spread
+ * and is split at the gutter so page-flip curls one half to the middle.
+ * The curl copies the page element, and a copied canvas is blank, so
+ * each animation frame copies the live pixels across.
  *
  * On a narrow screen the same canvases slide in 2D, one page at a time.
  * Zoom throws the old bitmap away and draws the page again.
@@ -128,6 +128,7 @@ async function bootReader(root) {
 
     const spreadPage = sheets.find((entry) => entry.spread) ?? sheets[0];
     const sheetAspect = spreadPage.pdfWidth / spreadPage.pdfHeight;
+    const singlePages = sheets.every((entry) => !entry.spread);
 
     let pageIndex = 0;
     let zoomIndex = 0;
@@ -219,12 +220,14 @@ async function bootReader(root) {
         const heightBudget = reading
             ? Math.max(stage.clientHeight - (toolbar?.offsetHeight ?? 64) - 28, 280)
             : Math.min(window.innerHeight * 0.78, 1100);
+        const facing = singlePages && !narrow;
+        const bookAspect = facing ? sheetAspect * 2 : sheetAspect;
         let pageWidth = widthBudget;
-        let pageHeight = pageWidth / sheetAspect;
+        let pageHeight = pageWidth / bookAspect;
 
         if (pageHeight > heightBudget) {
             pageHeight = heightBudget;
-            pageWidth = pageHeight * sheetAspect;
+            pageWidth = pageHeight * bookAspect;
         }
 
         pageWidth = Math.max(160, pageWidth * zoom);
@@ -417,7 +420,7 @@ async function bootReader(root) {
         entry.canvas.width = Math.floor(viewport.width);
         entry.canvas.height = Math.floor(viewport.height);
 
-        const task = page.render({ canvasContext: context, viewport });
+        const task = page.render({ canvas: entry.canvas, canvasContext: context, viewport });
         entry.task = task;
 
         try {
