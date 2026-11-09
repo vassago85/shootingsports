@@ -20,7 +20,7 @@
         $allVenues = $event->allVenues();
         $isMultiVenue = $allVenues->count() > 1;
     @endphp
-    <main id="main">
+    <main id="main" class="match-page">
         <section class="page-hero">
             <div class="wrap">
                 <p class="label">{{ \App\Support\EventDate::headline($event->starts_at, $event->ends_at) }}</p>
@@ -58,24 +58,20 @@
                 @if ($hubs->isNotEmpty())
                     <p>
                         @foreach ($hubs as $hub)
-                            <a href="{{ route('disciplines.show', $hub->slug) }}">{{ $hub->name }}</a>
+                            @if (! $loop->first) · @endif
                             @if ($eventProvince)
                                 <a href="{{ route('disciplines.province', [$hub->slug, $eventProvince->urlSlug()]) }}">{{ $hub->name }} in {{ $eventProvince->getLabel() }}</a>
+                            @else
+                                <a href="{{ route('disciplines.show', $hub->slug) }}">{{ $hub->name }}</a>
                             @endif
                         @endforeach
                     </p>
                 @endif
-                <div class="pill-row" style="position:static;margin-top:16px">
+                <div class="pill-row" style="position:static;margin-top:8px">
                     <x-event-status-pill :event="$event" />
                 </div>
             </div>
         </section>
-        <div class="wrap" style="padding-top:28px">
-            @foreach ($event->disciplines->flatMap(fn ($sport) => $sport->divisions())->unique(fn ($division) => $division->value)->take(3) as $sponsorDivision)
-                <x-ad-slot page="disciplines" placement-slot="category_sponsor" :division="$sponsorDivision" :limit="1" hide-when-vacant />
-            @endforeach
-            <x-ad-slot page="disciplines" placement-slot="category_sponsor" :disciplines="$event->disciplines" :limit="1" hide-when-vacant />
-        </div>
         <section class="block">
             <div class="wrap">
                 {{-- Bundle A #6: facts-first two-column layout.
@@ -83,10 +79,42 @@
                      the primary Enter here CTA. --}}
                 @php
                     $bannerUrl = $event->bannerUrl();
-                    $hasMatchMedia = filled($bannerUrl) || filled($event->description) || $event->openForTeamEntries();
+                    $plainDescription = trim((string) preg_replace('/\s+/', ' ', (string) $event->description));
+                    $descriptionIsShort = $plainDescription === '' || mb_strlen($plainDescription) <= 160;
+                    $hasCoordinates = $venue !== null && $venue->lat !== null && $venue->lng !== null;
+                    $hasAddress = $venue !== null && filled($venue->address);
+                    // Short copy with nowhere to put a map stacks into one column.
+                    // A venue address or coordinates keeps the two-column layout.
+                    $stackLayout = $descriptionIsShort && ! $hasCoordinates && ! $hasAddress;
+                    $relatedDiscipline = $event->primaryDiscipline() ?? $event->disciplines->first();
+                    $distance = $relatedDiscipline?->typical_distances;
+                    $showMatchInfo = ! $stackLayout && (
+                        $allVenues->isNotEmpty()
+                        || filled($relatedDiscipline?->name)
+                        || filled($distance)
+                        || $event->level !== null
+                        || filled($event->listedHost())
+                    );
+                    $showMedia = $showMatchInfo
+                        || filled($bannerUrl)
+                        || filled($event->description)
+                        || $event->openForTeamEntries();
+                    $mapSrc = null;
+
+                    if ($hasCoordinates) {
+                        $lat = (float) $venue->lat;
+                        $lng = (float) $venue->lng;
+                        $mapSrc = 'https://www.openstreetmap.org/export/embed.html?bbox='
+                            .($lng - 0.02).','.($lat - 0.02).','.($lng + 0.02).','.($lat + 0.02)
+                            .'&layer=mapnik&marker='.$lat.','.$lng;
+                    }
                 @endphp
-                <div @class(['match-layout', 'is-facts-only' => ! $hasMatchMedia])>
-                    @if ($hasMatchMedia)
+                <div @class([
+                    'match-layout',
+                    'is-stacked' => $stackLayout,
+                    'is-facts-only' => $stackLayout && ! $showMedia,
+                ])>
+                    @if ($showMedia)
                         <div class="match-layout-media">
                             @if (filled($bannerUrl))
                                 <figure class="match-poster">
@@ -95,6 +123,75 @@
                             @endif
                             @if ($event->description)
                                 <div class="prose">{!! nl2br(e($event->description)) !!}</div>
+                            @endif
+                            @if ($showMatchInfo)
+                                <section class="match-info">
+                                    <h2>Match info</h2>
+                                    @if ($mapSrc)
+                                        <div class="match-map">
+                                            <iframe
+                                                title="Map of {{ $venue->name }}"
+                                                src="{{ $mapSrc }}"
+                                                loading="lazy"
+                                                referrerpolicy="no-referrer-when-downgrade"
+                                            ></iframe>
+                                        </div>
+                                    @endif
+                                    <dl>
+                                        @if ($allVenues->isNotEmpty())
+                                            <div>
+                                                <dt>{{ $isMultiVenue ? 'Venues' : 'Venue' }}</dt>
+                                                <dd>
+                                                    @foreach ($allVenues as $listedVenue)
+                                                        <span class="match-info-place">
+                                                            <a href="{{ route('ranges.show', $listedVenue->slug) }}">{{ $listedVenue->name }}</a>
+                                                            @if (filled($listedVenue->address))
+                                                                <span>{{ $listedVenue->address }}</span>
+                                                            @endif
+                                                            @php
+                                                                $where = collect([$listedVenue->town, $listedVenue->province?->getLabel()])->filter()->implode(' · ');
+                                                            @endphp
+                                                            @if ($where !== '')
+                                                                <span>{{ $where }}</span>
+                                                            @endif
+                                                            <a href="{{ $listedVenue->directionsUrl() }}" rel="noopener noreferrer" target="_blank">Directions</a>
+                                                        </span>
+                                                    @endforeach
+                                                </dd>
+                                            </div>
+                                        @endif
+                                        @if (filled($relatedDiscipline?->name))
+                                            <div>
+                                                <dt>Discipline</dt>
+                                                <dd>{{ $relatedDiscipline->name }}</dd>
+                                            </div>
+                                        @endif
+                                        @if (filled($distance))
+                                            <div>
+                                                <dt>Distance</dt>
+                                                <dd>{{ $distance }}</dd>
+                                            </div>
+                                        @endif
+                                        @if ($event->level)
+                                            <div>
+                                                <dt>Level</dt>
+                                                <dd>{{ $event->level->getLabel() }}</dd>
+                                            </div>
+                                        @endif
+                                        @if ($organiser = $event->listedHost())
+                                            <div>
+                                                <dt>Organiser</dt>
+                                                <dd>
+                                                    @if ($hostUrl)
+                                                        <a href="{{ $hostUrl }}">{{ $organiser }}</a>
+                                                    @else
+                                                        {{ $organiser }}
+                                                    @endif
+                                                </dd>
+                                            </div>
+                                        @endif
+                                    </dl>
+                                </section>
                             @endif
                             @if ($event->openForTeamEntries())
                                 <livewire:submit-team-entry :event="$event" :key="'team-entry-'.$event->id" />
@@ -273,20 +370,38 @@
                     </aside>
                 </div>
 
-                @if (($relatedEvents ?? collect())->isNotEmpty())
-                    {{-- Same-discipline upcoming matches. Uses the
-                         shared calendar card so pills, dates and
-                         status match the rest of the site. --}}
+                <div class="match-sponsor">
+                    @foreach ($event->disciplines->flatMap(fn ($sport) => $sport->divisions())->unique(fn ($division) => $division->value)->take(3) as $sponsorDivision)
+                        <x-ad-slot page="disciplines" placement-slot="category_sponsor" :division="$sponsorDivision" :limit="1" hide-when-vacant />
+                    @endforeach
+                    <x-ad-slot page="disciplines" placement-slot="category_sponsor" :disciplines="$event->disciplines" :limit="1" hide-when-vacant />
+                </div>
+
+                @php $relatedCount = ($relatedEvents ?? collect())->count(); @endphp
+                @if ($relatedCount > 0)
                     <section class="match-related">
                         <div class="sec-head">
                             <p class="label">Also on the calendar</p>
-                            <h2>Other {{ $event->primaryDiscipline()?->name ?? 'matches' }} coming up</h2>
+                            <h2>Other {{ $relatedDiscipline?->name ?? 'matches' }} coming up</h2>
                         </div>
-                        <div class="dope-grid">
-                            @foreach ($relatedEvents as $related)
-                                <x-event-card :event="$related" />
-                            @endforeach
-                        </div>
+                        @if ($relatedCount < 3)
+                            <div class="match-minis">
+                                @foreach ($relatedEvents as $related)
+                                    <x-event-compact-row :event="$related" />
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="dope-grid">
+                                @foreach ($relatedEvents as $related)
+                                    <x-event-card :event="$related" />
+                                @endforeach
+                            </div>
+                        @endif
+                        @if ($relatedDiscipline)
+                            <p class="match-related-all">
+                                <a href="{{ route('calendar', ['discipline' => $relatedDiscipline->slug]) }}">View all {{ $relatedDiscipline->name }} events →</a>
+                            </p>
+                        @endif
                     </section>
                 @endif
 
@@ -300,11 +415,19 @@
                             <p class="label">Next from this club</p>
                             <h2>Upcoming at {{ $host?->name ?? 'this club' }}</h2>
                         </div>
-                        <div class="dope-grid">
-                            @foreach ($upcomingByHost as $next)
-                                <x-event-card :event="$next" />
-                            @endforeach
-                        </div>
+                        @if ($upcomingByHost->count() < 3)
+                            <div class="match-minis">
+                                @foreach ($upcomingByHost as $next)
+                                    <x-event-compact-row :event="$next" />
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="dope-grid">
+                                @foreach ($upcomingByHost as $next)
+                                    <x-event-card :event="$next" />
+                                @endforeach
+                            </div>
+                        @endif
                     </section>
                 @endif
 

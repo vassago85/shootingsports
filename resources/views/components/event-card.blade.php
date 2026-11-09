@@ -46,12 +46,6 @@
             <img class="dope-banner-fg" src="{{ $coverUrl }}" alt="" loading="lazy" decoding="async">
         @elseif ($coverUrl)
             <img src="{{ $coverUrl }}" alt="{{ $event->hostOrganisation?->name.' logo' }}" loading="lazy" decoding="async">
-        @else
-            <svg viewBox="0 0 40 40" aria-hidden="true">
-                <circle cx="20" cy="20" r="17" fill="none" stroke="#879A4A" stroke-width="1.2"/>
-                <circle cx="20" cy="20" r="7" fill="none" stroke="#879A4A" stroke-width=".9"/>
-                <path d="M20 1v11M20 28v11M1 20h11M28 20h11" stroke="#879A4A" stroke-width="1.2"/>
-            </svg>
         @endif
         <div class="pill-row">
             <x-event-status-pill :event="$event" />
@@ -119,7 +113,7 @@
              unexplained /login redirect. Wrapped in a container that
              overlays the whole-card link so the popover clicks fire. --}}
         <div class="dope-save-gate">
-            <a href="{{ route('ical.event', $event) }}">Add to calendar</a>
+            <a class="btn ghost" href="{{ route('ical.event', $event) }}">Add to calendar</a>
             <x-auth-gate action="save" label="Save to my Shooting Sports account" />
         </div>
     @endauth

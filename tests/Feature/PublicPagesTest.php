@@ -134,7 +134,7 @@ it('shows a discipline picture on the sport page and the sports directory', func
 
     $this->get(route('disciplines.index'))
         ->assertOk()
-        ->assertSee('discipline-images/prs.jpg', false);
+        ->assertDontSee('discipline-images/prs.jpg', false);
 });
 
 it('invalidates public stats without leaking versioned cache keys', function () {

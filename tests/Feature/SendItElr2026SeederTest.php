@@ -48,7 +48,17 @@ it('seeds the Send It ELR series and 2026 calendar', function () {
         ->and((float) $final?->venue?->lat)->toEqualWithDelta(-33.42915, 0.00001)
         ->and((float) $final?->venue?->lng)->toEqualWithDelta(19.83748, 0.00001)
         ->and($final?->venue?->address)->toContain('Close to Matroosbergstasie')
+        ->and($final?->venue?->description)->toBeNull()
         ->and($final?->description)->toContain('Karoo Huisies');
+
+    $this->get(route('ranges.show', CorrectSendItElrRange::SLUG))
+        ->assertOk()
+        ->assertSee('Close to Matroosbergstasie')
+        ->assertDontSee('About '.$final->venue->name)
+        ->assertDontSee('Charl Gous')
+        ->assertDontSee('Estian')
+        ->assertDontSee('Boomsticks')
+        ->assertDontSee('snow mountain');
 });
 
 it('sends the old Matroosbergstasie range address to the 2-mile range', function () {

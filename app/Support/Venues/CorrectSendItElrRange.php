@@ -75,8 +75,8 @@ class CorrectSendItElrRange
             'geocode_source' => GeocodeSource::Staff,
             'geocoded_at' => now(),
             'max_distance_m' => 3219,
-            'description' => $this->description(),
-            'notes' => 'Map pin is the Matroosberg railway halt. The range is close to Matroosbergstasie. Exact range GPS is still to come.',
+            'description' => null,
+            'notes' => null,
         ];
     }
 
@@ -95,15 +95,6 @@ class CorrectSendItElrRange
             'verification_state' => VerificationState::Unconfirmed,
             'source' => ListingSource::Staff,
         ];
-    }
-
-    public function description(): string
-    {
-        return <<<'TEXT'
-The Send It ELR 2-mile range is close to Matroosbergstasie, off the R318 on the way to Montagu. Exact coordinates are still to come. Charl Gous signposts the turnoff from the R318 for events. The range is run with Estian du Preez, who farms at Matroosbergstasie. Prizegiving for the 2-mile championship is at the Karoo Huisies on the farm.
-
-Matroosberg is the snow mountain above Ceres, not this range. The old Boomsticks range, Matroosbergstasie Skietklub, still has fences facing the R318 but no longer operates. The 1-mile challenge that used those lower platforms moved to Darling Steel Valley at the start of 2026.
-TEXT;
     }
 
     public function seriesDescription(): string

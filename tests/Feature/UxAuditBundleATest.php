@@ -136,8 +136,11 @@ it('match page links the venue and exposes Directions', function () {
 
     $response = $this->get(route('events.show', $event->slug))->assertOk();
 
-    $response->assertSee('match-layout is-facts-only', false)
-        ->assertDontSee('match-layout-media', false)
+    $response->assertSee('match-layout-media', false)
+        ->assertSee('Match info', false)
+        ->assertSee('openstreetmap.org/export/embed.html', false)
+        ->assertDontSee('is-facts-only', false)
+        ->assertDontSee('is-stacked', false)
         ->assertSee('Enter here', false)
         ->assertSee('Directions', false)
         ->assertSee(route('ranges.show', $venue->slug), false)

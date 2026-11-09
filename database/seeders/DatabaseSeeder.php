@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             // first-login account after `php artisan migrate --seed`.
             AdminUserSeeder::class,
             SendItElr2026Seeder::class,
+            SendItElr2027Seeder::class,
             RoyalFlushSteelChallenge2026Seeder::class,
             WildmanOpenDay2026Seeder::class,
             SaprfEventsSeeder::class,

@@ -29,7 +29,7 @@
                     </div>
                     <div class="disc-grid">
                         @foreach ($active as $discipline)
-                            <a @class(['disc', 'has-photo' => filled($discipline->imageUrl())]) href="{{ route('disciplines.show', $discipline->slug) }}" @if ($discipline->imageUrl()) style="--hero-image: url('{{ str_replace(['\\', "'"], ['/', ''], $discipline->imageUrl()) }}')" @endif>
+                            <a class="disc" href="{{ route('disciplines.show', $discipline->slug) }}">
                                 <span class="fam">{{ $discipline->family->getLabel() }}</span>
                                 <span class="nm">{{ $discipline->name }}</span>
                                 <span class="ct">{{ $discipline->events_count }} upcoming</span>
@@ -51,7 +51,7 @@
                         <summary>Show all {{ $total }} disciplines →</summary>
                         <div class="disc-grid" style="margin-top:1px">
                             @foreach ($reference as $discipline)
-                                <a @class(['disc', 'is-quiet', 'has-photo' => filled($discipline->imageUrl())]) href="{{ route('disciplines.show', $discipline->slug) }}" @if ($discipline->imageUrl()) style="--hero-image: url('{{ str_replace(['\\', "'"], ['/', ''], $discipline->imageUrl()) }}')" @endif>
+                                <a class="disc is-quiet" href="{{ route('disciplines.show', $discipline->slug) }}">
                                     <span class="fam">{{ $discipline->family->getLabel() }}</span>
                                     <span class="nm">{{ $discipline->name }}</span>
                                     <span class="ct ct-quiet">No matches listed yet</span>
