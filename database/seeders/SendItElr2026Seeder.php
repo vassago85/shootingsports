@@ -70,6 +70,14 @@ class SendItElr2026Seeder extends Seeder
             );
 
             $event->syncDisciplines([$elr->id], $elr->id);
+
+            if (str_contains($match['slug'], '22lr')) {
+                $rimfire = Discipline::query()->where('slug', '22lr-elr')->first();
+
+                if ($rimfire instanceof Discipline) {
+                    $event->attachDiscipline($rimfire, false);
+                }
+            }
         }
     }
 

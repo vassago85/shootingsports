@@ -47,13 +47,24 @@ class DisciplineSeeder extends Seeder
             'sort_order' => $sort += 10,
         ]);
 
-        $this->upsert([
+        $elr = $this->upsert([
             'slug' => 'elr',
             'name' => 'ELR',
             'family' => DisciplineFamily::Rifle,
             'short_blurb' => 'Extreme long range — known-distance steel past a mile, often to two miles.',
             'typical_distances' => '1 000–3 200 m',
             'is_published' => true,
+            'sort_order' => $sort += 10,
+        ]);
+
+        $this->upsert([
+            'slug' => '22lr-elr',
+            'name' => '.22 LR ELR',
+            'family' => DisciplineFamily::Rifle,
+            'parent_id' => $elr->id,
+            'short_blurb' => '.22 LR extreme long range.',
+            'typical_distances' => '50–750 m',
+            'is_published' => false,
             'sort_order' => $sort += 10,
         ]);
 

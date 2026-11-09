@@ -66,6 +66,31 @@ it('uses targets and stands for clay cards', function () {
         ->and($rows->firstWhere(fn ($row) => $row[0] === 'Stands')[1])->toBe('10');
 });
 
+it('uses the .22 LR range for a rimfire ELR match', function () {
+    $elr = Discipline::factory()->create([
+        'slug' => 'elr',
+        'name' => 'ELR',
+        'family' => DisciplineFamily::Rifle,
+        'typical_distances' => '1 000–3 200 m',
+    ]);
+    $rimfire = Discipline::factory()->create([
+        'slug' => '22lr-elr',
+        'name' => '.22 LR ELR',
+        'family' => DisciplineFamily::Rifle,
+        'parent_id' => $elr->id,
+        'typical_distances' => '50–750 m',
+        'is_published' => false,
+    ]);
+    $event = Event::factory()->confirmed()->create();
+    $event->syncDisciplines([$elr->id], $elr->id);
+    $event->attachDiscipline($rimfire, false);
+
+    $rows = collect(EventSpecRows::for($event->fresh(['disciplines'])));
+
+    expect($rows->firstWhere(fn ($row) => $row[0] === 'Distance')[1])->toBe('50–750 m')
+        ->and($rows->firstWhere(fn ($row) => $row[0] === 'Discipline')[1])->toBe('ELR');
+});
+
 it('hides empty spec rows', function () {
     // No venue, no round count, no entry fee -> no corresponding
     // rows. The old assertion forced a "Venue" row with a host

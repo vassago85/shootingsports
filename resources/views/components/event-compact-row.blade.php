@@ -3,7 +3,7 @@
 @php
     $matchUrl = route('events.show', $event->slug);
     $discipline = $event->primaryDiscipline() ?? $event->disciplines->first();
-    $distance = $discipline?->typical_distances;
+    $distance = \App\Support\EventSpecRows::distance($event);
     $hostName = $event->listedHost();
 @endphp
 

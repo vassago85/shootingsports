@@ -3,6 +3,7 @@
 use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Models\Organisation;
+use App\Support\EventSpecRows;
 use App\Support\Venues\CorrectSendItElrRange;
 use Database\Seeders\DisciplineSeeder;
 use Database\Seeders\SendItElr2027Seeder;
@@ -31,6 +32,18 @@ it('seeds the Send It ELR 2027 dates from the programme sheet', function () {
             '2027-10-30',
             '2027-11-13',
         ]);
+
+    $peks = $events->firstWhere('slug', 'send-it-peks-22lr-elr-2027-03-06');
+    $peksDistance = collect(EventSpecRows::for($peks->load('disciplines')))
+        ->firstWhere(fn (array $row): bool => $row[0] === 'Distance');
+
+    expect($peksDistance[1] ?? null)->toBe('50–750 m');
+
+    $twoMile = $events->firstWhere('slug', 'send-it-2-mile-challenge-2027-03-13');
+    $twoMileDistance = collect(EventSpecRows::for($twoMile->load('disciplines')))
+        ->firstWhere(fn (array $row): bool => $row[0] === 'Distance');
+
+    expect($twoMileDistance[1] ?? null)->toBe('1 000–3 200 m');
 
     $ultra = $events->firstWhere('slug', 'send-it-ultra-2027');
     $twoMile = $events->firstWhere('slug', 'send-it-2-mile-challenge-2027-11-13');

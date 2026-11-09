@@ -138,7 +138,8 @@ it('match page links the venue and exposes Directions', function () {
 
     $response->assertSee('match-layout-media', false)
         ->assertSee('Match info', false)
-        ->assertSee('openstreetmap.org/export/embed.html', false)
+        ->assertSee('maps.google.com/maps?q=', false)
+        ->assertDontSee('openstreetmap.org', false)
         ->assertDontSee('is-facts-only', false)
         ->assertDontSee('is-stacked', false)
         ->assertSee('Enter here', false)

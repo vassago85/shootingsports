@@ -87,7 +87,7 @@
                     // A venue address or coordinates keeps the two-column layout.
                     $stackLayout = $descriptionIsShort && ! $hasCoordinates && ! $hasAddress;
                     $relatedDiscipline = $event->primaryDiscipline() ?? $event->disciplines->first();
-                    $distance = $relatedDiscipline?->typical_distances;
+                    $distance = \App\Support\EventSpecRows::distance($event);
                     $showMatchInfo = ! $stackLayout && (
                         $allVenues->isNotEmpty()
                         || filled($relatedDiscipline?->name)
@@ -104,9 +104,7 @@
                     if ($hasCoordinates) {
                         $lat = (float) $venue->lat;
                         $lng = (float) $venue->lng;
-                        $mapSrc = 'https://www.openstreetmap.org/export/embed.html?bbox='
-                            .($lng - 0.02).','.($lat - 0.02).','.($lng + 0.02).','.($lat + 0.02)
-                            .'&layer=mapnik&marker='.$lat.','.$lng;
+                        $mapSrc = 'https://maps.google.com/maps?q='.rawurlencode($lat.','.$lng).'&z=14&output=embed';
                     }
                 @endphp
                 <div @class([

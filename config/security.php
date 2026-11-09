@@ -59,7 +59,7 @@ return [
         "img-src 'self' data: blob: https:;",
         "connect-src 'self' https://challenges.cloudflare.com https://api.paystack.co https://analytics.charsley.co.za https://analytics.charsleydigital.co.za https://nominatim.openstreetmap.org https://*.cartocdn.com https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com;",
         "worker-src 'self' blob:;",
-        "frame-src 'self' https://challenges.cloudflare.com https://js.paystack.co https://maps.googleapis.com;",
+        "frame-src 'self' https://challenges.cloudflare.com https://js.paystack.co https://maps.googleapis.com https://www.google.com https://maps.google.com;",
         "frame-ancestors 'self';",
         "base-uri 'self';",
         "form-action 'self';",

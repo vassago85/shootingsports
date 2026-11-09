@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Enums\DisciplineFamily;
+use App\Models\Discipline;
 use App\Models\Event;
 
 class EventSpecRows
@@ -34,7 +35,7 @@ class EventSpecRows
         } elseif (self::isFieldTarget($slug)) {
             $rows[] = ['Lanes', self::number($event->target_count ?? $event->stage_count)];
         } else {
-            $rows[] = ['Distance', $discipline?->typical_distances];
+            $rows[] = ['Distance', self::distance($event, $discipline)];
             $rows[] = ['Rounds', self::number($event->round_count)];
         }
 
@@ -51,6 +52,23 @@ class EventSpecRows
             ->map(fn (array $row): array => [$row[0], (string) $row[1]])
             ->values()
             ->all();
+    }
+
+    /**
+     * A more specific child discipline wins over the parent's range.
+     * .22 LR ELR is 50–750 m, not the centerfire ELR mile-plus range.
+     */
+    public static function distance(Event $event, ?Discipline $discipline = null): ?string
+    {
+        $event->loadMissing('disciplines');
+        $discipline ??= $event->primaryDiscipline() ?? $event->disciplines->first();
+
+        $specific = $event->disciplines
+            ->first(fn (Discipline $row): bool => $row->parent_id !== null && filled($row->typical_distances));
+
+        $value = $specific?->typical_distances ?? $discipline?->typical_distances;
+
+        return filled($value) ? $value : null;
     }
 
     private static function isShotgun(?DisciplineFamily $family, string $slug): bool
