@@ -48,20 +48,24 @@ it('matches gong skiet and gongskiet to gong shoot events', function () {
     ]))->assertOk()->assertSee('Natal Gong Series, Penbi leg');
 });
 
-it('links On Target Africa issues out to the reader', function () {
+it('keeps On Target Africa issues on this site', function () {
     Storage::fake('media');
     User::factory()->staff()->create();
     $this->seed(OnTargetAfricaSeeder::class);
 
+    expect(MagazineIssue::query()->where('slug', 'on-target-africa-89')->value('external_url'))->toBeNull()
+        ->and(MagazineIssue::query()->where('slug', 'on-target-africa-89')->value('pdf_path'))->toBe('magazines/pdf/on-target-africa-89.pdf')
+        ->and(Storage::disk('media')->exists('magazines/pdf/on-target-africa-89.pdf'))->toBeTrue();
+
     $this->get(route('magazines.index'))
         ->assertOk()
-        ->assertSee('https://www.yumpu.com/en/document/view/71271438/on-target-africa-87-august-2026-magazine-online', false)
-        ->assertSee('target="_blank"', false);
+        ->assertSee(route('magazines.show', 'on-target-africa-89'), false)
+        ->assertDontSee('yumpu.com', false);
 
     $this->get(route('magazines.show', 'on-target-africa-89'))
         ->assertOk()
-        ->assertSee('https://www.yumpu.com/en/document/view/71316791/on-target-africa-89-oct-2026-magazine', false)
-        ->assertSee('target="_blank"', false);
+        ->assertSee('id="magazine-flipbook"', false)
+        ->assertDontSee('yumpu.com', false);
 });
 
 it('opens a stored On Target PDF in the on-site reader', function () {
@@ -80,12 +84,12 @@ it('opens a stored On Target PDF in the on-site reader', function () {
     $this->get(route('magazines.show', 'on-target-africa-89'))
         ->assertOk()
         ->assertSee('id="magazine-flipbook"', false)
-        ->assertDontSee('yumpu.com/en/document/view/71316791', false);
+        ->assertDontSee('yumpu.com', false);
 
     $this->get(route('magazines.index'))
         ->assertOk()
         ->assertSee(route('magazines.show', 'on-target-africa-89'), false)
-        ->assertSee('https://www.yumpu.com/en/document/view/71271438/on-target-africa-87-august-2026-magazine-online', false);
+        ->assertDontSee('yumpu.com', false);
 });
 
 it('seeds the community listings once and does not duplicate them', function () {

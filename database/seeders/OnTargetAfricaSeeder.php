@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 /**
- * On Target Africa issues. Each issue keeps its Yumpu URL. Issues 88 and 89
- * also open in the on-site reader when magazines/pdf/on-target-africa-{n}.pdf
- * is already on the media disk. Issues 90 and 91 are added from /admin.
+ * On Target Africa issues. Reading stays on this site.
+ * Issues 88 and 89 ship with the app and are copied onto the media disk.
+ * Issues 90 and 91 are added from /admin.
  */
 class OnTargetAfricaSeeder extends Seeder
 {
@@ -28,6 +28,7 @@ class OnTargetAfricaSeeder extends Seeder
             unset($issue['slug']);
 
             $pdfPath = 'magazines/pdf/'.$slug.'.pdf';
+            $this->publishShippedPdf($slug, $pdfPath);
             if (Storage::disk('media')->exists($pdfPath)) {
                 $issue['pdf_path'] = $pdfPath;
             }
@@ -62,16 +63,16 @@ class OnTargetAfricaSeeder extends Seeder
     private function issues(): array
     {
         return [
-            $this->issue(87, '2026-08-01', 'August 2026', 'https://www.yumpu.com/en/document/view/71271438/on-target-africa-87-august-2026-magazine-online'),
-            $this->issue(88, '2026-09-01', 'September 2026', 'https://www.yumpu.com/en/document/view/71294262/ontargetafrica-88-september-2026-magazine'),
-            $this->issue(89, '2026-10-01', 'October 2026', 'https://www.yumpu.com/en/document/view/71316791/on-target-africa-89-oct-2026-magazine'),
+            $this->issue(87, '2026-08-01', 'August 2026'),
+            $this->issue(88, '2026-09-01', 'September 2026'),
+            $this->issue(89, '2026-10-01', 'October 2026'),
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function issue(int $number, string $month, string $monthLabel, string $url): array
+    private function issue(int $number, string $month, string $monthLabel): array
     {
         return [
             'slug' => 'on-target-africa-'.$number,
@@ -81,10 +82,44 @@ class OnTargetAfricaSeeder extends Seeder
             'issue_label' => 'Issue '.$number.' · '.$monthLabel,
             'issue_number' => $number,
             'issue_month' => $month,
-            'external_url' => $url,
+            'external_url' => null,
             'language' => 'en',
             'reader_access' => 'public',
             'published_at' => $month.' 08:00:00',
         ];
+    }
+
+    /**
+     * Copy the PDF that ships with the app onto the media disk.
+     * The production media directory is a mounted volume, so the file
+     * inside the image is not visible until this copy runs.
+     */
+    private function publishShippedPdf(string $slug, string $pdfPath): void
+    {
+        $shipped = database_path('seeders/assets/magazines/'.$slug.'.pdf');
+
+        if (! is_file($shipped)) {
+            return;
+        }
+
+        $shippedSize = filesize($shipped);
+        $disk = Storage::disk('media');
+        $currentSize = $disk->exists($pdfPath) ? $disk->size($pdfPath) : null;
+
+        if ($currentSize === $shippedSize) {
+            return;
+        }
+
+        $stream = fopen($shipped, 'rb');
+
+        if ($stream === false) {
+            return;
+        }
+
+        $disk->put($pdfPath, $stream);
+
+        if (is_resource($stream)) {
+            fclose($stream);
+        }
     }
 }

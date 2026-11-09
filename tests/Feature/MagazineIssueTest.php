@@ -48,6 +48,7 @@ it('shows a draft issue to anyone with a valid signed preview link', function ()
 it('serves a published issue to the public with the flipbook mount', function () {
     $issue = MagazineIssue::factory()->published()->create([
         'title' => 'October 2026 Issue',
+        'pdf_path' => 'magazines/pdf/issue.pdf',
     ]);
 
     $this->get(route('magazines.show', $issue->slug))

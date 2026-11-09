@@ -38,6 +38,8 @@ if [ "$ROLE" = "app" ]; then
     if [ "${APP_RUN_MIGRATIONS_ON_BOOT:-true}" = "true" ]; then
         echo "[entrypoint] Running migrations..."
         php artisan migrate --force --no-interaction || true
+        echo "[entrypoint] Publishing On Target Africa issues..."
+        php artisan db:seed --force --no-interaction --class=OnTargetAfricaSeeder || true
     fi
 
     echo "[entrypoint] Warming caches..."

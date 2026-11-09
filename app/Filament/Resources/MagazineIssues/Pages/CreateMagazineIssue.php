@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\MagazineIssues\Pages;
 
 use App\Filament\Resources\MagazineIssues\MagazineIssueResource;
+use App\Jobs\ExtractMagazineCover;
+use App\Jobs\ExtractMagazineText;
 use App\Models\MagazineIssue;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
@@ -20,6 +22,8 @@ class CreateMagazineIssue extends CreateRecord
         $data['reader_access'] = 'public';
         $data['published_at'] = $data['issue_month'] ?? now();
         $data['user_id'] = auth()->id();
+        $data['pdf_download_enabled'] = filled($data['pdf_path'] ?? null);
+        $data['external_url'] = null;
 
         return $data;
     }
@@ -28,6 +32,16 @@ class CreateMagazineIssue extends CreateRecord
     {
         if ($this->record instanceof MagazineIssue && blank($this->record->slug)) {
             $this->record->update(['slug' => 'issue-'.$this->record->id]);
+        }
+
+        if (! $this->record instanceof MagazineIssue || $this->record->pdf_path === null) {
+            return;
+        }
+
+        ExtractMagazineText::dispatch($this->record->id);
+
+        if ($this->record->cover_path === null) {
+            ExtractMagazineCover::dispatch($this->record->id);
         }
     }
 }

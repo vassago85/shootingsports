@@ -33,9 +33,7 @@
 
         <section class="block">
             <div class="wrap" style="max-width:800px">
-                @if ($issue->external_url && $issue->pdfUrl() === null)
-                    <p><a class="btn" href="{{ $issue->external_url }}" target="_blank" rel="noopener noreferrer">Read this issue</a></p>
-                @else
+                @if ($issue->pdfUrl())
                 <div class="magazine-stage" id="magazine-stage">
                     <div
                         id="magazine-flipbook"
@@ -92,6 +90,8 @@
                         @endif
                     </p>
                 </noscript>
+                @else
+                    <p class="empty">This issue is not on the reader yet.</p>
                 @endif
             </div>
         </section>
@@ -122,7 +122,7 @@
         @endif
     </main>
 
-    @unless ($issue->external_url && $issue->pdfUrl() === null)
+    @if ($issue->pdfUrl())
         @vite('resources/js/flipbook.js')
-    @endunless
+    @endif
 </x-layouts.public>

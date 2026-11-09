@@ -35,15 +35,7 @@
                                 <p>{{ $issue->description }}</p>
                             @endif
                             <p style="margin-top:12px">
-                                @if ($issue->pdfUrl())
-                                    <a class="btn" href="{{ route('magazines.show', $issue->slug) }}">Read this issue</a>
-                                @elseif ($issue->external_url)
-                                    <a class="btn" href="{{ $issue->external_url }}" target="_blank" rel="noopener noreferrer">Read this issue</a>
-                                @elseif ($issue->requiresLogin() && auth()->guest())
-                                    <a class="btn" href="{{ route('magazines.show', $issue->slug) }}">Sign in to read</a>
-                                @else
-                                    <a class="btn" href="{{ route('magazines.show', $issue->slug) }}">Read this issue</a>
-                                @endif
+                                <a class="btn" href="{{ route('magazines.show', $issue->slug) }}">Read this issue</a>
                             </p>
                         </div>
                     </article>

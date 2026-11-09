@@ -49,11 +49,14 @@ class MagazineIssueResource extends Resource
                 ->native(false)
                 ->displayFormat('F Y')
                 ->required(),
-            TextInput::make('external_url')
-                ->label('URL')
-                ->url()
+            FileUpload::make('pdf_path')
+                ->label('PDF')
+                ->disk('media')
+                ->directory('magazines/pdf')
+                ->visibility('public')
+                ->acceptedFileTypes(['application/pdf'])
+                ->maxSize(60 * 1024)
                 ->required()
-                ->maxLength(500)
                 ->columnSpanFull(),
             FileUpload::make('cover_path')
                 ->label('Cover')

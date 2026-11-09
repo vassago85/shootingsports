@@ -90,12 +90,6 @@ class MagazineIssueForm
                             ->label('Month')
                             ->native(false)
                             ->displayFormat('F Y'),
-                        TextInput::make('external_url')
-                            ->label('Reader URL')
-                            ->url()
-                            ->maxLength(500)
-                            ->helperText('Yumpu or another reader. Opens in a new tab when there is no PDF.')
-                            ->columnSpanFull(),
                         DateTimePicker::make('published_at')
                             ->label('Publish at')
                             ->seconds(false)
