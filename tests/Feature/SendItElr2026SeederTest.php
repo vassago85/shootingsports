@@ -20,6 +20,8 @@ it('seeds the Send It ELR series and 2026 calendar', function () {
     expect($series)->not->toBeNull()
         ->and($series->type)->toBe(OrganisationType::Series)
         ->and($series->name)->toBe('Send It ELR Shooting')
+        ->and($series->description)->toBe('1-mile and 2-mile challenges, .22 ELR, and Send It Ultra. Hosted with APW, 3% Tactical and PEKS.')
+        ->and($series->town)->toBeNull()
         ->and($series->logo_path)->toBe('organisation-logos/send-it-elr.png');
 
     $events = Event::query()->where('host_organisation_id', $series->id)->orderBy('starts_at')->get();

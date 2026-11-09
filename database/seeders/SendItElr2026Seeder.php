@@ -32,7 +32,7 @@ class SendItElr2026Seeder extends Seeder
                 'short_name' => 'Send It',
                 'type' => OrganisationType::Series,
                 'province' => Province::WesternCape,
-                'town' => 'Wellington',
+                'town' => null,
                 'website_url' => null,
                 'description' => app(CorrectSendItElrRange::class)->seriesDescription(),
                 'logo_path' => $logoPath,
@@ -83,7 +83,7 @@ class SendItElr2026Seeder extends Seeder
                 'name' => 'Darling Steel Valley',
                 'province' => Province::WesternCape,
                 'town' => 'Darling',
-                'notes' => '1-mile challenges hosted with APWY & 3% Tactical.',
+                'notes' => '1-mile challenges hosted with APW and 3% Tactical.',
             ],
             'peks-range-wellington' => [
                 'name' => 'PEKS Range',
@@ -145,7 +145,7 @@ class SendItElr2026Seeder extends Seeder
                 'venue' => 'darling-steel-valley',
                 'starts_at' => '2026-02-07 08:00:00',
                 'ends_at' => null,
-                'description' => 'Hosted by APWY & 3% Tactical at Darling Steel Valley.',
+                'description' => 'Hosted by APW and 3% Tactical at Darling Steel Valley.',
             ],
             [
                 'slug' => 'send-it-peks-22lr-elr-march-2026',
@@ -169,7 +169,7 @@ class SendItElr2026Seeder extends Seeder
                 'venue' => 'darling-steel-valley',
                 'starts_at' => '2026-03-28 08:00:00',
                 'ends_at' => null,
-                'description' => 'Hosted by APWY & 3% Tactical at Darling Steel Valley.',
+                'description' => 'Hosted by APW and 3% Tactical at Darling Steel Valley.',
             ],
             [
                 'slug' => 'send-it-2-mile-challenge-q2-2026',
@@ -217,7 +217,7 @@ class SendItElr2026Seeder extends Seeder
                 'venue' => 'darling-steel-valley',
                 'starts_at' => '2026-09-19 08:00:00',
                 'ends_at' => null,
-                'description' => 'Hosted by APWY & 3% Tactical at Darling Steel Valley.',
+                'description' => 'Hosted by APW and 3% Tactical at Darling Steel Valley.',
             ],
             [
                 'slug' => 'send-it-1-mile-challenge-final-2026',
@@ -225,7 +225,7 @@ class SendItElr2026Seeder extends Seeder
                 'venue' => 'darling-steel-valley',
                 'starts_at' => '2026-10-31 08:00:00',
                 'ends_at' => null,
-                'description' => 'Hosted by APWY & 3% Tactical at Darling Steel Valley.',
+                'description' => 'Hosted by APW and 3% Tactical at Darling Steel Valley.',
             ],
             [
                 'slug' => 'send-it-2-mile-challenge-final-2026',

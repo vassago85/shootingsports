@@ -26,6 +26,24 @@ class CorrectSendItElrRange
 
     public function __invoke(): void
     {
+        Organisation::query()->where('slug', 'send-it-elr')->update([
+            'description' => $this->seriesDescription(),
+            'town' => null,
+        ]);
+
+        Event::query()->whereIn('slug', [
+            'send-it-1-mile-challenge-q1-2026',
+            'send-it-1-mile-challenge-q2-2026',
+            'send-it-1-mile-challenge-q3-2026',
+            'send-it-1-mile-challenge-final-2026',
+        ])->update([
+            'description' => 'Hosted by APW and 3% Tactical at Darling Steel Valley.',
+        ]);
+
+        Venue::query()->where('slug', 'darling-steel-valley')->update([
+            'notes' => '1-mile challenges hosted with APW and 3% Tactical.',
+        ]);
+
         $venue = Venue::query()->where('slug', self::PREVIOUS_SLUG)->first()
             ?? Venue::query()->where('slug', self::SLUG)->first();
 
@@ -40,10 +58,6 @@ class CorrectSendItElrRange
         foreach ($this->eventDescriptions() as $slug => $description) {
             Event::query()->where('slug', $slug)->update(['description' => $description]);
         }
-
-        Organisation::query()->where('slug', 'send-it-elr')->update([
-            'description' => $this->seriesDescription(),
-        ]);
     }
 
     /**
@@ -94,7 +108,7 @@ TEXT;
 
     public function seriesDescription(): string
     {
-        return 'ELR series: 1-mile and 2-mile challenges, .22 ELR, and Send It Ultra. Hosted with APWY, 3% Tactical, PEKS, Estian du Preez, Lambert Brand and Taai Boskraal.';
+        return '1-mile and 2-mile challenges, .22 ELR, and Send It Ultra. Hosted with APW, 3% Tactical and PEKS.';
     }
 
     public function eventDescription(string $slug): string
