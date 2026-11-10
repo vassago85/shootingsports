@@ -57,8 +57,9 @@ it('serves every sitemap endpoint with a rich, enum-covering dataset', function 
         'status' => ListingStatus::Published,
     ]);
 
-    // One event per non-draft status. Published scope includes
-    // cancelled + completed, so all of these must survive the sort.
+    // One event per non-draft status. Cancelled rows stay in the
+    // table (the public URL is 410) but Indexability keeps them
+    // out of the sitemap. The query must still sort the rest.
     foreach ([
         EventStatus::Planned,
         EventStatus::Confirmed,
@@ -137,6 +138,22 @@ it('does not include archived organisations in the organisations sitemap', funct
         ->assertOk()
         ->assertSee('live-org', false)
         ->assertDontSee('archived-org', false);
+});
+
+it('does not include cancelled events in the events sitemap', function () {
+    Event::factory()->create([
+        'slug' => 'live-event',
+        'status' => EventStatus::Confirmed,
+    ]);
+    Event::factory()->create([
+        'slug' => 'cancelled-event',
+        'status' => EventStatus::Cancelled,
+    ]);
+
+    $this->get('/sitemaps/events.xml')
+        ->assertOk()
+        ->assertSee('live-event', false)
+        ->assertDontSee('cancelled-event', false);
 });
 
 it('does not include draft events in the events sitemap', function () {

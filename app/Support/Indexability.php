@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Models\Organisation;
 use App\Models\Provider;
@@ -15,7 +16,8 @@ use Illuminate\Database\Eloquent\Builder;
  * landing pages that should rank. Location is required. Clubs, ranges
  * and suppliers also need a discipline, a contact channel, or a real
  * fixture. A match is itself the fixture, so a start time plus a host
- * or a range is enough.
+ * or a range is enough. A cancelled match returns 410, so it
+ * leaves the sitemap instead of advertising a gone URL.
  */
 class Indexability
 {
@@ -84,6 +86,7 @@ class Indexability
     public static function events(Builder $query): Builder
     {
         return self::requireSlug($query->published())
+            ->where('status', '!=', EventStatus::Cancelled)
             ->where(function (Builder $place): void {
                 $place->whereNotNull('venue_id')
                     ->orWhereNotNull('host_organisation_id');
