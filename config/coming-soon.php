@@ -99,6 +99,7 @@ return [
         'coming-soon',
         'coming-soon/interest',
         'coming-soon/confirm/*',
+        'privacy',
         'login',
         'register',
         'forgot-password',

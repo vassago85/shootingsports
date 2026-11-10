@@ -54,6 +54,9 @@ return [
     // secondary handshake for the same property.
     'google' => [
         'site_verification' => env('GOOGLE_SITE_VERIFICATION'),
+        // Public-page container. Empty string disables the snippet
+        // (local and preview). The embed calendar never loads it.
+        'tag_manager_id' => env('GOOGLE_TAG_MANAGER_ID', 'GTM-P4VMCZ6G'),
         // Browser key for the public match map and ranges map. This is
         // not the Android key baked into the mobile app — Maps
         // JavaScript API keys are restricted by HTTP referrer.

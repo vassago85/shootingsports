@@ -136,6 +136,16 @@ it('keeps the health check reachable when the gate is on', function () {
     $this->get('/up')->assertOk();
 });
 
+it('keeps the privacy notice reachable while the gate is on', function () {
+    config()->set('coming-soon.enabled', true);
+
+    $this->get('/coming-soon')
+        ->assertSee(route('privacy'), false);
+
+    $this->get('/privacy')
+        ->assertSee('Google Tag Manager', false);
+});
+
 it('renders the coming-soon page for guests', function () {
     config()->set('coming-soon.enabled', true);
 

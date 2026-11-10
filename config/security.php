@@ -53,13 +53,13 @@ return [
 
     'csp_report_only' => implode(' ', [
         "default-src 'self';",
-        "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://js.paystack.co https://analytics.charsley.co.za https://analytics.charsleydigital.co.za https://unpkg.com https://maps.googleapis.com https://maps.gstatic.com;",
+        "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://js.paystack.co https://analytics.charsley.co.za https://analytics.charsleydigital.co.za https://unpkg.com https://maps.googleapis.com https://maps.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://tagmanager.google.com;",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://fonts.gstatic.com;",
         "font-src 'self' https://fonts.gstatic.com data:;",
         "img-src 'self' data: blob: https:;",
-        "connect-src 'self' https://challenges.cloudflare.com https://api.paystack.co https://analytics.charsley.co.za https://analytics.charsleydigital.co.za https://nominatim.openstreetmap.org https://*.cartocdn.com https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com;",
+        "connect-src 'self' https://challenges.cloudflare.com https://api.paystack.co https://analytics.charsley.co.za https://analytics.charsleydigital.co.za https://nominatim.openstreetmap.org https://*.cartocdn.com https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.googletagmanager.com https://stats.g.doubleclick.net;",
         "worker-src 'self' blob:;",
-        "frame-src 'self' https://challenges.cloudflare.com https://js.paystack.co https://maps.googleapis.com https://www.google.com https://maps.google.com;",
+        "frame-src 'self' https://challenges.cloudflare.com https://js.paystack.co https://maps.googleapis.com https://www.google.com https://maps.google.com https://www.googletagmanager.com;",
         "frame-ancestors 'self';",
         "base-uri 'self';",
         "form-action 'self';",

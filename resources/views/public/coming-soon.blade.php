@@ -167,6 +167,7 @@
         <footer class="cs-foot">
             <span>&copy; {{ date('Y') }} ShootingSports</span>
             <x-media-partner />
+            <a href="{{ route('privacy') }}">Privacy &amp; POPIA</a>
             <span>shootingsports.co.za</span>
         </footer>
     </div>

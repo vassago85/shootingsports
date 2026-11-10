@@ -94,3 +94,5 @@
 @if ($umamiScriptUrl && $umamiWebsiteId)
     <script defer src="{{ $umamiScriptUrl }}" data-website-id="{{ $umamiWebsiteId }}"></script>
 @endif
+
+<x-google-tag-manager />

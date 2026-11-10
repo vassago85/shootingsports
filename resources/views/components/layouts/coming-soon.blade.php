@@ -24,6 +24,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="coming-soon-body">
+    <x-google-tag-manager part="body" />
     {{ $slot }}
 </body>
 </html>

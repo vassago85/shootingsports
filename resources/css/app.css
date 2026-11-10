@@ -2504,6 +2504,13 @@ footer.site a:hover { color: #fff; }
     flex-wrap: wrap;
 }
 .cs-foot .media-partner:hover { color: #fff; }
+.cs-foot a {
+    color: var(--brass-lt);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+}
+.cs-foot a:hover { color: #c5e07a; }
 
 @media (max-width: 560px) {
     .cs-nav { padding: 18px 20px; }

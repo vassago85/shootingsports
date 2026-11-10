@@ -200,6 +200,30 @@ it('loads the Umami tracker only when both env vars are set', function () {
         ->assertSee('data-website-id="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"', false);
 });
 
+it('loads Google Tag Manager on public pages and keeps the embed tracker-free', function () {
+    config()->set('services.google.tag_manager_id', 'GTM-P4VMCZ6G');
+
+    $this->get(route('home'))
+        ->assertSee('https://www.googletagmanager.com/gtm.js?id=GTM-P4VMCZ6G', false)
+        ->assertSee('function gtag()', false)
+        ->assertSee('https://www.googletagmanager.com/ns.html?id=GTM-P4VMCZ6G', false);
+
+    $this->get(route('embed.calendar'))
+        ->assertDontSee('googletagmanager.com', false);
+
+    config()->set('services.google.tag_manager_id', '');
+
+    $this->get(route('home'))
+        ->assertDontSee('googletagmanager.com', false);
+});
+
+it('discloses Google Tag Manager on the privacy page', function () {
+    $this->get(route('privacy'))
+        ->assertSee('Google Tag Manager', false)
+        ->assertSee('GTM-P4VMCZ6G', false)
+        ->assertDontSee('nothing is shared with Google', false);
+});
+
 it('keeps the embed calendar tracker-free and noindexed', function () {
     config()->set('services.umami.script_url', 'https://analytics.example.test/script.js');
     config()->set('services.umami.website_id', 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee');

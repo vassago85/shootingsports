@@ -35,6 +35,7 @@
     @livewireStyles
 </head>
 <body class="ss-public">
+    <x-google-tag-manager part="body" />
     <a class="skip" href="#main">Skip to content</a>
     <header class="nav">
         <div class="nav-in">
