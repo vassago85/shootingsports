@@ -160,7 +160,9 @@ Route::get('/feed', FeedController::class)->name('feed');
 // renders the page-flip reader plus a translate-friendly text view.
 // Drafts 404 to the public, unless the request carries a signed
 // preview link generated from the Desk resource.
-Route::get('/go/{hotspot}', MagazineLinkController::class)->name('magazines.go');
+Route::get('/go/{hotspot}', MagazineLinkController::class)
+    ->where('hotspot', '[a-z0-9]{16}')
+    ->name('magazines.go');
 Route::get('/magazines', [MagazineIssueController::class, 'index'])->name('magazines.index');
 Route::post('/magazines/{issue}/download-link', [MagazineIssueController::class, 'emailDownloadLink'])
     ->name('magazines.download-link');
@@ -239,6 +241,7 @@ Route::get('/embed', [StaticPageController::class, 'embedDocs'])->name('embed.do
 Route::get('/oembed', [EmbedController::class, 'oembed'])->name('oembed');
 
 Route::get('/go/{placement}', PlacementClickController::class)
+    ->where('placement', '[0-9]+')
     ->middleware('throttle:60,1')
     ->name('placements.click');
 

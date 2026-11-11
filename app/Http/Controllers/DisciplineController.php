@@ -261,11 +261,9 @@ class DisciplineController extends Controller
     {
         $where = $province ? ' in '.$province->getLabel() : ' across South Africa';
         $when = $next?->starts_at?->timezone((string) config('app.timezone'))->format('j M Y');
-        $blurb = filled($discipline->body)
-            ? ' '.trim((string) preg_replace('/\s+/u', ' ', (string) $discipline->body))
-            : ($discipline->short_blurb
-                ? ' '.rtrim((string) $discipline->short_blurb, '.').'.'
-                : '');
+        $blurb = filled($discipline->short_blurb)
+            ? ' '.rtrim(trim((string) $discipline->short_blurb), '.').'.'
+            : '';
 
         if ($matchCount === 0) {
             return 'No upcoming '.$discipline->name.' match is listed'.$where.' yet.'.$blurb;
