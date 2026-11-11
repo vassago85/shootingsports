@@ -1,7 +1,7 @@
 <x-layouts.public :title="$seoTitle" :description="$seoDescription" :canonical="$canonical" :robots="$robots" :json-ld="$jsonLd">
     <main id="main" class="dir-page">
         <div class="wrap">
-            <x-dir-hero page="clubs" kicker="Clubs" title="Find a shooting club">
+            <x-dir-hero page="clubs" kicker="Clubs & associations" title="Find a club or association">
                 Find your club. Membership clubs, associations, and branded match series.
             </x-dir-hero>
 
@@ -11,7 +11,7 @@
                 @endif
                 <label class="dir-field">
                     <span>Search</span>
-                    <input type="search" name="q" value="{{ $search }}" placeholder="Club name">
+                    <input type="search" name="q" value="{{ $search }}" placeholder="Name or abbreviation">
                 </label>
                 <label class="dir-field">
                     <span>Sport</span>
@@ -68,7 +68,7 @@
                         </a>
                     @empty
                         <div class="empty">
-                            <p>No clubs match these filters.</p>
+                            <p>No clubs or associations match these filters.</p>
                             {{-- Useful next actions instead of a dead
                                  end: clearing filters and browsing the
                                  wider register both bring the shooter

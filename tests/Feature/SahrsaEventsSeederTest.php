@@ -16,7 +16,10 @@ it('seeds SAHRSA and the Cape Winelands Open from the poster', function () {
     $host = Organisation::query()->where('slug', 'sahrsa')->first();
 
     expect($host)->not->toBeNull()
+        ->and($host->name)->toBe('South African Hunting Rifle Shooting Association')
         ->and($host->type)->toBe(OrganisationType::Association)
+        ->and($host->email)->toBe('secretary@sahuntingrifle.co.za')
+        ->and($host->facebook_url)->toBe('https://www.facebook.com/groups/315102765352903')
         ->and($host->website_url)->toBe('https://www.sahuntingrifle.co.za');
 
     $event = Event::query()->where('slug', 'sahrsa-cape-winelands-open-2026')->first();

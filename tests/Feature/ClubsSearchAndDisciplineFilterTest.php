@@ -31,6 +31,27 @@ it('filters the club directory by a name search', function () {
         ->assertDontSee('Cape Metal Silhouette');
 });
 
+it('filters the club directory by a short name', function () {
+    Organisation::factory()->create([
+        'name' => 'South African Target Rifle Association',
+        'short_name' => 'SATRA',
+        'slug' => 'satra',
+        'type' => OrganisationType::Association,
+        'status' => ListingStatus::Published,
+    ]);
+    Organisation::factory()->create([
+        'name' => 'Cape Metal Silhouette',
+        'slug' => 'cape-metal-silhouette',
+        'type' => OrganisationType::Club,
+        'status' => ListingStatus::Published,
+    ]);
+
+    $this->get(route('clubs.index', ['q' => 'SATRA']))
+        ->assertOk()
+        ->assertSee('South African Target Rifle Association')
+        ->assertDontSee('Cape Metal Silhouette');
+});
+
 it('shows clubs that host events in the selected discipline even without a pivot row', function () {
     $prs = Discipline::factory()->create([
         'name' => 'Precision Rifle Series',
@@ -59,7 +80,7 @@ it('shows clubs that host events in the selected discipline even without a pivot
 it('offers clear-filters and explore-sports actions on the empty state', function () {
     $this->get(route('clubs.index', ['q' => 'zzz-no-match']))
         ->assertOk()
-        ->assertSee('No clubs match these filters')
+        ->assertSee('No clubs or associations match these filters')
         ->assertSee('Clear filters')
         ->assertSee('Explore shooting sports');
 });

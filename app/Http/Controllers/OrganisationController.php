@@ -48,6 +48,7 @@ class OrganisationController extends Controller
                 $like = '%'.addcslashes($search, '%_\\').'%';
                 $q->where(function (Builder $inner) use ($like): void {
                     $inner->where('name', 'like', $like)
+                        ->orWhere('short_name', 'like', $like)
                         ->orWhere('tagline', 'like', $like);
                 });
             })

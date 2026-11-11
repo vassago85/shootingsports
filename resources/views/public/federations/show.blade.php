@@ -23,6 +23,22 @@
         </section>
         <section class="block">
             <div class="wrap">
+                @if ($organisation->website_url)
+                    <p><a class="label" href="{{ $organisation->website_url }}" rel="noopener noreferrer" style="border-bottom:1px solid var(--brass);text-decoration:none">{{ parse_url($organisation->website_url, PHP_URL_HOST) }} →</a></p>
+                @endif
+                <x-social-links :links="$organisation->socialLinks()" label="Follow on" />
+                @php
+                    $taggedDisciplines = $inferredDisciplines->filter(
+                        fn ($discipline) => $discipline->is_published && ! $organisation->federatedDisciplines->contains($discipline),
+                    );
+                @endphp
+                @if ($taggedDisciplines->isNotEmpty())
+                    <div class="club-tags" style="margin:16px 0 28px">
+                        @foreach ($taggedDisciplines as $discipline)
+                            <a class="tag" href="{{ route('disciplines.show', $discipline->slug) }}">{{ $discipline->name }}</a>
+                        @endforeach
+                    </div>
+                @endif
                 @if ($organisation->federatedDisciplines->isNotEmpty())
                     <div class="sec-head">
                         <p class="label">Governs</p>

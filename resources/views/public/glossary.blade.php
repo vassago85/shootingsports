@@ -9,7 +9,7 @@
             <div class="wrap">
                 <p class="label"><a href="{{ route('disciplines.index') }}">Discover</a></p>
                 <h1>Event type glossary</h1>
-                <p>Every event type on the register, with the other names it goes by.</p>
+                <p>Every event type on the register, with the other names it goes by. Clubs and associations are listed separately, under <a href="{{ route('clubs.index') }}">Clubs &amp; associations</a>.</p>
             </div>
         </section>
 

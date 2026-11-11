@@ -46,7 +46,7 @@ final class PublicNav
                 'active' => ['clubs.*', 'federations.*', 'ranges.*', 'find', 'glossary'],
                 'children' => [
                     [
-                        'label' => 'Clubs',
+                        'label' => 'Clubs & associations',
                         'route' => 'clubs.index',
                         'active' => ['clubs.*', 'federations.*'],
                     ],
