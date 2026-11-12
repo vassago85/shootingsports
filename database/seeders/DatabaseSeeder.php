@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             SpringbokvlakteGongskietSeeder::class,
             SahrsaEventsSeeder::class,
             SatraAndSanssuSeeder::class,
+            KathuListingsSeeder::class,
             MuletechRidgeRangeSeeder::class,
             FreeCivilianShootersSeeder::class,
             AgriBoKammanassieSeeder::class,
