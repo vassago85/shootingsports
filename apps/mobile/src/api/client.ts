@@ -1,20 +1,41 @@
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 import { getAuthToken } from '@/auth/store';
 
-const DEFAULT_BASE_URL = 'http://127.0.0.1:8000';
+const NATIVE_DEV_BASE_URL = 'http://127.0.0.1:8000';
 
 /**
- * Resolves the API base URL from EXPO_PUBLIC_API_URL. Falls back to
- * 127.0.0.1:8000 so the app boots against a stock Laragon Laravel
- * install without extra config.
+ * Resolves the API base URL.
+ *
+ * Precedence:
+ *   1. EXPO_PUBLIC_API_URL (inlined at bundle time by Expo). An empty
+ *      string is respected and means "same origin" — that's the shape
+ *      the Dockerfile `pwa` stage sets so the installed PWA issues
+ *      relative /api/v1/* URLs that the browser resolves against
+ *      https://shootingsports.co.za (same host as the API).
+ *   2. Constants.expoConfig.extra.apiUrl for app.json overrides.
+ *   3. Platform-aware default. On web (dev server or any PWA build
+ *      where someone forgot to set the env var), fall back to the
+ *      current origin — the only value that could possibly work from a
+ *      phone's browser. On native, keep the Laragon default so
+ *      `npm run ios / android` against a dev build still boots without
+ *      extra config.
  */
 function resolveBaseUrl(): string {
   const configured =
     process.env.EXPO_PUBLIC_API_URL ??
     (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl;
 
-  return (configured ?? DEFAULT_BASE_URL).replace(/\/+$/, '');
+  if (typeof configured === 'string') {
+    return configured.replace(/\/+$/, '');
+  }
+
+  if (Platform.OS === 'web') {
+    return '';
+  }
+
+  return NATIVE_DEV_BASE_URL;
 }
 
 export class ApiError extends Error {

@@ -23,6 +23,14 @@ apps/mobile/dist
 apps/mobile/.expo
 apps/mobile/expo-start.err
 apps/mobile/*.log
+# Local dotenv files carry dev-only values (Laragon LAN IPs, dev secrets).
+# Expo's dotenv loader reads these before shell env, so if we let one into
+# the Docker build context the `pwa` stage bakes a shooter's LAN IP (or
+# worse) into the production bundle. Keep these out; the Dockerfile sets
+# the production EXPO_PUBLIC_* values explicitly.
+apps/mobile/.env
+apps/mobile/.env.*
+!apps/mobile/.env.example
 # Anything else in apps/ (future workspaces) stays out of the image until it
 # has its own build stage.
 apps/*/node_modules

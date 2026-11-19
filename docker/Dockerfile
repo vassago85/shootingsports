@@ -44,6 +44,16 @@ COPY apps/mobile/package.json apps/mobile/package-lock.json* ./
 RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 
 COPY apps/mobile ./
+
+# Expo inlines every EXPO_PUBLIC_* env var into the JS bundle at export
+# time. Empty EXPO_PUBLIC_API_URL tells apps/mobile/src/api/client.ts to
+# issue relative /api/v1/* URLs — the browser resolves those against the
+# current origin (shootingsports.co.za), so the PWA hits Laravel on the
+# same host with no CORS. HOME_PERSONALISED=1 mirrors the production
+# profile in apps/mobile/eas.json so a web shooter and a native shooter
+# see the same personalised home.
+ENV EXPO_PUBLIC_API_URL=""
+ENV EXPO_PUBLIC_HOME_PERSONALISED="1"
 RUN npx expo export --platform web
 
 FROM php:8.5-fpm-bookworm AS runtime
