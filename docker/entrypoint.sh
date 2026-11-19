@@ -40,6 +40,8 @@ if [ "$ROLE" = "app" ]; then
         php artisan migrate --force --no-interaction || true
         echo "[entrypoint] Publishing On Target Africa issues..."
         php artisan db:seed --force --no-interaction --class=OnTargetAfricaSeeder || true
+        echo "[entrypoint] Publishing PPRC December 2026 year-end matches..."
+        php artisan db:seed --force --no-interaction --class=PprcDecember2026Seeder || true
     fi
 
     echo "[entrypoint] Warming caches..."

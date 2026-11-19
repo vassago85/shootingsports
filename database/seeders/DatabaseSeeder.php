@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             SendItElr2027Seeder::class,
             RoyalFlushSteelChallenge2026Seeder::class,
             WildmanOpenDay2026Seeder::class,
+            PprcDecember2026Seeder::class,
             SaprfEventsSeeder::class,
             BenchrestFederationsSeeder::class,
             XsssaEventsSeeder::class,
