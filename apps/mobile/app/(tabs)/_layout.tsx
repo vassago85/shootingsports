@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, fonts } from '@/theme';
+import { colors, fonts, size } from '@/theme';
 
 /**
  * Four tabs, always, for every signed-in or guest shooter. No tab
@@ -13,14 +14,28 @@ import { colors, fonts } from '@/theme';
  * coloured, the active item is lime, and each tab has an icon over
  * its label." Icons use the outline variant when inactive and the
  * solid variant when active.
+ *
+ * Height: spec says "49pt of content plus the bottom safe-area inset".
+ * On native, React Navigation's BottomTabBar does this itself via
+ * useSafeAreaInsets, but on an installed web PWA the tab bar needs an
+ * explicit paddingBottom + height so labels clear the iPhone home
+ * indicator / Android gesture bar. We set it unconditionally — it's
+ * a no-op on devices without a bottom inset.
  */
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.lime,
         tabBarInactiveTintColor: colors.control,
-        tabBarStyle: { backgroundColor: colors.forest, borderTopColor: colors.forest },
+        tabBarStyle: {
+          backgroundColor: colors.forest,
+          borderTopColor: colors.forest,
+          height: size.tabBar + insets.bottom,
+          paddingBottom: insets.bottom,
+        },
         headerStyle: { backgroundColor: colors.forest },
         headerTintColor: colors.onForest,
         headerTitleStyle: { fontFamily: fonts.display, fontSize: 18 },

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!--
+      viewport-fit=cover lets the forest tab bar extend behind the
+      iPhone home indicator / Android nav bar so react-native-safe-area-context
+      can pad content away from those insets. Without it the browser caps the
+      viewport at the safe area and leaves a white band under the tab bar
+      once installed to the home screen.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
+    />
+
+    <title>Shooting Sports</title>
+
+    <!--
+      Installable PWA shell.
+      - manifest + theme-color drive Android Chrome's Install app prompt
+      - apple-mobile-web-app-* are the iOS-only equivalents; iOS does not
+        read the manifest display/theme values. "black-translucent" lets our
+        forest HeroBand draw under the status bar, same as native.
+    -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0E3328" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Shooting Sports" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
+
+    <!--
+      react-native-web recommended reset — matches Expo's default template.
+      Body overflow is hidden so inner <ScrollView>s behave like on native,
+      and the forest background shows through while the JS bundle hydrates
+      (prevents a white flash on first paint, especially on iOS standalone).
+    -->
+    <style id="expo-reset">
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        overflow: hidden;
+        background-color: #0e3328;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!--
+      Service worker registration.
+      Scope "/" so navigations under every tab (/, /calendar, /find, /me)
+      hit the same SW instance. Kept network-first (see public/sw.js) so a
+      deploy is never pinned to a stale JS bundle — the Expo PWA guide calls
+      this out as the single biggest footgun with service workers.
+    -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function (error) {
+            console.error('Service Worker registration failed:', error);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -57,6 +57,16 @@ export async function registerForPushNotifications(): Promise<string | null> {
     return null;
   }
 
+  // Web PWA path has no Expo push runtime — Expo Notifications relies on
+  // APNs / FCM, neither of which is reachable from a browser. Loading the
+  // native module on web also logs "Unsupported top-level event type"
+  // warnings during registration. The service-worker Web Push API is a
+  // separate transport we haven't wired yet (see native-apps-roadmap
+  // Phase 3), so for now the installed PWA just skips registration.
+  if (Platform.OS === 'web') {
+    return null;
+  }
+
   // Lazy-load expo-notifications so its native-module side-effects
   // (setNotificationHandler, the ExpoTopicSubscriptionModule probe)
   // never run on module eval in Expo Go. If isExpoGo() missed a new
