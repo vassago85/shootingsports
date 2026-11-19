@@ -47,6 +47,9 @@
       },
       "router": {}
     },
+    "experiments": {
+      "baseUrl": "/app"
+    },
     "owner": "charsley-digital",
     "runtimeVersion": {
       "policy": "appVersion"

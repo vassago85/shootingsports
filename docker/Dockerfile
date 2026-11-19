@@ -27,6 +27,25 @@ COPY --from=vendor /app/vendor ./vendor
 
 RUN npm run build
 
+# ---------------------------------------------------------------------------
+# PWA stage: export the Expo shooter app as a static web bundle so Laravel's
+# nginx can serve it at /app. The bundle is a self-contained SPA (routes
+# resolved client-side by Expo Router). experiments.baseUrl=/app in
+# apps/mobile/app.json prefixes every generated asset URL with /app so the
+# JS chunks load from /var/www/html/public/app/_expo/... on production.
+# This stage must stay separate from `assets` — different lockfile, different
+# toolchain, and Expo pulls a large dep tree we don't want in the Vite cache.
+# ---------------------------------------------------------------------------
+FROM node:22-alpine AS pwa
+
+WORKDIR /build
+
+COPY apps/mobile/package.json apps/mobile/package-lock.json* ./
+RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+
+COPY apps/mobile ./
+RUN npx expo export --platform web
+
 FROM php:8.5-fpm-bookworm AS runtime
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -72,8 +91,16 @@ WORKDIR /var/www/html
 COPY --from=vendor /app/vendor ./vendor
 COPY . .
 COPY --from=assets /build/public/build ./public/build
+# Mount the exported Expo PWA at /app. Nginx (see docker/nginx/default.conf)
+# falls back to public/app/index.html for client-side routes.
+COPY --from=pwa /build/dist ./public/app
 
-RUN composer dump-autoload -o --no-dev \
+# Strip the Expo source that COPY . . dragged in. The runtime image only
+# serves public/app/* (populated above) — the React Native source itself
+# is useless to PHP-FPM and inflates the image by ~400MB when node_modules
+# aren't present and ~1GB+ when a dev build happened before the Docker run.
+RUN rm -rf apps \
+    && composer dump-autoload -o --no-dev \
     && mkdir -p storage/framework/{cache,sessions,views,testing} storage/logs storage/app/media bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwx storage bootstrap/cache

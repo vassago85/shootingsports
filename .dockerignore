@@ -13,7 +13,18 @@ tests
 .phpunit.cache
 agent-transcripts
 
-# Mobile / Expo workspace lives in the monorepo but doesn't belong in the
-# PHP-FPM image. Nothing in `apps/` is served by Laravel; shipping it just
-# inflates the image. React Native source goes out via Expo Go / EAS builds.
-apps/
+# Mobile / Expo workspace. The runtime PHP-FPM image doesn't need the React
+# Native source — the Dockerfile's `pwa` stage exports a static web bundle
+# into public/app/ and the `rm -rf apps` step in the runtime stage drops the
+# source. But the pwa stage itself needs apps/mobile/ in the build context,
+# so we only ignore the heavy regeneratable subdirectories.
+apps/mobile/node_modules
+apps/mobile/dist
+apps/mobile/.expo
+apps/mobile/expo-start.err
+apps/mobile/*.log
+# Anything else in apps/ (future workspaces) stays out of the image until it
+# has its own build stage.
+apps/*/node_modules
+apps/*/dist
+apps/*/.expo

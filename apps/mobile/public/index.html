@@ -25,15 +25,22 @@
         read the manifest display/theme values. "black-translucent" lets our
         forest HeroBand draw under the status bar, same as native.
     -->
-    <link rel="manifest" href="/manifest.json" />
+    <!--
+      Paths below are deliberately relative (no leading slash). The same
+      files ship in dev (served at /) and in production (served at /app/
+      by Laravel's nginx). Relative URLs resolve against the document's
+      base, so manifest.json points at /manifest.json in dev and
+      /app/manifest.json in prod without any build-time rewrite.
+    -->
+    <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0E3328" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Shooting Sports" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
 
     <!--
       react-native-web recommended reset — matches Expo's default template.
@@ -62,15 +69,16 @@
 
     <!--
       Service worker registration.
-      Scope "/" so navigations under every tab (/, /calendar, /find, /me)
-      hit the same SW instance. Kept network-first (see public/sw.js) so a
-      deploy is never pinned to a stale JS bundle — the Expo PWA guide calls
-      this out as the single biggest footgun with service workers.
+      Registered relative to the document, so the SW scope auto-matches
+      wherever we're mounted: scope "/" in dev, scope "/app/" when hosted
+      under Laravel. Kept network-first (see sw.js) so a deploy is never
+      pinned to a stale JS bundle — the Expo PWA guide calls this out as
+      the single biggest footgun with service workers.
     -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/sw.js').catch(function (error) {
+          navigator.serviceWorker.register('sw.js').catch(function (error) {
             console.error('Service Worker registration failed:', error);
           });
         });
