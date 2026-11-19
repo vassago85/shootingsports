@@ -14,7 +14,6 @@ import {
   ErrorRow,
   GhostButton,
   HeroBand,
-  MatchCard,
   MatchRow,
   SectionTitle,
   Spinner,
@@ -48,10 +47,6 @@ import {
  * stays generic and national in the MVP, so users don't infer
  * personalisation that isn't there."
  */
-
-/** Width of each horizontally-scrolled MatchCard. Enough for a two-
- *  line title + meta without the row feeling cramped. */
-const CARD_WIDTH = 280;
 
 type ViewState =
   | { kind: 'loading' }
@@ -366,7 +361,7 @@ function GenericBody({
       )}
 
       {sections.weekend.length > 0 && (
-        <CarouselSection
+        <GenericSection
           title="This weekend"
           events={sections.weekend}
           onMatchPress={onMatchPress}
@@ -375,7 +370,7 @@ function GenericBody({
       )}
 
       {sections.next30.length > 0 && (
-        <CarouselSection
+        <GenericSection
           title="Next 30 days"
           events={sections.next30}
           onMatchPress={onMatchPress}
@@ -394,8 +389,19 @@ function GenericBody({
  * Shared section renderers
  * ========================================================= */
 
-/** The classic carousel section (title + "See all" + horizontal scroll). */
-function CarouselSection({
+/**
+ * Generic home section — title + "See all →" + a vertical stack of
+ * full-width MatchRows.
+ *
+ * Previously rendered as a horizontal carousel of fixed-width MatchCards,
+ * but on narrow phones (and on the installed PWA where react-native-web
+ * doesn't clip ScrollView intrinsic width to the viewport) that carousel
+ * overflowed the page and introduced horizontal page scroll — the bug the
+ * shooter saw as a forest-green band to the right of the content column.
+ * Vertical rows match the pattern PersonalisedSection already uses and
+ * what the Calendar list uses: scannable, no swiping, no overflow.
+ */
+function GenericSection({
   title,
   events,
   onMatchPress,
@@ -412,17 +418,18 @@ function CarouselSection({
         <SectionTitle>{title}</SectionTitle>
         <GhostButton label="See all →" onPress={onSeeAll} compact />
       </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.carousel}
-      >
+      {/* No wrapper gap: MatchRow draws its own card background +
+          bottom divider, so stacking them flush looks like the
+          Calendar list rather than a set of floating cards. */}
+      <View>
         {events.map((event) => (
-          <View key={event.id} style={styles.carouselCard}>
-            <MatchCard event={event} onPress={() => onMatchPress(event.slug)} />
-          </View>
+          <MatchRow
+            key={event.id}
+            event={event}
+            onPress={() => onMatchPress(event.slug)}
+          />
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -445,12 +452,12 @@ function PersonalisedSection({
   showChangedBadge?: boolean;
 }) {
   // Personalised feed sections render as a vertical stack of
-  // full-width rows, not a horizontal carousel. A shooter looking at
-  // their own feed wants to see every match without swiping — same
-  // reason the Calendar list and the Me > Saved list already use
-  // full-width rows. Carousels still make sense on the generic home
-  // (section-of-many), but once we're inside "FOR YOU" the pattern
-  // flips to scannable rows + a readable reasons strip underneath.
+  // full-width rows. Matches the generic home's GenericSection, the
+  // Calendar list, and Me > Saved — scannable rows, no swiping, no
+  // chance of the horizontal ScrollView bleeding past the viewport
+  // (the bug the installed PWA briefly showed on the generic home).
+  // The one thing personalised rows add on top of the generic layout
+  // is the reasons strip underneath each row.
   return (
     <View style={styles.section}>
       <View style={styles.sectionHead}>
@@ -569,9 +576,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 16,
   },
-  carousel: { paddingHorizontal: 16, gap: 12 },
-  carouselCard: { width: CARD_WIDTH, gap: 8 },
-
   /* Vertical stack used by PersonalisedSection — full-width rows,
      one per match, with the reasons strip sitting flush under its
      row (indented to line up with the row body, not the date block). */
