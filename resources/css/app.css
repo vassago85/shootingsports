@@ -2972,7 +2972,7 @@ html[lang] body.ss-public .dir-hero-art {
     height: 240px;
     border-radius: 12px;
     overflow: hidden;
-    background: #1a3d30 var(--hero-image) center 42%/cover no-repeat;
+    background: #1a3d30 var(--hero-image) center 68%/cover no-repeat;
     box-shadow: 0 14px 32px rgba(14, 51, 40, .16);
 }
 html[lang] body.ss-public .dir-hero-art::after {

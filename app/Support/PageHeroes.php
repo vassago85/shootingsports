@@ -79,7 +79,8 @@ class PageHeroes
     public static function fallbackUrl(string $page): ?string
     {
         $file = match ($page) {
-            'home', 'ranges' => 'images/pages/home.jpg',
+            'home' => 'images/pages/home.jpg',
+            'ranges' => 'images/pages/ranges.jpg',
             'clubs' => 'images/pages/clubs.jpg',
             'matches', 'calendar', 'sports' => 'images/pages/sports.jpg',
             'industry' => 'images/pages/industry.jpg',
