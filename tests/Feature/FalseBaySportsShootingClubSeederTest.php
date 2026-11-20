@@ -55,6 +55,10 @@ it('lists False Bay Sports Shooting Club, its quarry range, and the published ca
         ->and($range->access)->toBe(VenueAccess::GuestByArrangement)
         ->and($range->facilities)->toContain('Rifle Range, visitors and members, rifle only, 120 m')
         ->and($range->facilities)->toContain('Range 1, visitors and members, handgun only, 20 m')
+        ->and($range->image_paths)->toBe([
+            'range-images/fbssc-news-open-day-2026-11-03.jpg',
+            'range-images/fbssc-news-fundraiser-2026-06-16.jpg',
+        ])
         ->and(Venue::query()->where('slug', 'false-bay-sports-shooting-range')->count())->toBe(1);
 
     $hosted = Event::query()->where('host_organisation_id', $club->id);
@@ -102,11 +106,15 @@ it('lists False Bay Sports Shooting Club, its quarry range, and the published ca
         ->assertOk()
         ->assertSee('False Bay Sports Shooting Club')
         ->assertSee('R830')
+        ->assertSee('fbfta.co.za')
+        ->assertSee('064 286 0173')
         ->assertSee('R1 600')
         ->assertSee('fbssc.co')
         ->assertSee('False Bay Sports Shooting Range')
         ->assertSee('IPSC Boland Handgun Level 2')
         ->assertSee('Operation: Adrenaline Open Day')
+        ->assertSee('page-hero-poster', false)
+        ->assertSee('range-images/fbssc-news-open-day-2026-11-03.jpg', false)
         ->assertDontSee('exco@fbssc.co')
         ->assertDontSee('gm@fbssc.co')
         ->assertDontSee('Alwyn Marais');
@@ -118,7 +126,10 @@ it('lists False Bay Sports Shooting Club, its quarry range, and the published ca
         ->assertSee('120 m')
         ->assertSee('R110')
         ->assertSee('Ronin Tac House 1, vetted only, all calibre')
-        ->assertSee('40 km/h');
+        ->assertSee('40 km/h')
+        ->assertSee('page-hero-poster', false)
+        ->assertSee('range-images/fbssc-news-open-day-2026-11-03.jpg', false)
+        ->assertSee('range-images/fbssc-news-fundraiser-2026-06-16.jpg', false);
 
     $this->get(route('events.show', 'fbssc-open-day-2026-12-05'))
         ->assertOk()
@@ -126,6 +137,8 @@ it('lists False Bay Sports Shooting Club, its quarry range, and the published ca
         ->assertSee('Saturday 5 December 2026')
         ->assertSee('09:00–17:00')
         ->assertSee('clay pigeon shooting')
+        ->assertSee('bloodpack T-shirt target is back')
         ->assertSee('axe throwing')
+        ->assertSee('page-hero-poster', false)
         ->assertSee('/media/event-banners/fbssc-open-day-2026-12-05.png', false);
 });

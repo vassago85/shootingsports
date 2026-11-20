@@ -2931,6 +2931,24 @@ html[lang] body.ss-public .page-hero.has-photo h1 {
 html[lang] body.ss-public .page-hero.has-photo p,
 html[lang] body.ss-public .page-hero.has-photo .label { color: #d5e2d6; }
 html[lang] body.ss-public .page-hero:not(.has-photo) a:not(.btn) { color: #245d3f; }
+html[lang] body.ss-public .page-hero-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 280px);
+    gap: 24px;
+    align-items: start;
+}
+html[lang] body.ss-public .page-hero-poster {
+    width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    object-position: top center;
+    border-radius: 12px;
+    background: #1a3d30;
+}
+@media (max-width: 800px) {
+    html[lang] body.ss-public .page-hero-split { grid-template-columns: 1fr; }
+    html[lang] body.ss-public .page-hero-poster { max-height: 220px; width: auto; max-width: 100%; }
+}
 html[lang] body.ss-public .dir-hero {
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(260px, .9fr);

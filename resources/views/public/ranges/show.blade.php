@@ -6,9 +6,11 @@
     :image="$venue->imageUrls()[0] ?? null"
     :json-ld="$jsonLd"
 >
+    @php $photos = $venue->imageUrls(); @endphp
     <main id="main">
         <section class="page-hero">
-            <div class="wrap">
+            <div @class(['wrap', 'page-hero-split' => $photos !== []])>
+                <div>
                 <p class="label">{{ collect(['Range', $venue->province?->getLabel()])->filter()->implode(' · ') }}</p>
                 <h1>{{ $venue->name }} <x-listing-tier-badge :listing="$venue" /></h1>
                 @if (\App\Support\VenueNames::isScheduleFragment($venue->name))
@@ -18,16 +20,20 @@
                     <p>{{ $venue->address ?: $venue->town }}</p>
                 @endif
                 <x-verification-badge :listing="$venue" />
+                </div>
+                @if ($photos !== [])
+                    <img class="page-hero-poster" src="{{ $photos[0] }}" alt="{{ $venue->photoAlt($photos[0]) }}">
+                @endif
             </div>
         </section>
         <section class="block">
             <div class="wrap">
-                @php $photos = $venue->imageUrls(); @endphp
+                @php $gallery = array_slice($photos, 1); @endphp
                 <div class="range-profile">
                     <div>
-                @if ($photos !== [])
+                @if ($gallery !== [])
                     <div class="range-photos">
-                        @foreach ($photos as $photo)
+                        @foreach ($gallery as $photo)
                             <figure class="range-photo">
                                 <img src="{{ $photo }}" alt="{{ $venue->photoAlt($photo) }}">
                                 @if ($caption = $venue->photoCaption($photo))

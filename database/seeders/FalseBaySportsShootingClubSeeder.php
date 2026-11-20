@@ -43,6 +43,9 @@ use RuntimeException;
  * (falsebay.sportshootingclub); the header handle is stored.
  * The open-day poster prints Facebook as @FalseBaySC. The club
  * page keeps the header link, facebook.com/FalseBaySSC.
+ * The 3 November 2026 news poster is the club and range header.
+ * The 16 June 2026 fundraiser has passed, so that poster stays
+ * in the range gallery.
  */
 class FalseBaySportsShootingClubSeeder extends Seeder
 {
@@ -113,7 +116,7 @@ class FalseBaySportsShootingClubSeeder extends Seeder
                 'website_url' => 'https://fbssc.co/',
                 'facebook_url' => 'https://www.facebook.com/FalseBaySSC/',
                 'instagram_url' => 'https://www.instagram.com/falsebay.sportsshootingclub/',
-                'description' => 'Sports shooting club in the Glencairn Quarry, Tercentenary Way, Glencairn, Cape Town. NPC 2012/010543/08. Affiliated to SAPSA, CTSASA and SADPA. The calendar runs IPSC, SADPA, MPDS, Steel Challenge, WTR cowboy action and Clay Busters. The club also offers rimfire, ICORE and tactical training. Annual membership is R830 standard, R1 600 gold with unlimited entry, or R350 pensioner, plus a once-off R250 registration. Member gate fee R50. Non-member gate fee R110. Shooting packages are booked on 021 782 0107.',
+                'description' => 'Sports shooting club in the Glencairn Quarry, Tercentenary Way, Glencairn, Cape Town. NPC 2012/010543/08. Affiliated to SAPSA, CTSASA and SADPA. The calendar runs IPSC, SADPA, MPDS, Steel Challenge, WTR cowboy action and Clay Busters. The club also offers rimfire, ICORE and tactical training. False Bay Firearm Training Academy (fbfta.co.za) trains at the range and runs IPSC and SADPA style handgun and PCC matches. Annual membership is R830 standard, R1 600 gold with unlimited entry, or R350 pensioner, plus a once-off R250 registration. Member gate fee R50. Non-member gate fee R110. Shooting packages and academy bookings: 021 782 0107 or WhatsApp 064 286 0173.',
                 'accredited' => false,
                 'visitors_welcome' => true,
                 'status' => ListingStatus::Published,
@@ -126,30 +129,68 @@ class FalseBaySportsShootingClubSeeder extends Seeder
 
     private function range(): Venue
     {
+        $attributes = [
+            'name' => 'False Bay Sports Shooting Range',
+            'province' => Province::WesternCape,
+            'town' => 'Glencairn',
+            'address' => 'Tercentenary Way, Glencairn, Cape Town, 7975',
+            'lat' => -34.1538764,
+            'lng' => 18.4337522,
+            'geocode_source' => GeocodeSource::Staff,
+            'geocoded_at' => now(),
+            'max_distance_m' => 120,
+            'day_fee_cents' => 11000,
+            'access' => VenueAccess::GuestByArrangement,
+            'website_url' => 'https://fbssc.co/',
+            'description' => "The club range in the Glencairn Quarry. The quarry closed in May 1978. Visitors are marked on Range 1 (handgun, 20 m), Range 2 (handgun, air rifle and air pistol, 20 m) and the rifle range (rifle only, 120 m). Other bays are members or vetted only. The non-member gate fee is R110. Members pay R50.\n\nOpening hours on the contact page are Monday to Friday and Saturday 10:00–16:30, and Sunday 10:00–12:30. The residential speed limit is 40 km/h.",
+            'facilities' => $this->bays(),
+            'notes' => 'Bay list from https://fbssc.co/wp-content/uploads/2026/04/FBSSC-Ranges_2024.pdf. Coordinates from the Google Maps embed on https://fbssc.co/contact/. The site footer prints 7995; the contact page address is 7975. The homepage lists Saturday until 17:00 and Sunday until 13:00.',
+            'status' => ListingStatus::Published,
+            'verification_state' => VerificationState::Unconfirmed,
+            'source' => ListingSource::Staff,
+            'last_verified_at' => now(),
+        ];
+
+        $posters = $this->publishNewsPosters();
+
+        if ($posters !== []) {
+            $attributes['image_paths'] = $posters;
+        }
+
         return Venue::query()->updateOrCreate(
             ['slug' => 'false-bay-sports-shooting-range'],
-            [
-                'name' => 'False Bay Sports Shooting Range',
-                'province' => Province::WesternCape,
-                'town' => 'Glencairn',
-                'address' => 'Tercentenary Way, Glencairn, Cape Town, 7975',
-                'lat' => -34.1538764,
-                'lng' => 18.4337522,
-                'geocode_source' => GeocodeSource::Staff,
-                'geocoded_at' => now(),
-                'max_distance_m' => 120,
-                'day_fee_cents' => 11000,
-                'access' => VenueAccess::GuestByArrangement,
-                'website_url' => 'https://fbssc.co/',
-                'description' => "The club range in the Glencairn Quarry. The quarry closed in May 1978. Visitors are marked on Range 1 (handgun, 20 m), Range 2 (handgun, air rifle and air pistol, 20 m) and the rifle range (rifle only, 120 m). Other bays are members or vetted only. The non-member gate fee is R110. Members pay R50.\n\nOpening hours on the contact page are Monday to Friday and Saturday 10:00–16:30, and Sunday 10:00–12:30. The residential speed limit is 40 km/h.",
-                'facilities' => $this->bays(),
-                'notes' => 'Bay list from https://fbssc.co/wp-content/uploads/2026/04/FBSSC-Ranges_2024.pdf. Coordinates from the Google Maps embed on https://fbssc.co/contact/. The site footer prints 7995; the contact page address is 7975. The homepage lists Saturday until 17:00 and Sunday until 13:00.',
-                'status' => ListingStatus::Published,
-                'verification_state' => VerificationState::Unconfirmed,
-                'source' => ListingSource::Staff,
-                'last_verified_at' => now(),
-            ],
+            $attributes,
         );
+    }
+
+    /**
+     * Latest-news posters from fbssc.co. The November open-day
+     * poster is first so the range and club headers use it.
+     * The June fundraiser has passed, so it is only the later gallery image.
+     *
+     * @return list<string>
+     */
+    private function publishNewsPosters(): array
+    {
+        $files = [
+            'fbssc-news-open-day-2026-11-03.jpg',
+            'fbssc-news-fundraiser-2026-06-16.jpg',
+        ];
+        $paths = [];
+
+        foreach ($files as $filename) {
+            $source = database_path('seeders/data/'.$filename);
+
+            if (! is_file($source)) {
+                continue;
+            }
+
+            $path = 'range-images/'.$filename;
+            Storage::disk('media')->put($path, (string) file_get_contents($source));
+            $paths[] = $path;
+        }
+
+        return $paths;
     }
 
     /**
@@ -231,7 +272,7 @@ class FalseBaySportsShootingClubSeeder extends Seeder
                 'confirmed_at' => now(),
                 'website_url' => 'https://fbssc.co/calendar/',
                 'banner_path' => $this->storeOpenDayBanner(),
-                'description' => "Operation: Adrenaline open day at False Bay Sports Shooting Club, Tercentenary Way, Glencairn, on Saturday 5 December 2026. Open 09:00–17:00.\n\nThe poster lists The Wild West, defensive shooting, 9mm Parabellum handgun, .22 rifle, semi-auto rifles and carbines, sniper rifles, clay pigeon shooting, axe throwing, zombie survival, an exploding bloodpack T-shirt, and under-12 air rifles. Food stalls, family activities and photo opportunities. The poster says to find the club on Facebook at @FalseBaySC.",
+                'description' => "Operation: Adrenaline open day at False Bay Sports Shooting Club, Tercentenary Way, Glencairn, on Saturday 5 December 2026. Open 09:00–17:00.\n\nThe poster lists The Wild West, defensive shooting, 9mm Parabellum handgun, .22 rifle, semi-auto rifles and carbines, sniper rifles, clay pigeon shooting, axe throwing, zombie survival, an exploding bloodpack T-shirt, and under-12 air rifles. Food stalls, family activities and photo opportunities. The 3 November 2026 news poster says the bloodpack T-shirt target is back: shoot it right and it will explode, and take your bragging rights home. The poster says to find the club on Facebook at @FalseBaySC.",
                 'import_notes' => 'Club posters for Operation: Adrenaline, Saturday 5 December 2026, 09:00–17:00. The public calendar also lists this day as Open Day. No entry fee is printed on the posters.',
                 'source' => ListingSource::Staff,
                 'last_verified_at' => now(),

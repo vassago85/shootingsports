@@ -6,8 +6,12 @@
     :json-ld="$jsonLd"
 >
     <main id="main">
+        @php
+            $headerImage = $commonRanges->first(fn ($range): bool => $range->imageUrls() !== [])?->imageUrls()[0] ?? null;
+        @endphp
         <section class="page-hero">
-            <div class="wrap">
+            <div @class(['wrap', 'page-hero-split' => filled($headerImage)])>
+                <div>
                 <p class="label">{{ collect([$organisation->type->getLabel(), $organisation->province?->getLabel()])->filter()->implode(' · ') }}</p>
                 <div class="hero-row">
                     @if ($organisation->logoUrl())
@@ -21,6 +25,10 @@
                         <x-verification-badge :listing="$organisation" />
                     </div>
                 </div>
+                </div>
+                @if (filled($headerImage))
+                    <img class="page-hero-poster" src="{{ $headerImage }}" alt="{{ $organisation->name }}">
+                @endif
             </div>
         </section>
         <section class="block">

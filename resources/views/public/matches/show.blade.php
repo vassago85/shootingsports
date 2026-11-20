@@ -20,9 +20,11 @@
         $allVenues = $event->allVenues();
         $isMultiVenue = $allVenues->count() > 1;
     @endphp
+    @php $headerImage = $event->bannerUrl(); @endphp
     <main id="main" class="match-page">
         <section class="page-hero">
-            <div class="wrap">
+            <div @class(['wrap', 'page-hero-split' => filled($headerImage)])>
+                <div>
                 <p class="label">{{ \App\Support\EventDate::headline($event->starts_at, $event->ends_at) }}</p>
                 <h1>{{ $event->title }}</h1>
                 @php
@@ -70,6 +72,10 @@
                 <div class="pill-row" style="position:static;margin-top:8px">
                     <x-event-status-pill :event="$event" />
                 </div>
+                </div>
+                @if (filled($headerImage))
+                    <img class="page-hero-poster" src="{{ $headerImage }}" alt="{{ $event->title }} poster">
+                @endif
             </div>
         </section>
         <section class="block">
