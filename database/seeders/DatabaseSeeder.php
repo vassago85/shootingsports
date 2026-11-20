@@ -45,6 +45,7 @@ class DatabaseSeeder extends Seeder
             DwarskloofNightShootSeeder::class,
             PmpscCombinedShootSeeder::class,
             StagShootingClubSeeder::class,
+            FalseBaySportsShootingClubSeeder::class,
         ]);
 
         if (! app()->environment('local')) {
