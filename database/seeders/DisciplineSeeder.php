@@ -193,35 +193,53 @@ class DisciplineSeeder extends Seeder
      * Sources live in database/seeders/data/ keyed by the hero
      * filename; the published path on the media disk is keyed by the
      * discipline slug so a re-seed with a new image replaces the file
-     * in place without orphaning the old one.
+     * in place without orphaning the old one. Long-range rifle sports
+     * share one valley photograph until a sport has its own.
      */
     private function storeHeroImages(): void
     {
         $heroes = [
             'bisley-fullbore' => 'bisley-fullbore-hero.jpg',
+            'action-defensive' => 'action-defensive-hero.jpg',
+            'gong-shooting' => 'gong-shooting-hero.jpg',
+            'multigun' => 'multigun-hero.jpg',
         ];
 
         foreach ($heroes as $slug => $filename) {
-            $source = database_path('seeders/data/'.$filename);
+            $this->publishHero($slug, $filename, 'discipline-images/'.$slug.'.jpg');
+        }
 
-            if (! is_file($source)) {
-                continue;
-            }
+        foreach ([
+            'elr',
+            '22lr-elr',
+            'f-class',
+            'target-rifle',
+            'precision-rifle',
+            'pr22-rimfire',
+            'nrl-hunter',
+        ] as $slug) {
+            $this->publishHero($slug, 'long-range-hero.jpg', 'discipline-images/long-range.jpg');
+        }
+    }
 
-            $discipline = Discipline::query()->where('slug', $slug)->first();
+    private function publishHero(string $slug, string $filename, string $path): void
+    {
+        $source = database_path('seeders/data/'.$filename);
 
-            if ($discipline === null) {
-                continue;
-            }
+        if (! is_file($source)) {
+            return;
+        }
 
-            $extension = pathinfo($filename, PATHINFO_EXTENSION) ?: 'jpg';
-            $path = 'discipline-images/'.$slug.'.'.$extension;
+        $discipline = Discipline::query()->where('slug', $slug)->first();
 
-            Storage::disk('media')->put($path, file_get_contents($source));
+        if ($discipline === null) {
+            return;
+        }
 
-            if (! filled($discipline->image_path)) {
-                $discipline->forceFill(['image_path' => $path])->save();
-            }
+        Storage::disk('media')->put($path, file_get_contents($source));
+
+        if (! filled($discipline->image_path)) {
+            $discipline->forceFill(['image_path' => $path])->save();
         }
     }
 }

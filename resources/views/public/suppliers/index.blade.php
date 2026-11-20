@@ -1,19 +1,36 @@
 <x-layouts.public :title="$seoTitle" :description="$seoDescription" :canonical="$canonical" :robots="$robots" :json-ld="$jsonLd">
     <main id="main">
-        <div class="wrap dir-page">
-            <x-dir-hero page="industry" kicker="Directory" title="Industry">
-                Every shooting-related business, listed free. We do not sell firearms or take a cut of a transfer.
-                @if ($division)
-                    Showing suppliers linked to {{ $division->getLabel() }} sports.
+        <div class="wrap">
+            @php
+                $categoryCount = count($categories);
+                $businessCount = collect($grouped)->flatten(1)->unique('id')->count();
+                $heroUrl = \App\Support\PageHeroes::url('industry');
+            @endphp
+            <header class="dir-hero">
+                <div class="dir-hero-copy">
+                    <p class="label">Directory</p>
+                    <h1>Industry</h1>
+                    <div class="lede">
+                        <p>
+                            Every shooting-related business, listed free. We do not sell firearms or take a cut of a transfer.
+                            @if ($division)
+                                Showing suppliers linked to {{ $division->getLabel() }} sports.
+                            @endif
+                        </p>
+                        <p class="text-sm">{{ $businessCount }} businesses across {{ $categoryCount }} categories</p>
+                    </div>
+                </div>
+                @if (filled($heroUrl))
+                    <div class="dir-hero-art" style="--hero-image: url('{{ str_replace(['\\', "'"], ['/', ''], $heroUrl) }}'); background-position: center 42%" role="img" aria-label="A machinist working a metal lathe"></div>
                 @endif
-            </x-dir-hero>
+            </header>
         </div>
-        <section class="block">
+        <section class="block" style="padding-top:0">
             <div class="wrap">
                 {{-- Search sits above the category grid so a shooter
                      who already knows the business can find it without
                      picking the right category first. --}}
-                <form class="dir-filters" method="get" action="{{ route('suppliers.index') }}" style="margin-bottom:20px">
+                <form class="dir-filters mt-10" method="get" action="{{ route('suppliers.index') }}" style="margin-bottom:20px">
                     @if ($division)
                         <input type="hidden" name="division" value="{{ $division->value }}">
                     @endif

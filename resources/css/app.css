@@ -2953,9 +2953,9 @@ html[lang] body.ss-public .dir-hero {
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(260px, .9fr);
     gap: 24px;
-    align-items: end;
+    align-items: center;
     min-height: 180px;
-    margin-bottom: 12px;
+    margin: 32px 0 12px;
 }
 html[lang] body.ss-public .dir-hero h1 {
     text-transform: none;
@@ -2987,7 +2987,7 @@ html[lang] body.ss-public .build-list-plan {
 }
 html[lang] body.ss-public .dir-hero-art {
     position: relative;
-    height: 240px;
+    height: 280px;
     border-radius: 12px;
     overflow: hidden;
     background: #1a3d30 var(--hero-image) center 68%/cover no-repeat;

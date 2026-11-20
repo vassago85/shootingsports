@@ -117,7 +117,11 @@ it('rebrands the /suppliers page as Industry', function () {
     $this->get(route('suppliers.index'))
         ->assertOk()
         ->assertSee('<h1>Industry</h1>', false)
-        ->assertDontSee('<h1>Suppliers</h1>', false);
+        ->assertDontSee('<h1>Suppliers</h1>', false)
+        ->assertSee('businesses across', false)
+        ->assertSee('categories', false)
+        ->assertSee('dir-hero-art', false)
+        ->assertSee('images/pages/industry.jpg', false);
 });
 
 it('rebrands the /disciplines page as Sports', function () {
