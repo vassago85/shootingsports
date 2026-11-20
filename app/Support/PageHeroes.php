@@ -79,16 +79,18 @@ class PageHeroes
     public static function fallbackUrl(string $page): ?string
     {
         $file = match ($page) {
-            'matches', 'calendar', 'sports' => 'hero-match.jpg',
-            'home', 'clubs', 'ranges', 'industry' => 'hero-range.jpg',
+            'home', 'ranges' => 'images/pages/home.jpg',
+            'clubs' => 'images/pages/clubs.jpg',
+            'matches', 'calendar', 'sports' => 'images/pages/sports.jpg',
+            'industry' => 'images/pages/industry.jpg',
             default => null,
         };
 
-        if ($file === null || ! is_file(public_path('mockup-assets/'.$file))) {
+        if ($file === null || ! is_file(public_path($file))) {
             return null;
         }
 
-        return asset('mockup-assets/'.$file);
+        return asset($file);
     }
 
     public static function isStoredPhoto(string $path): bool

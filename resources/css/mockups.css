@@ -9,12 +9,12 @@
     --ss-ink: #17211d;
     --ss-muted: #66736e;
     --ss-line: #d8e1dd;
-    --ss-brand: #1f6b4c;
-    --ss-brand-2: #2b8078;
-    --ss-accent: #d9822b;
+    --ss-brand: #0e3328;
+    --ss-brand-2: #245d3f;
+    --ss-accent: #245d3f;
     --ss-warn: #c26c20;
     --ss-danger: #b6443d;
-    --ss-android: #0b57d0;
+    --ss-android: #0e3328;
     --ss-shadow: 0 18px 50px rgba(23, 33, 29, .14);
     --ss-soft-shadow: 0 10px 24px rgba(23, 33, 29, .09);
 }
@@ -78,6 +78,9 @@
     gap: 8px;
     padding: 12px;
     margin: 24px 0;
+    position: sticky;
+    top: calc(var(--nav-h, 62px) + 8px);
+    z-index: 30;
     background: rgba(246, 248, 245, .86);
     border: 1px solid rgba(216, 225, 221, .85);
     border-radius: 18px;
@@ -345,25 +348,26 @@
     left: 0;
     right: 0;
     bottom: 0;
-    height: 82px;
-    background: rgba(255, 255, 255, .94);
-    border-top: 1px solid var(--ss-line);
+    height: 78px;
+    background: #0e3328;
+    border-top: 0;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    padding: 8px 9px 12px;
-    backdrop-filter: blur(18px);
+    padding: 8px 6px 12px;
 }
 .phone-android .phone-tabs {
-    height: 78px;
-    background: #f9fbff;
-    border-top-color: #dce8f6;
-    padding: 8px 5px 10px;
+    height: 74px;
+    background: #0e3328;
+    border-top-color: #0e3328;
+    padding: 6px 4px 10px;
 }
 .phone-tabs a {
     display: grid;
     justify-items: center;
+    align-content: center;
     gap: 3px;
-    color: #76837e;
+    min-height: 44px;
+    color: #c6ccc9;
     font-family: Inter, ui-sans-serif, system-ui, sans-serif;
     font-size: 10px;
     font-weight: 800;
@@ -375,16 +379,20 @@
     background: transparent;
 }
 .phone-tabs a .tab-icon {
-    font-size: 17px;
-    line-height: 1;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    line-height: 0;
 }
+.phone-tabs a .tab-icon svg { display: block; }
 .phone-tabs a.on {
-    color: var(--ss-brand);
-    background: rgba(31, 107, 76, .08);
+    color: #c5e07a;
+    background: transparent;
 }
 .phone-android .phone-tabs a.on {
-    color: var(--ss-android);
-    background: #d8e8ff;
+    color: #c5e07a;
+    background: transparent;
 }
 
 /* --- Screen typography --------------------------------------------------- */
@@ -411,6 +419,11 @@
     overflow: hidden;
     margin-top: 4px;
 }
+.mk-hero.has-photo {
+    background:
+        linear-gradient(160deg, rgba(14, 51, 40, .88) 0%, rgba(14, 51, 40, .55) 100%),
+        var(--hero-image) center 40%/cover no-repeat;
+}
 .mk-hero:after {
     content: "";
     position: absolute;
@@ -420,10 +433,16 @@
     height: 136px;
     border-radius: 50%;
     background: rgba(255, 255, 255, .12);
+    pointer-events: none;
 }
+.mk-hero > * { position: relative; z-index: 1; }
 .phone-android .mk-hero {
     border-radius: 20px;
-    background: linear-gradient(135deg, var(--ss-android), var(--ss-brand));
+}
+.phone-android .mk-hero.has-photo {
+    background:
+        linear-gradient(160deg, rgba(14, 51, 40, .88) 0%, rgba(14, 51, 40, .55) 100%),
+        var(--hero-image) center 40%/cover no-repeat;
 }
 .mk-hero .kicker {
     color: rgba(255, 255, 255, .78);
@@ -601,8 +620,8 @@
     justify-content: center;
     min-height: 44px;
     padding: 10px 16px;
-    background: var(--ss-brand);
-    color: #fff;
+    background: #c5e07a;
+    color: #10251f;
     border: 0;
     border-radius: 14px;
     text-decoration: none;
@@ -613,7 +632,7 @@
     text-transform: none;
     cursor: default;
 }
-.phone-android .mk-btn { background: var(--ss-android); }
+.phone-android .mk-btn { background: #c5e07a; color: #10251f; }
 .mk-btn.wide { width: 100%; margin-top: 14px; }
 .mk-btn.secondary {
     background: rgba(255, 255, 255, .17);
@@ -766,11 +785,12 @@
 
 /* --- Detail hero + quick actions ---------------------------------------- */
 .mk-detail-hero {
-    min-height: 150px;
+    min-height: 168px;
     border-radius: 24px;
     background:
-        linear-gradient(135deg, rgba(23, 33, 29, .7), rgba(31, 107, 76, .66)),
-        repeating-linear-gradient(45deg, #c9d7cf 0, #c9d7cf 7px, #e4ece7 7px, #e4ece7 14px);
+        linear-gradient(180deg, rgba(14, 51, 40, .2), rgba(14, 51, 40, .82)),
+        var(--hero-image, none) center 42%/cover no-repeat,
+        #0e3328;
     color: #fff;
     padding: 18px;
     display: flex;
@@ -823,10 +843,8 @@
     height: 156px;
     border-radius: 20px;
     background:
-        linear-gradient(90deg, rgba(255, 255, 255, .6) 1px, transparent 1px),
-        linear-gradient(rgba(255, 255, 255, .6) 1px, transparent 1px),
-        linear-gradient(135deg, #d7e6db, #eef4f1);
-    background-size: 36px 36px, 36px 36px, auto;
+        linear-gradient(180deg, rgba(14, 51, 40, .15), rgba(14, 51, 40, .5)),
+        url('/images/pages/home.jpg') center 55%/cover no-repeat;
     border: 1px solid var(--ss-line);
     position: relative;
     overflow: hidden;
@@ -880,10 +898,11 @@
     position: relative;
     border: 1px solid var(--ss-line);
     background:
-        radial-gradient(circle at 65% 36%, rgba(31, 107, 76, .24) 0 5px, transparent 6px),
-        radial-gradient(circle at 42% 58%, rgba(217, 130, 43, .28) 0 5px, transparent 6px),
-        radial-gradient(circle at 55% 70%, rgba(39, 58, 82, .2) 0 5px, transparent 6px),
-        linear-gradient(45deg, #d6e4df, #f0f4ef);
+        radial-gradient(circle at 65% 36%, #c5e07a 0 6px, #0e3328 7px 9px, transparent 10px),
+        radial-gradient(circle at 42% 58%, #c5e07a 0 6px, #0e3328 7px 9px, transparent 10px),
+        radial-gradient(circle at 55% 70%, #c5e07a 0 6px, #0e3328 7px 9px, transparent 10px),
+        linear-gradient(180deg, rgba(14, 51, 40, .12), rgba(14, 51, 40, .42)),
+        url('/images/pages/home.jpg') center 60%/cover no-repeat;
 }
 
 /* --- Segmented / finder -------------------------------------------------- */
@@ -991,6 +1010,12 @@
     display: grid;
     place-items: center;
     font-weight: 800;
+}
+.mk-sport-icon.has-photo {
+    width: 100%;
+    height: 72px;
+    border-radius: 12px;
+    background: #0e3328 var(--hero-image) center 40%/cover no-repeat;
 }
 .phone-android .mk-sport-icon {
     background: #e7f0ff;

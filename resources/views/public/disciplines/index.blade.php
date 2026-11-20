@@ -29,7 +29,11 @@
                     </div>
                     <div class="disc-grid">
                         @foreach ($active as $discipline)
-                            <a class="disc" href="{{ route('disciplines.show', $discipline->slug) }}">
+                            @php $familyPhoto = $discipline->family->cardPhoto(); @endphp
+                            <a @class(['disc', 'has-photo' => filled($familyPhoto)]) href="{{ route('disciplines.show', $discipline->slug) }}">
+                                @if (filled($familyPhoto))
+                                    <span class="disc-photo" style="--hero-image: url('{{ asset($familyPhoto) }}')" aria-hidden="true"></span>
+                                @endif
                                 <span class="fam">{{ $discipline->family->getLabel() }}</span>
                                 <span class="nm">{{ $discipline->name }}</span>
                                 <span class="ct">{{ $discipline->events_count }} upcoming</span>
@@ -51,11 +55,15 @@
                         <summary>Show all {{ $total }} disciplines →</summary>
                         <div class="disc-grid" style="margin-top:1px">
                             @foreach ($reference as $discipline)
-                                <a class="disc is-quiet" href="{{ route('disciplines.show', $discipline->slug) }}">
-                                    <span class="fam">{{ $discipline->family->getLabel() }}</span>
-                                    <span class="nm">{{ $discipline->name }}</span>
-                                    <span class="ct ct-quiet">No matches listed yet</span>
-                                </a>
+                            @php $familyPhoto = $discipline->family->cardPhoto(); @endphp
+                            <a @class(['disc', 'is-quiet', 'has-photo' => filled($familyPhoto)]) href="{{ route('disciplines.show', $discipline->slug) }}">
+                                @if (filled($familyPhoto))
+                                    <span class="disc-photo" style="--hero-image: url('{{ asset($familyPhoto) }}')" aria-hidden="true"></span>
+                                @endif
+                                <span class="fam">{{ $discipline->family->getLabel() }}</span>
+                                <span class="nm">{{ $discipline->name }}</span>
+                                <span class="ct ct-quiet">No matches listed yet</span>
+                            </a>
                             @endforeach
                         </div>
                     </details>

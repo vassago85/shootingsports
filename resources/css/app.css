@@ -2920,6 +2920,16 @@ html[lang] body.ss-public .page-hero:not(.has-photo) h1 {
 }
 html[lang] body.ss-public .page-hero:not(.has-photo) p,
 html[lang] body.ss-public .page-hero:not(.has-photo) .label { color: #52655e; }
+html[lang] body.ss-public .page-hero.has-photo {
+    color: #f4f7f2;
+    border-radius: 0 0 18px 18px;
+}
+html[lang] body.ss-public .page-hero.has-photo h1 {
+    text-transform: none;
+    color: #fff;
+}
+html[lang] body.ss-public .page-hero.has-photo p,
+html[lang] body.ss-public .page-hero.has-photo .label { color: #d5e2d6; }
 html[lang] body.ss-public .page-hero:not(.has-photo) a:not(.btn) { color: #245d3f; }
 html[lang] body.ss-public .dir-hero {
     display: grid;
@@ -2959,18 +2969,17 @@ html[lang] body.ss-public .build-list-plan {
 }
 html[lang] body.ss-public .dir-hero-art {
     position: relative;
-    height: 180px;
-    border-radius: 0 0 0 48px;
+    height: 240px;
+    border-radius: 12px;
     overflow: hidden;
-    background: #1a3d30 var(--hero-image) center 40%/cover no-repeat;
+    background: #1a3d30 var(--hero-image) center 42%/cover no-repeat;
+    box-shadow: 0 14px 32px rgba(14, 51, 40, .16);
 }
 html[lang] body.ss-public .dir-hero-art::after {
     content: "";
     position: absolute;
     inset: 0;
-    background:
-        linear-gradient(90deg, #f7f8f5 0%, rgba(247, 248, 245, 0) 42%),
-        linear-gradient(180deg, rgba(247, 248, 245, 0) 42%, #f7f8f5 100%);
+    background: linear-gradient(90deg, rgba(14, 51, 40, .18) 0%, rgba(14, 51, 40, 0) 36%);
 }
 html[lang] body.ss-public .dir-tabs { display: flex; gap: 4px; border-bottom: 1px solid #dce3de; margin: 8px 0 14px; }
 html[lang] body.ss-public .dir-tabs a {
@@ -3328,7 +3337,46 @@ html[lang] body.ss-public .home-choices a:focus-visible {
     box-shadow: 0 12px 28px rgba(14, 51, 40, .1);
     transform: translateY(-2px);
 }
+html[lang] body.ss-public .home-choices a.has-photo {
+    min-height: 190px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    color: #f4f7f2;
+    border-color: transparent;
+    background:
+        linear-gradient(180deg, rgba(14, 30, 22, .08) 28%, rgba(14, 30, 22, .82) 100%),
+        var(--hero-image) center 42%/cover no-repeat;
+}
+html[lang] body.ss-public .home-choices a.has-photo .label { color: #d5e2d6; }
+html[lang] body.ss-public .home-choices a.has-photo strong { color: #fff; }
 html[lang] body.ss-public .home-choices strong { display: block; font-size: 20px; margin-top: 4px; }
+html[lang] body.ss-public .disc.has-photo { padding: 0; overflow: hidden; }
+html[lang] body.ss-public .disc-photo {
+    display: block;
+    height: 108px;
+    background: #0e3328 var(--hero-image) center 40%/cover no-repeat;
+}
+html[lang] body.ss-public .disc.has-photo .fam,
+html[lang] body.ss-public .disc.has-photo .nm,
+html[lang] body.ss-public .disc.has-photo .ct { padding-left: 16px; padding-right: 16px; }
+html[lang] body.ss-public .disc.has-photo .fam { padding-top: 12px; }
+html[lang] body.ss-public .disc.has-photo .ct { padding-bottom: 14px; }
+html[lang] body.ss-public .starter-note.has-photo {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(180px, .7fr);
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #dce3de;
+    align-items: stretch;
+}
+html[lang] body.ss-public .starter-note.has-photo > div:first-child { padding: 22px 24px; }
+html[lang] body.ss-public .starter-photo {
+    min-height: 168px;
+    background: #0e3328 var(--hero-image) center 40%/cover no-repeat;
+}
 html[lang] body.ss-public .home-follow .dir-list {
     box-shadow: 0 8px 24px rgba(14, 51, 40, .06);
 }
@@ -3342,7 +3390,7 @@ html[lang] body.ss-public .disc .nm { text-transform: none; font-size: 22px; }
     html[lang] body.ss-public .dir-split.is-clubs,
     html[lang] body.ss-public .home-choices,
     html[lang] body.ss-public .dir-filters { grid-template-columns: 1fr 1fr; }
-    html[lang] body.ss-public .dir-hero-art { height: 140px; }
+    html[lang] body.ss-public .dir-hero-art { height: 200px; }
     html[lang] body.ss-public .dir-map { position: static; height: 380px; }
     html[lang] body.ss-public .dir-row { grid-template-columns: 64px minmax(0, 1fr) 16px; }
     html[lang] body.ss-public .dir-side { grid-column: 2; }
@@ -3350,6 +3398,7 @@ html[lang] body.ss-public .disc .nm { text-transform: none; font-size: 22px; }
 @media (max-width: 640px) {
     html[lang] body.ss-public .dir-filters,
     html[lang] body.ss-public .home-choices,
+    html[lang] body.ss-public .starter-note.has-photo,
     html[lang] body.ss-public .dir-hero,
     html[lang] body.ss-public .dir-split,
     html[lang] body.ss-public .dir-split.is-clubs { grid-template-columns: 1fr; }

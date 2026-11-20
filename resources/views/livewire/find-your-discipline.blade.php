@@ -1,12 +1,12 @@
 <div>
     <main id="main">
-        <section class="page-hero">
+        <x-page-photo page="sports" class="page-hero">
             <div class="wrap">
                 <p class="label">Find your discipline</p>
                 <h1>What should you try?</h1>
                 <p>Six questions. Then nearby clubs and the next events.</p>
             </div>
-        </section>
+        </x-page-photo>
         <section class="block">
             <div class="wrap" style="max-width:720px">
                 @if ($step < 7)

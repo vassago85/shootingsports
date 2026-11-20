@@ -14,4 +14,18 @@ enum DisciplineFamily: string implements HasLabel
     case Shotgun = 'shotgun';
     case Airgun = 'airgun';
     case Multi = 'multi';
+
+    /**
+     * Decorative photo for family tiles. Airgun and multi have no
+     * matching picture in the public set, so those tiles stay plain.
+     */
+    public function cardPhoto(): ?string
+    {
+        return match ($this) {
+            self::Rifle => 'images/divisions/bolt-action-rifle.jpg',
+            self::Handgun => 'images/divisions/handgun.jpg',
+            self::Shotgun => 'images/divisions/shotgun.jpg',
+            self::Airgun, self::Multi => null,
+        };
+    }
 }

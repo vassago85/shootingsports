@@ -19,6 +19,18 @@
     };
 
     $href = fn (string $target): string => route('mockups.apps', ['screen' => $target]);
+    $tabIcon = function (string $name): string {
+        $common = 'width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+
+        return match ($name) {
+            'home' => '<svg '.$common.'><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z"/></svg>',
+            'events' => '<svg '.$common.'><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>',
+            'find' => '<svg '.$common.'><circle cx="11" cy="11" r="6"/><path d="M20 20l-3.5-3.5"/></svg>',
+            'following' => '<svg '.$common.'><path d="m12 4 2.1 4.4 4.9.7-3.5 3.4.8 4.8L12 15.8 7.7 17.3l.8-4.8L5 9.1l4.9-.7z"/></svg>',
+            'profile' => '<svg '.$common.'><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.2a6.5 6.5 0 0 1 13 0"/></svg>',
+            default => '',
+        };
+    };
 @endphp
 
 <figure class="phone phone-{{ $platform }}">
@@ -63,23 +75,23 @@
             @if ($config['tab'])
                 <nav class="phone-tabs" aria-label="{{ $platform === 'ios' ? 'iPhone tabs' : 'Android tabs' }}">
                     <a href="{{ $href('home') }}" @class(['on' => $config['tab'] === 'home'])>
-                        <span class="tab-icon" aria-hidden="true">⌂</span>
+                        <span class="tab-icon">{!! $tabIcon('home') !!}</span>
                         <span>Home</span>
                     </a>
                     <a href="{{ $href('events') }}" @class(['on' => $config['tab'] === 'events'])>
-                        <span class="tab-icon" aria-hidden="true">□</span>
+                        <span class="tab-icon">{!! $tabIcon('events') !!}</span>
                         <span>Events</span>
                     </a>
                     <a href="{{ $href('find') }}" @class(['on' => $config['tab'] === 'find'])>
-                        <span class="tab-icon" aria-hidden="true">⌖</span>
+                        <span class="tab-icon">{!! $tabIcon('find') !!}</span>
                         <span>Find</span>
                     </a>
                     <a href="{{ $href('following') }}" @class(['on' => $config['tab'] === 'following'])>
-                        <span class="tab-icon" aria-hidden="true">★</span>
+                        <span class="tab-icon">{!! $tabIcon('following') !!}</span>
                         <span>Following</span>
                     </a>
                     <a href="{{ $href('profile') }}" @class(['on' => $config['tab'] === 'profile'])>
-                        <span class="tab-icon" aria-hidden="true">◌</span>
+                        <span class="tab-icon">{!! $tabIcon('profile') !!}</span>
                         <span>Profile</span>
                     </a>
                 </nav>

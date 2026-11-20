@@ -148,12 +148,16 @@
                 <div class="sec-head">
                     <h2>Find a club or range</h2>
                 </div>
+                @php
+                    $clubsPhoto = \App\Support\PageHeroes::url('clubs');
+                    $rangesPhoto = \App\Support\PageHeroes::url('ranges');
+                @endphp
                 <div class="home-choices">
-                    <a href="{{ route('clubs.index') }}">
+                    <a @class(['has-photo' => filled($clubsPhoto)]) href="{{ route('clubs.index') }}" @if (filled($clubsPhoto)) style="--hero-image: url('{{ $clubsPhoto }}')" @endif>
                         <span class="label">Clubs and series</span>
                         <strong>Find people shooting the same sports.</strong>
                     </a>
-                    <a href="{{ route('ranges.index') }}">
+                    <a @class(['has-photo' => filled($rangesPhoto)]) href="{{ route('ranges.index') }}" @if (filled($rangesPhoto)) style="--hero-image: url('{{ $rangesPhoto }}')" @endif>
                         <span class="label">Ranges</span>
                         <strong>Find a range near you.</strong>
                     </a>
@@ -163,10 +167,16 @@
 
         <section class="block home-follow">
             <div class="wrap">
-                <div class="dir-note">
-                    <h2>New to shooting?</h2>
-                    <p>Not sure where to start? Learn about the different shooting disciplines and how to get involved.</p>
-                    <a class="btn dir-line" href="{{ route('disciplines.index') }}">Explore shooting sports</a>
+                @php $sportsPhoto = \App\Support\PageHeroes::url('sports'); @endphp
+                <div @class(['dir-note', 'starter-note', 'has-photo' => filled($sportsPhoto)])>
+                    <div>
+                        <h2>New to shooting?</h2>
+                        <p>Not sure where to start? Learn about the different shooting disciplines and how to get involved.</p>
+                        <a class="btn dir-line" href="{{ route('disciplines.index') }}">Explore shooting sports</a>
+                    </div>
+                    @if (filled($sportsPhoto))
+                        <div class="starter-photo" style="--hero-image: url('{{ $sportsPhoto }}')" role="img" aria-label=""></div>
+                    @endif
                 </div>
             </div>
         </section>

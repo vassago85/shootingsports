@@ -2,7 +2,7 @@
 
     {{-- 1. Onboarding --------------------------------------------------- --}}
     @case('onboarding')
-        <div class="mk-hero">
+        <div class="mk-hero has-photo" style="--hero-image: url('{{ asset('images/pages/clubs.jpg') }}')">
             <div class="kicker">Set up your calendar</div>
             <h2>Find shoots that fit your weekend.</h2>
             <p>Choose where you shoot and the sports you want to follow. You can browse without signing in.</p>
@@ -49,7 +49,7 @@
 
     {{-- 2. Home --------------------------------------------------------- --}}
     @case('home')
-        <div class="mk-hero">
+        <div class="mk-hero has-photo" style="--hero-image: url('{{ asset('images/pages/sports.jpg') }}')">
             <div class="kicker">This weekend · Nationwide</div>
             <h2>What's shooting this weekend?</h2>
             <p>{{ count($matches) }} upcoming matches on the register. Filter by sport, province or club.</p>
@@ -153,7 +153,7 @@
     {{-- 4. Event detail ------------------------------------------------- --}}
     @case('detail')
         @if ($match)
-            <div class="mk-detail-hero">
+            <div class="mk-detail-hero" style="--hero-image: url('{{ asset('images/pages/sports.jpg') }}')">
                 <div class="mk-tag-row">
                     @if ($match['discipline'])<span class="mk-tag">{{ $match['discipline'] }}</span>@endif
                     @if ($match['host'])<span class="mk-tag">{{ $match['host'] }}</span>@endif
@@ -267,7 +267,7 @@
             @php $sportList = array_slice($sports, 0, 6); @endphp
             @forelse ($sportList as $i => $sport)
                 <a class="mk-sport-tile" href="{{ $app('sports') }}">
-                    <div class="mk-sport-icon" aria-hidden="true">{{ $i + 1 }}</div>
+                    <div @class(['mk-sport-icon', 'has-photo' => filled($sport['photo'] ?? null)]) @if (filled($sport['photo'] ?? null)) style="--hero-image: url('{{ $sport['photo'] }}')" @endif aria-hidden="true">@unless (filled($sport['photo'] ?? null)){{ $i + 1 }}@endunless</div>
                     <strong>{{ $sport['name'] }}</strong>
                     <div class="mk-meta">{{ $sport['family'] ?: 'South African shooting sport' }}</div>
                     <div class="mk-progress"><span style="width: {{ 30 + $i * 8 }}%"></span></div>

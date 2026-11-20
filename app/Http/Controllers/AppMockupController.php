@@ -137,11 +137,16 @@ class AppMockupController extends Controller
             ->orderBy('name')
             ->limit(12)
             ->get()
-            ->map(fn (Discipline $sport): array => [
-                'slug' => $sport->slug,
-                'name' => $sport->name,
-                'family' => $sport->family?->getLabel(),
-            ])
+            ->map(function (Discipline $sport): array {
+                $photo = $sport->family?->cardPhoto();
+
+                return [
+                    'slug' => $sport->slug,
+                    'name' => $sport->name,
+                    'family' => $sport->family?->getLabel(),
+                    'photo' => filled($photo) ? asset($photo) : null,
+                ];
+            })
             ->all();
     }
 

@@ -18,8 +18,13 @@ beforeEach(function () {
 it('uses the built-in range photo on the ranges directory', function () {
     $this->get(route('ranges.index'))
         ->assertOk()
-        ->assertSee('mockup-assets/hero-range.jpg', false)
+        ->assertSee('images/pages/home.jpg', false)
         ->assertSee('class="ss-public"', false);
+
+    expect(PageHeroes::fallbackUrl('home'))->toContain('images/pages/home.jpg')
+        ->and(PageHeroes::fallbackUrl('clubs'))->toContain('images/pages/clubs.jpg')
+        ->and(PageHeroes::fallbackUrl('sports'))->toContain('images/pages/sports.jpg')
+        ->and(PageHeroes::fallbackUrl('industry'))->toContain('images/pages/industry.jpg');
 });
 
 it('uses an uploaded picture on the public page', function () {
@@ -31,7 +36,7 @@ it('uses an uploaded picture on the public page', function () {
     $this->get(route('ranges.index'))
         ->assertOk()
         ->assertSee('page-heroes/ranges.jpg', false)
-        ->assertDontSee('mockup-assets/hero-range.jpg', false);
+        ->assertDontSee('images/pages/home.jpg', false);
 
     expect(Setting::get('page.hero.ranges'))->toBe('page-heroes/ranges.jpg');
 });
