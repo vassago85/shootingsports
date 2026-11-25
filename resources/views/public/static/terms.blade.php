@@ -4,7 +4,7 @@
             <div class="wrap">
                 <p class="label">Legal</p>
                 <h1>Terms of Use</h1>
-                <p>Last updated: 8 November 2026. Draft for public use. Intended for attorney review. Questions: <a href="mailto:hello@shootingsports.co.za">hello@shootingsports.co.za</a>.</p>
+                <p>Last updated: 25 November 2026. Questions: <a href="mailto:hello@shootingsports.co.za">hello@shootingsports.co.za</a>.</p>
             </div>
         </section>
 
@@ -29,6 +29,7 @@
                     <li>You are responsible for safeguarding your login credentials and for activity under your account.</li>
                     <li>Shooter accounts and match-director (Desk) access may be refused, suspended, or revoked if we reasonably believe these Terms are breached or that listings or claims are fraudulent or unsafe.</li>
                     <li>Match-director access may require staff review before you can publish or edit listings.</li>
+                    <li>You may delete your account at any time from inside the app or from <code>/me/settings</code>; see section 17 for how that works.</li>
                 </ul>
 
                 <h2>4. Listings and accuracy</h2>
@@ -112,8 +113,16 @@
                 <h2>16. Changes</h2>
                 <p>We may update these Terms by posting a new version on this page and updating the “Last updated” date. Continued use after changes constitutes acceptance. Material changes to paid Pro terms will be communicated to subscribers where practicable.</p>
 
-                <h2>17. Termination</h2>
-                <p>You may stop using the service and delete or request deletion of your account via <a href="mailto:hello@shootingsports.co.za">hello@shootingsports.co.za</a> (subject to legal retention needs). We may suspend or terminate access for breach or risk to the platform.</p>
+                <h2>17. Termination and account deletion</h2>
+                <p>You can delete your account yourself:</p>
+                <ul>
+                    <li>in the mobile app: Me &rarr; Delete account;</li>
+                    <li>on the website: <code>/me/settings</code> &rarr; Delete account.</li>
+                </ul>
+                <p>Both routes do the same thing. Your profile, saved matches, follows, attendance log, device tokens, and personal access tokens are hidden immediately and you are signed out. A scheduled job then hard-deletes every row thirty (30) days later. Within that thirty-day window you can email <a href="mailto:hello@shootingsports.co.za">hello@shootingsports.co.za</a> from the same address to restore the account; after the purge the data is gone and cannot be restored.</p>
+                <p>If you manage a club, shop, range, or are an approved match director, you must hand those listings over to another owner or to us before you can delete your account. The app and the website block the delete action with the list of items to transfer. Email <a href="mailto:hello@shootingsports.co.za">hello@shootingsports.co.za</a> if you need staff to take the hand-over.</p>
+                <p>We may suspend or terminate access for breach of these Terms or risk to the platform.</p>
+                <p>Some records may be retained after deletion where South African law requires &mdash; for example invoice and tax records for a past Pro subscription or a Paystack entry payment. Those are kept only for the relevant retention period and are not used for any other purpose.</p>
 
                 <h2>18. Governing law</h2>
                 <p>These Terms are governed by the laws of the Republic of South Africa. Subject to mandatory consumer protections, courts of South Africa have jurisdiction.</p>

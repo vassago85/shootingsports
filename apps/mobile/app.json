@@ -11,6 +11,8 @@
       "expo-router",
       "expo-notifications",
       "expo-font",
+      "expo-secure-store",
+      "expo-status-bar",
       "expo-web-browser",
       [
         "expo-splash-screen",

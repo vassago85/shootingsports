@@ -5,6 +5,7 @@
                 <p class="label">Legal</p>
                 <h1>Privacy &amp; POPIA</h1>
                 <p>Public listings show club, range and supplier contact details that the organisation chose to publish. We do not sell personal information.</p>
+                <p>Last updated: 25 November 2026.</p>
             </div>
         </section>
 
@@ -23,6 +24,11 @@
 
                 <h2>Search &amp; social crawlers</h2>
                 <p>Google Search Console and standard search engines are welcome. The <code>/llms.txt</code> file publishes a curated map of the public pages for large-language-model crawlers; nothing behind <code>/desk</code> or <code>/admin</code> is a source.</p>
+
+                <h2>Deleting your account</h2>
+                <p>Signed-in shooters can delete the account from inside the mobile app (Me &rarr; Delete account) or from <code>/me/settings</code> on the website. Both routes do the same thing: the account is soft-deleted immediately &mdash; profile, saved matches, follows, attendance log, device tokens, and personal access tokens are hidden and the session is signed out &mdash; and a scheduled job hard-deletes every row thirty (30) days later. Within that window you can email <a href="mailto:hello@shootingsports.co.za">hello@shootingsports.co.za</a> from the same address to restore the account.</p>
+                <p>Accounts that manage a club, shop or range, or that are approved match directors, must hand those listings over before deletion. The app and the website block the action and list what needs to be transferred.</p>
+                <p>A narrow set of records may survive the purge where South African law requires it &mdash; for example invoice and tax records for a past Pro subscription or a Paystack entry payment. Those are kept only for the relevant retention period and are not used for any other purpose.</p>
 
                 <h2>Contact</h2>
                 <p>Data requests, corrections and takedown notices go to <a href="mailto:hello@shootingsports.co.za">hello@shootingsports.co.za</a>. A fuller POPIA notice will accompany user accounts in the next release.</p>
